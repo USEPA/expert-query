@@ -1,4 +1,4 @@
-# expert-query
+## Expert Query
 Sections 303(d) and 305(b) of the Clean Water Act require states to submit water quality assessment and impairment information to EPA on April 1st of every even numbered year. EPA now requires this data to be submitted electronically through the [Assessment and TMDL Tracking and implementatioN System (ATTAINS)](https://www.epa.gov/waterdata/attains). 
 
 The Expert Query tool will provide the public, EPA, state, and tribal users the ability to view more detailed ATTAINS data than they can in [How’s My Waterway](https://mywaterway.epa.gov/). It will also allow users to download data on a national scale.
