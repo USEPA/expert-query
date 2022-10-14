@@ -1,0 +1,50 @@
+# Use postgres/example user/password credentials
+
+services:
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+
+  db:
+    environment:
+      POSTGRES_PASSWORD: example
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    user: postgres
+    volumes:
+      - ./postgres/config:/etc/postgresql:ro
+      - ./postgres/log:/var/log/postgresql
+      - ./postgres/db:/docker-entrypoint-initdb.d
+      - /var/lib/postgresql
+
+  go:
+    build: ./go
+    depends_on:
+      - db
+    image: expert-query/go
+    ports:
+      - 3001:3001
+
+  node:
+    command:
+      - /bin/sh
+      - -c
+      - |
+        npm install
+        npm start
+    depends_on:
+      - db
+    environment:
+      - NODE_ENV=development
+    image: node:18.10
+    ports:
+      - 3000:3000
+    user: node
+    volumes:
+      - ./node:/home/node/app
+    working_dir: /home/node/app
+
+version: "3.9"
