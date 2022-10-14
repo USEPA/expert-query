@@ -92,13 +92,14 @@ func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 		defer cancel()
 
-        column := "assessmentunitidentifier"
+        selectColumn := "assessmentunitidentifier"
 		table := "assessments_by_catchment"
+        whereColumn := "huc12"
 
         randomIndex := rand.Intn(len(hucs))
         huc := hucs[randomIndex]
-        querystring := fmt.Sprintf("SELECT %s FROM %s WHERE huc12 = '%s';",
-            column, table, huc,
+        querystring := fmt.Sprintf("SELECT %s FROM %s WHERE %s = '%s';",
+            selectColumn, table, whereColumn, huc,
         )
 		rows, err := db.QueryContext(ctx, querystring)
 		if err != nil {

@@ -1,0 +1,37 @@
+# Use postgres/example user/password credentials
+
+services:
+  adminer:
+    image: adminer
+    networks:
+      - etl_network
+    ports:
+      - 8080:8080
+
+  owpub:
+    environment:
+      POSTGRES_PASSWORD: example
+    image: expert-query/postgis:14-3.3
+    networks:
+      - etl_network
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ./owpub/config:/etc/postgresql:ro
+      - ./owpub/log:/var/log/postgresql
+      - ./owpub/init:/docker-entrypoint-initdb.d
+      - ./owpub/data:/var/lib/postgresql/data
+
+  python:
+    networks:
+      - bridge_network
+      - etl_network
+
+networks:
+  name: etl_network
+  bridge_network:
+    external: true
+    name: bridge_network
+
+version: "3.9"
