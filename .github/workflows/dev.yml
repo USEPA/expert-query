@@ -69,6 +69,7 @@ jobs:
       CF_DEV_S3_PRIV_BUCKET_ID: ${{ secrets.CF_DEV_S3_PRIV_BUCKET_ID }}
       CF_DEV_S3_PRIV_REGION: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
       CF_DEV_S3_PRIV_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
+      GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
       SERVER_URL: https://expert-query-dev.app.cloud.gov/
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -119,6 +120,7 @@ jobs:
           cf set-env $APP_NAME "CF_DEV_S3_PUB_REGION" "$CF_DEV_S3_PUB_REGION" > /dev/null
           cf set-env $APP_NAME "CF_DEV_S3_PRIV_BUCKET_ID" "$CF_DEV_S3_PRIV_BUCKET_ID" > /dev/null
           cf set-env $APP_NAME "CF_DEV_S3_PRIV_REGION" "$CF_DEV_S3_PRIV_REGION" > /dev/null
+          cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
 
       # Now that front-end is built in server/dist, only push server dir to Cloud.gov
       - name: Deploy application to Cloud.gov
@@ -156,6 +158,7 @@ jobs:
       CF_DEV_S3_PRIV_BUCKET_ID: ${{ secrets.CF_DEV_S3_PRIV_BUCKET_ID }}
       CF_DEV_S3_PRIV_REGION: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
       CF_DEV_S3_PRIV_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
+      GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
       SERVER_URL: https://expert-query-dev.app.cloud.gov/
 
     steps:
