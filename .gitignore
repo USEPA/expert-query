@@ -42,3 +42,7 @@ app/cypress/videos/
 
 # VSCode
 .vscode/launch.json
+
+# DB
+database/docker/server/postgres/data/
+
