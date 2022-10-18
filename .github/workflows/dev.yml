@@ -53,11 +53,97 @@ jobs:
     env:
       APP_NAME: expert-query-dev
       CLOUD_SPACE: dev
+      CF_ORG: ${{ secrets.CF_ORG }}
+      CF_SPACE: ${{ secrets.CF_SPACE_DEV }}
+      CF_USER_DEV: ${{ secrets.CF_USER_DEV }}
+      CF_PASSWORD_DEV: ${{ secrets.CF_PASSWORD_DEV }}
+      CF_DEV_DB_HOST: ${{ secrets.CF_DEV_DB_HOST }}
+      CF_DEV_DB_PASSWORD: ${{ secrets.CF_DEV_DB_PASSWORD }}
+      CF_DEV_DB_PORT: ${{ secrets.CF_DEV_DB_PORT }}
+      CF_DEV_DB_USER: ${{ secrets.CF_DEV_DB_USER }}
+      CF_DEV_S3_PUB_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PUB_ACCESS_KEY }}
+      CF_DEV_S3_PUB_BUCKET_ID: ${{ secrets.CF_DEV_S3_PUB_BUCKET_ID }}
+      CF_DEV_S3_PUB_REGION: ${{ secrets.CF_DEV_S3_PUB_REGION }}
+      CF_DEV_S3_PUB_SECRET_KEY: ${{ secrets.CF_DEV_S3_PUB_SECRET_KEY }}
+      CF_DEV_S3_PRIV_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PRIV_ACCESS_KEY }}
+      CF_DEV_S3_PRIV_BUCKET_ID: ${{ secrets.CF_DEV_S3_PRIV_BUCKET_ID }}
+      CF_DEV_S3_PRIV_REGION: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
+      CF_DEV_S3_PRIV_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
+      SERVER_URL: https://expert-query-dev.app.cloud.gov/
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - run: echo "app changed"
+      
+      # Set up node and npm
+      - uses: actions/setup-node@master
+      
+      # Run front-end processes (install, lint, test, bundle)
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/client/.npm
+          key: v1-npm-client-deps-${{ hashFiles('**/client/package-lock.json') }}
+          restore-keys: v1-npm-client-deps-
+
+      - name: Install front-end dependencies
+        run: npm install
+        working-directory: app/client
+
+      - name: Build front-end files and move to server
+        run: |
+          PUBLIC_URL="$SERVER_URL" \
+            REACT_APP_SERVER_BASE_PATH="$SERVER_BASE_PATH" \
+            REACT_APP_CLOUD_SPACE="$CLOUD_SPACE" \
+            npm run build
+          cd build
+          mv * ../../server/app/public
+        working-directory: app/client
+
+      # Run CloudFoundry/Cloud.gov deployment
+      - name: Set up Cloud Foundry CLI
+        run: |
+          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v7&source=github'
+          sudo dpkg -i cf-cli_amd64.deb
+          cf -v
+          cf api https://api.fr.cloud.gov
+          cf auth "$CF_USER_DEV" "$CF_PASSWORD_DEV"
+          cf target -o "$CF_ORG" -s "$CF_SPACE"
+
+      - name: Set application-level variables
+        run: |
+          cf set-env $APP_NAME "CLOUD_SPACE" "$CLOUD_SPACE" > /dev/null
+          cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
+          cf set-env $APP_NAME "CF_DEV_S3_PUB_BUCKET_ID" "$CF_DEV_S3_PUB_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_DEV_S3_PUB_REGION" "$CF_DEV_S3_PUB_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_DEV_S3_PRIV_BUCKET_ID" "$CF_DEV_S3_PRIV_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_DEV_S3_PRIV_REGION" "$CF_DEV_S3_PRIV_REGION" > /dev/null
+
+      # Sync static content to public S3 bucket
+      - name: Sync static content to S3
+        run: aws s3 sync . s3://$CF_DEV_S3_PUB_BUCKET_ID/content
+        working-directory: app/server/app/content
+
+      # Set CORS configuration for public S3 bucket
+      - name: Set public S3 CORS configuration
+        run: aws s3api put-bucket-cors --bucket $CF_DEV_S3_PUB_BUCKET_ID --cors-configuration file://s3CORS.json
+        working-directory: app/server/app/config
+
+      # Sync private static content to private S3 bucket
+      - name: Sync private static content to S3
+        run: aws s3 sync . s3://$CF_DEV_S3_PRIV_BUCKET_ID/content-private
+        working-directory: app/server/app/content-private
+
+      # Set CORS configuration for private S3 bucket
+      - name: Set private S3 CORS configuration
+        run: aws s3api put-bucket-cors --bucket $CF_DEV_S3_PRIV_BUCKET_ID --cors-configuration file://s3CORS.json
+        working-directory: app/server/app/config
+
+      # Now that front-end is built in server/dist, only push server dir to Cloud.gov
+      - name: Deploy application to Cloud.gov
+        run: cf push $APP_NAME --strategy rolling -f ../manifest-dev.yml -p . -t 180
+        working-directory: app/server
 
   etl:
     # Check if this folder has any changes
@@ -74,7 +160,25 @@ jobs:
     env:
       APP_NAME: expert-query-etl-dev
       CLOUD_SPACE: dev
+      CF_ORG: ${{ secrets.CF_ORG }}
+      CF_SPACE: ${{ secrets.CF_SPACE_DEV }}
+      CF_USER_DEV: ${{ secrets.CF_USER_DEV }}
+      CF_PASSWORD_DEV: ${{ secrets.CF_PASSWORD_DEV }}
+      CF_DEV_DB_HOST: ${{ secrets.CF_DEV_DB_HOST }}
+      CF_DEV_DB_PASSWORD: ${{ secrets.CF_DEV_DB_PASSWORD }}
+      CF_DEV_DB_PORT: ${{ secrets.CF_DEV_DB_PORT }}
+      CF_DEV_DB_USER: ${{ secrets.CF_DEV_DB_USER }}
+      CF_DEV_S3_PUB_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PUB_ACCESS_KEY }}
+      CF_DEV_S3_PUB_BUCKET_ID: ${{ secrets.CF_DEV_S3_PUB_BUCKET_ID }}
+      CF_DEV_S3_PUB_REGION: ${{ secrets.CF_DEV_S3_PUB_REGION }}
+      CF_DEV_S3_PUB_SECRET_KEY: ${{ secrets.CF_DEV_S3_PUB_SECRET_KEY }}
+      CF_DEV_S3_PRIV_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PRIV_ACCESS_KEY }}
+      CF_DEV_S3_PRIV_BUCKET_ID: ${{ secrets.CF_DEV_S3_PRIV_BUCKET_ID }}
+      CF_DEV_S3_PRIV_REGION: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
+      CF_DEV_S3_PRIV_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
+      SERVER_URL: https://expert-query-dev.app.cloud.gov/
 
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       - run: echo "etl changed"
