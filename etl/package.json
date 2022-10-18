@@ -24,7 +24,7 @@
     "repository": "github:USEPA/expert-query",
     "scripts": {
       "start": "npm run start_local_cmd",
-      "start_local_cmd": "cross-env NODE_ENV=local LOGGER_LEVEL=DEBUG nodemon --ignore 'app/tests' --inspect=9001 app/server.js",
+      "start_local_cmd": "cross-env NODE_ENV=local LOGGER_LEVEL=DEBUG nodemon --ignore 'app/tests' --inspect=9001 app/index.js",
       "test": "echo \"Error: no test specified\" && exit 1"
     },
     "husky": {

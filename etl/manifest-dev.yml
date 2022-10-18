@@ -7,7 +7,7 @@ applications:
     timeout: 180
     buildpacks:
       - nodejs_buildpack
-    command: node app/server.js
+    command: node app/index.js
     env:
       NODE_ENV: development
       LOGGER_LEVEL: DEBUG
