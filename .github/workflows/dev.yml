@@ -15,7 +15,7 @@ on:
 jobs:
   changes:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     environment: dev
 
     outputs: 
@@ -46,7 +46,7 @@ jobs:
       needs.changes.outputs.workflows == 'true' }}
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     environment: dev
 
     # Set environment variables
@@ -122,15 +122,15 @@ jobs:
           cf set-env $APP_NAME "CF_DEV_S3_PRIV_REGION" "$CF_DEV_S3_PRIV_REGION" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
 
-      # Set CORS configuration for public S3 bucket
-      - name: Set public S3 CORS configuration
-        run: aws s3api put-bucket-cors --bucket $CF_DEV_S3_PUB_BUCKET_ID --cors-configuration file://s3CORS.json
-        working-directory: app/server/app/config
-
       # Sync static content to public S3 bucket
       - name: Sync static content to S3
         run: aws s3 sync . s3://$CF_DEV_S3_PUB_BUCKET_ID/content
         working-directory: app/server/app/content
+
+      # Set CORS configuration for public S3 bucket
+      - name: Set public S3 CORS configuration
+        run: aws s3api put-bucket-cors --bucket $CF_DEV_S3_PUB_BUCKET_ID --cors-configuration file://s3CORS.json
+        working-directory: app/server/app/config
 
       # Sync private static content to private S3 bucket
       - name: Sync private static content to S3
@@ -155,7 +155,7 @@ jobs:
         needs.changes.outputs.workflows == 'true' }}
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     environment: dev
 
     # Set environment variables
