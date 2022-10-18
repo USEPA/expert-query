@@ -5,7 +5,7 @@ name: CI
 # Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the master branch    branches: [ develop ]
-  pull_request:
+  push:
     branches: [ develop ]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -13,13 +13,13 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   changes:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     environment: dev
 
     outputs: 
+      workflows: ${{ steps.filter.outputs.workflows }}
       app: ${{ steps.filter.outputs.app }}
       etl: ${{ steps.filter.outputs.etl }}
 
@@ -31,25 +31,50 @@ jobs:
         id: filter
         with:
           filters: |
+            workflows:
+              - '.github/workflows/dev.yml'
             app:
               - 'app/**'
             etl:
               - 'etl/**'
         
   app:
+    # Check if this folder has any changes
     needs: changes
-    if: ${{ needs.changes.outputs.app == 'true' }}
+    if: ${{ 
+      needs.changes.outputs.app == 'true' ||  
+      needs.changes.outputs.workflows == 'true' }}
+
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     environment: dev
+
+    # Set environment variables
+    env:
+      APP_NAME: expert-query-dev
+      CLOUD_SPACE: dev
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v2
       - run: echo "app changed"
 
   etl:
+    # Check if this folder has any changes
     needs: changes
-    if: ${{ needs.changes.outputs.etl == 'true' }}
+    if: ${{ 
+        needs.changes.outputs.etl == 'true' ||  
+        needs.changes.outputs.workflows == 'true' }}
+
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     environment: dev
+
+    # Set environment variables
+    env:
+      APP_NAME: expert-query-etl-dev
+      CLOUD_SPACE: dev
+
     steps:
       - uses: actions/checkout@v2
       - run: echo "etl changed"
