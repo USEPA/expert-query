@@ -1,0 +1,55 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  changes:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    environment: dev
+
+    outputs: 
+      app: ${{ steps.filter.outputs.app }}
+      etl: ${{ steps.filter.outputs.etl }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:      
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it 
+      - uses: actions/checkout@v2
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'app/**'
+            etl:
+              - 'etl/**'
+        
+  app:
+    needs: changes
+    if: ${{ needs.changes.outputs.app == 'true' }}
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "app changed"
+
+  etl:
+    needs: changes
+    if: ${{ needs.changes.outputs.etl == 'true' }}
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "etl changed"
