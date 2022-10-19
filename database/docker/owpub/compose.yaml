@@ -17,7 +17,7 @@ services:
     volumes:
       - ./config:/etc/postgresql:ro
       - ./log:/var/log/postgresql
-      - ./init:/docker-entrypoint-initdb.d
+      - ./init:/docker-entrypoint-initdb.d:ro
       - ./data:/var/lib/postgresql/data
 
 version: "3.9"
