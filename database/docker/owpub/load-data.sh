@@ -16,6 +16,6 @@ rm $ZIP_FILE
 
 DATA_FILE=$(find . -maxdepth 1 -type f -name "*.gpkg" -printf "%f\n")
 ogr2ogr -f PostgreSQL PG:"host=0.0.0.0 port=5432 user='${POSTGRES_USER:-"postgres"}' password='${POSTGRES_PASSWORD}' dbname='${POSTGRES_DB:-"postgres"}'" $DATA_FILE --config PG_USE_COPY YES
-rm DATA_FILE
+rm $DATA_FILE
 
 exit 0

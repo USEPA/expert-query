@@ -6,18 +6,17 @@ services:
     ports:
       - 8080:8080
 
-  owpub:
-    build: ./owpub
+  postgres:
     environment:
       POSTGRES_PASSWORD: example
-    image: expert-query/postgis
+    image: postgres:14.5
     ports:
       - 5432:5432
     restart: always
     volumes:
-      - ./owpub/config:/etc/postgresql:ro
-      - ./owpub/log:/var/log/postgresql
-      - ./owpub/init:/docker-entrypoint-initdb.d
-      - ./owpub/data:/var/lib/postgresql/data
+      - ./config:/etc/postgresql:ro
+      - ./log:/var/log/postgresql
+      - ./init:/docker-entrypoint-initdb.d
+      - ./data:/var/lib/postgresql/data
 
 version: "3.9"
