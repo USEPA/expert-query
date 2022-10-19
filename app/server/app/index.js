@@ -5,16 +5,6 @@ const basicAuth = require("express-basic-auth");
 const logger = require("./utilities/logger");
 const log = logger.logger;
 
-const requiredEnvVars = ["GLOSSARY_AUTH"];
-
-requiredEnvVars.forEach((envVar) => {
-  if (!process.env[envVar]) {
-    const message = `Required environment variable ${envVar} not found.`;
-    log.error(message);
-    process.exit();
-  }
-});
-
 const app = express();
 const browserSyncPort = 9091;
 let port = process.env.PORT || 9090;
@@ -86,6 +76,27 @@ if (!isLocal && !isDevelopment && !isStaging)
   log.info("Environment = staging or production");
 
 /****************************************************************
+ Required Environment Variables
+****************************************************************/
+const requiredEnvVars = isLocal
+  ? ["GLOSSARY_AUTH"]
+  : [
+      "CF_DEV_S3_PUB_BUCKET_ID",
+      "CF_DEV_S3_PUB_REGION",
+      "CF_DEV_S3_PRIV_BUCKET_ID",
+      "CF_DEV_S3_PRIV_REGION",
+      "GLOSSARY_AUTH",
+    ];
+
+requiredEnvVars.forEach((envVar) => {
+  if (!process.env[envVar]) {
+    const message = `Required environment variable ${envVar} not found.`;
+    log.error(message);
+    process.exit();
+  }
+});
+
+/****************************************************************
 Enable CORS for local environment proxy use
 ****************************************************************/
 if (isLocal) {
@@ -102,64 +113,6 @@ if (isLocal) {
 
 function getUnauthorizedResponse(req) {
   return req.auth ? "Invalid credentials" : "No credentials provided";
-}
-
-/****************************************************************
-For Cloud.gov enviroments, get s3 endpoint location
-****************************************************************/
-if (!isLocal) {
-  if (process.env.VCAP_SERVICES) {
-    log.info("VCAP_SERVICES environmental variable found, continuing.");
-  } else {
-    let msg = "VCAP_SERVICES environmental variable NOT set, exiting system.";
-    log.error(msg);
-    process.exit();
-  }
-
-  if (process.env.S3_PUB_BIND_NAME) {
-    log.info("S3_PUB_BIND_NAME environmental variable found, continuing.");
-  } else {
-    let msg =
-      "S3_PUB_BIND_NAME environmental variable NOT set, exiting system.";
-    log.error(msg);
-    process.exit();
-  }
-
-  let vcap_services = JSON.parse(process.env.VCAP_SERVICES);
-  let S3_PUB_BIND_NAME = process.env.S3_PUB_BIND_NAME;
-
-  let s3_object = null;
-  if (!vcap_services.hasOwnProperty("s3")) {
-    let msg =
-      "VCAP_SERVICES environmental variable does not include bind to s3, exiting system.";
-    log.error(msg);
-    process.exit();
-  } else {
-    s3_object = vcap_services.s3.find(
-      (obj) => obj.instance_name == S3_PUB_BIND_NAME
-    );
-  }
-
-  if (
-    s3_object == null ||
-    !s3_object.hasOwnProperty("credentials") ||
-    !s3_object.credentials.hasOwnProperty("bucket") ||
-    !s3_object.credentials.hasOwnProperty("region")
-  ) {
-    let msg =
-      "VCAP_SERVICES environmental variable does not include the proper s3 information, exiting system.";
-    log.error(msg);
-    process.exit();
-  }
-
-  var s3_bucket_url =
-    "https://" +
-    s3_object.credentials.bucket +
-    ".s3-" +
-    s3_object.credentials.region +
-    ".amazonaws.com";
-  log.info("Calculated s3 bucket URL = " + s3_bucket_url);
-  app.set("s3_bucket_url", s3_bucket_url);
 }
 
 /****************************************************************

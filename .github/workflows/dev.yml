@@ -114,8 +114,6 @@ jobs:
 
       - name: Set application-level variables
         run: |
-          cf set-env $APP_NAME "CLOUD_SPACE" "$CLOUD_SPACE" > /dev/null
-          cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "CF_DEV_S3_PUB_BUCKET_ID" "$CF_DEV_S3_PUB_BUCKET_ID" > /dev/null
           cf set-env $APP_NAME "CF_DEV_S3_PUB_REGION" "$CF_DEV_S3_PUB_REGION" > /dev/null
           cf set-env $APP_NAME "CF_DEV_S3_PRIV_BUCKET_ID" "$CF_DEV_S3_PRIV_BUCKET_ID" > /dev/null
@@ -139,7 +137,7 @@ jobs:
         run: aws s3api put-bucket-cors --bucket $CF_DEV_S3_PUB_BUCKET_ID --cors-configuration file://s3CORS.json
         working-directory: app/server/app/config
 
-      - name: Configure Public AWS Credentials
+      - name: Configure Private AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.CF_DEV_S3_PRIV_ACCESS_KEY }}
@@ -175,7 +173,6 @@ jobs:
     # Set environment variables
     env:
       APP_NAME: expert-query-etl-dev
-      CLOUD_SPACE: dev
       CF_ORG: ${{ secrets.CF_ORG }}
       CF_SPACE: ${{ secrets.CF_SPACE_DEV }}
       CF_USER_DEV: ${{ secrets.CF_USER_DEV }}
@@ -193,7 +190,6 @@ jobs:
       CF_DEV_S3_PRIV_REGION: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
       CF_DEV_S3_PRIV_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
-      SERVER_URL: https://expert-query-dev.app.cloud.gov/
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it

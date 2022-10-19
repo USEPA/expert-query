@@ -12,9 +12,6 @@ applications:
       NODE_ENV: development
       LOGGER_LEVEL: DEBUG
       OPTIMIZE_MEMORY: true
-      DB_BIND_NAME: db-service-expert-query-dev
-      S3_PUB_BIND_NAME: s3-pub-expert-query-dev
-      S3_PRIV_BIND_NAME: s3-priv-expert-query-dev
     services:
       - db-service-expert-query-dev
       - s3-pub-expert-query-dev
