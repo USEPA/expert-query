@@ -10,4 +10,5 @@ ENV POSTGRES_DB="postgres"
 
 COPY ./load-data.sh ./
 
+RUN sed -i -e 's/\r\n$/\n/' load-data.sh
 RUN chmod +x load-data.sh
