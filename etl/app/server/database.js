@@ -98,15 +98,6 @@ export async function createEqDb(client) {
   }
 }
 
-function getPgDate(date) {
-  const year = date.getUTCFullYear();
-  let month = date.getUTCMonth();
-  if (month.length < 2) month = '0' + month;
-  let day = date.getUTCDate();
-  if (day.length < 2) day = '0' + day;
-  return `${year}-${month}-${day}`;
-}
-
 async function logEtlLoadStart() {
   try {
     await eqPool.query(
@@ -131,7 +122,7 @@ export async function runLoad() {
   try {
     // Create new schema & set to path
     const now = new Date();
-    const schemaName = `v_${now.valueOf()}`;
+    const schemaName = `schema_${now.valueOf()}`;
     await client.query('BEGIN');
     await client.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
     await client.query(`SET search_path TO ${schemaName}`);
@@ -182,7 +173,8 @@ export async function trimSchema() {
 
   const msInDay = 86400000;
   schemas.rows.forEach(async (schema) => {
-    if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
+    // if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
+    if (Date.now() - parseInt(schema.date) * 1000 > 1 * msInDay) {
       try {
         await eqPool.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
         eqPool.query(
