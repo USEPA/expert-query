@@ -1,6 +1,3 @@
-import Crypto from 'crypto';
-import fs from 'fs';
-import numeral from 'numeral';
 import pg from 'pg';
 
 import { logger as log } from './utilities/logger.js';
@@ -10,29 +7,19 @@ const { Pool } = pg;
 
 const dbName = 'expert_query';
 
-let isLocal = false;
-let isDevelopment = false;
-let isStaging = false;
+const eqUser = process.env.EQ_USERNAME ?? 'eq';
 
-if (process.env.NODE_ENV) {
-  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
-  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
-}
-
-const loadTestProducts = isLocal || isDevelopment || isStaging;
-
-const createConfig = {
+const pgConfig = {
   user: process.env.PG_USERNAME,
   password: process.env.PG_PASSWORD,
   database: 'postgres',
   port: process.env.PG_PORT,
   host: process.env.PG_HOST,
 };
-const createPool = new Pool(createConfig);
+const pgPool = new Pool(pgConfig);
 
 const eqConfig = {
-  ...createConfig,
+  ...pgConfig,
   database: dbName,
 };
 const eqPool = new Pool(eqConfig);
@@ -50,6 +37,7 @@ export async function checkLogTables() {
     await client.query('BEGIN');
     await client.query('CREATE SCHEMA IF NOT EXISTS logging');
     await client.query(create.etlLog);
+    await client.query(create.etlCurrent);
     await client.query('COMMIT');
     log.info('Logging tables exist');
   } catch (err) {
@@ -62,14 +50,12 @@ export async function checkLogTables() {
 }
 
 export async function connectPostgres() {
-  if (createConfig.user === '') {
+  if (pgConfig.user === '') {
     throw new Error('Database information not set!');
   } else {
-    log.info(
-      'Connecting to postgres: ' + createConfig.host + ':' + createConfig.port,
-    );
+    log.info('Connecting to postgres: ' + pgConfig.host + ':' + pgConfig.port);
     try {
-      const client = await createPool.connect();
+      const client = await pgPool.connect();
       return client;
     } catch (err) {
       throw err;
@@ -78,10 +64,17 @@ export async function connectPostgres() {
 }
 
 export async function createEqDb(client) {
+  if (process.env.EQ_PASSWORD === null) {
+    log.error(
+      'The experty_query connection information has not been properly set',
+    );
+    process.exit();
+  }
+
   try {
     try {
       // Create the expert_query db and ignore any errors, i.e. the db already exists
-      client.query('CREATE DATABASE ' + dbName);
+      await client.query('CREATE DATABASE ' + dbName);
       log.info(`${dbName} database created!`);
     } catch (err) {
       log.info(`Warning: ${dbName} database! ${err}`);
@@ -89,12 +82,12 @@ export async function createEqDb(client) {
 
     try {
       // Create the eq user and ignore any errors, i.e. the eq user already exists
-      client.query(
-        `CREATE USER ${process.env.EQ_USERNAME} WITH PASSWORD '${process.env.EQ_PASSWORD}'`,
+      await client.query(
+        `CREATE USER ${eqUser} WITH PASSWORD '${process.env.EQ_PASSWORD}'`,
       );
-      log.info(`${process.env.EQ_USERNAME} user created!`);
+      log.info(`${eqUser} user created!`);
     } catch (err) {
-      log.info(`Warning: ${process.env.EQ_USERNAME} user! ${err}`);
+      log.info(`Warning: ${eqUser} user! ${err}`);
     }
 
     return true;
@@ -105,4 +98,73 @@ export async function createEqDb(client) {
   }
 }
 
-export async function runLoad() {}
+function getPgDate(date) {
+  const year = date.getUTCFullYear();
+  let month = date.getUTCMonth();
+  if (month.length < 2) month = '0' + month;
+  let day = date.getUTCDate();
+  if (day.length < 2) day = '0' + day;
+  return `${year}-${month}-${day}`;
+}
+
+async function logEtlLoadStart() {
+  try {
+    await eqPool.query(
+      'INSERT INTO logging.etl_log (start_time)' +
+        ' VALUES (current_timestamp)',
+    );
+  } catch (err) {
+    log.warn(`Failed to log ETL process start: ${err}`);
+  }
+}
+
+export async function runLoad() {
+  log.info('Running ETL process!');
+
+  const client = await eqPool.connect().catch((err) => {
+    log.error(`${dbName} connection failed: ${err}`);
+    throw err;
+  });
+
+  log.info(`${dbName} connection established`);
+
+  try {
+    // Create new schema & set to path
+    const now = new Date();
+    const schemaName = `v_${now.valueOf()}`;
+    const creationDate = getPgDate(now);
+    await client.query('BEGIN');
+    await client.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
+    await client.query(`SET search_path TO ${schemaName}`);
+
+    // Add tables to schema
+    await client.query(create.profileTest);
+
+    // Import new data
+    logEtlLoadStart();
+
+    // Add new schema to control table
+    await client.query(
+      'INSERT INTO logging.etl_current' +
+        ' (schema_name, creation_date)' +
+        ' VALUES ($1, $2)',
+      [schemaName, creationDate],
+    );
+
+    // Give eq user USAGE privilege for schema, and set to eq's path
+    await client.query(`GRANT USAGE ON SCHEMA ${schemaName} TO ${eqUser}`);
+    await client.query(
+      `GRANT SELECT ON ALL TABLES IN SCHEMA ${schemaName} TO ${eqUser}`,
+    );
+    await client.query(`ALTER ROLE ALL SET search_path = "${schemaName}"`);
+
+    await client.query('COMMIT');
+    log.info('Tables updated');
+  } catch (err) {
+    log.warn('Failed to confirm that logging tables exist');
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
