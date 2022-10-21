@@ -5,6 +5,8 @@ import * as database from './server/database.js';
 import { logger as log } from './server/utilities/logger.js';
 
 const app = express();
+app.disable('x-powered-by');
+
 const port = process.env.PORT || 3001;
 
 app.on('ready', async () => {

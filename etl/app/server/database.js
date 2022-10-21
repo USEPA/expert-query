@@ -54,12 +54,8 @@ export async function connectPostgres() {
     throw new Error('Database information not set!');
   } else {
     log.info('Connecting to postgres: ' + pgConfig.host + ':' + pgConfig.port);
-    try {
-      const client = await pgPool.connect();
-      return client;
-    } catch (err) {
-      throw err;
-    }
+    const client = await pgPool.connect();
+    return client;
   }
 }
 
