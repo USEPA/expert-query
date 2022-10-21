@@ -37,7 +37,7 @@ export async function checkLogTables() {
     await client.query('BEGIN');
     await client.query('CREATE SCHEMA IF NOT EXISTS logging');
     await client.query(create.etlLog);
-    await client.query(create.etlCurrent);
+    await client.query(create.etlSchemas);
     await client.query('COMMIT');
     log.info('Logging tables exist');
   } catch (err) {
@@ -132,24 +132,23 @@ export async function runLoad() {
     // Create new schema & set to path
     const now = new Date();
     const schemaName = `v_${now.valueOf()}`;
-    const creationDate = getPgDate(now);
     await client.query('BEGIN');
     await client.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
     await client.query(`SET search_path TO ${schemaName}`);
+
+    // Add new schema to control table
+    await client.query(
+      'INSERT INTO logging.etl_schemas' +
+        ' (schema_name, creation_date)' +
+        ' VALUES ($1, current_timestamp)',
+      [schemaName],
+    );
 
     // Add tables to schema
     await client.query(create.profileTest);
 
     // Import new data
     logEtlLoadStart();
-
-    // Add new schema to control table
-    await client.query(
-      'INSERT INTO logging.etl_current' +
-        ' (schema_name, creation_date)' +
-        ' VALUES ($1, $2)',
-      [schemaName, creationDate],
-    );
 
     // Give eq user USAGE privilege for schema, and set to eq's path
     await client.query(`GRANT USAGE ON SCHEMA ${schemaName} TO ${eqUser}`);
@@ -167,4 +166,31 @@ export async function runLoad() {
   } finally {
     client.release();
   }
+}
+
+// Drop old schemas
+export async function trimSchema() {
+  const schemas = await eqPool
+    .query(
+      'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
+    )
+    .catch((err) => {
+      log.warn(`Could not query schemas: ${err}`);
+    });
+
+  if (!schemas) return;
+
+  const msInDay = 86400000;
+  schemas.rows.forEach(async (schema) => {
+    if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
+      try {
+        await eqPool.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
+        eqPool.query(
+          `DELETE FROM ONLY logging.etl_schemas WHERE schema_name = '${schema.schema_name}'`,
+        );
+      } catch (err) {
+        log.warn(`Error dropping obsolete schema: ${err}`);
+      }
+    }
+  });
 }

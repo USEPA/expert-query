@@ -26,7 +26,9 @@ app.on('ready', async () => {
   log.info('Creating tables, running load, and scheduling load to run daily');
 
   // Create and load new schema
-  database.runLoad();
+  database.runLoad().then(() => {
+    database.trimSchema();
+  });
 
   // Schedule ETL to run every thirty minutes
   cron.schedule(
@@ -35,7 +37,9 @@ app.on('ready', async () => {
       log.info('Running cron task every 30 minutes');
       log.info(new Date(Date.now()).toLocaleString());
 
-      database.runLoad();
+      database.runLoad().then(() => {
+        database.trimSchema();
+      });
     },
     {
       scheduled: true,

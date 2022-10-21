@@ -6,11 +6,11 @@ export const etlLog = `CREATE TABLE IF NOT EXISTS logging.etl_log
     load_error varchar
   )`;
 
-export const etlCurrent = `CREATE TABLE IF NOT EXISTS logging.etl_current
+export const etlSchemas = `CREATE TABLE IF NOT EXISTS logging.etl_schemas
   (
     id SERIAL PRIMARY KEY,
     schema_name varchar(20) NOT NULL,
-    creation_date DATE NOT NULL
+    creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL
   )`;
 
 export const profileTest = `CREATE TABLE IF NOT EXISTS profile_test
