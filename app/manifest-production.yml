@@ -1,0 +1,22 @@
+---
+applications:
+  - name: expert-query-prod
+    instances: 2
+    routes:
+      - route: expert-query-prod.app.cloud.gov
+      - route: expert-query.epa.gov
+    memory: 256M
+    disk_quota: 512MB
+    timeout: 180
+    buildpacks:
+      - nodejs_buildpack
+    command: node app/index.js
+    path: /
+    env:
+      NODE_ENV: production
+      LOGGER_LEVEL: ERROR
+      OPTIMIZE_MEMORY: true
+    services:
+      - db-service-expert-query-prod
+      - s3-pub-expert-query-prod
+      - s3-priv-expert-query-prod

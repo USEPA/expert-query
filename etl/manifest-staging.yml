@@ -1,0 +1,18 @@
+---
+applications:
+  - name: expert-query-etl-staging
+    instances: 1
+    memory: 128M
+    disk_quota: 512MB
+    timeout: 180
+    buildpacks:
+      - nodejs_buildpack
+    command: node app/index.js
+    env:
+      NODE_ENV: staging
+      LOGGER_LEVEL: DEBUG
+      OPTIMIZE_MEMORY: true
+    services:
+      - db-service-expert-query-staging
+      - s3-pub-expert-query-staging
+      - s3-priv-expert-query-staging
