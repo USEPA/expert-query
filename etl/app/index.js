@@ -37,8 +37,7 @@ app.on('ready', async () => {
 
   // Schedule ETL to run every thirty minutes
   cron.schedule(
-    // '0,30 * * * *',
-    '* * * * *',
+    '0,30 * * * *',
     () => {
       log.info('Running cron task every 30 minutes');
       log.info(new Date(Date.now()).toLocaleString());

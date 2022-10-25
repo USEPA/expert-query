@@ -144,7 +144,7 @@ async function logEtlLoadStart() {
   }
 }
 
-// For testing schema rotation
+// TEST
 let currentName = 1;
 
 export async function runLoad() {
@@ -176,9 +176,11 @@ export async function runLoad() {
     const schemaId = result.rows[0].id;
 
     // Add tables to schema
+    // TEST
     await client.query(create.profileTest);
 
     // Import new data
+    // TEST
     await client.query(
       'INSERT INTO profile_test (assessment_name) VALUES ($1)',
       [currentName],
@@ -197,7 +199,6 @@ export async function runLoad() {
       'UPDATE logging.etl_schemas SET active = $1 WHERE id = $2',
       ['1', schemaId],
     );
-    await client.query(`ALTER ROLE ALL SET search_path = '${schemaName}'`);
 
     await client.query('COMMIT');
     log.info('Tables updated');
@@ -227,8 +228,6 @@ export async function trimSchema() {
   const msInDay = 86400000;
   schemas.rows.forEach(async (schema) => {
     if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
-      /* const msInMinute = 60 * 1000;
-    if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInMinute) { */
       try {
         await eqPool.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
         eqPool.query(
