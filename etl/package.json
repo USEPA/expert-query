@@ -24,7 +24,7 @@
   "repository": "github:USEPA/expert-query",
   "scripts": {
     "start": "npm run start_local_cmd",
-    "start_local_cmd": "cross-env nodemon -r dotenv/config --ignore 'app/tests' --inspect app/index.js",
+    "start_local_cmd": "cross-env nodemon -r dotenv/config --ignore 'app/tests' --inspect app/index.js dotenv_config_path=.env.local",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "husky": {
@@ -34,22 +34,16 @@
   },
   "dependencies": {
     "aws-sdk": "2.1232.0",
-    "canada": "0.1.0",
-    "change-case": "4.1.2",
     "dotenv": "16.0.3",
     "express": "4.18.2",
-    "fast-csv": "4.3.6",
-    "jsforce": "1.11.0",
     "log4js": "6.7.0",
     "node-cron": "3.0.2",
-    "numeral": "2.0.6",
-    "pg": "8.8.0",
-    "us-state-codes": "1.1.2"
+    "pg": "8.8.0"
   },
   "devDependencies": {
     "browser-sync": "2.27.10",
     "cross-env": "7.0.3",
-    "eslint": "^8.25.0",
+    "eslint": "8.25.0",
     "husky": "8.0.1",
     "lint-staged": "13.0.3",
     "nodemon": "2.0.20",

@@ -28,13 +28,17 @@ app.on('ready', async () => {
   log.info('Creating tables, running load, and scheduling load to run daily');
 
   // Create and load new schema
-  database.runLoad().then(() => {
+  try {
+    await database.runLoad();
     database.trimSchema();
-  });
+  } catch (err) {
+    log.warn(`First run failed, continuing to schedule cron task: ${err}`);
+  }
 
   // Schedule ETL to run every thirty minutes
   cron.schedule(
-    '0,30 * * * *',
+    // '0,30 * * * *',
+    '* * * * *',
     () => {
       log.info('Running cron task every 30 minutes');
       log.info(new Date(Date.now()).toLocaleString());

@@ -5,16 +5,16 @@ import * as create from './queries/create.js';
 
 const { Pool } = pg;
 
-const dbName = 'expert_query';
+const dbName = process.env.DB_NAME ?? 'expert_query';
 
 const eqUser = process.env.EQ_USERNAME ?? 'eq';
 
 const pgConfig = {
-  user: process.env.PG_USERNAME,
-  password: process.env.PG_PASSWORD,
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
   database: 'postgres',
-  port: process.env.PG_PORT,
-  host: process.env.PG_HOST,
+  port: process.env.DB_PORT,
+  host: process.env.DB_HOST,
 };
 const pgPool = new Pool(pgConfig);
 
@@ -38,6 +38,10 @@ export async function checkLogTables() {
     await client.query('CREATE SCHEMA IF NOT EXISTS logging');
     await client.query(create.etlLog);
     await client.query(create.etlSchemas);
+    await client.query(`GRANT USAGE ON SCHEMA logging TO ${eqUser}`);
+    await client.query(
+      `GRANT SELECT ON ALL TABLES IN SCHEMA logging TO ${eqUser}`,
+    );
     await client.query('COMMIT');
     log.info('Logging tables exist');
   } catch (err) {
@@ -62,22 +66,34 @@ export async function connectPostgres() {
 export async function createEqDb(client) {
   if (process.env.EQ_PASSWORD === null) {
     log.error(
-      'The experty_query connection information has not been properly set',
+      'The expert_query connection information has not been properly set',
     );
     process.exit();
   }
 
-  try {
+  // Check if the database has already been created
+  const db = await eqPool
+    .query('SELECT datname FROM pg_database WHERE datname = $1', [dbName])
+    .catch((err) => log.warn(`Could not query databases: ${err}`));
+
+  if (!db) {
     try {
-      // Create the expert_query db and ignore any errors, i.e. the db already exists
+      // Create the expert_query db
       await client.query('CREATE DATABASE ' + dbName);
       log.info(`${dbName} database created!`);
     } catch (err) {
       log.info(`Warning: ${dbName} database! ${err}`);
     }
+  }
 
+  // Check if the user has already been created
+  const user = await eqPool
+    .query('SELECT usename FROM pg_user WHERE usename = $1', [eqUser])
+    .catch((err) => log.warn(`Could not query users: ${err}`));
+
+  if (!user) {
     try {
-      // Create the eq user and ignore any errors, i.e. the eq user already exists
+      // Create the eq user
       await client.query(
         `CREATE USER ${eqUser} WITH PASSWORD '${process.env.EQ_PASSWORD}'`,
       );
@@ -85,25 +101,51 @@ export async function createEqDb(client) {
     } catch (err) {
       log.info(`Warning: ${eqUser} user! ${err}`);
     }
+  }
 
-    return true;
+  client.release();
+  return true;
+}
+
+async function logEtlLoadError(etlLogId, loadError) {
+  try {
+    await eqPool.query(
+      'UPDATE logging.etl_log SET load_error = $1 WHERE id = $2',
+      [loadError, etlLogId],
+    );
+    log.info('ETL process error logged');
   } catch (err) {
-    throw new Error(`Failed to create ${dbName} database! ${err}`);
-  } finally {
-    client.release();
+    log.warn(`Failed to log ETL process error: ${err}`);
+  }
+}
+
+async function logEtlLoadEnd(etlLogId) {
+  try {
+    await eqPool.query(
+      'UPDATE logging.etl_log SET end_time = current_timestamp WHERE id = $1',
+      [etlLogId],
+    );
+    log.info('ETL process end logged');
+  } catch (err) {
+    log.warn(`Failed to log ETL process end: ${err}`);
   }
 }
 
 async function logEtlLoadStart() {
   try {
-    await eqPool.query(
+    const result = await eqPool.query(
       'INSERT INTO logging.etl_log (start_time)' +
-        ' VALUES (current_timestamp)',
+        ' VALUES (current_timestamp) RETURNING id',
     );
+    log.info('ETL process start logged');
+    return result.rows[0].id;
   } catch (err) {
     log.warn(`Failed to log ETL process start: ${err}`);
   }
 }
+
+// For testing schema rotation
+let currentName = 1;
 
 export async function runLoad() {
   log.info('Running ETL process!');
@@ -115,6 +157,7 @@ export async function runLoad() {
 
   log.info(`${dbName} connection established`);
 
+  const logId = await logEtlLoadStart();
   try {
     // Create new schema & set to path
     const now = new Date();
@@ -124,31 +167,45 @@ export async function runLoad() {
     await client.query(`SET search_path TO ${schemaName}`);
 
     // Add new schema to control table
-    await client.query(
+    const result = await client.query(
       'INSERT INTO logging.etl_schemas' +
-        ' (schema_name, creation_date)' +
-        ' VALUES ($1, current_timestamp)',
-      [schemaName],
+        ' (schema_name, creation_date, active)' +
+        ' VALUES ($1, current_timestamp, $2) RETURNING id',
+      [schemaName, '0'],
     );
+    const schemaId = result.rows[0].id;
 
     // Add tables to schema
     await client.query(create.profileTest);
 
     // Import new data
-    logEtlLoadStart();
+    await client.query(
+      'INSERT INTO profile_test (assessment_name) VALUES ($1)',
+      [currentName],
+    );
+    currentName += 1;
 
-    // Give eq user USAGE privilege for schema, and set to eq's path
+    // Give eq user USAGE privilege for schema
     await client.query(`GRANT USAGE ON SCHEMA ${schemaName} TO ${eqUser}`);
     await client.query(
       `GRANT SELECT ON ALL TABLES IN SCHEMA ${schemaName} TO ${eqUser}`,
     );
-    await client.query(`ALTER ROLE ALL SET search_path = "${schemaName}"`);
+
+    // Mark new schema as active, and set to eq's path
+    await client.query('UPDATE logging.etl_schemas SET active = $1', ['0']);
+    await client.query(
+      'UPDATE logging.etl_schemas SET active = $1 WHERE id = $2',
+      ['1', schemaId],
+    );
+    await client.query(`ALTER ROLE ALL SET search_path = '${schemaName}'`);
 
     await client.query('COMMIT');
     log.info('Tables updated');
+    logEtlLoadEnd(logId);
   } catch (err) {
-    log.warn('Failed to confirm that logging tables exist');
+    log.warn(`ETL process failed! ${err}`);
     await client.query('ROLLBACK');
+    logEtlLoadError(logId, err);
     throw err;
   } finally {
     client.release();
@@ -169,8 +226,9 @@ export async function trimSchema() {
 
   const msInDay = 86400000;
   schemas.rows.forEach(async (schema) => {
-    // if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
-    if (Date.now() - parseInt(schema.date) * 1000 > 1 * msInDay) {
+    if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
+      /* const msInMinute = 60 * 1000;
+    if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInMinute) { */
       try {
         await eqPool.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
         eqPool.query(
