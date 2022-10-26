@@ -115,7 +115,7 @@ export async function createEqDb(client) {
     .query('SELECT datname FROM pg_database WHERE datname = $1', [dbName])
     .catch((err) => log.warn(`Could not query databases: ${err}`));
 
-  if (!db) {
+  if (!db.rowCount) {
     try {
       // Create the expert_query db
       await client.query('CREATE DATABASE ' + dbName);
@@ -133,15 +133,17 @@ export async function createEqDb(client) {
     .catch((err) => log.warn(`Could not query users: ${err}`));
 
   log.info(`queryied for ${eqUser} user!`);
-
-  if (!user) {
+  log.info(user);
+  if (!user.rowCount) {
     log.info(`${eqUser} user does not exist`);
     try {
       // Create the eq user
       log.info(`creating ${eqUser} user...`);
-      await client.query(
-        `CREATE USER ${eqUser} WITH PASSWORD '${process.env.EQ_PASSWORD}'`,
-      );
+      const output = await client
+        .query(
+          `CREATE USER ${eqUser} WITH PASSWORD '${process.env.EQ_PASSWORD}'`,
+        )
+        .catch((err) => log.info(`Warning1: ${eqUser} user! ${err}`));
       log.info(`${eqUser} user created!`);
     } catch (err) {
       log.info(`Warning: ${eqUser} user! ${err}`);
