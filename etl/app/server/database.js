@@ -125,21 +125,15 @@ export async function createEqDb(client) {
     }
   }
 
-  log.info(`${dbName} database exists!`);
-
   // Check if the user has already been created
   const user = await eqPool
     .query('SELECT usename FROM pg_user WHERE usename = $1', [eqUser])
     .catch((err) => log.warn(`Could not query users: ${err}`));
 
-  log.info(`queryied for ${eqUser} user!`);
-  log.info(user);
   if (!user.rowCount) {
-    log.info(`${eqUser} user does not exist`);
     try {
       // Create the eq user
-      log.info(`creating ${eqUser} user...`);
-      const output = await client
+      await client
         .query(
           `CREATE USER ${eqUser} WITH PASSWORD '${process.env.EQ_PASSWORD}'`,
         )
@@ -149,8 +143,6 @@ export async function createEqDb(client) {
       log.info(`Warning: ${eqUser} user! ${err}`);
     }
   }
-
-  log.info(`${eqUser} user exists!`);
 
   client.release();
   return true;
@@ -274,7 +266,8 @@ export async function trimSchema() {
 
   if (!schemas) return;
 
-  const msInDay = 86400000;
+  // const msInDay = 86400000;
+  const msInDay = 60000;
   schemas.rows.forEach(async (schema) => {
     if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
       try {

@@ -35,11 +35,11 @@ app.on('ready', async () => {
     log.warn(`First run failed, continuing to schedule cron task: ${err}`);
   }
 
-  // Schedule ETL to run every thirty minutes
+  // Schedule ETL to run every minute
   cron.schedule(
-    '0,30 * * * *',
+    '* * * * *',
     () => {
-      log.info('Running cron task every 30 minutes');
+      log.info('Running cron task every minute');
       log.info(new Date(Date.now()).toLocaleString());
 
       database.runLoad().then(() => {
