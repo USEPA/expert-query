@@ -125,10 +125,14 @@ export async function createEqDb(client) {
     }
   }
 
+  log.info(`${dbName} database exists!`);
+
   // Check if the user has already been created
   const user = await eqPool
     .query('SELECT usename FROM pg_user WHERE usename = $1', [eqUser])
     .catch((err) => log.warn(`Could not query users: ${err}`));
+
+  log.info(`queryied for ${eqUser} user!`);
 
   if (!user) {
     try {
@@ -141,6 +145,8 @@ export async function createEqDb(client) {
       log.info(`Warning: ${eqUser} user! ${err}`);
     }
   }
+
+  log.info(`${eqUser} user exists!`);
 
   client.release();
   return true;
