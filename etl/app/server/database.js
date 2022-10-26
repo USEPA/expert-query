@@ -115,7 +115,7 @@ export async function createEqDb(client) {
     .query('SELECT datname FROM pg_database WHERE datname = $1', [dbName])
     .catch((err) => log.warn(`Could not query databases: ${err}`));
 
-  if (!db.rowCount) {
+  if (!db) {
     try {
       // Create the expert_query db
       await client.query('CREATE DATABASE ' + dbName);
