@@ -5,16 +5,55 @@ import * as create from './queries/create.js';
 
 const { Pool } = pg;
 
+let isLocal = false;
+let isDevelopment = false;
+let isStaging = false;
+
+let database_host = '';
+let database_user = '';
+let database_pwd = '';
+let database_port = '';
+
+if (process.env.NODE_ENV) {
+  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
+  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
+  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
+}
+
 const dbName = process.env.DB_NAME ?? 'expert_query';
 
 const eqUser = process.env.EQ_USERNAME ?? 'eq';
 
+if (isLocal) {
+  log.info('Since local, using a localhost Postgres database.');
+  database_host = process.env.DB_HOST;
+  database_user = process.env.DB_USERNAME;
+  database_pwd = process.env.DB_PASSWORD;
+  database_port = process.env.DB_PORT;
+} else {
+  if (process.env.VCAP_SERVICES) {
+    log.info('Using VCAP_SERVICES Information to connect to Postgres.');
+    let vcap_services = JSON.parse(process.env.VCAP_SERVICES);
+    database_host = vcap_services['aws-rds'][0].credentials.host;
+    database_user = vcap_services['aws-rds'][0].credentials.username;
+    database_pwd = vcap_services['aws-rds'][0].credentials.password;
+    database_port = vcap_services['aws-rds'][0].credentials.port;
+    log.info(database_host);
+    log.info(database_user);
+    log.info(database_port);
+  } else {
+    log.error(
+      'VCAP_SERVICES Information not found. Connection will not be attempted.',
+    );
+  }
+}
+
 const pgConfig = {
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
+  user: database_user,
+  password: database_pwd,
   database: 'postgres',
-  port: process.env.DB_PORT,
-  host: process.env.DB_HOST,
+  port: database_port,
+  host: database_host,
 };
 const pgPool = new Pool(pgConfig);
 
