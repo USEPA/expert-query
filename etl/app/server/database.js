@@ -135,8 +135,10 @@ export async function createEqDb(client) {
   log.info(`queryied for ${eqUser} user!`);
 
   if (!user) {
+    log.info(`${eqUser} user does not exist`);
     try {
       // Create the eq user
+      log.info(`creating ${eqUser} user...`);
       await client.query(
         `CREATE USER ${eqUser} WITH PASSWORD '${process.env.EQ_PASSWORD}'`,
       );
