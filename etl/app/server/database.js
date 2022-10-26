@@ -266,8 +266,7 @@ export async function trimSchema() {
 
   if (!schemas) return;
 
-  // const msInDay = 86400000;
-  const msInDay = 60000;
+  const msInDay = 86400000;
   schemas.rows.forEach(async (schema) => {
     if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
       try {
