@@ -59,6 +59,7 @@ app.on('tryDb', async () => {
       'Failed to connect to postgres! Retrying in 30 seconds...\n' + err,
     );
     setTimeout(() => {
+      log.info('Call tryDb2');
       app.emit('tryDb');
     }, 30 * 1000);
   });
@@ -71,12 +72,18 @@ app.on('tryDb', async () => {
   const dbSuccess = await database.createEqDb(client).catch((err) => {
     log.warn(`${err}: Retrying in 30 seconds...`);
     setTimeout(() => {
+      log.info('Call tryDb3');
       app.emit('tryDb');
     }, 30 * 1000);
     return false;
   });
 
-  if (dbSuccess) app.emit('ready');
+  log.info(`dbSuccess: ${dbSuccess}`);
+  if (dbSuccess) {
+    log.info('Call ready');
+    app.emit('ready');
+  }
 });
 
+log.info('Call tryDb1');
 app.emit('tryDb');
