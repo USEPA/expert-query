@@ -55,16 +55,32 @@ const pgConfig = {
   port: database_port,
   host: database_host,
 };
-const pgPool = new Pool(pgConfig);
+let pgPool = new Pool(pgConfig);
 
 const eqConfig = {
   ...pgConfig,
   database: dbName,
 };
-const eqPool = new Pool(eqConfig);
+
+let _eqPool;
+
+function startConnPool() {
+  if (_eqPool) return;
+  _eqPool = new Pool(eqConfig);
+  log.info('EqPool connection pool started');
+}
+
+export function endConnPool() {
+  if (!_eqPool) return;
+  _eqPool.end();
+  _eqPool = null;
+  log.info('EqPool connection pool ended');
+}
 
 export async function checkLogTables() {
-  const client = await eqPool.connect().catch((err) => {
+  startConnPool();
+
+  const client = await _eqPool.connect().catch((err) => {
     log.error(`${dbName} connection failed: ${err}`);
     throw err;
   });
@@ -87,9 +103,9 @@ export async function checkLogTables() {
     log.warn('Failed to confirm that logging tables exist');
     await client.query('ROLLBACK');
     throw err;
-  } finally {
-    client.release();
   }
+
+  endConnPool();
 }
 
 export async function connectPostgres() {
@@ -111,11 +127,11 @@ export async function createEqDb(client) {
   }
 
   // Check if the database has already been created
-  const db = await eqPool
+  const db = await client
     .query('SELECT datname FROM pg_database WHERE datname = $1', [dbName])
     .catch((err) => log.warn(`Could not query databases: ${err}`));
 
-  if (!db) {
+  if (!db.rowCount) {
     try {
       // Create the expert_query db
       await client.query('CREATE DATABASE ' + dbName);
@@ -126,7 +142,7 @@ export async function createEqDb(client) {
   }
 
   // Check if the user has already been created
-  const user = await eqPool
+  const user = await client
     .query('SELECT usename FROM pg_user WHERE usename = $1', [eqUser])
     .catch((err) => log.warn(`Could not query users: ${err}`));
 
@@ -144,13 +160,17 @@ export async function createEqDb(client) {
     }
   }
 
-  client.release();
+  client.end();
+  pgPool = null;
+
+  await checkLogTables();
+
   return true;
 }
 
-async function logEtlLoadError(etlLogId, loadError) {
+async function logEtlLoadError(client, etlLogId, loadError) {
   try {
-    await eqPool.query(
+    await client.query(
       'UPDATE logging.etl_log SET load_error = $1 WHERE id = $2',
       [loadError, etlLogId],
     );
@@ -160,9 +180,9 @@ async function logEtlLoadError(etlLogId, loadError) {
   }
 }
 
-async function logEtlLoadEnd(etlLogId) {
+async function logEtlLoadEnd(client, etlLogId) {
   try {
-    await eqPool.query(
+    await client.query(
       'UPDATE logging.etl_log SET end_time = current_timestamp WHERE id = $1',
       [etlLogId],
     );
@@ -172,9 +192,9 @@ async function logEtlLoadEnd(etlLogId) {
   }
 }
 
-async function logEtlLoadStart() {
+async function logEtlLoadStart(client) {
   try {
-    const result = await eqPool.query(
+    const result = await client.query(
       'INSERT INTO logging.etl_log (start_time)' +
         ' VALUES (current_timestamp) RETURNING id',
     );
@@ -191,14 +211,16 @@ let currentName = 1;
 export async function runLoad() {
   log.info('Running ETL process!');
 
-  const client = await eqPool.connect().catch((err) => {
+  startConnPool();
+
+  const client = await _eqPool.connect().catch((err) => {
     log.error(`${dbName} connection failed: ${err}`);
     throw err;
   });
 
   log.info(`${dbName} connection established`);
 
-  const logId = await logEtlLoadStart();
+  const logId = await logEtlLoadStart(client);
   try {
     // Create new schema & set to path
     const now = new Date();
@@ -243,11 +265,11 @@ export async function runLoad() {
 
     await client.query('COMMIT');
     log.info('Tables updated');
-    logEtlLoadEnd(logId);
+    await logEtlLoadEnd(client, logId);
   } catch (err) {
     log.warn(`ETL process failed! ${err}`);
     await client.query('ROLLBACK');
-    logEtlLoadError(logId, err);
+    await logEtlLoadError(client, logId, err);
     throw err;
   } finally {
     client.release();
@@ -256,27 +278,40 @@ export async function runLoad() {
 
 // Drop old schemas
 export async function trimSchema() {
-  const schemas = await eqPool
-    .query(
-      'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
-    )
-    .catch((err) => {
-      log.warn(`Could not query schemas: ${err}`);
-    });
+  startConnPool();
 
-  if (!schemas) return;
-
-  const msInDay = 86400000;
-  schemas.rows.forEach(async (schema) => {
-    if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
-      try {
-        await eqPool.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
-        eqPool.query(
-          `DELETE FROM ONLY logging.etl_schemas WHERE schema_name = '${schema.schema_name}'`,
-        );
-      } catch (err) {
-        log.warn(`Error dropping obsolete schema: ${err}`);
-      }
-    }
+  const client = await _eqPool.connect().catch((err) => {
+    log.error(`${dbName} connection failed: ${err}`);
+    throw err;
   });
+
+  try {
+    const schemas = await client
+      .query(
+        'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
+      )
+      .catch((err) => {
+        log.warn(`Could not query schemas: ${err}`);
+      });
+
+    if (!schemas) return;
+
+    const msInDay = 86400000;
+    schemas.rows.forEach(async (schema) => {
+      if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
+        try {
+          await client.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
+          await client.query(
+            `DELETE FROM ONLY logging.etl_schemas WHERE schema_name = '${schema.schema_name}'`,
+          );
+        } catch (err) {
+          log.warn(`Error dropping obsolete schema: ${err}`);
+        }
+      }
+    });
+  } catch (ex) {
+    log.warn(`Error dropping obsolete schemas: ${err}`);
+  } finally {
+    client.release();
+  }
 }

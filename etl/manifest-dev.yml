@@ -2,7 +2,7 @@
 applications:
   - name: expert-query-etl-dev
     instances: 1
-    memory: 128M
+    memory: 512MB
     disk_quota: 512MB
     timeout: 180
     buildpacks:
