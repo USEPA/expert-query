@@ -55,16 +55,32 @@ const pgConfig = {
   port: database_port,
   host: database_host,
 };
-const pgPool = new Pool(pgConfig);
+let pgPool = new Pool(pgConfig);
 
 const eqConfig = {
   ...pgConfig,
   database: dbName,
 };
-const eqPool = new Pool(eqConfig);
+
+let _eqPool;
+
+function startConnPool() {
+  if (_eqPool) return;
+  _eqPool = new Pool(eqConfig);
+  log.info('EqPool connection pool started');
+}
+
+export function endConnPool() {
+  if (!_eqPool) return;
+  _eqPool.end();
+  _eqPool = null;
+  log.info('EqPool connection pool ended');
+}
 
 export async function checkLogTables() {
-  const client = await eqPool.connect().catch((err) => {
+  startConnPool();
+
+  const client = await _eqPool.connect().catch((err) => {
     log.error(`${dbName} connection failed: ${err}`);
     throw err;
   });
@@ -87,9 +103,9 @@ export async function checkLogTables() {
     log.warn('Failed to confirm that logging tables exist');
     await client.query('ROLLBACK');
     throw err;
-  } finally {
-    client.release();
   }
+
+  endConnPool();
 }
 
 export async function connectPostgres() {
@@ -115,7 +131,7 @@ export async function createEqDb(client) {
     .query('SELECT datname FROM pg_database WHERE datname = $1', [dbName])
     .catch((err) => log.warn(`Could not query databases: ${err}`));
 
-  if (!db) {
+  if (!db.rowCount) {
     try {
       // Create the expert_query db
       await client.query('CREATE DATABASE ' + dbName);
@@ -144,7 +160,11 @@ export async function createEqDb(client) {
     }
   }
 
-  client.release();
+  client.end();
+  pgPool = null;
+
+  await checkLogTables();
+
   return true;
 }
 
@@ -191,7 +211,9 @@ let currentName = 1;
 export async function runLoad() {
   log.info('Running ETL process!');
 
-  const client = await eqPool.connect().catch((err) => {
+  startConnPool();
+
+  const client = await _eqPool.connect().catch((err) => {
     log.error(`${dbName} connection failed: ${err}`);
     throw err;
   });
@@ -256,7 +278,9 @@ export async function runLoad() {
 
 // Drop old schemas
 export async function trimSchema() {
-  const client = await eqPool.connect().catch((err) => {
+  startConnPool();
+
+  const client = await _eqPool.connect().catch((err) => {
     log.error(`${dbName} connection failed: ${err}`);
     throw err;
   });

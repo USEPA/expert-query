@@ -20,11 +20,6 @@ app.on('ready', async () => {
     log.error(err);
   }
 
-  // Create log tables if they don't exist
-  await database.checkLogTables().catch((err) => {
-    log.error(`Failed to check for expert_query log tables: ${err}`);
-  });
-
   log.info('Creating tables, running load, and scheduling load to run daily');
 
   // Create and load new schema
@@ -38,13 +33,18 @@ app.on('ready', async () => {
   // Schedule ETL to run daily at 3AM
   cron.schedule(
     '0 3 * * *',
-    () => {
+    async () => {
       log.info('Running cron task every day at 3AM');
       log.info(new Date(Date.now()).toLocaleString());
 
-      database.runLoad().then(() => {
-        database.trimSchema();
-      });
+      try {
+        await database.runLoad();
+        await database.trimSchema();
+        database.endConnPool();
+      } catch (err) {
+        log.warn(`Run failed, continuing to schedule cron task: ${err}`);
+        database.endConnPool();
+      }
     },
     {
       scheduled: true,
