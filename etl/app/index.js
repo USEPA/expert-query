@@ -30,7 +30,7 @@ app.on('ready', async () => {
   // Create and load new schema
   try {
     await database.runLoad();
-    database.trimSchema();
+    await database.trimSchema();
   } catch (err) {
     log.warn(`First run failed, continuing to schedule cron task: ${err}`);
   }

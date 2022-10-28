@@ -111,7 +111,7 @@ export async function createEqDb(client) {
   }
 
   // Check if the database has already been created
-  const db = await eqPool
+  const db = await client
     .query('SELECT datname FROM pg_database WHERE datname = $1', [dbName])
     .catch((err) => log.warn(`Could not query databases: ${err}`));
 
@@ -126,7 +126,7 @@ export async function createEqDb(client) {
   }
 
   // Check if the user has already been created
-  const user = await eqPool
+  const user = await client
     .query('SELECT usename FROM pg_user WHERE usename = $1', [eqUser])
     .catch((err) => log.warn(`Could not query users: ${err}`));
 
@@ -148,9 +148,9 @@ export async function createEqDb(client) {
   return true;
 }
 
-async function logEtlLoadError(etlLogId, loadError) {
+async function logEtlLoadError(client, etlLogId, loadError) {
   try {
-    await eqPool.query(
+    await client.query(
       'UPDATE logging.etl_log SET load_error = $1 WHERE id = $2',
       [loadError, etlLogId],
     );
@@ -160,9 +160,9 @@ async function logEtlLoadError(etlLogId, loadError) {
   }
 }
 
-async function logEtlLoadEnd(etlLogId) {
+async function logEtlLoadEnd(client, etlLogId) {
   try {
-    await eqPool.query(
+    await client.query(
       'UPDATE logging.etl_log SET end_time = current_timestamp WHERE id = $1',
       [etlLogId],
     );
@@ -172,9 +172,9 @@ async function logEtlLoadEnd(etlLogId) {
   }
 }
 
-async function logEtlLoadStart() {
+async function logEtlLoadStart(client) {
   try {
-    const result = await eqPool.query(
+    const result = await client.query(
       'INSERT INTO logging.etl_log (start_time)' +
         ' VALUES (current_timestamp) RETURNING id',
     );
@@ -198,7 +198,7 @@ export async function runLoad() {
 
   log.info(`${dbName} connection established`);
 
-  const logId = await logEtlLoadStart();
+  const logId = await logEtlLoadStart(client);
   try {
     // Create new schema & set to path
     const now = new Date();
@@ -243,11 +243,11 @@ export async function runLoad() {
 
     await client.query('COMMIT');
     log.info('Tables updated');
-    logEtlLoadEnd(logId);
+    await logEtlLoadEnd(client, logId);
   } catch (err) {
     log.warn(`ETL process failed! ${err}`);
     await client.query('ROLLBACK');
-    logEtlLoadError(logId, err);
+    await logEtlLoadError(client, logId, err);
     throw err;
   } finally {
     client.release();
@@ -256,27 +256,38 @@ export async function runLoad() {
 
 // Drop old schemas
 export async function trimSchema() {
-  const schemas = await eqPool
-    .query(
-      'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
-    )
-    .catch((err) => {
-      log.warn(`Could not query schemas: ${err}`);
-    });
-
-  if (!schemas) return;
-
-  const msInDay = 86400000;
-  schemas.rows.forEach(async (schema) => {
-    if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
-      try {
-        await eqPool.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
-        eqPool.query(
-          `DELETE FROM ONLY logging.etl_schemas WHERE schema_name = '${schema.schema_name}'`,
-        );
-      } catch (err) {
-        log.warn(`Error dropping obsolete schema: ${err}`);
-      }
-    }
+  const client = await eqPool.connect().catch((err) => {
+    log.error(`${dbName} connection failed: ${err}`);
+    throw err;
   });
+
+  try {
+    const schemas = await client
+      .query(
+        'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
+      )
+      .catch((err) => {
+        log.warn(`Could not query schemas: ${err}`);
+      });
+
+    if (!schemas) return;
+
+    const msInDay = 86400000;
+    schemas.rows.forEach(async (schema) => {
+      if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
+        try {
+          await client.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
+          await client.query(
+            `DELETE FROM ONLY logging.etl_schemas WHERE schema_name = '${schema.schema_name}'`,
+          );
+        } catch (err) {
+          log.warn(`Error dropping obsolete schema: ${err}`);
+        }
+      }
+    });
+  } catch (ex) {
+    log.warn(`Error dropping obsolete schemas: ${err}`);
+  } finally {
+    client.release();
+  }
 }
