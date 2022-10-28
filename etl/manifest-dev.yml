@@ -8,6 +8,7 @@ applications:
     buildpacks:
       - nodejs_buildpack
     command: node app/index.js
+    path: /
     env:
       NODE_ENV: development
       LOGGER_LEVEL: DEBUG
