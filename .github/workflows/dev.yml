@@ -65,6 +65,9 @@ jobs:
       CF_DEV_S3_PRIV_BUCKET_ID: ${{ secrets.CF_DEV_S3_PRIV_BUCKET_ID }}
       CF_DEV_S3_PRIV_REGION: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
       CF_DEV_S3_PRIV_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
+      DB_NAME: ${{ secrets.DB_NAME_DEV }}
+      DB_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
+      DB_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
       SERVER_URL: https://expert-query-dev.app.cloud.gov/
 
@@ -114,6 +117,9 @@ jobs:
           cf set-env $APP_NAME "CF_DEV_S3_PUB_REGION" "$CF_DEV_S3_PUB_REGION" > /dev/null
           cf set-env $APP_NAME "CF_DEV_S3_PRIV_BUCKET_ID" "$CF_DEV_S3_PRIV_BUCKET_ID" > /dev/null
           cf set-env $APP_NAME "CF_DEV_S3_PRIV_REGION" "$CF_DEV_S3_PRIV_REGION" > /dev/null
+          cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
+          cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
+          cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
 
       - name: Configure Public AWS Credentials
@@ -174,8 +180,8 @@ jobs:
       CF_USER_DEV: ${{ secrets.CF_USER_DEV }}
       CF_PASSWORD_DEV: ${{ secrets.CF_PASSWORD_DEV }}
       DB_NAME: ${{ secrets.DB_NAME_DEV }}
-      EQ_USERNAME: ${{ secrets.EQ_USER_DEV }}
       EQ_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
+      EQ_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
 
     steps:
