@@ -28,7 +28,7 @@ const baseUrl =
 ## Exports
 */
 
-// Constants
+// Properties
 
 export const tableName = 'assessments';
 

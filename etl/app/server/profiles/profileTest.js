@@ -8,7 +8,7 @@ const values = ['a', 'b', 'c', 'd', 'e'];
 ## Exports
 */
 
-// Variables
+// Properties
 
 export const tableName = 'profile_test';
 
