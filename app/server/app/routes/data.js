@@ -18,10 +18,10 @@ module.exports = function (app) {
       return Assessment.schema(req.activeSchema)
         .findAndCountAll({})
         .then((assessments) => res.status(200).send(assessments))
-        .catch((error) => res.status(400).send("Error! " + error));
+        .catch((error) => res.status(500).send("Error! " + error));
     } catch (error) {
       log.error("Failed to get assessments...");
-      return res.status(400).send("Error !" + error);
+      return res.status(500).send("Error !" + error);
     }
   });
 

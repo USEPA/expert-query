@@ -25,7 +25,7 @@ async function getActiveSchema(req, res, next) {
     next();
   } catch (error) {
     log.error("Failed to get active schema...");
-    res.status(400).send("Error !" + error);
+    res.status(500).send("Error !" + error);
   }
 }
 

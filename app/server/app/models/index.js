@@ -11,11 +11,11 @@ let isLocal = false;
 let isDevelopment = false;
 let isStaging = false;
 
-let database_host = "";
-let database_port = "";
-const database_name = process.env.DB_NAME ?? "expert_query";
-const database_user = process.env.DB_USERNAME;
-const database_pwd = process.env.DB_PASSWORD;
+let dbHost = "";
+let dbPort = "";
+const dbName = process.env.DB_NAME ?? "expert_query";
+const dbUser = process.env.DB_USERNAME;
+const dbPassword = process.env.DB_PASSWORD;
 
 if (process.env.NODE_ENV) {
   isLocal = "local" === process.env.NODE_ENV.toLowerCase();
@@ -25,8 +25,8 @@ if (process.env.NODE_ENV) {
 
 if (isLocal) {
   log.info("Since local, using a localhost Postgres database.");
-  database_host = process.env.DB_HOST;
-  database_port = process.env.DB_PORT;
+  dbHost = process.env.DB_HOST;
+  dbPort = process.env.DB_PORT;
 } else {
   if (!process.env.VCAP_SERVICES) {
     log.error(
@@ -37,18 +37,18 @@ if (isLocal) {
 
   log.info("Using VCAP_SERVICES Information to connect to Postgres.");
   let vcap_services = JSON.parse(process.env.VCAP_SERVICES);
-  database_host = vcap_services["aws-rds"][0].credentials.host;
-  database_port = vcap_services["aws-rds"][0].credentials.port;
+  dbHost = vcap_services["aws-rds"][0].credentials.host;
+  dbPort = vcap_services["aws-rds"][0].credentials.port;
 }
-log.info(`host: ${database_host}`);
-log.info(`port: ${database_port}`);
-log.info(`dbname: ${database_name}`);
-log.info(`user: ${database_user}`);
+log.info(`host: ${dbHost}`);
+log.info(`port: ${dbPort}`);
+log.info(`dbName: ${dbName}`);
+log.info(`user: ${dbUser}`);
 
 // Setup sequelize for handling connection pooling, queries, sanitization, and models
-const sequelize = new Sequelize(database_name, database_user, database_pwd, {
-  host: database_host,
-  port: database_port,
+const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
+  host: dbHost,
+  port: dbPort,
   dialect: "postgres",
   pool: {
     max: 20,
@@ -72,14 +72,5 @@ fs.readdirSync(__dirname)
     );
     db[model.name] = model;
   });
-
-Object.keys(db).forEach((modelName) => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
 
 module.exports = db;
