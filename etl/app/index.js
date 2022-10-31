@@ -50,7 +50,6 @@ app.on('ready', async () => {
     },
     {
       scheduled: true,
-      timezone: 'America/New_York',
     },
   );
 });
