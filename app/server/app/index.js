@@ -87,8 +87,8 @@ const requiredEnvVars = [
 ];
 
 if (isLocal) {
-  requiredEnvVars.push("DB_USERNAME");
-  requiredEnvVars.push("DB_USERNAME");
+  requiredEnvVars.push("DB_HOST");
+  requiredEnvVars.push("DB_PORT");
 } else {
   requiredEnvVars.push("CF_DEV_S3_PUB_BUCKET_ID");
   requiredEnvVars.push("CF_DEV_S3_PUB_REGION");
