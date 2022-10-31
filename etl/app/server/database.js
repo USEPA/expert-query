@@ -1,15 +1,9 @@
 import pg from 'pg';
 
 import { logger as log } from './utilities/logger.js';
-import * as create from './queries/create.js';
-import * as insert from './queries/insert.js';
+import * as profiles from './profiles/index.js';
 
 const { Client, Pool } = pg;
-
-const tables = {
-  profileTest: 'profile_test',
-  // assessments: 'assessments',
-};
 
 let isLocal = false;
 let isDevelopment = false;
@@ -110,8 +104,24 @@ export async function checkLogTables() {
   try {
     await client.query('BEGIN');
     await client.query('CREATE SCHEMA IF NOT EXISTS logging');
-    await client.query(create.etlLog);
-    await client.query(create.etlSchemas);
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS logging.etl_log
+        (
+          id SERIAL PRIMARY KEY,
+          end_time timestamp,
+          load_error varchar,
+          start_time timestamp NOT NULL
+        )`,
+    );
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS logging.etl_schemas
+        (
+          id SERIAL PRIMARY KEY,
+          active BOOLEAN NOT NULL,
+          creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+          schema_name varchar(20) NOT NULL
+        )`,
+    );
     await client.query(`GRANT USAGE ON SCHEMA logging TO ${eqUser}`);
     await client.query(
       `GRANT SELECT ON ALL TABLES IN SCHEMA logging TO ${eqUser}`,
@@ -129,12 +139,14 @@ export async function checkLogTables() {
   await endConnPool(pool);
 }
 
+// Connect to the default 'postgres' database
 export async function connectPostgres() {
   const pgClient = new Client(pgConfig);
   await pgClient.connect();
   return pgClient;
 }
 
+// Create a new database to avoid mutating the default 'postgres' database
 export async function createEqDb(client) {
   // Check if the database has already been created
   const db = await client
@@ -173,6 +185,7 @@ export async function createEqDb(client) {
   await checkLogTables();
 }
 
+// Create a fresh schema for new data
 async function createNewSchema(pool, schemaName) {
   const client = await getClient(pool);
   try {
@@ -200,6 +213,7 @@ async function createNewSchema(pool, schemaName) {
   }
 }
 
+// Retrieve an available client from the connection pool
 async function getClient(pool) {
   const client = await pool.connect().catch((err) => {
     log.error(`${dbName} connection failed: ${err}`);
@@ -210,28 +224,15 @@ async function getClient(pool) {
   return client;
 }
 
-async function loadTable(pool, tableKey, tableName, schemaName, rows) {
+// Load profile data into the new schema
+async function loadProfile(profile, pool, schemaName) {
+  const profileEtl = getProfileEtl(profile);
   const client = await getClient(pool);
-
   try {
-    await client.query('BEGIN');
-
-    await client.query(`SET search_path TO ${schemaName}`);
-
-    await client.query(`DROP TABLE IF EXISTS ${tableName}`);
-    await client.query(create[tableKey]);
-    log.info(`Table ${tableName} created`);
-
-    const inserts = rows.map(async (row) => {
-      await client.query(insert[tableKey], row);
-    });
-    await Promise.all(inserts);
-
-    await client.query('COMMIT');
-    log.info(`Table ${tableName} load success`);
+    await profileEtl(client, schemaName);
+    console.info(`ETL success for table ${profile.tableName}`);
   } catch (err) {
-    log.warn(`Failed to load table ${tableName}! ${err}`);
-    await client.query('ROLLBACK');
+    console.warn(`ETL failed for table ${profile.tableName}: ${err}`);
     throw err;
   } finally {
     client.release();
@@ -275,6 +276,7 @@ async function logEtlLoadStart(pool) {
   }
 }
 
+// Load new data into a fresh schema, then discard old schemas
 export async function runJob(first = false) {
   const pool = startConnPool();
   try {
@@ -303,9 +305,9 @@ export async function runLoad(pool) {
     const schemaId = await createNewSchema(pool, schemaName);
 
     // Add tables to schema and import new data
-    const loadTasks = Object.entries(tables).map(([tableKey, tableName]) =>
-      loadTable(pool, tableKey, tableName, schemaName, [['a'], ['b'], ['c']]),
-    );
+    const loadTasks = Object.values(profiles).map((profile) => {
+      return loadProfile(profile, pool, schemaName);
+    });
     await Promise.all(loadTasks);
 
     await transferSchema(pool, schemaName, schemaId);
@@ -319,6 +321,7 @@ export async function runLoad(pool) {
   }
 }
 
+// Grant usage privileges on the new schema to the read-only user
 async function transferSchema(pool, schemaName, schemaId) {
   const client = await getClient(pool);
   try {
@@ -381,4 +384,51 @@ export async function trimSchema(pool) {
   } finally {
     client.release();
   }
+}
+
+// Get the ETL task for a particular profile
+function getProfileEtl({
+  createQuery,
+  extract,
+  insertQuery,
+  tableName,
+  transform,
+}) {
+  return async function (client, schemaName) {
+    // Create the table for the profile
+    try {
+      await client.query(`SET search_path TO ${schemaName}`);
+
+      await client.query(`DROP TABLE IF EXISTS ${tableName}`);
+      await client.query(createQuery);
+      log.info(`Table ${tableName} created`);
+    } catch (err) {
+      log.warn(`Failed to create table ${tableName}: ${err}`);
+      throw err;
+    }
+
+    // Extract, transform, and load the new data
+    try {
+      await client.query('BEGIN');
+
+      let res = await extract();
+      while (res.data !== null) {
+        const rows = transform(res.data);
+        const inserts = rows.map(async (row) => {
+          await client.query(insertQuery, row);
+        });
+        await Promise.all(inserts);
+
+        log.info(`Next record offset for table ${tableName}: ${res.next}`);
+        res = await extract(res.next);
+      }
+
+      await client.query('COMMIT');
+      log.info(`Table ${tableName} load success`);
+    } catch (err) {
+      log.warn(`Failed to load table ${tableName}! ${err}`);
+      await client.query('ROLLBACK');
+      throw err;
+    }
+  };
 }
