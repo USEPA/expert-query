@@ -2,7 +2,7 @@
 applications:
   - name: expert-query-staging
     instances: 1
-    memory: 128M
+    memory: 512MB
     disk_quota: 512MB
     timeout: 180
     buildpacks:

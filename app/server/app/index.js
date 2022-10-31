@@ -78,15 +78,23 @@ if (!isLocal && !isDevelopment && !isStaging)
 /****************************************************************
  Required Environment Variables
 ****************************************************************/
-const requiredEnvVars = isLocal
-  ? ["GLOSSARY_AUTH"]
-  : [
-      "CF_DEV_S3_PUB_BUCKET_ID",
-      "CF_DEV_S3_PUB_REGION",
-      "CF_DEV_S3_PRIV_BUCKET_ID",
-      "CF_DEV_S3_PRIV_REGION",
-      "GLOSSARY_AUTH",
-    ];
+// initialize to common variables
+const requiredEnvVars = [
+  "DB_NAME",
+  "DB_USERNAME",
+  "DB_PASSWORD",
+  "GLOSSARY_AUTH",
+];
+
+if (isLocal) {
+  requiredEnvVars.push("DB_USERNAME");
+  requiredEnvVars.push("DB_USERNAME");
+} else {
+  requiredEnvVars.push("CF_DEV_S3_PUB_BUCKET_ID");
+  requiredEnvVars.push("CF_DEV_S3_PUB_REGION");
+  requiredEnvVars.push("CF_DEV_S3_PRIV_BUCKET_ID");
+  requiredEnvVars.push("CF_DEV_S3_PRIV_REGION");
+}
 
 requiredEnvVars.forEach((envVar) => {
   if (!process.env[envVar]) {
