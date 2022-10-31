@@ -2,8 +2,14 @@ import pg from 'pg';
 
 import { logger as log } from './utilities/logger.js';
 import * as create from './queries/create.js';
+import * as insert from './queries/insert.js';
 
-const { Pool } = pg;
+const { Client, Pool } = pg;
+
+const tables = {
+  profileTest: 'profile_test',
+  // assessments: 'assessments',
+};
 
 let isLocal = false;
 let isDevelopment = false;
@@ -20,6 +26,35 @@ if (process.env.NODE_ENV) {
   isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
 }
 
+const requiredEnvVars = ['EQ_PASSWORD'];
+
+if (isLocal) {
+  requiredEnvVars.push(
+    'DB_USERNAME',
+    'DB_PASSWORD',
+    'DB_PORT',
+    'DB_HOST',
+    'REMOTE_DB_USERNAME',
+    'REMOTE_DB_PASSWORD',
+    'REMOTE_DB_PORT',
+    'REMOTE_DB_HOST',
+    'REMOTE_DB_NAME',
+  );
+} else {
+  requiredEnvVars.push('VCAP_SERVICES');
+}
+
+requiredEnvVars.forEach((envVar) => {
+  if (!process.env[envVar]) {
+    const message =
+      envVar === 'VCAP_SERVICES'
+        ? 'VCAP_SERVICES Information not found. Connection will not be attempted.'
+        : `Required environment variable ${envVar} not found.`;
+    log.error(message);
+    process.exit();
+  }
+});
+
 const dbName = process.env.DB_NAME ?? 'expert_query';
 
 const eqUser = process.env.EQ_USERNAME ?? 'eq';
@@ -31,21 +66,15 @@ if (isLocal) {
   database_pwd = process.env.DB_PASSWORD;
   database_port = process.env.DB_PORT;
 } else {
-  if (process.env.VCAP_SERVICES) {
-    log.info('Using VCAP_SERVICES Information to connect to Postgres.');
-    let vcap_services = JSON.parse(process.env.VCAP_SERVICES);
-    database_host = vcap_services['aws-rds'][0].credentials.host;
-    database_user = vcap_services['aws-rds'][0].credentials.username;
-    database_pwd = vcap_services['aws-rds'][0].credentials.password;
-    database_port = vcap_services['aws-rds'][0].credentials.port;
-    log.info(database_host);
-    log.info(database_user);
-    log.info(database_port);
-  } else {
-    log.error(
-      'VCAP_SERVICES Information not found. Connection will not be attempted.',
-    );
-  }
+  log.info('Using VCAP_SERVICES Information to connect to Postgres.');
+  let vcap_services = JSON.parse(process.env.VCAP_SERVICES);
+  database_host = vcap_services['aws-rds'][0].credentials.host;
+  database_user = vcap_services['aws-rds'][0].credentials.username;
+  database_pwd = vcap_services['aws-rds'][0].credentials.password;
+  database_port = vcap_services['aws-rds'][0].credentials.port;
+  log.info(database_host);
+  log.info(database_user);
+  log.info(database_port);
 }
 
 const pgConfig = {
@@ -55,37 +84,27 @@ const pgConfig = {
   port: database_port,
   host: database_host,
 };
-let pgPool = new Pool(pgConfig);
 
 const eqConfig = {
   ...pgConfig,
   database: dbName,
 };
 
-let _eqPool;
-
 function startConnPool() {
-  if (_eqPool) return;
-  _eqPool = new Pool(eqConfig);
+  const pool = new Pool(eqConfig);
   log.info('EqPool connection pool started');
+  return pool;
 }
 
-export function endConnPool() {
-  if (!_eqPool) return;
-  _eqPool.end();
-  _eqPool = null;
+export async function endConnPool(pool) {
+  await pool.end();
   log.info('EqPool connection pool ended');
 }
 
 export async function checkLogTables() {
-  startConnPool();
+  const pool = startConnPool();
 
-  const client = await _eqPool.connect().catch((err) => {
-    log.error(`${dbName} connection failed: ${err}`);
-    throw err;
-  });
-
-  log.info(`${dbName} connection established`);
+  const client = await getClient(pool);
 
   // Ensure the log tables exist; if not, create them
   try {
@@ -103,29 +122,20 @@ export async function checkLogTables() {
     log.warn('Failed to confirm that logging tables exist');
     await client.query('ROLLBACK');
     throw err;
+  } finally {
+    client.release();
   }
 
-  endConnPool();
+  await endConnPool(pool);
 }
 
 export async function connectPostgres() {
-  if (pgConfig.user === '') {
-    throw new Error('Database information not set!');
-  } else {
-    log.info('Connecting to postgres: ' + pgConfig.host + ':' + pgConfig.port);
-    const client = await pgPool.connect();
-    return client;
-  }
+  const pgClient = new Client(pgConfig);
+  await pgClient.connect();
+  return pgClient;
 }
 
 export async function createEqDb(client) {
-  if (process.env.EQ_PASSWORD === null) {
-    log.error(
-      'The expert_query connection information has not been properly set',
-    );
-    process.exit();
-  }
-
   // Check if the database has already been created
   const db = await client
     .query('SELECT datname FROM pg_database WHERE datname = $1', [dbName])
@@ -160,17 +170,77 @@ export async function createEqDb(client) {
     }
   }
 
-  client.end();
-  pgPool = null;
-
   await checkLogTables();
-
-  return true;
 }
 
-async function logEtlLoadError(client, etlLogId, loadError) {
+async function createNewSchema(pool, schemaName) {
+  const client = await getClient(pool);
   try {
-    await client.query(
+    // Create new schema
+    await client.query('BEGIN');
+    await client.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
+
+    // Add new schema to control table
+    const result = await client.query(
+      'INSERT INTO logging.etl_schemas' +
+        ' (schema_name, creation_date, active)' +
+        ' VALUES ($1, current_timestamp, $2) RETURNING id',
+      [schemaName, '0'],
+    );
+    const schemaId = result.rows[0].id;
+    log.info(`Schema ${schemaName} created`);
+    await client.query('COMMIT');
+    return schemaId;
+  } catch (err) {
+    log.warn(`Failed to create new schema! ${err}`);
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function getClient(pool) {
+  const client = await pool.connect().catch((err) => {
+    log.error(`${dbName} connection failed: ${err}`);
+    throw err;
+  });
+
+  log.info(`${dbName} connection established`);
+  return client;
+}
+
+async function loadTable(pool, tableKey, tableName, schemaName, rows) {
+  const client = await getClient(pool);
+
+  try {
+    await client.query('BEGIN');
+
+    await client.query(`SET search_path TO ${schemaName}`);
+
+    await client.query(`DROP TABLE IF EXISTS ${tableName}`);
+    await client.query(create[tableKey]);
+    log.info(`Table ${tableName} created`);
+
+    const inserts = rows.map(async (row) => {
+      await client.query(insert[tableKey], row);
+    });
+    await Promise.all(inserts);
+
+    await client.query('COMMIT');
+    log.info(`Table ${tableName} load success`);
+  } catch (err) {
+    log.warn(`Failed to load table ${tableName}! ${err}`);
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function logEtlLoadError(pool, etlLogId, loadError) {
+  try {
+    await pool.query(
       'UPDATE logging.etl_log SET load_error = $1 WHERE id = $2',
       [loadError, etlLogId],
     );
@@ -180,9 +250,9 @@ async function logEtlLoadError(client, etlLogId, loadError) {
   }
 }
 
-async function logEtlLoadEnd(client, etlLogId) {
+async function logEtlLoadEnd(pool, etlLogId) {
   try {
-    await client.query(
+    await pool.query(
       'UPDATE logging.etl_log SET end_time = current_timestamp WHERE id = $1',
       [etlLogId],
     );
@@ -192,9 +262,9 @@ async function logEtlLoadEnd(client, etlLogId) {
   }
 }
 
-async function logEtlLoadStart(client) {
+async function logEtlLoadStart(pool) {
   try {
-    const result = await client.query(
+    const result = await pool.query(
       'INSERT INTO logging.etl_log (start_time)' +
         ' VALUES (current_timestamp) RETURNING id',
     );
@@ -205,50 +275,54 @@ async function logEtlLoadStart(client) {
   }
 }
 
-// TEST
-let currentName = 1;
+export async function runJob(first = false) {
+  const pool = startConnPool();
+  try {
+    await runLoad(pool);
+    await trimSchema(pool);
+  } catch (err) {
+    log.warn(
+      `${
+        first ? 'First run' : 'Run'
+      } failed, continuing to schedule cron task: ${err}`,
+    );
+  } finally {
+    await endConnPool(pool);
+  }
+}
 
-export async function runLoad() {
+export async function runLoad(pool) {
   log.info('Running ETL process!');
 
-  startConnPool();
+  const logId = await logEtlLoadStart(pool);
 
-  const client = await _eqPool.connect().catch((err) => {
-    log.error(`${dbName} connection failed: ${err}`);
-    throw err;
-  });
+  const now = new Date();
+  const schemaName = `schema_${now.valueOf()}`;
 
-  log.info(`${dbName} connection established`);
-
-  const logId = await logEtlLoadStart(client);
   try {
-    // Create new schema & set to path
-    const now = new Date();
-    const schemaName = `schema_${now.valueOf()}`;
+    const schemaId = await createNewSchema(pool, schemaName);
+
+    // Add tables to schema and import new data
+    const loadTasks = Object.entries(tables).map(([tableKey, tableName]) =>
+      loadTable(pool, tableKey, tableName, schemaName, [['a'], ['b'], ['c']]),
+    );
+    await Promise.all(loadTasks);
+
+    await transferSchema(pool, schemaName, schemaId);
+
+    log.info('Tables updated');
+    await logEtlLoadEnd(pool, logId);
+  } catch (err) {
+    log.warn(`ETL process failed! ${err}`);
+    await logEtlLoadError(pool, logId, err);
+    throw err;
+  }
+}
+
+async function transferSchema(pool, schemaName, schemaId) {
+  const client = await getClient(pool);
+  try {
     await client.query('BEGIN');
-    await client.query(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`);
-    await client.query(`SET search_path TO ${schemaName}`);
-
-    // Add new schema to control table
-    const result = await client.query(
-      'INSERT INTO logging.etl_schemas' +
-        ' (schema_name, creation_date, active)' +
-        ' VALUES ($1, current_timestamp, $2) RETURNING id',
-      [schemaName, '0'],
-    );
-    const schemaId = result.rows[0].id;
-
-    // Add tables to schema
-    // TEST
-    await client.query(create.profileTest);
-
-    // Import new data
-    // TEST
-    await client.query(
-      'INSERT INTO profile_test (assessment_name) VALUES ($1)',
-      [currentName],
-    );
-    currentName += 1;
 
     // Give eq user USAGE privilege for schema
     await client.query(`GRANT USAGE ON SCHEMA ${schemaName} TO ${eqUser}`);
@@ -264,12 +338,8 @@ export async function runLoad() {
     );
 
     await client.query('COMMIT');
-    log.info('Tables updated');
-    await logEtlLoadEnd(client, logId);
   } catch (err) {
-    log.warn(`ETL process failed! ${err}`);
     await client.query('ROLLBACK');
-    await logEtlLoadError(client, logId, err);
     throw err;
   } finally {
     client.release();
@@ -277,39 +347,36 @@ export async function runLoad() {
 }
 
 // Drop old schemas
-export async function trimSchema() {
-  startConnPool();
+export async function trimSchema(pool) {
+  const schemas = await pool
+    .query(
+      'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
+    )
+    .catch((err) => {
+      log.warn(`Could not query schemas: ${err}`);
+    });
 
-  const client = await _eqPool.connect().catch((err) => {
-    log.error(`${dbName} connection failed: ${err}`);
-    throw err;
-  });
+  if (!schemas?.rowCount) return;
 
+  const client = await getClient(pool);
   try {
-    const schemas = await client
-      .query(
-        'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
-      )
-      .catch((err) => {
-        log.warn(`Could not query schemas: ${err}`);
-      });
-
-    if (!schemas) return;
-
     const msInDay = 86400000;
     schemas.rows.forEach(async (schema) => {
       if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
         try {
+          await client.query('BEGIN');
           await client.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
           await client.query(
             `DELETE FROM ONLY logging.etl_schemas WHERE schema_name = '${schema.schema_name}'`,
           );
+          await client.query('COMMIT');
         } catch (err) {
           log.warn(`Error dropping obsolete schema: ${err}`);
+          await client.query('ROLLBACK');
         }
       }
     });
-  } catch (ex) {
+  } catch (err) {
     log.warn(`Error dropping obsolete schemas: ${err}`);
   } finally {
     client.release();
