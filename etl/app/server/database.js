@@ -23,17 +23,7 @@ if (process.env.NODE_ENV) {
 const requiredEnvVars = ['EQ_PASSWORD'];
 
 if (isLocal) {
-  requiredEnvVars.push(
-    'DB_USERNAME',
-    'DB_PASSWORD',
-    'DB_PORT',
-    'DB_HOST',
-    'REMOTE_DB_USERNAME',
-    'REMOTE_DB_PASSWORD',
-    'REMOTE_DB_PORT',
-    'REMOTE_DB_HOST',
-    'REMOTE_DB_NAME',
-  );
+  requiredEnvVars.push('DB_USERNAME', 'DB_PASSWORD', 'DB_PORT', 'DB_HOST');
 } else {
   requiredEnvVars.push('VCAP_SERVICES');
 }

@@ -1,6 +1,3 @@
-/*
-## Config
-*/
 const limit = 1;
 const values = ['a', 'b', 'c', 'd', 'e'];
 

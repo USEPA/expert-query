@@ -2,12 +2,9 @@ import axios from 'axios';
 
 import { logger as log } from '../utilities/logger.js';
 
-/*
-## Config
-*/
 const limit = 2000;
 
-const remoteColumns = [
+const selectColumns = [
   'assessmentunitidentifier',
   'assessmentunitname',
   'ircategory',
@@ -21,8 +18,8 @@ const remoteColumns = [
 ];
 const baseUrl =
   'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/4/query?' +
-  'f=pjson&orderByFields=OBJECTID&returnGeometry=false&where=1%3D1' +
-  `&outFields=${remoteColumns.join(',')}&resultRecordCount=${limit}`;
+  'f=pjson&orderByFields=objectid&returnGeometry=false' +
+  `&outFields=${selectColumns.join(',')}&resultRecordCount=${limit}`;
 
 /*
 ## Exports
@@ -66,7 +63,7 @@ export const insertQuery = `INSERT INTO ${tableName}
 // Methods
 
 export async function extract(next = 0, retryCount = 0) {
-  const url = next > 0 ? baseUrl + `&resultOffset=${next}` : baseUrl;
+  const url = baseUrl + `&where=objectid+>=+${next}`;
   const res = await axios.get(url);
   if (res.status !== 200) {
     log.info('Non-200 response returned from GIS service, retrying');
