@@ -51,10 +51,6 @@ app.on('tryDb', async () => {
     }, 30 * 1000);
   });
 
-  if (!client) return;
-
-  log.info('postgres connection established');
-
   // Create expert_query user
   try {
     await database.createEqDb(client);
