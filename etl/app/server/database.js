@@ -86,9 +86,7 @@ export async function endConnPool(pool) {
 }
 
 export async function checkLogTables() {
-  const pool = startConnPool();
-
-  const client = await getClient(pool);
+  const client = await connectClient(eqConfig);
 
   // Ensure the log tables exist; if not, create them
   try {
@@ -123,17 +121,23 @@ export async function checkLogTables() {
     await client.query('ROLLBACK');
     throw err;
   } finally {
-    client.release();
+    client.end();
   }
+}
 
-  await endConnPool(pool);
+async function connectClient(config) {
+  const client = new Client(config);
+  await client.connect().catch((err) => {
+    log.error(`${config.database} connection failed: ${err}`);
+    throw err;
+  });
+  log.info('${config.database} connection established');
+  return client;
 }
 
 // Connect to the default 'postgres' database
 export async function connectPostgres() {
-  const pgClient = new Client(pgConfig);
-  await pgClient.connect();
-  return pgClient;
+  return await connectClient(pgConfig);
 }
 
 // Create a new database to avoid mutating the default 'postgres' database
