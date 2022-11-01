@@ -34,7 +34,7 @@ app.on('ready', async () => {
 
   // Schedule ETL to run daily at 3AM
   cron.schedule(
-    '0 3 * * *',
+    '38 9 * * *',
     async () => {
       log.info('Running cron task every day at 3AM');
       log.info(new Date(Date.now()).toLocaleString());
