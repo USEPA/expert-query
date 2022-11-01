@@ -5,7 +5,7 @@ applications:
     routes:
       - route: expert-query-prod.app.cloud.gov
       - route: expert-query.epa.gov
-    memory: 256M
+    memory: 512MB
     disk_quota: 512MB
     timeout: 180
     buildpacks:

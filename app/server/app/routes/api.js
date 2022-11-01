@@ -10,11 +10,6 @@ const isLocal = process.env.NODE_ENV === "local";
 module.exports = function (app) {
   const router = express.Router();
 
-  // --- Placeholder for API calls
-  router.get("/db-query", function (req, res, next) {
-    res.json({ success: true });
-  });
-
   // --- get static content from S3
   router.get("/lookupFiles", (req, res) => {
     const s3Bucket = process.env.CF_DEV_S3_PUB_BUCKET_ID;
