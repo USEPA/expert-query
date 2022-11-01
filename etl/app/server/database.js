@@ -361,9 +361,11 @@ export async function trimSchema(pool) {
   const client = await getClient(pool);
   try {
     const msInDay = 86400000;
-    schemas.rows.forEach(async (schema) => {
-      if (Date.now() - parseInt(schema.date) * 1000 > 5 * msInDay) {
+    for (const index in schemas.rows) {
+      const schema = schemas.rows[index];
+      if (Date.now() - parseFloat(schema.date) * 1000 > 1 * msInDay) {
         try {
+          log.info(`Dropping obsolete schema ${schema.schema_name}`);
           await client.query('BEGIN');
           await client.query(`DROP SCHEMA ${schema.schema_name} CASCADE`);
           await client.query(
@@ -375,7 +377,7 @@ export async function trimSchema(pool) {
           await client.query('ROLLBACK');
         }
       }
-    });
+    }
   } catch (err) {
     log.warn(`Error dropping obsolete schemas: ${err}`);
   } finally {
