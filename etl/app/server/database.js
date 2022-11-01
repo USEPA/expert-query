@@ -131,7 +131,7 @@ async function connectClient(config) {
     log.error(`${config.database} connection failed: ${err}`);
     throw err;
   });
-  log.info('${config.database} connection established');
+  log.info(`${config.database} connection established`);
   return client;
 }
 
