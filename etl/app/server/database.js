@@ -135,6 +135,9 @@ export async function createEqDb(client) {
     try {
       // Create the expert_query db
       await client.query('CREATE DATABASE ' + dbName);
+      await client.query(
+        `ALTER DATABASE ${dbName} SET timezone TO 'America/New_York';`,
+      );
       log.info(`${dbName} database created!`);
     } catch (err) {
       log.info(`Warning: ${dbName} database! ${err}`);
