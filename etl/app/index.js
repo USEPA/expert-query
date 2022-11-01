@@ -23,14 +23,13 @@ app.on('ready', async () => {
   log.info('Creating tables, running load, and scheduling load to run daily');
 
   // Create and load new schema
-  await database.runJob();
+  await database.runJob(true);
 
   // Schedule ETL to run daily at 3AM
   cron.schedule(
     '0 3 * * *',
     async () => {
       log.info('Running cron task every day at 3AM');
-      log.info(new Date(Date.now()).toLocaleString());
 
       database.runJob();
     },
@@ -46,7 +45,6 @@ app.on('tryDb', async () => {
       'Failed to connect to postgres! Retrying in 30 seconds...\n' + err,
     );
     setTimeout(() => {
-      log.info('Call tryDb2');
       app.emit('tryDb');
     }, 30 * 1000);
   });
@@ -54,12 +52,10 @@ app.on('tryDb', async () => {
   // Create expert_query user
   try {
     await database.createEqDb(client);
-    log.info('Call ready');
     app.emit('ready');
   } catch (err) {
     log.warn(`${err}: Retrying in 30 seconds...`);
     setTimeout(() => {
-      log.info('Call tryDb3');
       app.emit('tryDb');
     }, 30 * 1000);
   } finally {
@@ -67,5 +63,4 @@ app.on('tryDb', async () => {
   }
 });
 
-log.info('Call tryDb1');
 app.emit('tryDb');
