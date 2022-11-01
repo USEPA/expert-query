@@ -23,30 +23,15 @@ app.on('ready', async () => {
   log.info('Creating tables, running load, and scheduling load to run daily');
 
   // Create and load new schema
-  try {
-    await database.runLoad();
-    await database.trimSchema();
-  } catch (err) {
-    log.warn(`First run failed, continuing to schedule cron task: ${err}`);
-  }
-
-  database.endConnPool();
+  await database.runJob(true);
 
   // Schedule ETL to run daily at 3AM
   cron.schedule(
     '0 3 * * *',
     async () => {
       log.info('Running cron task every day at 3AM');
-      log.info(new Date(Date.now()).toLocaleString());
 
-      try {
-        await database.runLoad();
-        await database.trimSchema();
-        database.endConnPool();
-      } catch (err) {
-        log.warn(`Run failed, continuing to schedule cron task: ${err}`);
-        database.endConnPool();
-      }
+      database.runJob();
     },
     {
       scheduled: true,
@@ -60,31 +45,22 @@ app.on('tryDb', async () => {
       'Failed to connect to postgres! Retrying in 30 seconds...\n' + err,
     );
     setTimeout(() => {
-      log.info('Call tryDb2');
       app.emit('tryDb');
     }, 30 * 1000);
   });
-
-  if (!client) return;
-
-  log.info('postgres connection established');
 
   // Create expert_query user
-  const dbSuccess = await database.createEqDb(client).catch((err) => {
+  try {
+    await database.createEqDb(client);
+    app.emit('ready');
+  } catch (err) {
     log.warn(`${err}: Retrying in 30 seconds...`);
     setTimeout(() => {
-      log.info('Call tryDb3');
       app.emit('tryDb');
     }, 30 * 1000);
-    return false;
-  });
-
-  log.info(`dbSuccess: ${dbSuccess}`);
-  if (dbSuccess) {
-    log.info('Call ready');
-    app.emit('ready');
+  } finally {
+    await client.end();
   }
 });
 
-log.info('Call tryDb1');
 app.emit('tryDb');
