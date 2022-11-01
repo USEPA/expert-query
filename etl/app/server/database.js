@@ -363,7 +363,7 @@ export async function trimSchema(pool) {
     const msInDay = 86400000;
     for (const index in schemas.rows) {
       const schema = schemas.rows[index];
-      if (Date.now() - parseFloat(schema.date) * 1000 > 1 * msInDay) {
+      if (Date.now() - parseFloat(schema.date) * 1000 > 5 * msInDay) {
         try {
           log.info(`Dropping obsolete schema ${schema.schema_name}`);
           await client.query('BEGIN');
