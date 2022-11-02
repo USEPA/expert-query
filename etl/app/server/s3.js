@@ -1,6 +1,6 @@
 import AWS from 'aws-sdk';
 import axios from 'axios';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { getEnvironment } from './utilities/environment.js';
