@@ -1,49 +1,22 @@
 import pg from 'pg';
-
+import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
 import * as profiles from './profiles/index.js';
 
 const { Client, Pool } = pg;
 
-let isLocal = false;
-let isDevelopment = false;
-let isStaging = false;
+const environment = getEnvironment();
 
 let database_host = '';
 let database_user = '';
 let database_pwd = '';
 let database_port = '';
 
-if (process.env.NODE_ENV) {
-  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
-  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
-}
-
-const requiredEnvVars = ['EQ_PASSWORD'];
-
-if (isLocal) {
-  requiredEnvVars.push('DB_USERNAME', 'DB_PASSWORD', 'DB_PORT', 'DB_HOST');
-} else {
-  requiredEnvVars.push('VCAP_SERVICES');
-}
-
-requiredEnvVars.forEach((envVar) => {
-  if (!process.env[envVar]) {
-    const message =
-      envVar === 'VCAP_SERVICES'
-        ? 'VCAP_SERVICES Information not found. Connection will not be attempted.'
-        : `Required environment variable ${envVar} not found.`;
-    log.error(message);
-    process.exit();
-  }
-});
-
 const dbName = process.env.DB_NAME ?? 'expert_query';
 
 const eqUser = process.env.EQ_USERNAME ?? 'eq';
 
-if (isLocal) {
+if (environment.isLocal) {
   log.info('Since local, using a localhost Postgres database.');
   database_host = process.env.DB_HOST;
   database_user = process.env.DB_USERNAME;

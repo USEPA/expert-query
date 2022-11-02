@@ -3,41 +3,13 @@ import axios from 'axios';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
+import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-let isLocal = false;
-let isDevelopment = false;
-let isStaging = false;
-
-if (process.env.NODE_ENV) {
-  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
-  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
-}
-
-const requiredEnvVars = ['GLOSSARY_AUTH'];
-
-if (!isLocal) {
-  requiredEnvVars.push('CF_S3_PUB_ACCESS_KEY');
-  requiredEnvVars.push('CF_S3_PUB_BUCKET_ID');
-  requiredEnvVars.push('CF_S3_PUB_REGION');
-  requiredEnvVars.push('CF_S3_PUB_SECRET_KEY');
-  requiredEnvVars.push('CF_S3_PRIV_ACCESS_KEY');
-  requiredEnvVars.push('CF_S3_PRIV_BUCKET_ID');
-  requiredEnvVars.push('CF_S3_PRIV_REGION');
-  requiredEnvVars.push('CF_S3_PRIV_SECRET_KEY');
-}
-
-requiredEnvVars.forEach((envVar) => {
-  if (!process.env[envVar]) {
-    const message = `Required environment variable ${envVar} not found.`;
-    log.error(message);
-    process.exit();
-  }
-});
+const environment = getEnvironment();
 
 // Loads etl config from private S3 bucket
 export async function loadConfig() {
@@ -47,7 +19,7 @@ export async function loadConfig() {
   try {
     // setup private s3 bucket
     let s3;
-    if (!isLocal) {
+    if (!environment.isLocal) {
       let config = new AWS.Config({
         accessKeyId: process.env.CF_S3_PRIV_ACCESS_KEY,
         secretAccessKey: process.env.CF_S3_PRIV_SECRET_KEY,
@@ -61,7 +33,7 @@ export async function loadConfig() {
     const promises = filenames.map((filename) => {
       // local development: read files directly from disk
       // Cloud.gov: fetch files from the public s3 bucket
-      return isLocal
+      return environment.isLocal
         ? readFile(resolve(__dirname, '../content-private', filename), 'utf8')
         : s3
             .getObject({
@@ -75,7 +47,7 @@ export async function loadConfig() {
 
     // convert to json
     const parsedData = stringsOrResponses.map((stringOrResponse) =>
-      isLocal
+      environment.isLocal
         ? JSON.parse(stringOrResponse)
         : JSON.parse(stringOrResponse.Body.toString('utf-8')),
     );
@@ -96,7 +68,7 @@ export async function uploadFilePublic(filePath, fileToUpload) {
   try {
     // local development: write files directly to disk on the client app side
     // Cloud.gov: upload files to the public s3 bucket
-    if (isLocal) {
+    if (environment.isLocal) {
       const subFolderPath = resolve(
         __dirname,
         `../../../app/server/app/${subFolder}`,
