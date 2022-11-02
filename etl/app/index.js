@@ -2,12 +2,28 @@ import cron from 'node-cron';
 import express from 'express';
 
 import * as database from './server/database.js';
+import * as s3 from './server/s3.js';
 import { logger as log } from './server/utilities/logger.js';
 
 const app = express();
 app.disable('x-powered-by');
 
 const port = process.env.PORT || 3001;
+
+async function etlJob(first = false) {
+  // load config from private s3 bucket
+  const s3Data = await s3.loadConfig();
+
+  if (s3Data) s3.syncGlossary(s3Data.services);
+  else {
+    log.warn(
+      'Failed to get config from private S3 bucket, skipping glossary sync',
+    );
+  }
+
+  // Create and load new schema
+  await database.runJob(first);
+}
 
 app.on('ready', async () => {
   app.listen(port, () => {
@@ -21,9 +37,7 @@ app.on('ready', async () => {
   }
 
   log.info('Creating tables, running load, and scheduling load to run daily');
-
-  // Create and load new schema
-  await database.runJob(true);
+  etlJob();
 
   // Schedule ETL to run daily at 3AM
   cron.schedule(
@@ -31,7 +45,7 @@ app.on('ready', async () => {
     async () => {
       log.info('Running cron task every day at 3AM');
 
-      database.runJob();
+      etlJob();
     },
     {
       scheduled: true,

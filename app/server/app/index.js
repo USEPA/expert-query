@@ -79,12 +79,7 @@ if (!isLocal && !isDevelopment && !isStaging)
  Required Environment Variables
 ****************************************************************/
 // initialize to common variables
-const requiredEnvVars = [
-  "DB_NAME",
-  "DB_USERNAME",
-  "DB_PASSWORD",
-  "GLOSSARY_AUTH",
-];
+const requiredEnvVars = ["DB_NAME", "DB_USERNAME", "DB_PASSWORD"];
 
 if (isLocal) {
   requiredEnvVars.push("DB_HOST");
