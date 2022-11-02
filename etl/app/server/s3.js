@@ -57,7 +57,7 @@ export async function loadConfig() {
       services: parsedData[1],
     };
   } catch (err) {
-    log.warn(`Error getting static content from private S3 bucket`);
+    log.warn('Error loading config from private S3 bucket');
   }
 }
 
@@ -106,10 +106,10 @@ export async function uploadFilePublic(filePath, fileToUpload) {
   }
 }
 
-export async function syncGlossary(services, retryCount = 0) {
+export async function syncGlossary(s3Config, retryCount = 0) {
   try {
     // query the glossary service
-    const res = await axios.get(services.glossaryURL, {
+    const res = await axios.get(s3Config.services.glossaryURL, {
       headers: {
         authorization: `basic ${process.env.GLOSSARY_AUTH}`,
       },
@@ -118,10 +118,10 @@ export async function syncGlossary(services, retryCount = 0) {
     // check response, retry on failure
     if (res.status !== 200) {
       log.info('Non-200 response returned from Glossary service, retrying');
-      if (retryCount < 5) {
+      if (retryCount < s3Config.config.retryLimit) {
         return setTimeout(
-          () => syncGlossary(services, retryCount + 1),
-          5 * 1000,
+          () => syncGlossary(s3Config, retryCount + 1),
+          s3Config.config.retryIntervalSeconds * 1000,
         );
       } else {
         throw new Error('Sync glossary retry count exceeded');

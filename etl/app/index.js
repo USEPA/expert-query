@@ -42,17 +42,19 @@ requiredEnvVars.forEach((envVar) => {
 
 async function etlJob(first = false) {
   // load config from private s3 bucket
-  const s3Data = await s3.loadConfig();
+  const s3Config = await s3.loadConfig();
 
-  if (s3Data) s3.syncGlossary(s3Data.services);
-  else {
+  if (!s3Config) {
     log.warn(
-      'Failed to get config from private S3 bucket, skipping glossary sync',
+      'Failed to get config from private S3 bucket, aborting etl process',
     );
+    return;
   }
 
+  s3.syncGlossary(s3Config);
+
   // Create and load new schema
-  await database.runJob(first);
+  await database.runJob(s3Config, first);
 }
 
 app.on('ready', async () => {

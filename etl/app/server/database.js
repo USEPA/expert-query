@@ -195,8 +195,8 @@ async function getClient(pool) {
 }
 
 // Load profile data into the new schema
-async function loadProfile(profile, pool, schemaName) {
-  const profileEtl = getProfileEtl(profile);
+async function loadProfile(profile, pool, schemaName, s3Config) {
+  const profileEtl = getProfileEtl(profile, s3Config);
   const client = await getClient(pool);
   try {
     await profileEtl(client, schemaName);
@@ -247,11 +247,11 @@ async function logEtlLoadStart(pool) {
 }
 
 // Load new data into a fresh schema, then discard old schemas
-export async function runJob(first = false) {
+export async function runJob(s3Config, first = false) {
   const pool = startConnPool();
   try {
-    await runLoad(pool);
-    await trimSchema(pool);
+    await runLoad(pool, s3Config);
+    await trimSchema(pool, s3Config);
   } catch (err) {
     log.warn(
       `${
@@ -263,7 +263,7 @@ export async function runJob(first = false) {
   }
 }
 
-export async function runLoad(pool) {
+export async function runLoad(pool, s3Config) {
   log.info('Running ETL process!');
 
   const logId = await logEtlLoadStart(pool);
@@ -276,7 +276,7 @@ export async function runLoad(pool) {
 
     // Add tables to schema and import new data
     const loadTasks = Object.values(profiles).map((profile) => {
-      return loadProfile(profile, pool, schemaName);
+      return loadProfile(profile, pool, schemaName, s3Config);
     });
     await Promise.all(loadTasks);
 
@@ -320,7 +320,9 @@ async function transferSchema(pool, schemaName, schemaId) {
 }
 
 // Drop old schemas
-export async function trimSchema(pool) {
+export async function trimSchema(pool, s3Config) {
+  const schemaRetentionDays = s3Config.config.schemaRetentionDays;
+
   const schemas = await pool
     .query(
       'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
@@ -336,7 +338,10 @@ export async function trimSchema(pool) {
     const msInDay = 86400000;
     for (const index in schemas.rows) {
       const schema = schemas.rows[index];
-      if (Date.now() - parseFloat(schema.date) * 1000 > 5 * msInDay) {
+      if (
+        Date.now() - parseFloat(schema.date) * 1000 >
+        schemaRetentionDays * msInDay
+      ) {
         try {
           log.info(`Dropping obsolete schema ${schema.schema_name}`);
           await client.query('BEGIN');
@@ -359,13 +364,10 @@ export async function trimSchema(pool) {
 }
 
 // Get the ETL task for a particular profile
-function getProfileEtl({
-  createQuery,
-  extract,
-  insertQuery,
-  tableName,
-  transform,
-}) {
+function getProfileEtl(
+  { createQuery, extract, insertQuery, tableName, transform },
+  s3Config,
+) {
   return async function (client, schemaName) {
     // Create the table for the profile
     try {
@@ -383,7 +385,7 @@ function getProfileEtl({
     try {
       await client.query('BEGIN');
 
-      let res = await extract();
+      let res = await extract(s3Config);
       while (res.data !== null) {
         const rows = transform(res.data);
         const inserts = rows.map(async (row) => {
@@ -392,7 +394,7 @@ function getProfileEtl({
         await Promise.all(inserts);
 
         log.info(`Next record offset for table ${tableName}: ${res.next}`);
-        res = await extract(res.next);
+        res = await extract(s3Config, res.next);
       }
 
       await client.query('COMMIT');
