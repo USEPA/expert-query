@@ -1,16 +1,12 @@
 // components
-import { Loading } from "components/loading";
+import { Loading } from 'components/loading';
 // contexts
-import { useContentState } from "contexts/content";
+import { useContentState } from 'contexts/content';
 
 export function Home() {
   const { content } = useContentState();
 
-  if(content.status === 'pending') return <Loading />;
+  if (content.status === 'pending') return <Loading />;
 
-  return (
-    <div>
-      Expert Query Placeholder...
-    </div>
-  );
+  return <div>Expert Query Placeholder...</div>;
 }
