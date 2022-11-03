@@ -120,9 +120,9 @@ jobs:
       - name: Configure Public AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.CF_S3_PUB_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.CF_S3_PUB_SECRET_KEY }}
-          aws-region: ${{ secrets.CF_S3_PUB_REGION }}
+          aws-access-key-id: $CF_S3_PUB_ACCESS_KEY
+          aws-secret-access-key: $CF_S3_PUB_SECRET_KEY
+          aws-region: $CF_S3_PUB_REGION
 
       # Sync static content to public S3 bucket
       - name: Sync static content to S3
@@ -206,9 +206,9 @@ jobs:
       - name: Configure Private AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.CF_S3_PRIV_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.CF_S3_PRIV_SECRET_KEY }}
-          aws-region: ${{ secrets.CF_S3_PRIV_REGION }}
+          aws-access-key-id: $CF_S3_PRIV_ACCESS_KEY
+          aws-secret-access-key: $CF_S3_PRIV_SECRET_KEY
+          aws-region: $CF_S3_PRIV_REGION
 
       # Sync private static content to private S3 bucket
       - name: Sync private static content to S3
