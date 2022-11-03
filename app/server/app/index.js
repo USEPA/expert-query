@@ -79,21 +79,14 @@ if (!isLocal && !isDevelopment && !isStaging)
  Required Environment Variables
 ****************************************************************/
 // initialize to common variables
-const requiredEnvVars = [
-  "DB_NAME",
-  "DB_USERNAME",
-  "DB_PASSWORD",
-  "GLOSSARY_AUTH",
-];
+const requiredEnvVars = ["DB_NAME", "DB_USERNAME", "DB_PASSWORD"];
 
 if (isLocal) {
   requiredEnvVars.push("DB_HOST");
   requiredEnvVars.push("DB_PORT");
 } else {
-  requiredEnvVars.push("CF_DEV_S3_PUB_BUCKET_ID");
-  requiredEnvVars.push("CF_DEV_S3_PUB_REGION");
-  requiredEnvVars.push("CF_DEV_S3_PRIV_BUCKET_ID");
-  requiredEnvVars.push("CF_DEV_S3_PRIV_REGION");
+  requiredEnvVars.push("CF_S3_PUB_BUCKET_ID");
+  requiredEnvVars.push("CF_S3_PUB_REGION");
 }
 
 requiredEnvVars.forEach((envVar) => {

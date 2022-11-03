@@ -12,8 +12,8 @@ module.exports = function (app) {
 
   // --- get static content from S3
   router.get("/lookupFiles", (req, res) => {
-    const s3Bucket = process.env.CF_DEV_S3_PUB_BUCKET_ID;
-    const s3Region = process.env.CF_DEV_S3_PUB_REGION;
+    const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
+    const s3Region = process.env.CF_S3_PUB_REGION;
     const metadataObj = logger.populateMetdataObjFromRequest(req);
 
     // NOTE: static content files found in `app/server/app/content/` directory
@@ -67,8 +67,8 @@ module.exports = function (app) {
   // --- get static content from S3
   router.get("/getFile", (req, res) => {
     const { filepath } = req.query;
-    const s3Bucket = process.env.CF_DEV_S3_PUB_BUCKET_ID;
-    const s3Region = process.env.CF_DEV_S3_PUB_REGION;
+    const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
+    const s3Region = process.env.CF_S3_PUB_REGION;
     const metadataObj = logger.populateMetdataObjFromRequest(req);
 
     const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
