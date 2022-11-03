@@ -6,6 +6,7 @@ type Props = {
   disabled?: boolean;
   onClick: (ev: MouseEvent<HTMLButtonElement>) => void;
   size?: 'small' | 'large';
+  styles?: string[];
   type?: 'button' | 'submit';
 };
 
@@ -15,9 +16,10 @@ export default function Button({
   disabled = false,
   onClick,
   size = 'small',
+  styles = [],
   type = 'button',
 }: Props) {
-  const buttonStyles: string[] = [];
+  const buttonStyles: string[] = [...styles];
 
   switch (color) {
     case 'blue':

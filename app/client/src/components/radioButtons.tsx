@@ -9,25 +9,27 @@ interface Option {
 
 type Props = {
   legend?: ReactNode;
-  handleChange: (selected: string) => void;
+  onChange: (selected: string) => void;
   options: Option[];
+  styles?: string[];
   tile?: boolean;
 };
 
 export default function RadioButtons({
-  handleChange,
+  onChange,
   legend,
   options,
+  styles = [],
   tile = false,
 }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
-    if (selected) handleChange(selected);
-  }, [handleChange, selected]);
+    if (selected) onChange(selected);
+  }, [onChange, selected]);
 
   return (
-    <fieldset className="usa-fieldset">
+    <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && <legend className="usa-legend">{legend}</legend>}
       {options.map((option, i) => (
         <div key={i} className="usa-radio">

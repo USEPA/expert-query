@@ -10,25 +10,27 @@ interface Option {
 
 type Props = {
   legend?: ReactNode;
-  handleChange: (selected: string[]) => void;
+  onChange: (selected: string[]) => void;
   options: Option[];
+  styles?: string[];
   tile?: boolean;
 };
 
 export default function Checkboxes({
   legend,
-  handleChange,
+  onChange,
   options,
+  styles = [],
   tile = false,
 }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
 
   useEffect(() => {
-    handleChange(selected);
-  }, [handleChange, selected]);
+    onChange(selected);
+  }, [onChange, selected]);
 
   return (
-    <fieldset className="usa-fieldset">
+    <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && <legend className="usa-legend">{legend}</legend>}
       {options.map((option, i) => (
         <div className="usa-checkbox">

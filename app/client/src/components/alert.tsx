@@ -17,7 +17,7 @@ export default function Alert({
   styles = [],
   type = 'info',
 }: Props) {
-  const alertStyles = [];
+  const alertStyles = [...styles];
 
   switch (type) {
     case 'info':
@@ -36,8 +36,6 @@ export default function Alert({
 
   if (slim) styles.push('usa-alert--slim');
   if (!icon) styles.push('usa-alert--no-icon');
-
-  alertStyles.push(...styles);
 
   return (
     <div className={`usa-alert ${alertStyles.join(' ')}`}>
