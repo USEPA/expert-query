@@ -20,7 +20,7 @@ export async function loadConfig() {
     // setup private s3 bucket
     let s3;
     if (!environment.isLocal) {
-      let config = new AWS.Config({
+      const config = new AWS.Config({
         accessKeyId: process.env.CF_S3_PRIV_ACCESS_KEY,
         secretAccessKey: process.env.CF_S3_PRIV_SECRET_KEY,
         region: process.env.CF_S3_PRIV_REGION,
@@ -137,7 +137,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
       let definitionHtml = '';
       term.Attributes.forEach((attr) => {
         if (attr.Name === 'Def1') definition = attr.Value;
-        if (attr.Name === 'Editorial Note') definition = attr.Value;
+        if (attr.Name === 'Editorial Note') definitionHtml = attr.Value;
       });
 
       terms.push({
