@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
 import * as profiles from './profiles/index.js';
@@ -195,15 +196,33 @@ async function getClient(pool) {
 }
 
 // Load profile data into the new schema
-async function loadProfile(profile, pool, schemaName, s3Config) {
+async function loadProfile(
+  profile,
+  pool,
+  schemaName,
+  s3Config,
+  retryCount = 0,
+) {
   const profileEtl = getProfileEtl(profile, s3Config);
   const client = await getClient(pool);
   try {
     await profileEtl(client, schemaName);
     console.info(`ETL success for table ${profile.tableName}`);
   } catch (err) {
-    console.warn(`ETL failed for table ${profile.tableName}: ${err}`);
-    throw err;
+    if (retryCount < s3Config.config.retryLimit) {
+      console.info(`Retrying ETL for table ${profile.tableName}: ${err}`);
+      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
+      return await loadProfile(
+        profile,
+        pool,
+        schemaName,
+        s3Config,
+        retryCount + 1,
+      );
+    } else {
+      console.warn(`ETL failed for table ${profile.tableName}: ${err}`);
+      throw err;
+    }
   } finally {
     client.release();
   }
@@ -382,27 +401,26 @@ function getProfileEtl(
     }
 
     // Extract, transform, and load the new data
-    try {
-      await client.query('BEGIN');
-
-      let res = await extract(s3Config);
-      while (res.data !== null) {
+    let res = await extract(s3Config);
+    while (res.data !== null) {
+      try {
+        await client.query('BEGIN');
         const rows = transform(res.data);
         const inserts = rows.map(async (row) => {
           await client.query(insertQuery, row);
         });
         await Promise.all(inserts);
-
-        log.info(`Next record offset for table ${tableName}: ${res.next}`);
-        res = await extract(s3Config, res.next);
+        await client.query('COMMIT');
+      } catch (err) {
+        log.warn(`Failed to load table ${tableName}! ${err}`);
+        await client.query('ROLLBACK');
+        throw err;
       }
 
-      await client.query('COMMIT');
-      log.info(`Table ${tableName} load success`);
-    } catch (err) {
-      log.warn(`Failed to load table ${tableName}! ${err}`);
-      await client.query('ROLLBACK');
-      throw err;
+      log.info(`Next record offset for table ${tableName}: ${res.next}`);
+      res = await extract(s3Config, res.next);
     }
+
+    log.info(`Table ${tableName} load success`);
   };
 }
