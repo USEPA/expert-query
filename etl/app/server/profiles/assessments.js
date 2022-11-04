@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { setTimeout } from 'timers/promises';
 
 import { logger as log } from '../utilities/logger.js';
 
@@ -69,10 +70,8 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   if (res.status !== 200) {
     log.info('Non-200 response returned from GIS service, retrying');
     if (retryCount < s3Config.config.retryLimit) {
-      return setTimeout(
-        () => extract(s3Config, next, retryCount + 1),
-        s3Config.config.retryIntervalSeconds * 1000,
-      );
+      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
+      return await extract(s3Config, next, retryCount + 1);
     } else {
       throw new Error('Retry count exceeded');
     }
