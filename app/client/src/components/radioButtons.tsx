@@ -8,9 +8,9 @@ interface Option {
 
 type Props = {
   legend?: ReactNode;
-  onChange: (selected: string) => void;
+  onChange: (selected: Option) => void;
   options: Option[];
-  selected?: string | null;
+  selected?: Option | null;
   styles?: string[];
   tile?: boolean;
 };
@@ -33,8 +33,8 @@ export default function RadioButtons({
             id={`radio-${option.value}-${i}`}
             type="radio"
             value={option.value}
-            checked={option.value === selected}
-            onChange={(ev) => onChange(ev.target.value)}
+            checked={option.value === selected?.value}
+            onChange={(_ev) => onChange(option)}
           />
           <label
             className="usa-radio__label"

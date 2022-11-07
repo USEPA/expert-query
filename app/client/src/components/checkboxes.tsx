@@ -9,12 +9,16 @@ interface Option {
 
 type Props = {
   legend?: ReactNode;
-  onChange: (selected: string[]) => void;
+  onChange: (selected: Option[]) => void;
   options: Option[];
-  selected?: string[];
+  selected?: Option[];
   styles?: string[];
   tile?: boolean;
 };
+
+function isSelected(option: Option, selected: Option[]) {
+  return !!selected.find((s) => s.value === option.value);
+}
 
 export default function Checkboxes({
   legend,
@@ -36,12 +40,12 @@ export default function Checkboxes({
             id={`check-${option.value}-${i}`}
             type="checkbox"
             value={option.value}
-            checked={selected.includes(option.value)}
-            onChange={(ev) => {
-              if (selected.includes(ev.target.value)) {
-                onChange(selected.filter((value) => value !== option.value));
+            checked={isSelected(option, selected)}
+            onChange={(_ev) => {
+              if (isSelected(option, selected)) {
+                onChange(selected.filter((s) => s.value !== option.value));
               } else {
-                onChange([...selected, option.value]);
+                onChange([...selected, option]);
               }
             }}
           />

@@ -5,12 +5,12 @@ type Props = {
   text: string;
 };
 
-const failureMessage = 'Failed to copy text.';
+const failureMessage = 'Could not access clipboard.';
 
 const successMessage = 'Copied to clipboard!';
 
 export default function CopyBox({ text }: Props) {
-  const [statusMessage, setStatusMessage] = useState(successMessage);
+  const [status, setStatus] = useState<'success' | 'failure' | 'idle'>('idle');
   const [statusVisible, setStatusVisible] = useState(false);
 
   useEffect(() => {
@@ -26,10 +26,10 @@ export default function CopyBox({ text }: Props) {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        setStatusMessage(successMessage);
+        setStatus('success');
       })
       .catch((_err) => {
-        setStatusMessage(failureMessage);
+        setStatus('failure');
       })
       .finally(() => setStatusVisible(true));
   }, [text]);
@@ -47,9 +47,9 @@ export default function CopyBox({ text }: Props) {
           <span
             className={`margin-right-1 flex-align-center font-sans-2xs ${
               statusVisible ? 'display-inline' : 'display-none'
-            }`}
+            } ${status === 'failure' && 'text-secondary'}`}
           >
-            {statusMessage}
+            {status === 'success' ? successMessage : failureMessage}
           </span>
           <button
             type="button"
@@ -76,6 +76,7 @@ export default function CopyBox({ text }: Props) {
               focusable="false"
               role="img"
             />
+            <span className="sr-only">Copy content</span>
           </button>
         </span>
       </p>

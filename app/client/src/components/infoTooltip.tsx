@@ -1,46 +1,131 @@
 import { ReactComponent as Info } from 'uswds/img/usa-icons/info.svg';
+import { Portal } from '@reach/portal';
+import { TooltipPopup, useTooltip } from '@reach/tooltip';
+import { cloneElement, useRef } from 'react';
+// types
+import type { Position } from '@reach/tooltip';
+import type { ReactElement, Ref } from 'react';
+// styles
+import '@reach/tooltip/styles.css';
 
-type Position = 'top' | 'right' | 'bottom' | 'left';
+/*
+## Helpers
+ */
+const centered: Position = (triggerRect, tooltipRect) => {
+  if (!triggerRect || !tooltipRect) return {};
+  const triggerCenter = triggerRect.left + triggerRect.width / 2;
+  const left = triggerCenter - tooltipRect.width / 2;
+  const maxLeft = document.body.clientWidth - tooltipRect.width;
+  return {
+    left: Math.min(Math.max(2, left), maxLeft) + window.scrollX,
+    top: triggerRect.bottom + 8 + window.scrollY,
+  };
+};
 
-type Props = {
-  position?: Position;
+/*
+## Components
+ */
+type TooltipProps = {
+  children: ReactElement;
+  label: string;
+  triggerRef: Ref<HTMLElement>;
+};
+
+function Tooltip({ children, label, triggerRef }: TooltipProps) {
+  const [trigger, tooltip] = useTooltip({
+    ref: triggerRef,
+  });
+  const { isVisible, triggerRect } = tooltip;
+
+  return (
+    <>
+      {cloneElement(children, trigger)}
+
+      {isVisible && (
+        <Portal>
+          <div
+            style={{
+              position: 'absolute',
+              left:
+                (triggerRect &&
+                  triggerRect.left - 10 + triggerRect.width / 2) ??
+                undefined,
+              top:
+                (triggerRect && triggerRect.bottom + window.scrollY) ??
+                undefined,
+              width: 0,
+              height: 0,
+              borderLeft: '10px solid transparent',
+              borderRight: '10px solid transparent',
+              borderBottom: '10px solid black',
+            }}
+          />
+        </Portal>
+      )}
+
+      <TooltipPopup
+        {...tooltip}
+        style={{
+          backgroundColor: '#1b1b1b',
+          border: 'none',
+          borderRadius: '.25rem',
+          color: 'white',
+          fontSize: '1rem',
+          maxWidth: '320px',
+          padding: '0.5rem',
+          textAlign: 'center',
+          transition: 'opacity .08s ease-in-out',
+          whiteSpace: 'normal',
+        }}
+        label={label}
+        position={centered}
+      />
+    </>
+  );
+}
+
+type InfoTooltipProps = {
+  description?: string;
   styles?: string[];
   text: string;
 };
 
 export default function InfoTooltip({
-  position = 'top',
+  description,
   styles = [],
   text,
-}: Props) {
+}: InfoTooltipProps) {
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   return (
-    <button
-      type="button"
-      className={[
-        ...styles,
-        'usa-button',
-        'usa-tooltip',
-        'bg-white',
-        'border-0',
-        'margin-0',
-        'padding-0',
-        'width-auto',
-        'hover:bg-white',
-      ].join(' ')}
-      data-position={position}
-      title={text}
-    >
-      <Info
-        aria-hidden="true"
+    <Tooltip label={text} triggerRef={triggerRef}>
+      <button
+        onClick={(_ev) => triggerRef.current?.focus()}
         className={[
-          'usa-icon',
-          'text-primary',
-          'focus:text-primary-dark',
-          'hover:text-primary-dark',
+          ...styles,
+          'usa-button',
+          'bg-white',
+          'border-0',
+          'margin-0',
+          'padding-0',
+          'width-auto',
+          'hover:bg-white',
         ].join(' ')}
-        focusable="false"
-        role="img"
-      />
-    </button>
+        ref={triggerRef}
+        type="button"
+      >
+        <Info
+          aria-hidden="true"
+          className={[
+            'usa-icon',
+            'text-primary',
+            'focus:text-primary-dark',
+            'hover:text-primary-dark',
+          ].join(' ')}
+          focusable="false"
+          role="img"
+        />
+        <span className="sr-only">{description ?? 'Information Tooltip'}</span>
+      </button>
+    </Tooltip>
   );
 }
