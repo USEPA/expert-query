@@ -38,7 +38,7 @@ export default function Alert({
   if (!icon) styles.push('usa-alert--no-icon');
 
   return (
-    <div className={`usa-alert ${alertStyles.join(' ')}`}>
+    <div className={`usa-alert ${alertStyles.join(' ')}`} role="alert">
       <div className="usa-alert__body">
         {heading && <h4 className="usa-alert__heading">{heading}</h4>}
         <p className="usa-alert__text">{children}</p>

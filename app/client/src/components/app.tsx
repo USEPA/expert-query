@@ -29,6 +29,7 @@ function useFetchedContent() {
         });
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return;
         contentDispatch({ type: 'FETCH_CONTENT_FAILURE' });
       });
 

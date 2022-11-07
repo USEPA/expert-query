@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 // types
 import type { ReactNode } from 'react';
 
@@ -11,23 +10,19 @@ type Props = {
   legend?: ReactNode;
   onChange: (selected: string) => void;
   options: Option[];
+  selected?: string | null;
   styles?: string[];
   tile?: boolean;
 };
 
 export default function RadioButtons({
-  onChange,
   legend,
+  onChange,
   options,
+  selected = null,
   styles = [],
   tile = false,
 }: Props) {
-  const [selected, setSelected] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (selected) onChange(selected);
-  }, [onChange, selected]);
-
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && <legend className="usa-legend">{legend}</legend>}
@@ -39,9 +34,7 @@ export default function RadioButtons({
             type="radio"
             value={option.value}
             checked={option.value === selected}
-            onChange={(ev) => {
-              setSelected(ev.target.value);
-            }}
+            onChange={(ev) => onChange(ev.target.value)}
           />
           <label
             className="usa-radio__label"

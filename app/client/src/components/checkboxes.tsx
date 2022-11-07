@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 // types
 import type { ReactNode } from 'react';
 
@@ -12,6 +11,7 @@ type Props = {
   legend?: ReactNode;
   onChange: (selected: string[]) => void;
   options: Option[];
+  selected?: string[];
   styles?: string[];
   tile?: boolean;
 };
@@ -20,15 +20,10 @@ export default function Checkboxes({
   legend,
   onChange,
   options,
+  selected = [],
   styles = [],
   tile = false,
 }: Props) {
-  const [selected, setSelected] = useState<string[]>([]);
-
-  useEffect(() => {
-    onChange(selected);
-  }, [onChange, selected]);
-
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && <legend className="usa-legend">{legend}</legend>}
@@ -44,9 +39,9 @@ export default function Checkboxes({
             checked={selected.includes(option.value)}
             onChange={(ev) => {
               if (selected.includes(ev.target.value)) {
-                setSelected(selected.filter((value) => value !== option.value));
+                onChange(selected.filter((value) => value !== option.value));
               } else {
-                setSelected([...selected, option.value]);
+                onChange([...selected, option.value]);
               }
             }}
           />

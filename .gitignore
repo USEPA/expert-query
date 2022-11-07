@@ -48,3 +48,5 @@ database/docker/owpub/data/
 database/docker/postgres/data/
 database/docker/server/postgres/data/
 
+# EQ ETL Bucket
+app/server/app/content-etl/

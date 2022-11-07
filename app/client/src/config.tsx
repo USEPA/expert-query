@@ -1,12 +1,9 @@
-const {
-  NODE_ENV,
-  REACT_APP_CLOUD_SPACE,
-  REACT_APP_SERVER_BASE_PATH,
-} = process.env;
+const { NODE_ENV, REACT_APP_CLOUD_SPACE, REACT_APP_SERVER_BASE_PATH } =
+  process.env;
 
 // allows the app to be accessed from a sub directory of a server (e.g. /attains-query)
 export const serverBasePath =
-  NODE_ENV === "development" ? "" : REACT_APP_SERVER_BASE_PATH || "";
+  NODE_ENV === 'development' ? '' : REACT_APP_SERVER_BASE_PATH || '';
 
 // NOTE: This app is configured to use [Create React App's proxy setup]
 // (https://create-react-app.dev/docs/proxying-api-requests-in-development/)
@@ -25,17 +22,17 @@ export const serverUrl = window.location.origin + serverBasePath;
 // that set an "Accept" request header to "text/html", so in those cases we need
 // to explicitly use the server app's URL/port (localhost:3001)
 export const serverUrlForHrefs =
-  NODE_ENV === "development" ? "http://localhost:9090" : serverUrl;
+  NODE_ENV === 'development' ? 'http://localhost:9090' : serverUrl;
 
 export const cloudSpace =
-  NODE_ENV === "development" ? "dev" : REACT_APP_CLOUD_SPACE || "";
+  NODE_ENV === 'development' ? 'dev' : REACT_APP_CLOUD_SPACE || '';
 
 async function fetchData(url: string, options: RequestInit) {
   try {
     const response = await fetch(url, options);
     if (!response.ok) throw new Error(response.statusText);
-    const contentType = response.headers.get("content-type");
-    return contentType?.includes("application/json")
+    const contentType = response.headers.get('content-type');
+    return contentType?.includes('application/json')
       ? await response.json()
       : Promise.resolve();
   } catch (error) {
@@ -49,8 +46,8 @@ async function fetchData(url: string, options: RequestInit) {
  */
 export function getData(url: string, signal: AbortSignal) {
   return fetchData(url, {
-    method: "GET",
-    credentials: "include" as const,
+    method: 'GET',
+    credentials: 'include' as const,
     signal,
   });
 }
@@ -61,9 +58,9 @@ export function getData(url: string, signal: AbortSignal) {
  */
 export function postData(url: string, data: object) {
   return fetchData(url, {
-    method: "POST",
-    credentials: "include" as const,
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    credentials: 'include' as const,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
 }
