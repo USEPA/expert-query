@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { createRoot } from 'react-dom/client';
 import {
   BrowserRouter,
+  Navigate,
   Routes,
   Route,
 } from "react-router-dom";
@@ -116,7 +117,8 @@ export function App() {
   return (
     <BrowserRouter basename={serverBasePath}>
       <Routes>
-        <Route index element={<Home />} />
+        <Route index element={<Navigate to="/attains" replace />} />
+        <Route path="/attains" element={<Home />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </BrowserRouter>

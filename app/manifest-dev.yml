@@ -2,6 +2,8 @@
 applications:
   - name: expert-query-dev
     instances: 1
+    routes:
+      - owapps-dev.app.cloud.gov/expertquery
     memory: 512MB
     disk_quota: 512MB
     timeout: 180

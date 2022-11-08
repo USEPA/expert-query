@@ -25,5 +25,5 @@ module.exports = function (app) {
     }
   });
 
-  app.use("/data", router);
+  app.use("/attains/data", router);
 };
