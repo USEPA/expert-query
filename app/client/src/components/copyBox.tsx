@@ -54,7 +54,7 @@ export default function CopyBox({ text }: Props) {
           <span
             className={`margin-right-1 flex-align-center font-sans-2xs ${
               statusVisible ? 'display-inline' : 'display-none'
-            } ${status === 'failure' && 'text-secondary'}`}
+            } ${status === 'failure' ? 'text-red' : 'text-green'}`}
           >
             {status === 'success' ? successMessage : failureMessage}
           </span>

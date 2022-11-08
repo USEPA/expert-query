@@ -205,18 +205,6 @@ function matchSingleOption<S, T>(
   > | null;
 }
 
-// Type assertion for return value `matchStaticOptions`
-function matchMultipleOptions<S, T>(
-  values: QueryValue | QueryValue[] | null,
-  defaultValue: QueryValue | null,
-  options: Option<S, T>[],
-): Option<S, T>[] {
-  return matchStaticOptions(values, defaultValue, options, true) as Option<
-    S,
-    T
-  >[];
-}
-
 // Produce the option/s corresponding to a particular value
 function matchStaticOptions<S, T>(
   values: QueryValue | QueryValue[] | null,
