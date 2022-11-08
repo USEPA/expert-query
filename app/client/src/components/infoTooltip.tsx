@@ -10,7 +10,7 @@ import '@reach/tooltip/styles.css';
 
 /*
 ## Helpers
- */
+*/
 const centered: Position = (triggerRect, tooltipRect) => {
   if (!triggerRect || !tooltipRect) return {};
   const triggerCenter = triggerRect.left + triggerRect.width / 2;

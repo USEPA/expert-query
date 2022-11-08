@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import Select from 'react-select';
 // components
 import Alert from 'components/alert';
@@ -10,6 +10,24 @@ import InfoTooltip from 'components/infoTooltip';
 import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
+// types
+import type { ReactNode } from 'react';
+
+/*
+## Types
+*/
+interface InputState {
+  fileFormat: Option<ReactNode, string> | null;
+  dataProfile: Option<JSX.Element, keyof typeof dataProfiles> | null;
+}
+
+type InputAction =
+  | { type: 'reset' }
+  | { type: 'fileFormat'; payload: Option<ReactNode, string> }
+  | {
+      type: 'dataProfile';
+      payload: Option<JSX.Element, keyof typeof dataProfiles> | null;
+    };
 
 interface Option<S, T> {
   label: S;
@@ -65,8 +83,6 @@ const dataProfileOptions = Object.keys(dataProfiles).map((profileId) => {
   return dataProfileOption(profileId as keyof typeof dataProfiles);
 });
 
-const defaultDataProfile = 'assessmentUnits';
-
 const fileFormatOptions = [
   {
     label: 'Comma-separated (CSV)',
@@ -88,27 +104,28 @@ const fileFormatOptions = [
 
 const defaultFileFormat = 'csv';
 
-const staticFields = {
-  dataProfile: dataProfileOptions,
-  fileFormat: fileFormatOptions,
-};
+const staticFields = ['dataProfile', 'fileFormat'];
 
 /*
 ## Utilities
 */
-// Convert a JSON object into a parameter string
-function buildQueryString(query: QueryState) {
+// Converts a JSON object into a parameter string
+function buildQueryString(query: QueryState, includeStatic = true) {
   const paramsList: Array<QueryParameter> = [];
   Object.entries(query).forEach(([field, value]) => {
+    if (!includeStatic && staticFields.includes(field)) return;
+
+    // Duplicate the query parameter for an array of values
     if (Array.isArray(value)) value.forEach((v) => paramsList.push([field, v]));
+    // Else push a single parameter
     else paramsList.push([field, value]);
   });
   return paramsList
     .reduce((a, b) => a + `&${b[0]}=${b[1]}`, '')
-    .replace('&', '');
+    .replace('&', ''); // trim the leading ampersand
 }
 
-// Get data profile select options from data profiles config
+// Gets data profile select options from data profiles configuration
 function dataProfileOption(profileId: keyof typeof dataProfiles) {
   return {
     value: profileId,
@@ -122,17 +139,106 @@ function dataProfileOption(profileId: keyof typeof dataProfiles) {
   };
 }
 
-// Produce the option corresponding to a particular value
-function getStaticOption<S, T>(
-  value: string,
-  defaultValue: string,
-  options: Option<S, T>[],
-) {
-  return (
-    options.find((option) => option.value === value) ??
-    options.find((option) => option.value === defaultValue) ??
-    null
+// Uses URL query parameters or default values for initial state
+function getInitialState(): InputState {
+  const params = parseInitialParams();
+
+  const fileFormat = matchSingleOption(
+    params.fileFormat ?? null,
+    defaultFileFormat,
+    fileFormatOptions,
   );
+
+  const dataProfile = matchSingleOption(
+    params.dataProfile ?? null,
+    null,
+    dataProfileOptions,
+  );
+
+  return { fileFormat, dataProfile };
+}
+
+function inputReducer(state: InputState, action: InputAction): InputState {
+  switch (action.type) {
+    case 'fileFormat':
+      return {
+        ...state,
+        fileFormat: action.payload,
+      };
+    case 'dataProfile':
+      return {
+        ...state,
+        dataProfile: action.payload,
+      };
+    case 'reset':
+      return {
+        dataProfile: null,
+        fileFormat: matchSingleOption(
+          null,
+          defaultFileFormat,
+          fileFormatOptions,
+        ),
+      };
+    default: {
+      const message = `Unhandled action type: ${action}`;
+      throw new Error(message);
+    }
+  }
+}
+
+// Type narrowing for InputState
+function isOption(
+  maybeOption: Option<unknown, unknown> | QueryValue,
+): maybeOption is Option<unknown, unknown> {
+  return typeof maybeOption === 'object' && 'value' in maybeOption;
+}
+
+// Type assertion for return value `matchStaticOptions`
+function matchSingleOption<S, T>(
+  values: QueryValue | QueryValue[] | null,
+  defaultValue: QueryValue | null,
+  options: Option<S, T>[],
+): Option<S, T> | null {
+  return matchStaticOptions(values, defaultValue, options) as Option<
+    S,
+    T
+  > | null;
+}
+
+// Type assertion for return value `matchStaticOptions`
+function matchMultipleOptions<S, T>(
+  values: QueryValue | QueryValue[] | null,
+  defaultValue: QueryValue | null,
+  options: Option<S, T>[],
+): Option<S, T>[] {
+  return matchStaticOptions(values, defaultValue, options, true) as Option<
+    S,
+    T
+  >[];
+}
+
+// Produce the option/s corresponding to a particular value
+function matchStaticOptions<S, T>(
+  values: QueryValue | QueryValue[] | null,
+  defaultValue: QueryValue | null,
+  options: Option<S, T>[],
+  multiple = false,
+) {
+  const valuesArray: QueryValue[] = [];
+  if (Array.isArray(values)) valuesArray.push(...values);
+  else if (values !== null) valuesArray.push(values);
+  if (!valuesArray.length && defaultValue) valuesArray.push(defaultValue);
+
+  const matches = new Set<Option<S, T>>(); // prevent duplicates
+  // Check if the value is valid, otherwise use a default value
+  valuesArray.forEach((value) => {
+    const match =
+      options.find((option) => option.value === value) ??
+      options.find((option) => option.value === defaultValue);
+    if (match) matches.add(match);
+  });
+  const matchesArray = Array.from(matches);
+  return multiple ? matchesArray : matchesArray.pop() ?? null;
 }
 
 // Parse parameters provided in the URL hash into a JSON object
@@ -141,13 +247,16 @@ function parseInitialParams() {
   const initialParamsList = window.location.hash.replace('#', '').split('&');
   initialParamsList.forEach((param) => {
     const parsedParam = param.split('=');
-    if (parsedParam.length !== 2) return;
+    // Disregard invalid or empty parameters
+    if (parsedParam.length !== 2 || parsedParam[1] === '') return;
     const [field, newValue] = parsedParam;
     if (field in initialParams) {
+      // Multiple values, add to an array
       const value = initialParams[field];
       if (Array.isArray(value)) value.push(newValue);
       else initialParams[field] = [value, newValue];
     } else {
+      // Single value
       initialParams[field] = newValue;
     }
   });
@@ -160,64 +269,39 @@ function parseInitialParams() {
 export function Home() {
   const { content } = useContentState();
 
-  // Params passed in through the URL hash
-  const [initialParams] = useState<QueryState>(parseInitialParams());
+  const [inputState, inputDispatch] = useReducer(
+    inputReducer,
+    getInitialState(),
+  );
+  const { dataProfile, fileFormat } = inputState;
 
-  // Filter fields
-  const [fileFormat, setFileFormat] = useState<
-    typeof fileFormatOptions[number] | null
-  >(null);
-
-  useEffect(() => {
-    const value = initialParams.fileFormat;
-    if (typeof value !== 'string') return;
-    setFileFormat(getStaticOption(value, defaultFileFormat, fileFormatOptions));
-  }, [initialParams]);
-
-  const [dataProfile, setDataProfile] = useState<
-    typeof dataProfileOptions[number] | null
-  >(null);
-
-  useEffect(() => {
-    const value = initialParams.dataProfile;
-    if (typeof value !== 'string') return;
-    setDataProfile(
-      getStaticOption(value, defaultDataProfile, dataProfileOptions),
-    );
-  }, [initialParams]);
-
-  // Reset all inputs to a default or empty value
-  const clearInputs = useCallback(() => {
-    setFileFormat(null);
-    setDataProfile(null);
-  }, []);
-
-  // Update URL when inputs change
+  // Track non-empty values relevant to the current profile
   const [queryParams, setQueryParams] = useState<QueryState>({});
 
+  // Update URL when inputs change
   useEffect(() => {
-    const allParams = {
-      dataProfile: dataProfile?.value,
-      fileFormat: fileFormat?.value,
-    };
-
     // Get selected parameters, including multiselectable fields
-    // const currentQueryParams: Array<QueryParameter> = [];
     const newQueryParams: QueryState = {};
-    Object.entries(allParams).forEach(([field, value]) => {
-      if (value == null) return;
+    Object.entries(inputState).forEach(([field, value]) => {
+      if (value == null || (Array.isArray(value) && !value.length)) return;
+      // Extract 'value' field from Option types
+      const flattenedValue = Array.isArray(value)
+        ? value.map((v) => (isOption(v) ? v.value : v))
+        : isOption(value)
+        ? value.value
+        : value;
       if (
-        Object.keys(staticFields).includes(field) ||
+        staticFields.includes(field) ||
         (dataProfile && dataProfiles[dataProfile.value].fields.includes(field))
       ) {
-        newQueryParams[field] = value;
+        newQueryParams[field] = flattenedValue;
       }
     });
 
     window.location.hash = buildQueryString(newQueryParams);
 
     setQueryParams(newQueryParams);
-  }, [fileFormat, dataProfile]);
+  }, [dataProfile, inputState]);
 
   if (content.status === 'pending') return <Loading />;
 
@@ -231,7 +315,7 @@ export function Home() {
   if (content.status === 'success')
     return (
       <div>
-        <Summary heading="How to Use This Application" styles={['margin-2']}>
+        <Summary heading="How to Use This Application">
           <p>
             Select a data profile, then build a query by selecting options from
             the input fields.
@@ -239,56 +323,60 @@ export function Home() {
         </Summary>
         <h3>Data Profile</h3>
         <Select
-          isClearable={true}
-          onChange={(ev) => setDataProfile(ev)}
+          onChange={(ev) => inputDispatch({ type: 'dataProfile', payload: ev })}
           options={dataProfileOptions}
+          placeholder="Select a data profile..."
           value={dataProfile}
-        />
-        <h3>Filters</h3>
-        <h3>Download the Data</h3>
-        <div className="display-flex flex-wrap">
-          <RadioButtons
-            legend={
-              <>
-                <b className="margin-right-1">File Format</b>
-                <InfoTooltip text="Choose a file format for the result set" />
-              </>
-            }
-            onChange={(option) =>
-              setFileFormat(option as typeof fileFormatOptions[number])
-            }
-            options={fileFormatOptions}
-            selected={fileFormat}
-            styles={['margin-bottom-2']}
-          />
-          <div className="display-flex flex-column flex-1 margin-y-auto">
-            <Button
-              onClick={() => {}}
-              styles={['margin-x-auto', 'margin-bottom-1']}
-            >
-              Download
-            </Button>
-            <Button
-              color="white"
-              onClick={clearInputs}
-              styles={['margin-x-auto']}
-            >
-              Clear Search
-            </Button>
-          </div>
-        </div>
-        <h4>Current Query</h4>
-        <CopyBox
-          text={`${window.location.origin}/#${buildQueryString(queryParams)}`}
         />
         {dataProfile && (
           <>
-            <h4>{dataProfiles[dataProfile.value].label} API Query</h4>
+            <h3>Filters</h3>
+            <h3>Download the Data</h3>
+            <div className="display-flex flex-wrap">
+              <RadioButtons
+                legend={
+                  <>
+                    <b className="margin-right-1">File Format</b>
+                    <InfoTooltip text="Choose a file format for the result set" />
+                  </>
+                }
+                onChange={(option) =>
+                  inputDispatch({ type: 'fileFormat', payload: option })
+                }
+                options={fileFormatOptions}
+                selected={fileFormat}
+                styles={['margin-bottom-2']}
+              />
+              <div className="display-flex flex-column flex-1 margin-y-auto">
+                <Button
+                  onClick={() => {}}
+                  styles={['margin-x-auto', 'margin-bottom-1']}
+                >
+                  Download
+                </Button>
+                <Button
+                  color="white"
+                  onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                  styles={['margin-x-auto']}
+                >
+                  Clear Search
+                </Button>
+              </div>
+            </div>
+            <h4>Current Query</h4>
             <CopyBox
-              text={`${window.location.origin}/data/${
-                dataProfiles[dataProfile.value].subdirectory
-              }?${buildQueryString(queryParams)}`}
+              text={`${window.location.origin}/#${buildQueryString(
+                queryParams,
+              )}`}
             />
+            <>
+              <h4>{dataProfiles[dataProfile.value].label} API Query</h4>
+              <CopyBox
+                text={`${window.location.origin}/data/${
+                  dataProfiles[dataProfile.value].subdirectory
+                }?${buildQueryString(queryParams, false)}`}
+              />
+            </>
           </>
         )}
       </div>

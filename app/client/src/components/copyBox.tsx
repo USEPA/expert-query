@@ -23,6 +23,11 @@ export default function CopyBox({ text }: Props) {
   }, [statusVisible]);
 
   const copyToClipboard = useCallback(() => {
+    if (!navigator.clipboard) {
+      setStatus('failure');
+      setStatusVisible(true);
+      return;
+    }
     navigator.clipboard
       .writeText(text)
       .then(() => {
@@ -31,7 +36,9 @@ export default function CopyBox({ text }: Props) {
       .catch((_err) => {
         setStatus('failure');
       })
-      .finally(() => setStatusVisible(true));
+      .finally(() => {
+        setStatusVisible(true);
+      });
   }, [text]);
 
   return (
