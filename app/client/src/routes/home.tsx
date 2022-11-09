@@ -3,6 +3,7 @@ import Select from 'react-select';
 // components
 import Alert from 'components/alert';
 import Button from 'components/button';
+import Checkbox from 'components/checkbox';
 import CopyBox from 'components/copyBox';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
@@ -83,6 +84,8 @@ const dataProfileOptions = Object.keys(dataProfiles).map((profileId) => {
   return dataProfileOption(profileId as keyof typeof dataProfiles);
 });
 
+const defaultFileFormat = 'csv';
+
 const fileFormatOptions = [
   {
     label: 'Comma-separated (CSV)',
@@ -101,8 +104,6 @@ const fileFormatOptions = [
     value: 'json',
   },
 ];
-
-const defaultFileFormat = 'csv';
 
 const staticFields = ['dataProfile', 'fileFormat'];
 
@@ -125,6 +126,12 @@ function buildQueryString(query: QueryState, includeStatic = true) {
     .replace('&', ''); // trim the leading ampersand
 }
 
+function getLocalStorageItem(item: string) {
+  if (storageAvailable()) {
+    return localStorage.getItem(item) ?? null;
+  } else return null;
+}
+
 // Gets data profile select options from data profiles configuration
 function dataProfileOption(profileId: keyof typeof dataProfiles) {
   return {
@@ -136,6 +143,14 @@ function dataProfileOption(profileId: keyof typeof dataProfiles) {
         <em>{dataProfiles[profileId].description}</em>
       </p>
     ),
+  };
+}
+
+// Empty or default values for inputs
+function getClearedState(): InputState {
+  return {
+    dataProfile: null,
+    fileFormat: matchSingleOption(null, defaultFileFormat, fileFormatOptions),
   };
 }
 
@@ -158,6 +173,7 @@ function getInitialState(): InputState {
   return { fileFormat, dataProfile };
 }
 
+// Manages the state of all query field inputs
 function inputReducer(state: InputState, action: InputAction): InputState {
   switch (action.type) {
     case 'fileFormat':
@@ -167,18 +183,11 @@ function inputReducer(state: InputState, action: InputAction): InputState {
       };
     case 'dataProfile':
       return {
-        ...state,
+        ...getClearedState(),
         dataProfile: action.payload,
       };
     case 'reset':
-      return {
-        dataProfile: null,
-        fileFormat: matchSingleOption(
-          null,
-          defaultFileFormat,
-          fileFormatOptions,
-        ),
-      };
+      return getClearedState();
     default: {
       const message = `Unhandled action type: ${action}`;
       throw new Error(message);
@@ -251,6 +260,33 @@ function parseInitialParams() {
   return initialParams;
 }
 
+function setLocalStorageItem(item: string, value: string) {
+  storageAvailable() && localStorage.setItem(item, value);
+}
+
+function storageAvailable(
+  storageType: 'localStorage' | 'sessionStorage' = 'localStorage',
+) {
+  let storage: Storage = window[storageType];
+  try {
+    const x = '__storage_test__';
+    storage.setItem(x, x);
+    storage.removeItem(x);
+    return true;
+  } catch (e) {
+    return (
+      e instanceof DOMException &&
+      // everything except Firefox
+      (e.name === 'QuotaExceededError' ||
+        // Firefox
+        e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+      // acknowledge QuotaExceededError only if there's something already stored
+      storage &&
+      storage.length !== 0
+    );
+  }
+}
+
 /*
 ## Components
 */
@@ -291,6 +327,16 @@ export function Home() {
     setQueryParams(newQueryParams);
   }, [dataProfile, inputState]);
 
+  const [introVisible, setIntroVisible] = useState(
+    getLocalStorageItem('showIntro') === 'true' ?? true,
+  );
+  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!dontShowAgain) return;
+    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
+  }, [dontShowAgain]);
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure')
@@ -303,12 +349,24 @@ export function Home() {
   if (content.status === 'success')
     return (
       <div>
-        <Summary heading="How to Use This Application">
-          <p>
-            Select a data profile, then build a query by selecting options from
-            the input fields.
-          </p>
-        </Summary>
+        {introVisible && (
+          <Summary heading="How to Use This Application">
+            <p>
+              Select a data profile, then build a query by selecting options
+              from the input fields.
+            </p>
+            <p className="display-flex flex-justify flex-wrap">
+              <Checkbox
+                checked={dontShowAgain ?? false}
+                id="do-not-show-intro-checkbox"
+                label="Don't show again on this computer"
+                onChange={(_ev) => setDontShowAgain(!dontShowAgain)}
+                styles={['margin-bottom-2 margin-right-1']}
+              />
+              <Button onClick={() => setIntroVisible(false)}>Close</Button>
+            </p>
+          </Summary>
+        )}
         <h3>Data Profile</h3>
         <Select
           onChange={(ev) => inputDispatch({ type: 'dataProfile', payload: ev })}

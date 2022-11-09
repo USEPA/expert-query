@@ -1,4 +1,7 @@
+// components
+import Checkbox from 'components/checkbox';
 // types
+import { uniqueId } from 'lodash';
 import type { ReactNode } from 'react';
 
 interface Option {
@@ -31,16 +34,15 @@ export default function Checkboxes({
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && <legend className="usa-legend">{legend}</legend>}
-      {options.map((option, i) => (
-        <div className="usa-checkbox">
-          <input
-            className={`usa-checkbox__input ${
-              tile && 'usa-checkbox__input--tile'
-            }`}
-            id={`check-${option.value}-${i}`}
-            type="checkbox"
-            value={option.value}
+      {options.map((option) => {
+        const id = uniqueId('checkbox-');
+        return (
+          <Checkbox
             checked={isSelected(option, selected)}
+            description={option.description}
+            id={id}
+            key={id}
+            label={option.label}
             onChange={(_ev) => {
               if (isSelected(option, selected)) {
                 onChange(selected.filter((s) => s.value !== option.value));
@@ -48,20 +50,11 @@ export default function Checkboxes({
                 onChange([...selected, option]);
               }
             }}
+            tile={tile}
+            value={option.value}
           />
-          <label
-            className="usa-checkbox__label"
-            htmlFor={`check-${option.value}-${i}`}
-          >
-            {option.label}
-            {option.description && (
-              <span className="usa-checkbox__label-description">
-                {option.description}
-              </span>
-            )}
-          </label>
-        </div>
-      ))}
+        );
+      })}
     </fieldset>
   );
 }
