@@ -8,11 +8,12 @@ import CopyBox from 'components/copyBox';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
+import RangeSlider from 'components/rangeSlider';
 import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
 // types
-import type { ReactNode } from 'react';
+import type { Dispatch, ReactNode } from 'react';
 
 /*
 ## Types
@@ -49,33 +50,81 @@ type QueryValue = string | number | boolean;
 const dataProfiles = {
   assessmentUnits: {
     description: 'Description of assessment units',
-    fields: ['state'],
+    fields: [
+      'assessmentUnitId',
+      'assessmentUnitName',
+      'assessmentUnitStatus',
+      'locationDescription',
+      'locationText',
+      'locationTypeCode',
+      'organizationId',
+      'organizationName',
+      'organizationType',
+      'region',
+      'sizeSource',
+      'sourceScale',
+      'state',
+      'useClassName',
+      'waterSize',
+      'waterSizeUnits',
+      'waterType',
+    ],
     label: 'Assessment Units',
-    subdirectory: 'assessmentUnits',
+    resource: 'assessment-units',
   },
   assessmentUnitsMonitoring: {
     description: 'Description of assessment units with monitoring locations',
-    fields: ['state'],
+    fields: [
+      'assessmentUnitId',
+      'assessmentUnitName',
+      'assessmentUnitStatus',
+      'locationDescription',
+      'monitoringLocationDataLink',
+      'monitoringLocationId',
+      'monitoringLocationOrgId',
+      'organizationId',
+      'organizationName',
+      'organizationType',
+      'region',
+      'reportingCycle',
+      'sizeSource',
+      'sourceScale',
+      'state',
+      'useClassName',
+      'waterSize',
+      'waterSizeUnits',
+      'waterType',
+    ],
     label: 'Assessment Units with Monitoring Locations',
-    subdirectory: 'assessmentUnitsMonitoring',
+    resource: 'assessment-units-monitoring-locations',
   },
   catchmentCorrespondence: {
     description: 'Description of Catchment Correspondence',
-    fields: ['state'],
+    fields: [
+      'assessmentUnitId',
+      'assessmentUnitName',
+      'catchmentNhdplusId',
+      'organizationId',
+      'organizationName',
+      'organizationType',
+      'region',
+      'reportingCycle',
+      'state',
+    ],
     label: 'Catchment Correspondence',
-    subdirectory: 'catchmentCorrespondence',
+    resource: 'catchment-correspondence',
   },
   sources: {
     description: 'Description of Sources',
     fields: ['state'],
     label: 'Sources',
-    subdirectory: 'sources',
+    resource: 'sources',
   },
   tmdl: {
     description: 'Description of Total Maximum Daily Load',
     fields: ['state'],
     label: 'Total Maximum Daily Load',
-    subdirectory: 'tmdl',
+    resource: 'tmdl',
   },
 };
 
@@ -373,7 +422,7 @@ export function Home() {
         )}
         <h3>Data Profile</h3>
         <Select
-          aria-label="Data Profile input"
+          aria-label="Select a data profile"
           onChange={(ev) => inputDispatch({ type: 'dataProfile', payload: ev })}
           options={dataProfileOptions}
           placeholder="Select a data profile..."
@@ -382,6 +431,11 @@ export function Home() {
         {dataProfile && (
           <>
             <h3>Filters</h3>
+            <FilterFields
+              dispatch={inputDispatch}
+              fields={dataProfiles[dataProfile.value].fields}
+              state={inputState}
+            />
             <h3>Download the Data</h3>
             <div className="display-flex flex-wrap">
               <RadioButtons
@@ -424,7 +478,7 @@ export function Home() {
               <h4>{dataProfiles[dataProfile.value].label} API Query</h4>
               <CopyBox
                 text={`${window.location.origin}/data/${
-                  dataProfiles[dataProfile.value].subdirectory
+                  dataProfiles[dataProfile.value].resource
                 }?${buildQueryString(queryParams, false)}`}
               />
             </>
@@ -434,4 +488,54 @@ export function Home() {
     );
 
   return null;
+}
+
+type FilterFieldsProps = {
+  dispatch: Dispatch<InputAction>;
+  fields: string[];
+  state: InputState;
+};
+
+function FilterFields({ dispatch, fields, state }: FilterFieldsProps) {
+  return (
+    <div>
+      {fields.includes('state') && (
+        <div>
+          <label className="usa-label">
+            <b>State</b>
+            <Select
+              aria-label="Select a state"
+              // onChange={(ev) => dispatch({ type: 'state', payload: ev })}
+              // options={dataProfileOptions}
+              placeholder="Select a state..."
+              // value={state}
+            />
+          </label>
+        </div>
+      )}
+
+      {fields.includes('region') && (
+        <div>
+          <label className="usa-label">
+            <b>Region</b>
+            <Select
+              aria-label="Select a region"
+              // onChange={(ev) => dispatch({ type: 'state', payload: ev })}
+              // options={dataProfileOptions}
+              placeholder="Select a region..."
+              // value={state}
+            />
+          </label>
+        </div>
+      )}
+
+      {fields.includes('reportingCycle') && (
+        <RangeSlider
+          label={<b>Reporting Cycle</b>}
+          onChange={(value) => console.log(value)}
+          value={0}
+        />
+      )}
+    </div>
+  );
 }

@@ -1,6 +1,10 @@
+import { uniqueId } from 'lodash';
+import { useState } from 'react';
+// types
+import type { ReactNode } from 'react';
+
 type Props = {
-  ariaLabel?: string;
-  dual?: boolean;
+  label: ReactNode;
   min?: number;
   max?: number;
   onChange: (value: number) => void;
@@ -10,7 +14,7 @@ type Props = {
 };
 
 export default function RangeSlider({
-  ariaLabel,
+  label,
   min = 0,
   max = 100,
   onChange,
@@ -18,14 +22,18 @@ export default function RangeSlider({
   styles = [],
   value,
 }: Props) {
+  const [id] = useState(uniqueId('range-slider-'));
   return (
     <div className={styles.join(' ')}>
+      <label className="usa-label" htmlFor={id}>
+        {label}
+      </label>
       <input
-        aria-label={ariaLabel ?? 'Range input'}
         aria-valuemax={max}
         aria-valuemin={min}
         aria-valuenow={value}
         className="usa-range"
+        id={id}
         step={step}
         max={max}
         min={min}
