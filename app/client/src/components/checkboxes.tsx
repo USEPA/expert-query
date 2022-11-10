@@ -1,7 +1,6 @@
 // components
 import Checkbox from 'components/checkbox';
 // types
-import { uniqueId } from 'lodash';
 import type { ReactNode } from 'react';
 
 interface Option {
@@ -34,14 +33,12 @@ export default function Checkboxes({
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && <legend className="usa-legend">{legend}</legend>}
-      {options.map((option) => {
-        const id = uniqueId('checkbox-');
+      {options.map((option, i) => {
         return (
           <Checkbox
             checked={isSelected(option, selected)}
             description={option.description}
-            id={id}
-            key={id}
+            key={i}
             label={option.label}
             onChange={(_ev) => {
               if (isSelected(option, selected)) {

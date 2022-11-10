@@ -1,10 +1,11 @@
+import { uniqueId } from 'lodash';
+import { useState } from 'react';
 // types
 import type { ChangeEvent, ReactNode } from 'react';
 
 type Props = {
   checked: boolean;
   description?: ReactNode;
-  id: string;
   label: ReactNode;
   onChange: (ev: ChangeEvent) => void;
   styles?: string[];
@@ -15,13 +16,13 @@ type Props = {
 export default function Checkbox({
   checked,
   description,
-  id,
   label,
   onChange,
   styles = [],
   tile = false,
   value,
 }: Props) {
+  const [id] = useState(uniqueId('checkbox-'));
   return (
     <div
       className={`usa-checkbox ${styles.join(' ')}`}

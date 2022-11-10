@@ -5,9 +5,9 @@ import Alert from 'components/alert';
 import Button from 'components/button';
 import Checkbox from 'components/checkbox';
 import CopyBox from 'components/copyBox';
+import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
-import InfoTooltip from 'components/infoTooltip';
 import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
@@ -328,12 +328,12 @@ export function Home() {
   }, [dataProfile, inputState]);
 
   const [introVisible, setIntroVisible] = useState(
-    getLocalStorageItem('showIntro') === 'true' ?? true,
+    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
   );
   const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!dontShowAgain) return;
+    if (dontShowAgain === null) return;
     setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
   }, [dontShowAgain]);
 
@@ -355,20 +355,25 @@ export function Home() {
               Select a data profile, then build a query by selecting options
               from the input fields.
             </p>
-            <p className="display-flex flex-justify flex-wrap">
+            <div className="display-flex flex-justify flex-wrap">
               <Checkbox
                 checked={dontShowAgain ?? false}
-                id="do-not-show-intro-checkbox"
                 label="Don't show again on this computer"
                 onChange={(_ev) => setDontShowAgain(!dontShowAgain)}
-                styles={['margin-bottom-2 margin-right-1']}
+                styles={['margin-right-1 margin-y-auto']}
               />
-              <Button onClick={() => setIntroVisible(false)}>Close</Button>
-            </p>
+              <Button
+                onClick={() => setIntroVisible(false)}
+                styles={['margin-top-2']}
+              >
+                Close Intro
+              </Button>
+            </div>
           </Summary>
         )}
         <h3>Data Profile</h3>
         <Select
+          aria-label="Data Profile input"
           onChange={(ev) => inputDispatch({ type: 'dataProfile', payload: ev })}
           options={dataProfileOptions}
           placeholder="Select a data profile..."
