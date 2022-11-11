@@ -59,7 +59,7 @@ function parseCriteria(query, profile, queryParams) {
       appendToWhere(query, "state", queryParams.state);
       appendToWhere(query, "ir_category", queryParams.irCategory);
       break;
-    case "ProfileTest":
+    case "profile_test":
       appendToWhere(query, "id", queryParams.id);
       appendToWhere(query, "assessment_name", queryParams.assessmentName);
       break;
@@ -68,12 +68,12 @@ function parseCriteria(query, profile, queryParams) {
   }
 }
 
-async function executeQuery(model, req, res, next) {
+async function executeQuery(profile, req, res, next) {
   // output types csv, tab-separated, Excel, or JSON
   try {
-    const query = knex.withSchema(req.activeSchema).select("*").from(model);
+    const query = knex.withSchema(req.activeSchema).select("*").from(profile);
 
-    parseCriteria(query, model, req.query);
+    parseCriteria(query, profile, req.query);
 
     const stream = await query.stream({
       batchSize: 2000,
@@ -87,14 +87,14 @@ async function executeQuery(model, req, res, next) {
         // output the data
         res.setHeader(
           "Content-disposition",
-          `attachment; filename=${model}.${format}`
+          `attachment; filename=${profile}.${format}`
         );
         StreamingService.streamResponse(res, stream, format);
         break;
       case "xlsx":
         res.setHeader(
           "Content-Disposition",
-          `attachment; filename=${model}.xlsx`
+          `attachment; filename=${profile}.xlsx`
         );
 
         res._write = function (chunk, encoding, next) {
@@ -107,8 +107,8 @@ async function executeQuery(model, req, res, next) {
           useStyles: true,
         });
 
-        workbook.addWorksheet(model);
-        const worksheet = workbook.getWorksheet(model);
+        workbook.addWorksheet(profile);
+        const worksheet = workbook.getWorksheet(profile);
 
         stream
           .pipe(
@@ -123,33 +123,33 @@ async function executeQuery(model, req, res, next) {
       default:
         res.setHeader(
           "Content-disposition",
-          `attachment; filename=${model}.json`
+          `attachment; filename=${profile}.json`
         );
         StreamingService.streamResponse(res, stream, format);
         break;
     }
   } catch (error) {
-    log.error(`Failed to get data from the "${model}" profile...`);
+    log.error(`Failed to get data from the "${profile}" profile...`);
     return res.status(500).send("Error !" + error);
   }
 }
 
-function executeQueryCountOnly(model, req, res, next) {
+function executeQueryCountOnly(profile, req, res, next) {
   // always return json with the count
   try {
     const query = knex
       .withSchema(req.activeSchema)
       .count("id")
-      .from(model)
+      .from(profile)
       .first();
 
-    parseCriteria(query, model, req.query);
+    parseCriteria(query, profile, req.query);
 
     query
       .then((count) => res.status(200).send(count))
       .catch((error) => res.status(500).send("Error! " + error));
   } catch (error) {
-    log.error(`Failed to get count from the "${model.name}" profile...`);
+    log.error(`Failed to get count from the "${profile.name}" profile...`);
     return res.status(500).send("Error !" + error);
   }
 }
