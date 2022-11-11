@@ -1,7 +1,7 @@
 const express = require("express");
+const { knex } = require("./utilities/database");
 const logger = require("./utilities/logger");
 const log = logger.logger;
-const etlSchema = require("./models").etlSchema;
 
 /**
  * Middleware to get/set the active schema and add it to the original request
@@ -13,14 +13,16 @@ const etlSchema = require("./models").etlSchema;
 async function getActiveSchema(req, res, next) {
   try {
     // query the logging schema to get the active schema
-    const schema = await etlSchema.findOne({
-      where: { active: true },
-      attributes: ["schemaName", "active"],
-      order: [["creationDate", "DESC"]],
-    });
+    const schema = await knex
+      .withSchema("logging")
+      .select("schema_name", "active")
+      .from("etl_schemas")
+      .where("active", true)
+      .orderBy("creation_date", "desc")
+      .first();
 
     // Add activeSchema to the request object
-    req.activeSchema = schema.schemaName;
+    req.activeSchema = schema.schema_name;
 
     next();
   } catch (error) {

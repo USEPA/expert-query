@@ -2,14 +2,18 @@ const axios = require("axios");
 const express = require("express");
 const { resolve } = require("node:path");
 const Papa = require("papaparse");
+const pg = require("pg");
+const QueryStream = require("pg-query-stream");
 const Op = require("sequelize").Op;
 const Excel = require("exceljs");
 const { getActiveSchema } = require("../middleware");
-const Assessment = require("../models").Assessment;
-const ProfileTest = require("../models").ProfileTest;
+const { knex } = require("../utilities/database");
 const logger = require("../utilities/logger");
 const log = logger.logger;
-const streamData = require("../utilities/streamingService");
+const {
+  StreamingService,
+  ExcelTransform,
+} = require("../utilities/streamingService");
 
 function tryParseJSON(value) {
   try {
@@ -25,162 +29,108 @@ function tryParseJSON(value) {
   }
 }
 
-function parseArrayParam(param) {
-  let result = [];
+function appendToWhere(query, paramName, paramValue) {
+  if (!paramValue) return;
 
-  if (param) {
-    const parsedParam = tryParseJSON(param);
-    if (Array.isArray(parsedParam.value)) {
-      result = parsedParam.value;
-    } else {
-      result = [parsedParam.value];
-    }
+  const parsedParam = tryParseJSON(paramValue);
+
+  if (Array.isArray(parsedParam.value)) {
+    query.whereIn(paramName, parsedParam.value);
+  } else {
+    query.where(paramName, parsedParam.value);
   }
-
-  return result;
 }
 
-function parseCriteria(profile, query) {
+function parseCriteria(query, profile, queryParams) {
   switch (profile) {
-    case "Assessment":
-      return {
-        [Op.and]: [
-          { id: { [Op.or]: parseArrayParam(query.id) } },
-          {
-            reportingCycle: { [Op.or]: parseArrayParam(query.reportingCycle) },
-          },
-          {
-            assessmentUnitId: {
-              [Op.or]: parseArrayParam(query.assessmentUnitId),
-            },
-          },
-          {
-            assessmentUnitName: {
-              [Op.or]: parseArrayParam(query.assessmentUnitName),
-            },
-          },
-          {
-            organizationId: { [Op.or]: parseArrayParam(query.organizationId) },
-          },
-          {
-            organizationName: {
-              [Op.or]: parseArrayParam(query.organizationName),
-            },
-          },
-          {
-            organizationType: {
-              [Op.or]: parseArrayParam(query.organizationType),
-            },
-          },
-          {
-            overallStatus: { [Op.or]: parseArrayParam(query.overallStatus) },
-          },
-          {
-            region: { [Op.or]: parseArrayParam(query.region) },
-          },
-          {
-            state: { [Op.or]: parseArrayParam(query.state) },
-          },
-          {
-            irCategory: { [Op.or]: parseArrayParam(query.irCategory) },
-          },
-        ],
-      };
+    case "assessments":
+      appendToWhere(query, "id", queryParams.id);
+      appendToWhere(query, "reporting_cycle", queryParams.reportingCycle);
+      appendToWhere(query, "assessment_unit_id", queryParams.assessmentUnitId);
+      appendToWhere(
+        query,
+        "assessment_unit_name",
+        queryParams.assessmentUnitName
+      );
+      appendToWhere(query, "organization_id", queryParams.organizationId);
+      appendToWhere(query, "organization_name", queryParams.organizationName);
+      appendToWhere(query, "organization_type", queryParams.organizationType);
+      appendToWhere(query, "overall_status", queryParams.overallStatus);
+      appendToWhere(query, "region", queryParams.region);
+      appendToWhere(query, "state", queryParams.state);
+      appendToWhere(query, "ir_category", queryParams.irCategory);
+      break;
     case "ProfileTest":
-      return {
-        [Op.or]: [
-          { id: { [Op.or]: parseArrayParam(query.id) } },
-          {
-            assessmentName: { [Op.or]: parseArrayParam(query.assessmentName) },
-          },
-        ],
-      };
+      appendToWhere(query, "id", queryParams.id);
+      appendToWhere(query, "assessment_name", queryParams.assessmentName);
+      break;
     default:
-      return {};
+      break;
   }
 }
 
-function executeQuery(model, req, res, next) {
+async function executeQuery(model, req, res, next) {
   // output types csv, tab-separated, Excel, or JSON
   try {
-    return model
-      .schema(req.activeSchema)
-      .findAndCountAll({
-        where: parseCriteria(model.name, req.query),
-      })
-      .then(async (data) => {
-        const format = req.query.format ?? req.query.f;
-        switch (format) {
-          case "csv":
-          case "tsv":
-            // convert json to CSV or TSV
-            const out = Papa.unparse(JSON.stringify(data.rows), {
-              delimiter: format === "tsv" ? "\t" : ",",
-            });
+    const query = knex.withSchema(req.activeSchema).select("*").from(model);
 
-            // output the data
-            res.setHeader(
-              "Content-disposition",
-              `attachment; filename=${model.name}.${format}`
-            );
-            streamData(res, out, {
-              contentType: `text/${format}`,
-            });
-            break;
-          case "xlsx":
-            res.statusCode = 200;
-            res.setHeader(
-              "Content-Type",
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            );
-            res.setHeader(
-              "Content-Disposition",
-              `attachment; filename=${model.name}.xlsx`
-            );
+    parseCriteria(query, model, req.query);
 
-            const workbook = new Excel.stream.xlsx.WorkbookWriter({
-              stream: res,
-              useStyles: true,
-            });
+    const stream = await query.stream({
+      batchSize: 2000,
+      highWaterMark: 10000,
+    });
 
-            workbook.addWorksheet(model.name);
-            const worksheet = workbook.getWorksheet(model.name);
+    const format = req.query.format ?? req.query.f;
+    switch (format) {
+      case "csv":
+      case "tsv":
+        // output the data
+        res.setHeader(
+          "Content-disposition",
+          `attachment; filename=${model}.${format}`
+        );
+        StreamingService.streamResponse(res, stream, format);
+        break;
+      case "xlsx":
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=${model}.xlsx`
+        );
 
-            const rowsJson = JSON.parse(JSON.stringify(data.rows));
+        res._write = function (chunk, encoding, next) {
+          that.push(chunk);
+          next();
+        };
 
-            worksheet.columns = Object.keys(rowsJson[0]).map((key) => {
-              return { header: key, key };
-            });
+        const workbook = new Excel.stream.xlsx.WorkbookWriter({
+          stream: res,
+          useStyles: true,
+        });
 
-            rowsJson.forEach((row) => {
-              worksheet.addRow(row).commit();
-            });
+        workbook.addWorksheet(model);
+        const worksheet = workbook.getWorksheet(model);
 
-            workbook.commit().then(
-              function () {
-                res.end();
-              },
-              function (err) {
-                log.info("Error! " + err);
-                res.status(500).send("Error! " + err);
-              }
-            );
-            break;
-          case "json":
-          default:
-            res.setHeader(
-              "Content-disposition",
-              `attachment; filename=${model.name}.json`
-            );
-            streamData(res, data, {
-              contentType: "application/json; charset=utf-8",
-            });
-            break;
-        }
-      })
-      .catch((error) => res.status(500).send("Error! " + error));
+        stream
+          .pipe(
+            new ExcelTransform({
+              workbook,
+              worksheet,
+            })
+          )
+          .pipe(process.stdout);
+        break;
+      case "json":
+      default:
+        res.setHeader(
+          "Content-disposition",
+          `attachment; filename=${model}.json`
+        );
+        StreamingService.streamResponse(res, stream, format);
+        break;
+    }
   } catch (error) {
-    log.error(`Failed to get data from the "${model.name}" profile...`);
+    log.error(`Failed to get data from the "${model}" profile...`);
     return res.status(500).send("Error !" + error);
   }
 }
@@ -188,12 +138,16 @@ function executeQuery(model, req, res, next) {
 function executeQueryCountOnly(model, req, res, next) {
   // always return json with the count
   try {
-    return model
-      .schema(req.activeSchema)
-      .count({
-        where: parseCriteria(model.name, req.query),
-      })
-      .then((count) => res.status(200).send({ count }))
+    const query = knex
+      .withSchema(req.activeSchema)
+      .count("id")
+      .from(model)
+      .first();
+
+    parseCriteria(query, model, req.query);
+
+    query
+      .then((count) => res.status(200).send(count))
       .catch((error) => res.status(500).send("Error! " + error));
   } catch (error) {
     log.error(`Failed to get count from the "${model.name}" profile...`);
@@ -208,18 +162,18 @@ module.exports = function (app) {
 
   // --- get assessments from database
   router.get("/assessments", function (req, res, next) {
-    executeQuery(Assessment, req, res, next);
+    executeQuery("assessments", req, res, next);
   });
   router.get("/assessments/count", function (req, res, next) {
-    executeQueryCountOnly(Assessment, req, res, next);
+    executeQueryCountOnly("assessments", req, res, next);
   });
 
   // --- get profile_test from database
   router.get("/profileTests", function (req, res, next) {
-    executeQuery(ProfileTest, req, res, next);
+    executeQuery("profile_test", req, res, next);
   });
   router.get("/profileTests/count", function (req, res, next) {
-    executeQueryCountOnly(ProfileTest, req, res, next);
+    executeQueryCountOnly("profile_test", req, res, next);
   });
 
   app.use("/data", router);
