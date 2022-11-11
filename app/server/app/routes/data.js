@@ -1,13 +1,15 @@
-const { resolve } = require("node:path");
-const { readFile } = require("node:fs/promises");
-const express = require("express");
 const axios = require("axios");
+const express = require("express");
+const { resolve } = require("node:path");
+const Papa = require("papaparse");
 const Op = require("sequelize").Op;
-const logger = require("../utilities/logger");
-const log = logger.logger;
+const Excel = require("exceljs");
 const { getActiveSchema } = require("../middleware");
 const Assessment = require("../models").Assessment;
 const ProfileTest = require("../models").ProfileTest;
+const logger = require("../utilities/logger");
+const log = logger.logger;
+const streamData = require("../utilities/streamingService");
 
 function tryParseJSON(value) {
   try {
@@ -99,13 +101,83 @@ function parseCriteria(profile, query) {
 }
 
 function executeQuery(model, req, res, next) {
+  // output types csv, tab-separated, Excel, or JSON
   try {
     return model
       .schema(req.activeSchema)
       .findAndCountAll({
         where: parseCriteria(model.name, req.query),
       })
-      .then((data) => res.status(200).send(data))
+      .then(async (data) => {
+        const format = req.query.format ?? req.query.f;
+        switch (format) {
+          case "csv":
+          case "tsv":
+            // convert json to CSV or TSV
+            const out = Papa.unparse(JSON.stringify(data.rows), {
+              delimiter: format === "tsv" ? "\t" : ",",
+            });
+
+            // output the data
+            res.setHeader(
+              "Content-disposition",
+              `attachment; filename=${model.name}.${format}`
+            );
+            streamData(res, out, {
+              contentType: `text/${format}`,
+            });
+            break;
+          case "xlsx":
+            res.statusCode = 200;
+            res.setHeader(
+              "Content-Type",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            );
+            res.setHeader(
+              "Content-Disposition",
+              `attachment; filename=${model.name}.xlsx`
+            );
+
+            const workbook = new Excel.stream.xlsx.WorkbookWriter({
+              stream: res,
+              useStyles: true,
+            });
+
+            workbook.addWorksheet(model.name);
+            const worksheet = workbook.getWorksheet(model.name);
+
+            const rowsJson = JSON.parse(JSON.stringify(data.rows));
+
+            worksheet.columns = Object.keys(rowsJson[0]).map((key) => {
+              return { header: key, key };
+            });
+
+            rowsJson.forEach((row) => {
+              worksheet.addRow(row).commit();
+            });
+
+            workbook.commit().then(
+              function () {
+                res.end();
+              },
+              function (err) {
+                log.info("Error! " + err);
+                res.status(500).send("Error! " + err);
+              }
+            );
+            break;
+          case "json":
+          default:
+            res.setHeader(
+              "Content-disposition",
+              `attachment; filename=${model.name}.json`
+            );
+            streamData(res, data, {
+              contentType: "application/json; charset=utf-8",
+            });
+            break;
+        }
+      })
       .catch((error) => res.status(500).send("Error! " + error));
   } catch (error) {
     log.error(`Failed to get data from the "${model.name}" profile...`);
@@ -114,6 +186,7 @@ function executeQuery(model, req, res, next) {
 }
 
 function executeQueryCountOnly(model, req, res, next) {
+  // always return json with the count
   try {
     return model
       .schema(req.activeSchema)
