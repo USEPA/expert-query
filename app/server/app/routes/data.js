@@ -4,7 +4,6 @@ const { resolve } = require("node:path");
 const Papa = require("papaparse");
 const pg = require("pg");
 const QueryStream = require("pg-query-stream");
-const Op = require("sequelize").Op;
 const Excel = require("exceljs");
 const { getActiveSchema } = require("../middleware");
 const { knex } = require("../utilities/database");

@@ -1,7 +1,6 @@
 const path = require("path");
 const express = require("express");
 const helmet = require("helmet");
-const basicAuth = require("express-basic-auth");
 const logger = require("./utilities/logger");
 const log = logger.logger;
 
