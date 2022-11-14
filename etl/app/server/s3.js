@@ -1,5 +1,6 @@
 import AWS from 'aws-sdk';
 import axios from 'axios';
+import domainValueMappings from '../config/domainValueMappings.js';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
@@ -106,6 +107,80 @@ export async function uploadFilePublic(filePath, fileToUpload) {
   }
 }
 
+// Retries an HTTP request in response to a failure
+function retryRequest(serviceName, count, s3Config, callback) {
+  log.info(`Non-200 response returned from ${serviceName} service, retrying`);
+  if (count < s3Config.config.retryLimit) {
+    return setTimeout(
+      () => callback(s3Config, count + 1),
+      s3Config.config.retryIntervalSeconds * 1000,
+    );
+  } else {
+    throw new Error(`Sync ${serviceName} retry count exceeded`);
+  }
+}
+
+// Sync the domain values corresponding to a single domain name
+function syncSingleDomain(name, mapping) {
+  return async function (s3Config, retryCount = 0) {
+    try {
+      const res = await axios.get(
+        `${s3Config.services.domainValues}?domainName=${mapping.domainName}`,
+      );
+
+      if (res.status !== 200) {
+        return retryRequest(
+          `Domain Values (${mapping.domainName})`,
+          retryCount,
+          s3Config,
+          syncSingleDomain(name, mapping),
+        );
+      }
+
+      const values = res.data.map((value) => {
+        return {
+          label: value[mapping.labelField ?? 'name'],
+          value: value[mapping.valueField ?? 'code'],
+        };
+      });
+
+      uploadFilePublic(`${name}Values.json`, JSON.stringify(values));
+    } catch (err) {
+      log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
+    }
+  };
+}
+
+export function syncDomainValues(s3Config) {
+  syncStateValues(s3Config);
+
+  Object.entries(domainValueMappings).forEach(([name, mapping]) => {
+    syncSingleDomain(name, mapping)(s3Config);
+  });
+}
+
+// Sync state codes and labels from the states service
+async function syncStateValues(s3Config, retryCount = 0) {
+  try {
+    const res = await axios.get(s3Config.services.stateCodes);
+
+    if (res.status !== 200) {
+      return retryRequest('States', retryCount, s3Config, syncStateValues);
+    }
+
+    const states = res.data.data.map((state) => {
+      return {
+        label: state.name,
+        value: state.code,
+      };
+    });
+
+    uploadFilePublic('stateValues.json', JSON.stringify(states));
+  } catch (err) {
+    log.warn(`Sync States failed! ${err}`);
+  }
+}
+
 export async function syncGlossary(s3Config, retryCount = 0) {
   try {
     // query the glossary service
@@ -117,15 +192,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
 
     // check response, retry on failure
     if (res.status !== 200) {
-      log.info('Non-200 response returned from Glossary service, retrying');
-      if (retryCount < s3Config.config.retryLimit) {
-        return setTimeout(
-          () => syncGlossary(s3Config, retryCount + 1),
-          s3Config.config.retryIntervalSeconds * 1000,
-        );
-      } else {
-        throw new Error('Sync glossary retry count exceeded');
-      }
+      return retryRequest('Glossary', retryCount, s3Config, syncGlossary);
     }
 
     // build the glossary json output
