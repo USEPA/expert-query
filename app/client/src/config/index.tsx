@@ -1,3 +1,5 @@
+export * as options from './options';
+
 const { NODE_ENV, REACT_APP_CLOUD_SPACE, REACT_APP_SERVER_BASE_PATH } =
   process.env;
 
@@ -64,3 +66,84 @@ export function postData(url: string, data: object) {
     body: JSON.stringify(data),
   });
 }
+
+export const dataProfiles = {
+  assessmentUnits: {
+    description: 'Description of assessment units',
+    fields: [
+      'assessmentUnitId',
+      'assessmentUnitName',
+      'assessmentUnitStatus',
+      'locationDescription',
+      'locationText',
+      'locationTypeCode',
+      'organizationId',
+      'organizationName',
+      'organizationType',
+      'region',
+      'sizeSource',
+      'sourceScale',
+      'state',
+      'useClassName',
+      'waterSize',
+      'waterSizeUnits',
+      'waterType',
+    ],
+    label: 'Assessment Units',
+    resource: 'assessment-units',
+  },
+  assessmentUnitsMonitoring: {
+    description: 'Description of assessment units with monitoring locations',
+    fields: [
+      'assessmentUnitId',
+      'assessmentUnitName',
+      'assessmentUnitStatus',
+      'locationDescription',
+      'monitoringLocationDataLink',
+      'monitoringLocationId',
+      'monitoringLocationOrgId',
+      'organizationId',
+      'organizationName',
+      'organizationType',
+      'region',
+      'reportingCycle',
+      'sizeSource',
+      'sourceScale',
+      'state',
+      'useClassName',
+      'waterSize',
+      'waterSizeUnits',
+      'waterType',
+    ],
+    label: 'Assessment Units with Monitoring Locations',
+    resource: 'assessment-units-monitoring-locations',
+  },
+  catchmentCorrespondence: {
+    description: 'Description of Catchment Correspondence',
+    fields: [
+      'assessmentUnitId',
+      'assessmentUnitName',
+      'catchmentNhdplusId',
+      'organizationId',
+      'organizationName',
+      'organizationType',
+      'region',
+      'reportingCycle',
+      'state',
+    ],
+    label: 'Catchment Correspondence',
+    resource: 'catchment-correspondence',
+  },
+  sources: {
+    description: 'Description of Sources',
+    fields: ['state'],
+    label: 'Sources',
+    resource: 'sources',
+  },
+  tmdl: {
+    description: 'Description of Total Maximum Daily Load',
+    fields: ['state'],
+    label: 'Total Maximum Daily Load',
+    resource: 'tmdl',
+  },
+} as const;
