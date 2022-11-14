@@ -1,17 +1,15 @@
 import { uniqueId } from 'lodash';
 // types
 import type { ReactNode } from 'react';
+import type { Option } from 'types';
 
-interface Option {
-  label: ReactNode;
-  value: string;
-}
+type RadioOption = Option<ReactNode, string>;
 
 type Props = {
   legend?: ReactNode;
-  onChange: (selected: Option) => void;
-  options: Option[];
-  selected?: Option | null;
+  onChange: (selected: RadioOption) => void;
+  options: readonly RadioOption[];
+  selected?: RadioOption | null;
   styles?: string[];
   tile?: boolean;
 };

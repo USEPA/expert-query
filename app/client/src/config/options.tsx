@@ -1,17 +1,19 @@
-import { dataProfiles } from "./index";
+import profiles from './profiles';
+// types
+import type { Option } from 'types';
 
 export const confirmed = [
   {
-    label: "Yes",
-    value: "Y",
+    label: 'Yes',
+    value: 'Y',
   },
   {
-    label: "No",
-    value: "N",
+    label: 'No',
+    value: 'N',
   },
 ] as const;
 
-export const dataProfile = Object.entries(dataProfiles).map(([id, profile]) => {
+export const dataProfile = Object.entries(profiles).map(([id, profile]) => {
   return {
     value: id,
     label: (
@@ -22,24 +24,24 @@ export const dataProfile = Object.entries(dataProfiles).map(([id, profile]) => {
       </p>
     ),
   };
-});
+}) as Option<JSX.Element, keyof typeof profiles>[];
 
 export const fileFormat = [
   {
-    label: "Comma-separated (CSV)",
-    value: "csv",
+    label: 'Comma-separated (CSV)',
+    value: 'csv',
   },
   {
-    label: "Tab-separated (TSV)",
-    value: "tsv",
+    label: 'Tab-separated (TSV)',
+    value: 'tsv',
   },
   {
-    label: "Microsoft Excel (XLSX)",
-    value: "xlsx",
+    label: 'Microsoft Excel (XLSX)',
+    value: 'xlsx',
   },
   {
-    label: "JavaScript Object Notation (JSON)",
-    value: "json",
+    label: 'JavaScript Object Notation (JSON)',
+    value: 'json',
   },
 ] as const;
 
@@ -47,11 +49,11 @@ export const inIndianCountry = confirmed;
 
 export const organizationType = [
   {
-    label: "State",
-    value: "State",
+    label: 'State',
+    value: 'State',
   },
   {
-    label: "Tribe",
-    value: "Tribe",
+    label: 'Tribe',
+    value: 'Tribe',
   },
 ] as const;

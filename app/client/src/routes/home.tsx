@@ -15,15 +15,16 @@ import Summary from 'components/summary';
 import { useContentState } from 'contexts/content';
 // types
 import type { Dispatch, ReactNode } from 'react';
+import type { Option } from 'types';
 // config
-import { getData } from 'config';
+import { getData, options, profiles } from 'config';
 
 /*
 ## Types
 */
 interface InputState {
   fileFormat: Option<ReactNode, string> | null;
-  dataProfile: Option<JSX.Element, keyof typeof dataProfiles> | null;
+  dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
   state: Option<string, string>[] | null;
 }
 
@@ -31,16 +32,11 @@ type InputAction =
   | { type: 'fileFormat'; payload: Option<ReactNode, string> }
   | {
       type: 'dataProfile';
-      payload: Option<JSX.Element, keyof typeof dataProfiles> | null;
+      payload: Option<JSX.Element, keyof typeof profiles> | null;
     }
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' }
   | { type: 'state'; payload: Readonly<Option<string, string>[]> };
-
-interface Option<S, T> {
-  label: S;
-  value: T;
-}
 
 type QueryParameter = [string, QueryValue];
 
@@ -53,112 +49,7 @@ type QueryValue = string | number | boolean;
 /*
 ## Constants
 */
-const dataProfiles = {
-  assessmentUnits: {
-    description: 'Description of assessment units',
-    fields: [
-      'assessmentUnitId',
-      'assessmentUnitName',
-      'assessmentUnitStatus',
-      'locationDescription',
-      'locationText',
-      'locationTypeCode',
-      'organizationId',
-      'organizationName',
-      'organizationType',
-      'region',
-      'sizeSource',
-      'sourceScale',
-      'state',
-      'useClassName',
-      'waterSize',
-      'waterSizeUnits',
-      'waterType',
-    ],
-    label: 'Assessment Units',
-    resource: 'assessment-units',
-  },
-  assessmentUnitsMonitoring: {
-    description: 'Description of assessment units with monitoring locations',
-    fields: [
-      'assessmentUnitId',
-      'assessmentUnitName',
-      'assessmentUnitStatus',
-      'locationDescription',
-      'monitoringLocationDataLink',
-      'monitoringLocationId',
-      'monitoringLocationOrgId',
-      'organizationId',
-      'organizationName',
-      'organizationType',
-      'region',
-      'reportingCycle',
-      'sizeSource',
-      'sourceScale',
-      'state',
-      'useClassName',
-      'waterSize',
-      'waterSizeUnits',
-      'waterType',
-    ],
-    label: 'Assessment Units with Monitoring Locations',
-    resource: 'assessment-units-monitoring-locations',
-  },
-  catchmentCorrespondence: {
-    description: 'Description of Catchment Correspondence',
-    fields: [
-      'assessmentUnitId',
-      'assessmentUnitName',
-      'catchmentNhdplusId',
-      'organizationId',
-      'organizationName',
-      'organizationType',
-      'region',
-      'reportingCycle',
-      'state',
-    ],
-    label: 'Catchment Correspondence',
-    resource: 'catchment-correspondence',
-  },
-  sources: {
-    description: 'Description of Sources',
-    fields: ['state'],
-    label: 'Sources',
-    resource: 'sources',
-  },
-  tmdl: {
-    description: 'Description of Total Maximum Daily Load',
-    fields: ['state'],
-    label: 'Total Maximum Daily Load',
-    resource: 'tmdl',
-  },
-};
-
-// static options
-const dataProfileOptions = Object.keys(dataProfiles).map((profileId) => {
-  return dataProfileOption(profileId as keyof typeof dataProfiles);
-});
-
 const defaultFileFormat = 'csv';
-
-const fileFormatOptions = [
-  {
-    label: 'Comma-separated (CSV)',
-    value: 'csv',
-  },
-  {
-    label: 'Tab-separated (TSV)',
-    value: 'tsv',
-  },
-  {
-    label: 'Microsoft Excel (XLSX)',
-    value: 'xlsx',
-  },
-  {
-    label: 'JavaScript Object Notation (JSON)',
-    value: 'json',
-  },
-];
 
 const staticFields = ['dataProfile', 'fileFormat'];
 
@@ -187,20 +78,6 @@ function getLocalStorageItem(item: string) {
   } else return null;
 }
 
-// Gets data profile select options from data profiles configuration
-function dataProfileOption(profileId: keyof typeof dataProfiles) {
-  return {
-    value: profileId,
-    label: (
-      <p className="margin-1">
-        <b>{dataProfiles[profileId].label}</b>
-        <br />
-        <em>{dataProfiles[profileId].description}</em>
-      </p>
-    ),
-  };
-}
-
 // Empty or default values for inputs
 function getDefaultState(): InputState {
   return {
@@ -208,7 +85,7 @@ function getDefaultState(): InputState {
     fileFormat: matchSingleStaticOption(
       null,
       defaultFileFormat,
-      fileFormatOptions,
+      options.fileFormat,
     ),
     state: null,
   };
@@ -221,13 +98,13 @@ async function getInitialState(signal: AbortSignal): Promise<InputState> {
   const fileFormat = matchSingleStaticOption(
     params.fileFormat ?? null,
     defaultFileFormat,
-    fileFormatOptions,
+    options.fileFormat,
   );
 
   const dataProfile = matchSingleStaticOption(
     params.dataProfile ?? null,
     null,
-    dataProfileOptions,
+    options.dataProfile,
   );
 
   // Fetch domain values
@@ -282,7 +159,7 @@ function isOption(
 function matchSingleStaticOption<S, T>(
   values: QueryValue | QueryValue[] | null,
   defaultValue: QueryValue | null,
-  options: Option<S, T>[],
+  options: readonly Option<S, T>[],
 ): Option<S, T> | null {
   return matchStaticOptions(values, defaultValue, options) as Option<
     S,
@@ -305,7 +182,7 @@ function matchMultipleStaticOptions<S, T>(
 function matchStaticOptions<S, T>(
   values: QueryValue | QueryValue[] | null,
   defaultValue: QueryValue | null,
-  options: Option<S, T>[],
+  options: readonly Option<S, T>[],
   multiple = false,
 ) {
   const valuesArray: QueryValue[] = [];
@@ -437,7 +314,10 @@ export function Home() {
         : value;
       if (
         staticFields.includes(field) ||
-        (dataProfile && dataProfiles[dataProfile.value].fields.includes(field))
+        (dataProfile &&
+          (
+            profiles[dataProfile.value].fields as ReadonlyArray<string>
+          ).includes(field))
       ) {
         newQueryParams[field] = flattenedValue;
       }
@@ -496,7 +376,7 @@ export function Home() {
         <Select
           aria-label="Select a data profile"
           onChange={(ev) => inputDispatch({ type: 'dataProfile', payload: ev })}
-          options={dataProfileOptions}
+          options={options.dataProfile}
           placeholder="Select a data profile..."
           value={dataProfile}
         />
@@ -505,7 +385,7 @@ export function Home() {
             <h3>Filters</h3>
             <FilterFields
               dispatch={inputDispatch}
-              fields={dataProfiles[dataProfile.value].fields}
+              fields={profiles[dataProfile.value].fields}
               state={inputState}
             />
             <h3>Download the Data</h3>
@@ -520,7 +400,7 @@ export function Home() {
                 onChange={(option) =>
                   inputDispatch({ type: 'fileFormat', payload: option })
                 }
-                options={fileFormatOptions}
+                options={options.fileFormat}
                 selected={fileFormat}
                 styles={['margin-bottom-2']}
               />
@@ -547,10 +427,10 @@ export function Home() {
               )}`}
             />
             <>
-              <h4>{dataProfiles[dataProfile.value].label} API Query</h4>
+              <h4>{profiles[dataProfile.value].label} API Query</h4>
               <CopyBox
                 text={`${window.location.origin}/data/${
-                  dataProfiles[dataProfile.value].resource
+                  profiles[dataProfile.value].resource
                 }?${buildQueryString(queryParams, false)}`}
               />
             </>
@@ -564,7 +444,7 @@ export function Home() {
 
 type FilterFieldsProps = {
   dispatch: Dispatch<InputAction>;
-  fields: string[];
+  fields: readonly string[];
   state: InputState;
 };
 

@@ -2,23 +2,22 @@
 import Checkbox from 'components/checkbox';
 // types
 import type { ReactNode } from 'react';
+import type { Option } from 'types';
 
-interface Option {
+type CheckboxOption = Option<ReactNode, string> & {
   description?: ReactNode;
-  label: ReactNode;
-  value: string;
-}
+};
 
 type Props = {
   legend?: ReactNode;
-  onChange: (selected: Option[]) => void;
-  options: Option[];
-  selected?: Option[];
+  onChange: (selected: CheckboxOption[]) => void;
+  options: CheckboxOption[];
+  selected?: CheckboxOption[];
   styles?: string[];
   tile?: boolean;
 };
 
-function isSelected(option: Option, selected: Option[]) {
+function isSelected(option: CheckboxOption, selected: CheckboxOption[]) {
   return !!selected.find((s) => s.value === option.value);
 }
 
