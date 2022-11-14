@@ -1,5 +1,6 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 // components
 import Alert from 'components/alert';
 import Button from 'components/button';
@@ -14,6 +15,8 @@ import Summary from 'components/summary';
 import { useContentState } from 'contexts/content';
 // types
 import type { Dispatch, ReactNode } from 'react';
+// config
+import { getData } from 'config';
 
 /*
 ## Types
@@ -21,15 +24,18 @@ import type { Dispatch, ReactNode } from 'react';
 interface InputState {
   fileFormat: Option<ReactNode, string> | null;
   dataProfile: Option<JSX.Element, keyof typeof dataProfiles> | null;
+  state: Option<string, string>[] | null;
 }
 
 type InputAction =
-  | { type: 'reset' }
   | { type: 'fileFormat'; payload: Option<ReactNode, string> }
   | {
       type: 'dataProfile';
       payload: Option<JSX.Element, keyof typeof dataProfiles> | null;
-    };
+    }
+  | { type: 'initialize'; payload: InputState }
+  | { type: 'reset' }
+  | { type: 'state'; payload: Readonly<Option<string, string>[]> };
 
 interface Option<S, T> {
   label: S;
@@ -196,30 +202,49 @@ function dataProfileOption(profileId: keyof typeof dataProfiles) {
 }
 
 // Empty or default values for inputs
-function getClearedState(): InputState {
+function getDefaultState(): InputState {
   return {
     dataProfile: null,
-    fileFormat: matchSingleOption(null, defaultFileFormat, fileFormatOptions),
+    fileFormat: matchSingleStaticOption(
+      null,
+      defaultFileFormat,
+      fileFormatOptions,
+    ),
+    state: null,
   };
 }
 
 // Uses URL query parameters or default values for initial state
-function getInitialState(): InputState {
+async function getInitialState(signal: AbortSignal): Promise<InputState> {
   const params = parseInitialParams();
 
-  const fileFormat = matchSingleOption(
+  const fileFormat = matchSingleStaticOption(
     params.fileFormat ?? null,
     defaultFileFormat,
     fileFormatOptions,
   );
 
-  const dataProfile = matchSingleOption(
+  const dataProfile = matchSingleStaticOption(
     params.dataProfile ?? null,
     null,
     dataProfileOptions,
   );
 
-  return { fileFormat, dataProfile };
+  // Fetch domain values
+  const statePromise = getData<Option<string, string>[]>(
+    '/api/states',
+    signal,
+  ).catch((err) => {
+    console.warn(`Could not fetch state options: ${err}`);
+    return null;
+  });
+
+  const stateOptions = await statePromise;
+  const state = stateOptions
+    ? matchMultipleStaticOptions(params.state ?? null, null, stateOptions)
+    : null;
+
+  return { dataProfile, fileFormat, state };
 }
 
 // Manages the state of all query field inputs
@@ -232,11 +257,13 @@ function inputReducer(state: InputState, action: InputAction): InputState {
       };
     case 'dataProfile':
       return {
-        ...getClearedState(),
+        ...state,
         dataProfile: action.payload,
       };
+    case 'initialize':
+      return action.payload;
     case 'reset':
-      return getClearedState();
+      return getDefaultState();
     default: {
       const message = `Unhandled action type: ${action}`;
       throw new Error(message);
@@ -251,8 +278,8 @@ function isOption(
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
-// Type assertion for return value `matchStaticOptions`
-function matchSingleOption<S, T>(
+// Wrapper function for `matchStaticOptions`
+function matchSingleStaticOption<S, T>(
   values: QueryValue | QueryValue[] | null,
   defaultValue: QueryValue | null,
   options: Option<S, T>[],
@@ -261,6 +288,17 @@ function matchSingleOption<S, T>(
     S,
     T
   > | null;
+}
+
+// Wrapper function for `matchStaticOptions`
+function matchMultipleStaticOptions<S, T>(
+  values: QueryValue | QueryValue[] | null,
+  defaultValue: QueryValue | null,
+  options: Option<S, T>[],
+): Option<S, T>[] | null {
+  return matchStaticOptions(values, defaultValue, options) as
+    | Option<S, T>[]
+    | null;
 }
 
 // Produce the option/s corresponding to a particular value
@@ -336,17 +374,51 @@ function storageAvailable(
   }
 }
 
+function useAbortSignal() {
+  const abortController = useRef(new AbortController());
+  const getAbortController = useCallback(() => {
+    if (abortController.current.signal.aborted) {
+      abortController.current = new AbortController();
+    }
+    return abortController.current;
+  }, []);
+
+  useEffect(() => {
+    return function cleanup() {
+      abortController.current.abort();
+    };
+  }, [getAbortController]);
+
+  const getSignal = useCallback(
+    () => getAbortController().signal,
+    [getAbortController],
+  );
+
+  return getSignal;
+}
 /*
 ## Components
 */
 export function Home() {
   const { content } = useContentState();
+  const getAbortSignal = useAbortSignal();
 
   const [inputState, inputDispatch] = useReducer(
     inputReducer,
-    getInitialState(),
+    getDefaultState(),
   );
   const { dataProfile, fileFormat } = inputState;
+
+  // Populate the input fields with URL parameters, if any
+  useEffect(() => {
+    getInitialState(getAbortSignal())
+      .then((initialState) => {
+        inputDispatch({ type: 'initialize', payload: initialState });
+      })
+      .catch((err) => {
+        console.warn(`Error loading initial fields: ${err}`);
+      });
+  }, [getAbortSignal]);
 
   // Track non-empty values relevant to the current profile
   const [queryParams, setQueryParams] = useState<QueryState>({});
@@ -497,18 +569,27 @@ type FilterFieldsProps = {
 };
 
 function FilterFields({ dispatch, fields, state }: FilterFieldsProps) {
+  const getAbortSignal = useAbortSignal();
   return (
     <div>
       {fields.includes('state') && (
         <div>
           <label className="usa-label">
             <b>State</b>
-            <Select
+            <AsyncSelect
               aria-label="Select a state"
-              // onChange={(ev) => dispatch({ type: 'state', payload: ev })}
-              // options={dataProfileOptions}
+              cacheOptions
+              defaultOptions
+              isMulti
+              loadOptions={() =>
+                getData<Option<string, string>[]>(
+                  '/api/state',
+                  getAbortSignal(),
+                )
+              }
+              onChange={(ev) => dispatch({ type: 'state', payload: ev })}
               placeholder="Select a state..."
-              // value={state}
+              value={state.state}
             />
           </label>
         </div>

@@ -12,6 +12,8 @@ import { MarkdownContent } from 'components/markdownContent';
 import { useContentState, useContentDispatch } from 'contexts/content';
 // config
 import { cloudSpace, getData, serverBasePath, serverUrl } from '../config';
+// types
+import type { Content } from 'contexts/content';
 
 /** Custom hook to fetch static content */
 function useFetchedContent() {
@@ -21,7 +23,7 @@ function useFetchedContent() {
     const controller = new AbortController();
 
     contentDispatch({ type: 'FETCH_CONTENT_REQUEST' });
-    getData(`${serverUrl}/api/lookupFiles`, controller.signal)
+    getData<Content>(`${serverUrl}/api/lookupFiles`, controller.signal)
       .then((res) => {
         contentDispatch({
           type: 'FETCH_CONTENT_SUCCESS',

@@ -34,7 +34,7 @@ async function fetchData(url: string, options: RequestInit) {
     const contentType = response.headers.get('content-type');
     return contentType?.includes('application/json')
       ? await response.json()
-      : Promise.resolve();
+      : Promise.reject(new Error('Invalid content type received'));
   } catch (error) {
     return await Promise.reject(error);
   }
@@ -44,7 +44,7 @@ async function fetchData(url: string, options: RequestInit) {
  * Fetches data and returns a promise containing JSON fetched from a provided
  * web service URL or handles any other OK response returned from the server
  */
-export function getData(url: string, signal: AbortSignal) {
+export function getData<T>(url: string, signal: AbortSignal): Promise<T> {
   return fetchData(url, {
     method: 'GET',
     credentials: 'include' as const,

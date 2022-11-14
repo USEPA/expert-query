@@ -4,80 +4,77 @@ import {
   createContext,
   useContext,
   useReducer,
-} from "react";
+} from 'react';
 
 type Props = {
   children: ReactNode;
 };
 
-type Content = {
+export type Content = {
   services: {
     waterbodyService: {
       points: string;
       lines: string;
       areas: string;
       controlTable: string;
-    },
+    };
     glossaryURL: string;
     attains: {
       serviceUrlDev: string;
       serviceUrl: string;
-    },
+    };
     googleAnalyticsMapping: {
       urlLookup: string;
       wildcardUrl: string;
       name: string;
-    }[]
+    }[];
   };
   alertsConfig: {
     [page: string]: {
       class: string;
       content: string;
-    },
+    };
   };
 };
 
 type State = {
   content:
-    | { status: "idle"; data: {} }
-    | { status: "pending"; data: {} }
-    | { status: "success"; data: Content }
-    | { status: "failure"; data: {} };
+    | { status: 'idle'; data: {} }
+    | { status: 'pending'; data: {} }
+    | { status: 'success'; data: Content }
+    | { status: 'failure'; data: {} };
 };
 
 export type Action =
-  | { type: "FETCH_CONTENT_REQUEST" }
+  | { type: 'FETCH_CONTENT_REQUEST' }
   | {
-      type: "FETCH_CONTENT_SUCCESS";
+      type: 'FETCH_CONTENT_SUCCESS';
       payload: Content;
     }
-  | { type: "FETCH_CONTENT_FAILURE" };
+  | { type: 'FETCH_CONTENT_FAILURE' };
 
 const StateContext = createContext<State | undefined>(undefined);
 const DispatchContext = createContext<Dispatch<Action> | undefined>(undefined);
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "FETCH_CONTENT_REQUEST": {
+    case 'FETCH_CONTENT_REQUEST': {
       return {
         ...state,
         content: {
-          status: "pending",
+          status: 'pending',
           data: {},
         },
       };
     }
 
-    case "FETCH_CONTENT_SUCCESS": {
-      const {
-        services,
-        alertsConfig,
-      } = action.payload;
+    case 'FETCH_CONTENT_SUCCESS': {
+      const { services, alertsConfig } = action.payload;
 
       return {
         ...state,
         content: {
-          status: "success",
+          status: 'success',
           data: {
             services,
             alertsConfig,
@@ -86,11 +83,11 @@ function reducer(state: State, action: Action): State {
       };
     }
 
-    case "FETCH_CONTENT_FAILURE": {
+    case 'FETCH_CONTENT_FAILURE': {
       return {
         ...state,
         content: {
-          status: "failure",
+          status: 'failure',
           data: {},
         },
       };
@@ -106,7 +103,7 @@ function reducer(state: State, action: Action): State {
 export function ContentProvider({ children }: Props) {
   const initialState: State = {
     content: {
-      status: "idle",
+      status: 'idle',
       data: {},
     },
   };
