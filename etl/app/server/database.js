@@ -384,7 +384,7 @@ export async function trimSchema(pool, s3Config) {
 
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  { createQuery, extract, insertQuery, tableName, transform },
+  { createQuery, extract, tableName, transform },
   s3Config,
 ) {
   return async function (client, schemaName) {
@@ -401,24 +401,20 @@ function getProfileEtl(
     }
 
     // Extract, transform, and load the new data
-    let res = await extract(s3Config);
-    while (res.data !== null) {
-      try {
-        await client.query('BEGIN');
-        const rows = transform(res.data);
-        const inserts = rows.map(async (row) => {
-          await client.query(insertQuery, row);
-        });
-        await Promise.all(inserts);
-        await client.query('COMMIT');
-      } catch (err) {
-        log.warn(`Failed to load table ${tableName}! ${err}`);
-        await client.query('ROLLBACK');
-        throw err;
+    try {
+      client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
+      let res = await extract(s3Config);
+      while (res.data !== null) {
+        const query = transform(res.data);
+        await client.query(query);
+        log.info(`Next record offset for table ${tableName}: ${res.next}`);
+        res = await extract(s3Config, res.next);
       }
-
-      log.info(`Next record offset for table ${tableName}: ${res.next}`);
-      res = await extract(s3Config, res.next);
+    } catch (err) {
+      log.warn(`Failed to load table ${tableName}! ${err}`);
+      throw err;
+    } finally {
+      client.query(`ALTER TABLE ${tableName} SET LOGGED`);
     }
 
     log.info(`Table ${tableName} load success`);

@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { setTimeout } from 'timers/promises';
+import pgPromise from 'pg-promise';
+
+const pgp = pgPromise({ capSQL: true });
 
 import { logger as log } from '../utilities/logger.js';
 
@@ -39,21 +42,18 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     ir_category VARCHAR(5)
   )`;
 
-export const insertQuery = `INSERT INTO ${tableName}
-  (
-    assessment_unit_id,
-    assessment_unit_name,
-    ir_category,
-    organization_id,
-    organization_name,
-    organization_type,
-    overall_status,
-    region,
-    reporting_cycle,
-    state
-  ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
-  )`;
+const insertColumns = new pgp.helpers.ColumnSet([
+  { name: 'assessment_unit_id', prop: 'assessmentUnitId' },
+  { name: 'assessment_unit_name', prop: 'assessmentUnitName' },
+  { name: 'ir_category', prop: 'iRCategory' },
+  { name: 'organization_id', prop: 'organizationId' },
+  { name: 'organization_name', prop: 'organizationName' },
+  { name: 'organization_type', prop: 'organizationType' },
+  { name: 'overall_status', prop: 'overallStatus' },
+  { name: 'region' },
+  { name: 'reporting_cycle', prop: 'reportingCycle' },
+  { name: 'state' },
+]);
 
 // Methods
 
@@ -83,18 +83,18 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
 export function transform(data) {
   const rows = [];
   data.forEach((datum) => {
-    rows.push([
-      datum.assessmentunitidentifier,
-      datum.assessmentunitname,
-      datum.ircategory,
-      datum.organizationid,
-      datum.organizationname,
-      datum.orgtype,
-      datum.overallstatus,
-      datum.region,
-      datum.reportingcycle,
-      datum.state,
-    ]);
+    rows.push({
+      assessmentUnitId: datum.assessmentunitidentifier,
+      assessmentUnitName: datum.assessmentunitname,
+      iRCategory: datum.ircategory,
+      organizationId: datum.organizationid,
+      organizationName: datum.organizationname,
+      organizationType: datum.orgtype,
+      overallStatus: datum.overallstatus,
+      region: datum.region,
+      reportingCycle: datum.reportingcycle,
+      state: datum.state,
+    });
   });
-  return rows;
+  return pgp.helpers.insert(rows, insertColumns, tableName);
 }
