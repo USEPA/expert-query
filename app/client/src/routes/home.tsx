@@ -79,7 +79,7 @@ function getLocalStorageItem(item: string) {
 }
 
 // Empty or default values for inputs
-function getDefaultState(): InputState {
+function getDefaultInputs(): InputState {
   return {
     dataProfile: null,
     fileFormat: matchSingleStaticOption(
@@ -92,7 +92,7 @@ function getDefaultState(): InputState {
 }
 
 // Uses URL query parameters or default values for initial state
-async function getInitialState(signal: AbortSignal): Promise<InputState> {
+async function getUrlInputs(signal: AbortSignal): Promise<InputState> {
   const params = parseInitialParams();
 
   const fileFormat = matchSingleStaticOption(
@@ -109,10 +109,10 @@ async function getInitialState(signal: AbortSignal): Promise<InputState> {
 
   // Fetch domain values
   const statePromise = getData<Option<string, string>[]>(
-    '/api/states',
+    '/api/values/state',
     signal,
   ).catch((err) => {
-    console.warn(`Could not fetch state options: ${err}`);
+    console.error(`Could not fetch state options: ${err}`);
     return null;
   });
 
@@ -140,7 +140,7 @@ function inputReducer(state: InputState, action: InputAction): InputState {
     case 'initialize':
       return action.payload;
     case 'reset':
-      return getDefaultState();
+      return getDefaultInputs();
     default: {
       const message = `Unhandled action type: ${action}`;
       throw new Error(message);
@@ -282,19 +282,21 @@ export function Home() {
 
   const [inputState, inputDispatch] = useReducer(
     inputReducer,
-    getDefaultState(),
+    getDefaultInputs(),
   );
   const { dataProfile, fileFormat } = inputState;
 
   // Populate the input fields with URL parameters, if any
+  const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
-    getInitialState(getAbortSignal())
-      .then((initialState) => {
-        inputDispatch({ type: 'initialize', payload: initialState });
+    getUrlInputs(getAbortSignal())
+      .then((initialInputs) => {
+        inputDispatch({ type: 'initialize', payload: initialInputs });
       })
       .catch((err) => {
-        console.warn(`Error loading initial fields: ${err}`);
-      });
+        console.error(`Error loading initial fields: ${err}`);
+      })
+      .finally(() => setInputsLoaded(true));
   }, [getAbortSignal]);
 
   // Track non-empty values relevant to the current profile
@@ -302,6 +304,8 @@ export function Home() {
 
   // Update URL when inputs change
   useEffect(() => {
+    if (!inputsLoaded) return;
+
     // Get selected parameters, including multiselectable fields
     const newQueryParams: QueryState = {};
     Object.entries(inputState).forEach(([field, value]) => {
@@ -326,7 +330,7 @@ export function Home() {
     window.location.hash = buildQueryString(newQueryParams);
 
     setQueryParams(newQueryParams);
-  }, [dataProfile, inputState]);
+  }, [dataProfile, inputState, inputsLoaded]);
 
   const [introVisible, setIntroVisible] = useState(
     !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
@@ -463,7 +467,7 @@ function FilterFields({ dispatch, fields, state }: FilterFieldsProps) {
               isMulti
               loadOptions={() =>
                 getData<Option<string, string>[]>(
-                  '/api/state',
+                  '/api/values/state',
                   getAbortSignal(),
                 )
               }
