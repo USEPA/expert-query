@@ -1,9 +1,4 @@
-const axios = require("axios");
 const express = require("express");
-const { resolve } = require("node:path");
-const Papa = require("papaparse");
-const pg = require("pg");
-const QueryStream = require("pg-query-stream");
 const Excel = require("exceljs");
 const { getActiveSchema } = require("../middleware");
 const { knex } = require("../utilities/database");
@@ -40,6 +35,19 @@ function appendToWhere(query, paramName, paramValue) {
 function parseCriteria(query, profile, queryParams) {
   switch (profile) {
     case "assessments":
+      query.select(
+        "id",
+        "reporting_cycle as reportingCycle",
+        "assessment_unit_id as assessmentUnitId",
+        "assessment_unit_name as assessmentUnitName",
+        "organization_id as organizationId",
+        "organization_name as organizationName",
+        "organization_type as organizationType",
+        "overall_status as overallStatus",
+        "region",
+        "state",
+        "ir_category as irCategory"
+      );
       appendToWhere(query, "id", queryParams.id);
       appendToWhere(query, "reporting_cycle", queryParams.reportingCycle);
       appendToWhere(query, "assessment_unit_id", queryParams.assessmentUnitId);
@@ -57,6 +65,7 @@ function parseCriteria(query, profile, queryParams) {
       appendToWhere(query, "ir_category", queryParams.irCategory);
       break;
     case "profile_test":
+      query.select("id", "assessment_name as assessmentName");
       appendToWhere(query, "id", queryParams.id);
       appendToWhere(query, "assessment_name", queryParams.assessmentName);
       break;
@@ -65,10 +74,10 @@ function parseCriteria(query, profile, queryParams) {
   }
 }
 
-async function executeQuery(profile, req, res, next) {
+async function executeQuery(profile, req, res) {
   // output types csv, tab-separated, Excel, or JSON
   try {
-    const query = knex.withSchema(req.activeSchema).select("*").from(profile);
+    const query = knex.withSchema(req.activeSchema).from(profile);
 
     parseCriteria(query, profile, req.query);
 
@@ -108,11 +117,13 @@ async function executeQuery(profile, req, res, next) {
         });
         break;
       case "json":
-      default:
         res.setHeader(
           "Content-disposition",
           `attachment; filename=${profile}.json`
         );
+        StreamingService.streamResponse(res, stream, format);
+        break;
+      default:
         StreamingService.streamResponse(res, stream, format);
         break;
     }
@@ -122,7 +133,7 @@ async function executeQuery(profile, req, res, next) {
   }
 }
 
-function executeQueryCountOnly(profile, req, res, next) {
+function executeQueryCountOnly(profile, req, res) {
   // always return json with the count
   try {
     const query = knex
@@ -151,19 +162,19 @@ module.exports = function (app) {
   router.use(getActiveSchema);
 
   // --- get assessments from database
-  router.get("/assessments", function (req, res, next) {
-    executeQuery("assessments", req, res, next);
+  router.get("/assessments", function (req, res) {
+    executeQuery("assessments", req, res);
   });
-  router.get("/assessments/count", function (req, res, next) {
-    executeQueryCountOnly("assessments", req, res, next);
+  router.get("/assessments/count", function (req, res) {
+    executeQueryCountOnly("assessments", req, res);
   });
 
   // --- get profile_test from database
-  router.get("/profileTests", function (req, res, next) {
-    executeQuery("profile_test", req, res, next);
+  router.get("/profileTests", function (req, res) {
+    executeQuery("profile_test", req, res);
   });
-  router.get("/profileTests/count", function (req, res, next) {
-    executeQueryCountOnly("profile_test", req, res, next);
+  router.get("/profileTests/count", function (req, res) {
+    executeQueryCountOnly("profile_test", req, res);
   });
 
   app.use("/data", router);
