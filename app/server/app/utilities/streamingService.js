@@ -20,7 +20,7 @@ class StreamingService {
     };
   };
 
-  static writeHead = (res, status = 200, format) => {
+  static writeHead = (res, status, format) => {
     if (typeof res.headersSent === "boolean" && !res.headersSent) {
       let contentType = "application/json; charset=utf-8";
       if (format === "csv") contentType = "text/csv";
@@ -37,7 +37,7 @@ class StreamingService {
   static getBasicTransform = (preHook, format) => {
     return new Transform({
       writableObjectMode: true,
-      transform(data = {}, encoding, callback) {
+      transform(data, encoding, callback) {
         // preHook on first data only
         if (!this.comma) preHook();
 
@@ -62,7 +62,7 @@ class StreamingService {
   static getJsonTransform = (preHook) => {
     return new Transform({
       writableObjectMode: true,
-      transform(data = {}, encoding, callback) {
+      transform(data, encoding, callback) {
         // preHook on first data only
         if (!this.comma) preHook();
         // if first data && error then no open/close brackets
