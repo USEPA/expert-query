@@ -2,6 +2,8 @@ const { Transform, Readable, Writable, pipeline } = require("stream");
 const Papa = require("papaparse");
 const bl = require("bl");
 const util = require("util");
+const logger = require("../utilities/logger");
+const log = logger.logger;
 
 class StreamingService {
   static getOptions = (outStream, format) => {
@@ -14,8 +16,11 @@ class StreamingService {
       },
       errorHandler: (error) => {
         if (!error) return;
+
         const { stack, message } = error;
-        console.error({ error: Object.assign({}, error, { stack, message }) });
+        if (message === "Premature close") return;
+
+        log.warn("Out stream Error! " + error);
       },
     };
   };
@@ -25,6 +30,9 @@ class StreamingService {
       let contentType = "application/json; charset=utf-8";
       if (format === "csv") contentType = "text/csv";
       if (format === "tsv") contentType = "text/tsv";
+      if (format === "xlsx")
+        contentType =
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
       res.writeHead(status, {
         "Content-Type": contentType,
@@ -81,13 +89,47 @@ class StreamingService {
     });
   };
 
-  static streamResponse = (outStream, inStream, format) => {
+  static getXlsxTransform = (preHook, format, excelDoc) => {
+    return new Transform({
+      writableObjectMode: true,
+      readableObjectMode: false,
+      transform(data, encoding, callback) {
+        // preHook on first data only
+        if (!this.comma) {
+          excelDoc.worksheet.columns = Object.keys(data).map((key) => {
+            return { header: key, key };
+          });
+        }
+
+        // convert the json to csv
+        excelDoc.worksheet.addRow(data).commit();
+
+        // set comma for subsequent data
+        if (!this.comma) this.comma = "\n";
+
+        callback();
+      },
+      final(callback) {
+        excelDoc.workbook
+          .commit()
+          .then(() => {
+            callback();
+          })
+          .catch((err) => {
+            res.status(500).send("Error! " + err);
+          });
+      },
+    });
+  };
+
+  static streamResponse = (outStream, inStream, format, excelDoc = null) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,
       format
     );
     inStream.on("error", (error) => {
       errorHook();
+      log.warn("Streaming in error! " + error);
       inStream.push({ error: error.message });
       outStream.end();
     });
@@ -96,46 +138,12 @@ class StreamingService {
     if (format === "csv" || format === "tsv") {
       transform = StreamingService.getBasicTransform(preHook, format);
     }
+    if (format === "xlsx" && excelDoc) {
+      transform = StreamingService.getXlsxTransform(preHook, format, excelDoc);
+    }
 
     pipeline(inStream, transform, outStream, errorHandler);
   };
 }
 
-const ExcelTransform = function (options) {
-  Transform.call(this, {
-    writableObjectMode: true,
-    readableObjectMode: false,
-  });
-
-  this.workbook = options.workbook;
-  const that = this;
-  this.workbook.stream.on("readable", function () {
-    const chunk = this.workbook.stream.read();
-    that.push(chunk);
-  });
-  this.worksheet = options.worksheet;
-};
-
-util.inherits(ExcelTransform, Transform);
-
-ExcelTransform.prototype._transform = function (data, encoding, callback) {
-  if (!this.worksheet.columns) {
-    this.worksheet.columns = Object.keys(data).map((key) => {
-      return { header: key, key };
-    });
-  }
-
-  this.worksheet.addRow(data).commit();
-
-  callback();
-};
-
-ExcelTransform.prototype._flush = function (callback) {
-  this.workbook.commit();
-  callback();
-};
-
-module.exports = {
-  StreamingService,
-  ExcelTransform,
-};
+module.exports = StreamingService;

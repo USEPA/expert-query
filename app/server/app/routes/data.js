@@ -9,10 +9,7 @@ const { getActiveSchema } = require("../middleware");
 const { knex } = require("../utilities/database");
 const logger = require("../utilities/logger");
 const log = logger.logger;
-const {
-  StreamingService,
-  ExcelTransform,
-} = require("../utilities/streamingService");
+const StreamingService = require("../utilities/streamingService");
 
 function tryParseJSON(value) {
   try {
@@ -105,14 +102,10 @@ async function executeQuery(profile, req, res, next) {
         workbook.addWorksheet(profile);
         const worksheet = workbook.getWorksheet(profile);
 
-        stream
-          .pipe(
-            new ExcelTransform({
-              workbook,
-              worksheet,
-            })
-          )
-          .pipe(process.stdout);
+        StreamingService.streamResponse(res, stream, format, {
+          workbook,
+          worksheet,
+        });
         break;
       case "json":
       default:
@@ -142,7 +135,10 @@ function executeQueryCountOnly(profile, req, res, next) {
 
     query
       .then((count) => res.status(200).send(count))
-      .catch((error) => res.status(500).send("Error! " + error));
+      .catch((error) => {
+        log.error(`Failed to get count from the "${profile.name}" profile...`);
+        res.status(500).send("Error! " + error);
+      });
   } catch (error) {
     log.error(`Failed to get count from the "${profile.name}" profile...`);
     return res.status(500).send("Error !" + error);
