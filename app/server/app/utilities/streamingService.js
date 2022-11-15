@@ -16,9 +16,7 @@ class StreamingService {
       },
       errorHandler: (error) => {
         if (!error) return;
-
-        const { stack, message } = error;
-        if (message === "Premature close") return;
+        if (error.message === "Premature close") return;
 
         log.warn("Out stream Error! " + error);
       },
