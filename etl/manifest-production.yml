@@ -2,6 +2,7 @@
 applications:
   - name: expert-query-etl-prod
     instances: 1
+    no-route: true
     memory: 512MB
     disk_quota: 512MB
     timeout: 180

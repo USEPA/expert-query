@@ -2,6 +2,7 @@
 applications:
   - name: expert-query-etl-staging
     instances: 1
+    no-route: true
     memory: 128MB
     disk_quota: 512MB
     timeout: 180
