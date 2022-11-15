@@ -81,7 +81,7 @@ class StreamingService {
     });
   };
 
-  static streamResponse = (outStream, inStream, format, excelDoc = null) => {
+  static streamResponse = (outStream, inStream, format) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,
       format

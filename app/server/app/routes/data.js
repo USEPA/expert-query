@@ -97,11 +97,6 @@ async function executeQuery(profile, req, res, next) {
           `attachment; filename=${profile}.xlsx`
         );
 
-        res._write = function (chunk, encoding, next) {
-          that.push(chunk);
-          next();
-        };
-
         const workbook = new Excel.stream.xlsx.WorkbookWriter({
           stream: res,
           useStyles: true,
