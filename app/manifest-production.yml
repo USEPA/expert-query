@@ -3,7 +3,8 @@ applications:
   - name: expert-query-prod
     instances: 2
     routes:
-      - route: owapps.epa.gov/expertquery
+      - route: expert-query-prod.app.cloud.gov
+      - route: expert-query.epa.gov
     memory: 512MB
     disk_quota: 512MB
     timeout: 180
