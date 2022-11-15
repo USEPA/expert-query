@@ -121,7 +121,7 @@ function retryRequest(serviceName, count, s3Config, callback) {
 }
 
 // Sync the domain values corresponding to a single domain name
-function syncSingleDomain(name, mapping) {
+function fetchSingleDomain(name, mapping) {
   return async function (s3Config, retryCount = 0) {
     try {
       const res = await axios.get(
@@ -144,23 +144,37 @@ function syncSingleDomain(name, mapping) {
         };
       });
 
-      uploadFilePublic(`${name}Values.json`, JSON.stringify(values));
+      return values;
     } catch (err) {
       log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
+      return [];
     }
   };
 }
 
 export function syncDomainValues(s3Config) {
-  syncStateValues(s3Config);
+  const fetchPromises = [];
+  const domainValues = {};
+  fetchPromises.push(
+    fetchStateValues(s3Config).then((values) => (domainValues.state = values)),
+  );
 
   Object.entries(domainValueMappings).forEach(([name, mapping]) => {
-    syncSingleDomain(name, mapping)(s3Config);
+    fetchPromises.push(
+      fetchSingleDomain(
+        name,
+        mapping,
+      )(s3Config).then((values) => (domainValues[name] = values)),
+    );
   });
+
+  Promise.all(fetchPromises).then(() =>
+    uploadFilePublic('domainValues.json', JSON.stringify(domainValues)),
+  );
 }
 
 // Sync state codes and labels from the states service
-async function syncStateValues(s3Config, retryCount = 0) {
+async function fetchStateValues(s3Config, retryCount = 0) {
   try {
     const res = await axios.get(s3Config.services.stateCodes);
 
@@ -175,9 +189,10 @@ async function syncStateValues(s3Config, retryCount = 0) {
       };
     });
 
-    uploadFilePublic('stateValues.json', JSON.stringify(states));
+    return states;
   } catch (err) {
     log.warn(`Sync States failed! ${err}`);
+    return [];
   }
 }
 

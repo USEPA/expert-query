@@ -17,7 +17,11 @@ module.exports = function (app) {
     const metadataObj = logger.populateMetdataObjFromRequest(req);
 
     // NOTE: static content files found in `app/server/app/content/` directory
-    const filenames = ["config/services.json", "alerts/config.json"];
+    const filenames = [
+      "content/config/services.json",
+      "content/alerts/config.json",
+      "content-etl/domainValues.json",
+    ];
 
     const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
@@ -25,7 +29,7 @@ module.exports = function (app) {
       // local development: read files directly from disk
       // Cloud.gov: fetch files from the public s3 bucket
       return isLocal
-        ? readFile(resolve(__dirname, "../content", filename), "utf8")
+        ? readFile(resolve(__dirname, "../", filename), "utf8")
         : axios({
             method: "get",
             url: `${s3BucketUrl}/content/${filename}`,
@@ -45,6 +49,7 @@ module.exports = function (app) {
         return res.json({
           services: isLocal ? JSON.parse(data[0]) : data[0],
           alertsConfig: isLocal ? JSON.parse(data[1]) : data[1],
+          domainValues: isLocal ? JSON.parse(data[2]) : data[2],
         });
       })
       .catch((error) => {

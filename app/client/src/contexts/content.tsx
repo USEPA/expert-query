@@ -17,23 +17,26 @@ type Content = {
       lines: string;
       areas: string;
       controlTable: string;
-    },
+    };
     glossaryURL: string;
     attains: {
       serviceUrlDev: string;
       serviceUrl: string;
-    },
+    };
     googleAnalyticsMapping: {
       urlLookup: string;
       wildcardUrl: string;
       name: string;
-    }[]
+    }[];
   };
   alertsConfig: {
     [page: string]: {
       class: string;
       content: string;
-    },
+    };
+  };
+  domainValues: {
+    [field: string]: Option<string, string>[];
   };
 };
 
@@ -69,10 +72,7 @@ function reducer(state: State, action: Action): State {
     }
 
     case "FETCH_CONTENT_SUCCESS": {
-      const {
-        services,
-        alertsConfig,
-      } = action.payload;
+      const { services, alertsConfig, domainValues } = action.payload;
 
       return {
         ...state,
@@ -81,6 +81,7 @@ function reducer(state: State, action: Action): State {
           data: {
             services,
             alertsConfig,
+            domainValues,
           },
         },
       };
