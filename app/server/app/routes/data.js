@@ -6,6 +6,11 @@ const logger = require("../utilities/logger");
 const log = logger.logger;
 const StreamingService = require("../utilities/streamingService");
 
+/**
+ * Trys to parse the provided string value to JSON.
+ * @param {string} value
+ * @returns The json representation of the provided value along with whether or not the original value was json
+ */
 function tryParseJSON(value) {
   try {
     return {
@@ -20,6 +25,12 @@ function tryParseJSON(value) {
   }
 }
 
+/**
+ * Appends to the where clause of the provided query.
+ * @param {Object} query KnexJS query object
+ * @param {string} paramName column name
+ * @param {string} paramValue URL query value
+ */
 function appendToWhere(query, paramName, paramValue) {
   if (!paramValue) return;
 
@@ -32,6 +43,13 @@ function appendToWhere(query, paramName, paramValue) {
   }
 }
 
+/**
+ * Builds the select clause and where clause of the query based on the provided
+ * profile name.
+ * @param {Object} query KnexJS query object
+ * @param {string} profile name of the profile being queried
+ * @param {Object} queryParams URL query value
+ */
 function parseCriteria(query, profile, queryParams) {
   switch (profile) {
     case "assessments":
@@ -74,6 +92,13 @@ function parseCriteria(query, profile, queryParams) {
   }
 }
 
+/**
+ * Runs a query against the provided profile name and streams the result to the
+ * client as csv, tsv, xlsx, json file, or inline json.
+ * @param {string} profile name of the profile being queried
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
 async function executeQuery(profile, req, res) {
   // output types csv, tab-separated, Excel, or JSON
   try {
@@ -133,6 +158,12 @@ async function executeQuery(profile, req, res) {
   }
 }
 
+/**
+ * Runs a query against the provided profile name and returns the number of records.
+ * @param {string} profile name of the profile being queried
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
 function executeQueryCountOnly(profile, req, res) {
   // always return json with the count
   try {

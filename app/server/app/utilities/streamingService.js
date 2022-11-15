@@ -23,6 +23,12 @@ class StreamingService {
     };
   };
 
+  /**
+   * Writes the response headers.
+   * @param {express.Response} res
+   * @param {number} status http response code
+   * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
+   */
   static writeHead = (res, status, format) => {
     if (typeof res.headersSent === "boolean" && !res.headersSent) {
       let contentType = "application/json; charset=utf-8";
@@ -40,6 +46,12 @@ class StreamingService {
     }
   };
 
+  /**
+   * Transforms the streaming data to csv or tsv.
+   * @param {function} preHook function for writing initial headers
+   * @param {'csv'|'tsv'} format export format file type
+   * @returns Transform object
+   */
   static getBasicTransform = (preHook, format) => {
     return new Transform({
       writableObjectMode: true,
@@ -65,6 +77,11 @@ class StreamingService {
     });
   };
 
+  /**
+   * Transforms the streaming data to json.
+   * @param {function} preHook function for writing initial headers
+   * @returns Transform object
+   */
   static getJsonTransform = (preHook) => {
     return new Transform({
       writableObjectMode: true,
@@ -87,7 +104,13 @@ class StreamingService {
     });
   };
 
-  static getXlsxTransform = (preHook, format, excelDoc) => {
+  /**
+   * Transforms the streaming data to xlsx.
+   * @param {function} preHook function for writing initial headers
+   * @param {Object} excelDoc Excel workbook and worksheet objects
+   * @returns Transform object
+   */
+  static getXlsxTransform = (preHook, excelDoc) => {
     return new Transform({
       writableObjectMode: true,
       readableObjectMode: false,
@@ -120,6 +143,14 @@ class StreamingService {
     });
   };
 
+  /**
+   * Builds a pipe for streaming data in from the database and out to the client
+   * in the specified format.
+   * @param {express.Response} outStream output response stream
+   * @param {Transform} inStream readable stream from database query
+   * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
+   * @param {Object} excelDoc Excel workbook and worksheet objects
+   */
   static streamResponse = (outStream, inStream, format, excelDoc = null) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,
@@ -137,7 +168,7 @@ class StreamingService {
       transform = StreamingService.getBasicTransform(preHook, format);
     }
     if (format === "xlsx" && excelDoc) {
-      transform = StreamingService.getXlsxTransform(preHook, format, excelDoc);
+      transform = StreamingService.getXlsxTransform(preHook, excelDoc);
     }
 
     pipeline(inStream, transform, outStream, errorHandler);
