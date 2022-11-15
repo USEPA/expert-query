@@ -1,7 +1,6 @@
 import { uniqueId } from 'lodash';
 // types
 import type { ReactNode } from 'react';
-import type { Option } from 'types';
 
 type RadioOption = Option<ReactNode, string>;
 

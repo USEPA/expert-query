@@ -1,6 +1,4 @@
 import profiles from './profiles';
-// types
-import type { Option } from 'types';
 
 export const confirmed = [
   {

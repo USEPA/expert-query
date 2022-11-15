@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Select from 'react-select';
-import AsyncSelect from 'react-select/async';
 // components
 import Alert from 'components/alert';
 import Button from 'components/button';
@@ -15,9 +14,8 @@ import Summary from 'components/summary';
 import { useContentState } from 'contexts/content';
 // types
 import type { Dispatch, ReactNode } from 'react';
-import type { Option } from 'types';
 // config
-import { getData, options, profiles } from 'config';
+import { options as listOptions, profiles } from 'config';
 
 /*
 ## Types
@@ -25,7 +23,7 @@ import { getData, options, profiles } from 'config';
 interface InputState {
   fileFormat: Option<ReactNode, string> | null;
   dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  state: Option<string, string>[] | null;
+  state: Readonly<Option<string, string>[]> | null;
 }
 
 type InputAction =
@@ -51,16 +49,16 @@ type QueryValue = string | number | boolean;
 */
 const defaultFileFormat = 'csv';
 
-const staticFields = ['dataProfile', 'fileFormat'];
+const controlFields = ['dataProfile', 'fileFormat'];
 
 /*
 ## Utilities
 */
 // Converts a JSON object into a parameter string
-function buildQueryString(query: QueryState, includeStatic = true) {
+function buildQueryString(query: QueryState, includeControl = true) {
   const paramsList: Array<QueryParameter> = [];
   Object.entries(query).forEach(([field, value]) => {
-    if (!includeStatic && staticFields.includes(field)) return;
+    if (!includeControl && controlFields.includes(field)) return;
 
     // Duplicate the query parameter for an array of values
     if (Array.isArray(value)) value.forEach((v) => paramsList.push([field, v]));
@@ -85,41 +83,36 @@ function getDefaultInputs(): InputState {
     fileFormat: matchSingleStaticOption(
       null,
       defaultFileFormat,
-      options.fileFormat,
+      listOptions.fileFormat,
     ),
     state: null,
   };
 }
 
 // Uses URL query parameters or default values for initial state
-async function getUrlInputs(signal: AbortSignal): Promise<InputState> {
+async function getUrlInputs(
+  signal: AbortSignal, // will need for DB checks
+  domainOptions: DomainValues,
+): Promise<InputState> {
   const params = parseInitialParams();
 
   const fileFormat = matchSingleStaticOption(
     params.fileFormat ?? null,
     defaultFileFormat,
-    options.fileFormat,
+    listOptions.fileFormat,
   );
 
   const dataProfile = matchSingleStaticOption(
     params.dataProfile ?? null,
     null,
-    options.dataProfile,
+    listOptions.dataProfile,
   );
 
-  // Fetch domain values
-  const statePromise = getData<Option<string, string>[]>(
-    '/api/values/state',
-    signal,
-  ).catch((err) => {
-    console.error(`Could not fetch state options: ${err}`);
-    return null;
-  });
-
-  const stateOptions = await statePromise;
-  const state = stateOptions
-    ? matchMultipleStaticOptions(params.state ?? null, null, stateOptions)
-    : null;
+  const state = matchMultipleStaticOptions(
+    params.state ?? null,
+    null,
+    domainOptions.state,
+  );
 
   return { dataProfile, fileFormat, state };
 }
@@ -141,6 +134,11 @@ function inputReducer(state: InputState, action: InputAction): InputState {
       return action.payload;
     case 'reset':
       return getDefaultInputs();
+    case 'state':
+      return {
+        ...state,
+        state: action.payload,
+      };
     default: {
       const message = `Unhandled action type: ${action}`;
       throw new Error(message);
@@ -159,9 +157,9 @@ function isOption(
 function matchSingleStaticOption<S, T>(
   values: QueryValue | QueryValue[] | null,
   defaultValue: QueryValue | null,
-  options: readonly Option<S, T>[],
+  options?: readonly Option<S, T>[],
 ): Option<S, T> | null {
-  return matchStaticOptions(values, defaultValue, options) as Option<
+  return matchStaticOptions(values, defaultValue, options ?? null) as Option<
     S,
     T
   > | null;
@@ -171,9 +169,9 @@ function matchSingleStaticOption<S, T>(
 function matchMultipleStaticOptions<S, T>(
   values: QueryValue | QueryValue[] | null,
   defaultValue: QueryValue | null,
-  options: Option<S, T>[],
+  options?: Option<S, T>[],
 ): Option<S, T>[] | null {
-  return matchStaticOptions(values, defaultValue, options) as
+  return matchStaticOptions(values, defaultValue, options ?? null) as
     | Option<S, T>[]
     | null;
 }
@@ -182,9 +180,10 @@ function matchMultipleStaticOptions<S, T>(
 function matchStaticOptions<S, T>(
   values: QueryValue | QueryValue[] | null,
   defaultValue: QueryValue | null,
-  options: readonly Option<S, T>[],
+  options: readonly Option<S, T>[] | null,
   multiple = false,
 ) {
+  if (!options) return defaultValue;
   const valuesArray: QueryValue[] = [];
   if (Array.isArray(values)) valuesArray.push(...values);
   else if (values !== null) valuesArray.push(values);
@@ -289,7 +288,9 @@ export function Home() {
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
-    getUrlInputs(getAbortSignal())
+    if (content.status === 'failure') return setInputsLoaded(true);
+    if (content.status !== 'success') return;
+    getUrlInputs(getAbortSignal(), content.data.domainValues)
       .then((initialInputs) => {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
@@ -297,7 +298,7 @@ export function Home() {
         console.error(`Error loading initial fields: ${err}`);
       })
       .finally(() => setInputsLoaded(true));
-  }, [getAbortSignal]);
+  }, [content, getAbortSignal]);
 
   // Track non-empty values relevant to the current profile
   const [queryParams, setQueryParams] = useState<QueryState>({});
@@ -317,7 +318,7 @@ export function Home() {
         ? value.value
         : value;
       if (
-        staticFields.includes(field) ||
+        controlFields.includes(field) ||
         (dataProfile &&
           (
             profiles[dataProfile.value].fields as ReadonlyArray<string>
@@ -380,7 +381,7 @@ export function Home() {
         <Select
           aria-label="Select a data profile"
           onChange={(ev) => inputDispatch({ type: 'dataProfile', payload: ev })}
-          options={options.dataProfile}
+          options={listOptions.dataProfile}
           placeholder="Select a data profile..."
           value={dataProfile}
         />
@@ -390,6 +391,7 @@ export function Home() {
             <FilterFields
               dispatch={inputDispatch}
               fields={profiles[dataProfile.value].fields}
+              options={{ ...listOptions, ...content.data.domainValues }}
               state={inputState}
             />
             <h3>Download the Data</h3>
@@ -404,7 +406,7 @@ export function Home() {
                 onChange={(option) =>
                   inputDispatch({ type: 'fileFormat', payload: option })
                 }
-                options={options.fileFormat}
+                options={listOptions.fileFormat}
                 selected={fileFormat}
                 styles={['margin-bottom-2']}
               />
@@ -449,29 +451,22 @@ export function Home() {
 type FilterFieldsProps = {
   dispatch: Dispatch<InputAction>;
   fields: readonly string[];
+  options: typeof listOptions & DomainValues;
   state: InputState;
 };
 
-function FilterFields({ dispatch, fields, state }: FilterFieldsProps) {
-  const getAbortSignal = useAbortSignal();
+function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
   return (
     <div>
       {fields.includes('state') && (
         <div>
           <label className="usa-label">
             <b>State</b>
-            <AsyncSelect
-              aria-label="Select a state"
-              cacheOptions
-              defaultOptions
+            <Select
+              aria-label="Select a state..."
               isMulti
-              loadOptions={() =>
-                getData<Option<string, string>[]>(
-                  '/api/values/state',
-                  getAbortSignal(),
-                )
-              }
               onChange={(ev) => dispatch({ type: 'state', payload: ev })}
+              options={options.state}
               placeholder="Select a state..."
               value={state.state}
             />

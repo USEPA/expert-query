@@ -35,6 +35,7 @@ export type Content = {
       content: string;
     };
   };
+  domainValues: DomainValues;
 };
 
 type State = {
@@ -69,7 +70,7 @@ function reducer(state: State, action: Action): State {
     }
 
     case 'FETCH_CONTENT_SUCCESS': {
-      const { services, alertsConfig } = action.payload;
+      const { services, alertsConfig, domainValues } = action.payload;
 
       return {
         ...state,
@@ -78,6 +79,7 @@ function reducer(state: State, action: Action): State {
           data: {
             services,
             alertsConfig,
+            domainValues,
           },
         },
       };
