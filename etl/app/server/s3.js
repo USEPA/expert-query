@@ -1,6 +1,5 @@
 import AWS from 'aws-sdk';
 import axios from 'axios';
-import domainValueMappings from '../config/domainValueMappings.js';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
@@ -15,7 +14,11 @@ const environment = getEnvironment();
 // Loads etl config from private S3 bucket
 export async function loadConfig() {
   // NOTE: static content files found in `etl/app/content-private/` directory
-  const filenames = ['config.json', 'services.json'];
+  const filenames = [
+    'config.json',
+    'services.json',
+    'domainValueMappings.json',
+  ];
 
   try {
     // setup private s3 bucket
@@ -56,6 +59,7 @@ export async function loadConfig() {
     return {
       config: parsedData[0],
       services: parsedData[1],
+      domainValueMappings: parsedData[2],
     };
   } catch (err) {
     log.warn('Error loading config from private S3 bucket');
@@ -159,7 +163,7 @@ export function syncDomainValues(s3Config) {
     fetchStateValues(s3Config).then((values) => (domainValues.state = values)),
   );
 
-  Object.entries(domainValueMappings).forEach(([name, mapping]) => {
+  Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
     fetchPromises.push(
       fetchSingleDomain(
         name,
