@@ -1,7 +1,6 @@
 const path = require("path");
 const express = require("express");
 const helmet = require("helmet");
-const basicAuth = require("express-basic-auth");
 const logger = require("./utilities/logger");
 const log = logger.logger;
 
@@ -85,6 +84,7 @@ if (isLocal) {
   requiredEnvVars.push("DB_HOST");
   requiredEnvVars.push("DB_PORT");
 } else {
+  requiredEnvVars.push("VCAP_SERVICES");
   requiredEnvVars.push("CF_S3_PUB_BUCKET_ID");
   requiredEnvVars.push("CF_S3_PUB_REGION");
 }

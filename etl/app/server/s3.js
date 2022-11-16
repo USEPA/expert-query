@@ -14,7 +14,11 @@ const environment = getEnvironment();
 // Loads etl config from private S3 bucket
 export async function loadConfig() {
   // NOTE: static content files found in `etl/app/content-private/` directory
-  const filenames = ['config.json', 'services.json'];
+  const filenames = [
+    'config.json',
+    'services.json',
+    'domainValueMappings.json',
+  ];
 
   try {
     // setup private s3 bucket
@@ -55,6 +59,7 @@ export async function loadConfig() {
     return {
       config: parsedData[0],
       services: parsedData[1],
+      domainValueMappings: parsedData[2],
     };
   } catch (err) {
     log.warn('Error loading config from private S3 bucket');
@@ -106,6 +111,95 @@ export async function uploadFilePublic(filePath, fileToUpload) {
   }
 }
 
+// Retries an HTTP request in response to a failure
+function retryRequest(serviceName, count, s3Config, callback) {
+  log.info(`Non-200 response returned from ${serviceName} service, retrying`);
+  if (count < s3Config.config.retryLimit) {
+    return setTimeout(
+      () => callback(s3Config, count + 1),
+      s3Config.config.retryIntervalSeconds * 1000,
+    );
+  } else {
+    throw new Error(`Sync ${serviceName} retry count exceeded`);
+  }
+}
+
+// Sync the domain values corresponding to a single domain name
+function fetchSingleDomain(name, mapping) {
+  return async function (s3Config, retryCount = 0) {
+    try {
+      const res = await axios.get(
+        `${s3Config.services.domainValues}?domainName=${mapping.domainName}`,
+      );
+
+      if (res.status !== 200) {
+        return retryRequest(
+          `Domain Values (${mapping.domainName})`,
+          retryCount,
+          s3Config,
+          syncSingleDomain(name, mapping),
+        );
+      }
+
+      const values = res.data.map((value) => {
+        return {
+          label: value[mapping.labelField ?? 'name'],
+          value: value[mapping.valueField ?? 'code'],
+        };
+      });
+
+      return values;
+    } catch (err) {
+      log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
+      return [];
+    }
+  };
+}
+
+export function syncDomainValues(s3Config) {
+  const fetchPromises = [];
+  const domainValues = {};
+  fetchPromises.push(
+    fetchStateValues(s3Config).then((values) => (domainValues.state = values)),
+  );
+
+  Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
+    fetchPromises.push(
+      fetchSingleDomain(
+        name,
+        mapping,
+      )(s3Config).then((values) => (domainValues[name] = values)),
+    );
+  });
+
+  Promise.all(fetchPromises).then(() =>
+    uploadFilePublic('domainValues.json', JSON.stringify(domainValues)),
+  );
+}
+
+// Sync state codes and labels from the states service
+async function fetchStateValues(s3Config, retryCount = 0) {
+  try {
+    const res = await axios.get(s3Config.services.stateCodes);
+
+    if (res.status !== 200) {
+      return retryRequest('States', retryCount, s3Config, syncStateValues);
+    }
+
+    const states = res.data.data.map((state) => {
+      return {
+        label: state.name,
+        value: state.code,
+      };
+    });
+
+    return states;
+  } catch (err) {
+    log.warn(`Sync States failed! ${err}`);
+    return [];
+  }
+}
+
 export async function syncGlossary(s3Config, retryCount = 0) {
   try {
     // query the glossary service
@@ -117,15 +211,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
 
     // check response, retry on failure
     if (res.status !== 200) {
-      log.info('Non-200 response returned from Glossary service, retrying');
-      if (retryCount < s3Config.config.retryLimit) {
-        return setTimeout(
-          () => syncGlossary(s3Config, retryCount + 1),
-          s3Config.config.retryIntervalSeconds * 1000,
-        );
-      } else {
-        throw new Error('Sync glossary retry count exceeded');
-      }
+      return retryRequest('Glossary', retryCount, s3Config, syncGlossary);
     }
 
     // build the glossary json output

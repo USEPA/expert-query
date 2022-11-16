@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import express from 'express';
 
+import { routes } from './routes/index.js';
 import * as database from './server/database.js';
 import * as s3 from './server/s3.js';
 import { logger as log } from './server/utilities/logger.js';
@@ -18,15 +19,17 @@ const requiredEnvVars = ['EQ_PASSWORD', 'GLOSSARY_AUTH'];
 if (environment.isLocal) {
   requiredEnvVars.push('DB_USERNAME', 'DB_PASSWORD', 'DB_PORT', 'DB_HOST');
 } else {
-  requiredEnvVars.push('CF_S3_PUB_ACCESS_KEY');
-  requiredEnvVars.push('CF_S3_PUB_BUCKET_ID');
-  requiredEnvVars.push('CF_S3_PUB_REGION');
-  requiredEnvVars.push('CF_S3_PUB_SECRET_KEY');
-  requiredEnvVars.push('CF_S3_PRIV_ACCESS_KEY');
-  requiredEnvVars.push('CF_S3_PRIV_BUCKET_ID');
-  requiredEnvVars.push('CF_S3_PRIV_REGION');
-  requiredEnvVars.push('CF_S3_PRIV_SECRET_KEY');
-  requiredEnvVars.push('VCAP_SERVICES');
+  requiredEnvVars.push(
+    'CF_S3_PUB_ACCESS_KEY',
+    'CF_S3_PUB_BUCKET_ID',
+    'CF_S3_PUB_REGION',
+    'CF_S3_PUB_SECRET_KEY',
+    'CF_S3_PRIV_ACCESS_KEY',
+    'CF_S3_PRIV_BUCKET_ID',
+    'CF_S3_PRIV_REGION',
+    'CF_S3_PRIV_SECRET_KEY',
+    'VCAP_SERVICES',
+  );
 }
 
 requiredEnvVars.forEach((envVar) => {
@@ -40,6 +43,9 @@ requiredEnvVars.forEach((envVar) => {
   }
 });
 
+// setup server routes
+routes(app);
+
 async function etlJob(first = false) {
   // load config from private s3 bucket
   const s3Config = await s3.loadConfig();
@@ -52,6 +58,7 @@ async function etlJob(first = false) {
   }
 
   s3.syncGlossary(s3Config);
+  s3.syncDomainValues(s3Config);
 
   // Create and load new schema
   await database.runJob(s3Config, first);
@@ -94,6 +101,8 @@ app.on('tryDb', async () => {
       app.emit('tryDb');
     }, 30 * 1000);
   });
+
+  if (!client) return;
 
   // Create expert_query user
   try {
