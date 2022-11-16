@@ -2,12 +2,60 @@ import cron from 'node-cron';
 import express from 'express';
 
 import * as database from './server/database.js';
+import * as s3 from './server/s3.js';
 import { logger as log } from './server/utilities/logger.js';
+import { getEnvironment } from './server/utilities/environment.js';
 
 const app = express();
 app.disable('x-powered-by');
 
 const port = process.env.PORT || 3001;
+
+const environment = getEnvironment();
+
+const requiredEnvVars = ['EQ_PASSWORD', 'GLOSSARY_AUTH'];
+
+if (environment.isLocal) {
+  requiredEnvVars.push('DB_USERNAME', 'DB_PASSWORD', 'DB_PORT', 'DB_HOST');
+} else {
+  requiredEnvVars.push('CF_S3_PUB_ACCESS_KEY');
+  requiredEnvVars.push('CF_S3_PUB_BUCKET_ID');
+  requiredEnvVars.push('CF_S3_PUB_REGION');
+  requiredEnvVars.push('CF_S3_PUB_SECRET_KEY');
+  requiredEnvVars.push('CF_S3_PRIV_ACCESS_KEY');
+  requiredEnvVars.push('CF_S3_PRIV_BUCKET_ID');
+  requiredEnvVars.push('CF_S3_PRIV_REGION');
+  requiredEnvVars.push('CF_S3_PRIV_SECRET_KEY');
+  requiredEnvVars.push('VCAP_SERVICES');
+}
+
+requiredEnvVars.forEach((envVar) => {
+  if (!process.env[envVar]) {
+    const message =
+      envVar === 'VCAP_SERVICES'
+        ? 'VCAP_SERVICES Information not found. Connection will not be attempted.'
+        : `Required environment variable ${envVar} not found.`;
+    log.error(message);
+    process.exit();
+  }
+});
+
+async function etlJob(first = false) {
+  // load config from private s3 bucket
+  const s3Config = await s3.loadConfig();
+
+  if (!s3Config) {
+    log.warn(
+      'Failed to get config from private S3 bucket, aborting etl process',
+    );
+    return;
+  }
+
+  s3.syncGlossary(s3Config);
+
+  // Create and load new schema
+  await database.runJob(s3Config, first);
+}
 
 app.on('ready', async () => {
   app.listen(port, () => {
@@ -21,17 +69,15 @@ app.on('ready', async () => {
   }
 
   log.info('Creating tables, running load, and scheduling load to run daily');
-
-  // Create and load new schema
-  await database.runJob(true);
+  etlJob();
 
   // Schedule ETL to run daily at 3AM
   cron.schedule(
     '0 3 * * *',
-    async () => {
+    () => {
       log.info('Running cron task every day at 3AM');
 
-      database.runJob();
+      etlJob();
     },
     {
       scheduled: true,

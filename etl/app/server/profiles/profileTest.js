@@ -19,7 +19,7 @@ export const insertQuery = `INSERT INTO ${tableName} (assessment_name) VALUES ($
 
 // Methods
 
-export async function extract(next = 0) {
+export async function extract(s3Config, next = 0) {
   return next < values.length
     ? { data: [[values[next]]], next: next + limit }
     : { data: null, next: next + limit };

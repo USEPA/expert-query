@@ -1,0 +1,6 @@
+{
+    "chunkSize": 2000,
+    "retryLimit": 5,
+    "retryIntervalSeconds": 5,
+    "schemaRetentionDays": 5
+}

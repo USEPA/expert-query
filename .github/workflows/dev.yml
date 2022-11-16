@@ -57,19 +57,15 @@ jobs:
       CF_SPACE: ${{ secrets.CF_SPACE_DEV }}
       CF_USER_DEV: ${{ secrets.CF_USER_DEV }}
       CF_PASSWORD_DEV: ${{ secrets.CF_PASSWORD_DEV }}
-      CF_DEV_S3_PUB_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PUB_ACCESS_KEY }}
-      CF_DEV_S3_PUB_BUCKET_ID: ${{ secrets.CF_DEV_S3_PUB_BUCKET_ID }}
-      CF_DEV_S3_PUB_REGION: ${{ secrets.CF_DEV_S3_PUB_REGION }}
-      CF_DEV_S3_PUB_SECRET_KEY: ${{ secrets.CF_DEV_S3_PUB_SECRET_KEY }}
-      CF_DEV_S3_PRIV_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PRIV_ACCESS_KEY }}
-      CF_DEV_S3_PRIV_BUCKET_ID: ${{ secrets.CF_DEV_S3_PRIV_BUCKET_ID }}
-      CF_DEV_S3_PRIV_REGION: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
-      CF_DEV_S3_PRIV_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
+      CF_S3_PUB_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PUB_ACCESS_KEY }}
+      CF_S3_PUB_BUCKET_ID: ${{ secrets.CF_DEV_S3_PUB_BUCKET_ID }}
+      CF_S3_PUB_REGION: ${{ secrets.CF_DEV_S3_PUB_REGION }}
+      CF_S3_PUB_SECRET_KEY: ${{ secrets.CF_DEV_S3_PUB_SECRET_KEY }}
       DB_NAME: ${{ secrets.DB_NAME_DEV }}
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       DB_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
-      SERVER_URL: https://expert-query-dev.app.cloud.gov/
+      SERVER_URL: https://owapps-dev.app.cloud.gov/expertquery
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -104,7 +100,7 @@ jobs:
       # Run CloudFoundry/Cloud.gov deployment
       - name: Set up Cloud Foundry CLI
         run: |
-          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v7&source=github'
+          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v8&source=github'
           sudo dpkg -i cf-cli_amd64.deb
           cf -v
           cf api https://api.fr.cloud.gov
@@ -113,10 +109,8 @@ jobs:
 
       - name: Set application-level variables
         run: |
-          cf set-env $APP_NAME "CF_DEV_S3_PUB_BUCKET_ID" "$CF_DEV_S3_PUB_BUCKET_ID" > /dev/null
-          cf set-env $APP_NAME "CF_DEV_S3_PUB_REGION" "$CF_DEV_S3_PUB_REGION" > /dev/null
-          cf set-env $APP_NAME "CF_DEV_S3_PRIV_BUCKET_ID" "$CF_DEV_S3_PRIV_BUCKET_ID" > /dev/null
-          cf set-env $APP_NAME "CF_DEV_S3_PRIV_REGION" "$CF_DEV_S3_PRIV_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_BUCKET_ID" "$CF_S3_PUB_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_REGION" "$CF_S3_PUB_REGION" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
@@ -126,35 +120,18 @@ jobs:
       - name: Configure Public AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.CF_DEV_S3_PUB_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.CF_DEV_S3_PUB_SECRET_KEY }}
-          aws-region: ${{ secrets.CF_DEV_S3_PUB_REGION }}
+          aws-access-key-id: ${{ env.CF_S3_PUB_ACCESS_KEY }}
+          aws-secret-access-key: ${{ env.CF_S3_PUB_SECRET_KEY }}
+          aws-region: ${{ env.CF_S3_PUB_REGION }}
 
       # Sync static content to public S3 bucket
       - name: Sync static content to S3
-        run: aws s3 sync . s3://$CF_DEV_S3_PUB_BUCKET_ID/content
+        run: aws s3 sync . s3://$CF_S3_PUB_BUCKET_ID/content
         working-directory: app/server/app/content
 
       # Set CORS configuration for public S3 bucket
       - name: Set public S3 CORS configuration
-        run: aws s3api put-bucket-cors --bucket $CF_DEV_S3_PUB_BUCKET_ID --cors-configuration file://s3CORS.json
-        working-directory: app/server/app/config
-
-      - name: Configure Private AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.CF_DEV_S3_PRIV_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
-          aws-region: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
-
-      # Sync private static content to private S3 bucket
-      - name: Sync private static content to S3
-        run: aws s3 sync . s3://$CF_DEV_S3_PRIV_BUCKET_ID/content-private
-        working-directory: app/server/app/content-private
-
-      # Set CORS configuration for private S3 bucket
-      - name: Set private S3 CORS configuration
-        run: aws s3api put-bucket-cors --bucket $CF_DEV_S3_PRIV_BUCKET_ID --cors-configuration file://s3CORS.json
+        run: aws s3api put-bucket-cors --bucket $CF_S3_PUB_BUCKET_ID --cors-configuration file://s3CORS.json
         working-directory: app/server/app/config
 
       # Now that front-end is built in server/dist, only push server dir to Cloud.gov
@@ -180,6 +157,14 @@ jobs:
       CF_SPACE: ${{ secrets.CF_SPACE_DEV }}
       CF_USER_DEV: ${{ secrets.CF_USER_DEV }}
       CF_PASSWORD_DEV: ${{ secrets.CF_PASSWORD_DEV }}
+      CF_S3_PUB_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PUB_ACCESS_KEY }}
+      CF_S3_PUB_BUCKET_ID: ${{ secrets.CF_DEV_S3_PUB_BUCKET_ID }}
+      CF_S3_PUB_REGION: ${{ secrets.CF_DEV_S3_PUB_REGION }}
+      CF_S3_PUB_SECRET_KEY: ${{ secrets.CF_DEV_S3_PUB_SECRET_KEY }}
+      CF_S3_PRIV_ACCESS_KEY: ${{ secrets.CF_DEV_S3_PRIV_ACCESS_KEY }}
+      CF_S3_PRIV_BUCKET_ID: ${{ secrets.CF_DEV_S3_PRIV_BUCKET_ID }}
+      CF_S3_PRIV_REGION: ${{ secrets.CF_DEV_S3_PRIV_REGION }}
+      CF_S3_PRIV_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_SECRET_KEY }}
       DB_NAME: ${{ secrets.DB_NAME_DEV }}
       EQ_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       EQ_USERNAME: ${{ secrets.EQ_USER_DEV }}
@@ -195,7 +180,7 @@ jobs:
       # Run CloudFoundry/Cloud.gov deployment
       - name: Set up Cloud Foundry CLI
         run: |
-          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v7&source=github'
+          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v8&source=github'
           sudo dpkg -i cf-cli_amd64.deb
           cf -v
           cf api https://api.fr.cloud.gov
@@ -204,11 +189,36 @@ jobs:
 
       - name: Set application-level variables
         run: |
+          cf set-env $APP_NAME "CF_S3_PUB_ACCESS_KEY" "$CF_S3_PUB_ACCESS_KEY" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_BUCKET_ID" "$CF_S3_PUB_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_REGION" "$CF_S3_PUB_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_SECRET_KEY" "$CF_S3_PUB_SECRET_KEY" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_ACCESS_KEY" "$CF_S3_PRIV_ACCESS_KEY" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_BUCKET_ID" "$CF_S3_PRIV_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_REGION" "$CF_S3_PRIV_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_SECRET_KEY" "$CF_S3_PRIV_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "EQ_USERNAME" "$EQ_USERNAME" > /dev/null
           cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
+
+      - name: Configure Private AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.CF_S3_PRIV_ACCESS_KEY }}
+          aws-secret-access-key: ${{ env.CF_S3_PRIV_SECRET_KEY }}
+          aws-region: ${{ env.CF_S3_PRIV_REGION }}
+
+      # Sync private static content to private S3 bucket
+      - name: Sync private static content to S3
+        run: aws s3 sync . s3://$CF_S3_PRIV_BUCKET_ID/content-private
+        working-directory: etl/app/content-private
+
+      # Set CORS configuration for private S3 bucket
+      - name: Set private S3 CORS configuration
+        run: aws s3api put-bucket-cors --bucket $CF_S3_PRIV_BUCKET_ID --cors-configuration file://s3CORS.json
+        working-directory: etl/app/config
 
       # Now that front-end is built in server/dist, only push server dir to Cloud.gov
       - name: Deploy application to Cloud.gov

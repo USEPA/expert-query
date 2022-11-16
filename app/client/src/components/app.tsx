@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import 'uswds/css/uswds.css';
 import 'uswds/js/uswds.js';
 import 'bootstrap/dist/css/bootstrap-grid.min.css';
@@ -117,7 +117,8 @@ export function App() {
   return (
     <BrowserRouter basename={serverBasePath}>
       <Routes>
-        <Route index element={<Home />} />
+        <Route index element={<Navigate to="/attains" replace />} />
+        <Route path="/attains" element={<Home />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </BrowserRouter>

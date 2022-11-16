@@ -1,49 +1,23 @@
 import pg from 'pg';
-
+import { setTimeout } from 'timers/promises';
+import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
 import * as profiles from './profiles/index.js';
 
 const { Client, Pool } = pg;
 
-let isLocal = false;
-let isDevelopment = false;
-let isStaging = false;
+const environment = getEnvironment();
 
 let database_host = '';
 let database_user = '';
 let database_pwd = '';
 let database_port = '';
 
-if (process.env.NODE_ENV) {
-  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
-  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
-}
-
-const requiredEnvVars = ['EQ_PASSWORD'];
-
-if (isLocal) {
-  requiredEnvVars.push('DB_USERNAME', 'DB_PASSWORD', 'DB_PORT', 'DB_HOST');
-} else {
-  requiredEnvVars.push('VCAP_SERVICES');
-}
-
-requiredEnvVars.forEach((envVar) => {
-  if (!process.env[envVar]) {
-    const message =
-      envVar === 'VCAP_SERVICES'
-        ? 'VCAP_SERVICES Information not found. Connection will not be attempted.'
-        : `Required environment variable ${envVar} not found.`;
-    log.error(message);
-    process.exit();
-  }
-});
-
 const dbName = process.env.DB_NAME ?? 'expert_query';
 
 const eqUser = process.env.EQ_USERNAME ?? 'eq';
 
-if (isLocal) {
+if (environment.isLocal) {
   log.info('Since local, using a localhost Postgres database.');
   database_host = process.env.DB_HOST;
   database_user = process.env.DB_USERNAME;
@@ -222,15 +196,33 @@ async function getClient(pool) {
 }
 
 // Load profile data into the new schema
-async function loadProfile(profile, pool, schemaName) {
-  const profileEtl = getProfileEtl(profile);
+async function loadProfile(
+  profile,
+  pool,
+  schemaName,
+  s3Config,
+  retryCount = 0,
+) {
+  const profileEtl = getProfileEtl(profile, s3Config);
   const client = await getClient(pool);
   try {
     await profileEtl(client, schemaName);
     console.info(`ETL success for table ${profile.tableName}`);
   } catch (err) {
-    console.warn(`ETL failed for table ${profile.tableName}: ${err}`);
-    throw err;
+    if (retryCount < s3Config.config.retryLimit) {
+      console.info(`Retrying ETL for table ${profile.tableName}: ${err}`);
+      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
+      return await loadProfile(
+        profile,
+        pool,
+        schemaName,
+        s3Config,
+        retryCount + 1,
+      );
+    } else {
+      console.warn(`ETL failed for table ${profile.tableName}: ${err}`);
+      throw err;
+    }
   } finally {
     client.release();
   }
@@ -274,11 +266,11 @@ async function logEtlLoadStart(pool) {
 }
 
 // Load new data into a fresh schema, then discard old schemas
-export async function runJob(first = false) {
+export async function runJob(s3Config, first = false) {
   const pool = startConnPool();
   try {
-    await runLoad(pool);
-    await trimSchema(pool);
+    await runLoad(pool, s3Config);
+    await trimSchema(pool, s3Config);
   } catch (err) {
     log.warn(
       `${
@@ -290,7 +282,7 @@ export async function runJob(first = false) {
   }
 }
 
-export async function runLoad(pool) {
+export async function runLoad(pool, s3Config) {
   log.info('Running ETL process!');
 
   const logId = await logEtlLoadStart(pool);
@@ -303,7 +295,7 @@ export async function runLoad(pool) {
 
     // Add tables to schema and import new data
     const loadTasks = Object.values(profiles).map((profile) => {
-      return loadProfile(profile, pool, schemaName);
+      return loadProfile(profile, pool, schemaName, s3Config);
     });
     await Promise.all(loadTasks);
 
@@ -347,7 +339,9 @@ async function transferSchema(pool, schemaName, schemaId) {
 }
 
 // Drop old schemas
-export async function trimSchema(pool) {
+export async function trimSchema(pool, s3Config) {
+  const schemaRetentionDays = s3Config.config.schemaRetentionDays;
+
   const schemas = await pool
     .query(
       'SELECT extract(epoch from creation_date) as date, schema_name FROM logging.etl_schemas',
@@ -363,7 +357,10 @@ export async function trimSchema(pool) {
     const msInDay = 86400000;
     for (const index in schemas.rows) {
       const schema = schemas.rows[index];
-      if (Date.now() - parseFloat(schema.date) * 1000 > 5 * msInDay) {
+      if (
+        Date.now() - parseFloat(schema.date) * 1000 >
+        schemaRetentionDays * msInDay
+      ) {
         try {
           log.info(`Dropping obsolete schema ${schema.schema_name}`);
           await client.query('BEGIN');
@@ -386,13 +383,10 @@ export async function trimSchema(pool) {
 }
 
 // Get the ETL task for a particular profile
-function getProfileEtl({
-  createQuery,
-  extract,
-  insertQuery,
-  tableName,
-  transform,
-}) {
+function getProfileEtl(
+  { createQuery, extract, insertQuery, tableName, transform },
+  s3Config,
+) {
   return async function (client, schemaName) {
     // Create the table for the profile
     try {
@@ -407,27 +401,26 @@ function getProfileEtl({
     }
 
     // Extract, transform, and load the new data
-    try {
-      await client.query('BEGIN');
-
-      let res = await extract();
-      while (res.data !== null) {
+    let res = await extract(s3Config);
+    while (res.data !== null) {
+      try {
+        await client.query('BEGIN');
         const rows = transform(res.data);
         const inserts = rows.map(async (row) => {
           await client.query(insertQuery, row);
         });
         await Promise.all(inserts);
-
-        log.info(`Next record offset for table ${tableName}: ${res.next}`);
-        res = await extract(res.next);
+        await client.query('COMMIT');
+      } catch (err) {
+        log.warn(`Failed to load table ${tableName}! ${err}`);
+        await client.query('ROLLBACK');
+        throw err;
       }
 
-      await client.query('COMMIT');
-      log.info(`Table ${tableName} load success`);
-    } catch (err) {
-      log.warn(`Failed to load table ${tableName}! ${err}`);
-      await client.query('ROLLBACK');
-      throw err;
+      log.info(`Next record offset for table ${tableName}: ${res.next}`);
+      res = await extract(s3Config, res.next);
     }
+
+    log.info(`Table ${tableName} load success`);
   };
 }

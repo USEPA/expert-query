@@ -1,8 +1,7 @@
 import axios from 'axios';
+import { setTimeout } from 'timers/promises';
 
 import { logger as log } from '../utilities/logger.js';
-
-const limit = 2000;
 
 const selectColumns = [
   'assessmentunitidentifier',
@@ -16,10 +15,6 @@ const selectColumns = [
   'reportingcycle',
   'state',
 ];
-const baseUrl =
-  'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/4/query?' +
-  'f=pjson&orderByFields=objectid&returnGeometry=false' +
-  `&outFields=${selectColumns.join(',')}&resultRecordCount=${limit}`;
 
 /*
 ## Exports
@@ -62,19 +57,27 @@ export const insertQuery = `INSERT INTO ${tableName}
 
 // Methods
 
-export async function extract(next = 0, retryCount = 0) {
+export async function extract(s3Config, next = 0, retryCount = 0) {
+  const chunkSize = s3Config.config.chunkSize;
+
+  const baseUrl =
+    `${s3Config.services.attainsGis.summary}/query?` +
+    'f=pjson&orderByFields=objectid&returnGeometry=false' +
+    `&outFields=${selectColumns.join(',')}&resultRecordCount=${chunkSize}`;
+
   const url = baseUrl + `&where=objectid+>=+${next}`;
   const res = await axios.get(url);
   if (res.status !== 200) {
     log.info('Non-200 response returned from GIS service, retrying');
-    if (retryCount < 5) {
-      return setTimeout(() => extract(next, retryCount + 1), 5 * 1000);
+    if (retryCount < s3Config.config.retryLimit) {
+      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
+      return await extract(s3Config, next, retryCount + 1);
     } else {
       throw new Error('Retry count exceeded');
     }
   }
   const data = res.data.features.map((feature) => feature.attributes);
-  return { data: data.length ? data : null, next: next + limit };
+  return { data: data.length ? data : null, next: next + chunkSize };
 }
 
 export function transform(data) {
