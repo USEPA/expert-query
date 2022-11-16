@@ -50,22 +50,27 @@ function appendToWhere(query, paramName, paramValue) {
  * @param {string} profile name of the profile being queried
  * @param {Object} queryParams URL query value
  */
-function parseCriteria(query, profile, queryParams) {
+function parseCriteria(query, profile, queryParams, countOnly = false) {
   switch (profile) {
     case "assessments":
-      query.select(
-        "id",
-        "reporting_cycle as reportingCycle",
-        "assessment_unit_id as assessmentUnitId",
-        "assessment_unit_name as assessmentUnitName",
-        "organization_id as organizationId",
-        "organization_name as organizationName",
-        "organization_type as organizationType",
-        "overall_status as overallStatus",
-        "region",
-        "state",
-        "ir_category as irCategory"
-      );
+      if (countOnly) {
+        query.count("id");
+      } else {
+        query.select(
+          "id",
+          "reporting_cycle as reportingCycle",
+          "assessment_unit_id as assessmentUnitId",
+          "assessment_unit_name as assessmentUnitName",
+          "organization_id as organizationId",
+          "organization_name as organizationName",
+          "organization_type as organizationType",
+          "overall_status as overallStatus",
+          "region",
+          "state",
+          "ir_category as irCategory"
+        );
+      }
+
       appendToWhere(query, "id", queryParams.id);
       appendToWhere(query, "reporting_cycle", queryParams.reportingCycle);
       appendToWhere(query, "assessment_unit_id", queryParams.assessmentUnitId);
@@ -83,7 +88,11 @@ function parseCriteria(query, profile, queryParams) {
       appendToWhere(query, "ir_category", queryParams.irCategory);
       break;
     case "profile_test":
-      query.select("id", "assessment_name as assessmentName");
+      if (countOnly) {
+        query.count("id");
+      } else {
+        query.select("id", "assessment_name as assessmentName");
+      }
       appendToWhere(query, "id", queryParams.id);
       appendToWhere(query, "assessment_name", queryParams.assessmentName);
       break;
@@ -167,13 +176,9 @@ async function executeQuery(profile, req, res) {
 function executeQueryCountOnly(profile, req, res) {
   // always return json with the count
   try {
-    const query = knex
-      .withSchema(req.activeSchema)
-      .count("id")
-      .from(profile)
-      .first();
+    const query = knex.withSchema(req.activeSchema).from(profile).first();
 
-    parseCriteria(query, profile, req.query);
+    parseCriteria(query, profile, req.query, true);
 
     query
       .then((count) => res.status(200).send(count))
