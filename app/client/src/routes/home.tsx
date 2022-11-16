@@ -171,7 +171,7 @@ function matchMultipleStaticOptions<S, T>(
   defaultValue: QueryValue | null,
   options?: Option<S, T>[],
 ): Option<S, T>[] | null {
-  return matchStaticOptions(values, defaultValue, options ?? null) as
+  return matchStaticOptions(values, defaultValue, options ?? null, true) as
     | Option<S, T>[]
     | null;
 }
@@ -295,7 +295,7 @@ export function Home() {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
       .catch((err) => {
-        console.error(`Error loading initial fields: ${err}`);
+        console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setInputsLoaded(true));
   }, [content, getAbortSignal]);
