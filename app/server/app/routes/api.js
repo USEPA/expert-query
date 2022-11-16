@@ -110,9 +110,5 @@ module.exports = function (app) {
       });
   });
 
-  router.get("/test", (req, res) => {
-    const { url } = req.query;
-  });
-
   app.use("/api", router);
 };
