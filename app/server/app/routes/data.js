@@ -7,7 +7,7 @@ const log = logger.logger;
 const StreamingService = require("../utilities/streamingService");
 
 /**
- * Trys to parse the provided string value to JSON.
+ * Tries to parse the provided string value to JSON.
  * @param {string} value
  * @returns The json representation of the provided value along with whether or not the original value was json
  */
