@@ -1,3 +1,7 @@
+import pgPromise from 'pg-promise';
+
+const pgp = pgPromise({ capSQL: true });
+
 const limit = 1;
 const values = ['a', 'b', 'c', 'd', 'e'];
 
@@ -15,16 +19,24 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     assessment_name varchar(20) NOT NULL
   )`;
 
-export const insertQuery = `INSERT INTO ${tableName} (assessment_name) VALUES ($1)`;
+const insertColumns = new pgp.helpers.ColumnSet([
+  { name: 'assessment_name', prop: 'assessmentName' },
+]);
 
 // Methods
 
-export async function extract(s3Config, next = 0) {
+export async function extract(_s3Config, next = 0) {
   return next < values.length
-    ? { data: [[values[next]]], next: next + limit }
+    ? { data: [{ name: values[next] }], next: next + limit }
     : { data: null, next: next + limit };
 }
 
 export function transform(data) {
-  return data;
+  const rows = [];
+  data.forEach((datum) => {
+    rows.push({
+      assessmentName: datum.name,
+    });
+  });
+  return pgp.helpers.insert(rows, insertColumns, tableName);
 }
