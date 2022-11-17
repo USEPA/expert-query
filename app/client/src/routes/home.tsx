@@ -2,7 +2,6 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Select from 'react-select';
 // components
 import Alert from 'components/alert';
-import Button from 'components/button';
 import Checkbox from 'components/checkbox';
 import CopyBox from 'components/copyBox';
 import InfoTooltip from 'components/infoTooltip';
@@ -21,13 +20,13 @@ import { options as listOptions, profiles } from 'config';
 ## Types
 */
 interface InputState {
-  fileFormat: Option<ReactNode, string> | null;
+  format: Option<ReactNode, string> | null;
   dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
   state: Readonly<Option<string, string>[]> | null;
 }
 
 type InputAction =
-  | { type: 'fileFormat'; payload: Option<ReactNode, string> }
+  | { type: 'format'; payload: Option<ReactNode, string> }
   | {
       type: 'dataProfile';
       payload: Option<JSX.Element, keyof typeof profiles> | null;
@@ -49,18 +48,18 @@ type InputValue = URLQueryArg | URLQueryArg[] | null;
 /*
 ## Constants
 */
-const defaultFileFormat = 'csv';
+const defaultFormat = 'csv';
 
-const controlFields = ['dataProfile', 'fileFormat'];
+const controlFields = ['dataProfile', 'format'];
 
 /*
 ## Utilities
 */
 // Converts a JSON object into a parameter string
-function buildQueryString(query: URLQueryState, includeControl = true) {
+function buildQueryString(query: URLQueryState, includeProfile = true) {
   const paramsList: Array<URLQueryParam> = [];
   Object.entries(query).forEach(([field, value]) => {
-    if (!includeControl && controlFields.includes(field)) return;
+    if (!includeProfile && field === 'dataProfile') return;
 
     // Duplicate the query parameter for an array of values
     if (Array.isArray(value)) value.forEach((v) => paramsList.push([field, v]));
@@ -82,11 +81,7 @@ function getLocalStorageItem(item: string) {
 function getDefaultInputs(): InputState {
   return {
     dataProfile: null,
-    fileFormat: matchSingleStaticOption(
-      null,
-      defaultFileFormat,
-      listOptions.fileFormat,
-    ),
+    format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
     state: null,
   };
 }
@@ -109,10 +104,10 @@ async function getUrlInputs(
 ): Promise<InputState> {
   const params = parseInitialParams();
 
-  const fileFormat = matchSingleStaticOption(
-    params.fileFormat ?? null,
-    defaultFileFormat,
-    listOptions.fileFormat,
+  const format = matchSingleStaticOption(
+    params.format ?? null,
+    defaultFormat,
+    listOptions.format,
   );
 
   const dataProfile = matchSingleStaticOption(
@@ -127,16 +122,16 @@ async function getUrlInputs(
     domainOptions.state,
   );
 
-  return { dataProfile, fileFormat, state };
+  return { dataProfile, format, state };
 }
 
 // Manages the state of all query field inputs
 function inputReducer(state: InputState, action: InputAction): InputState {
   switch (action.type) {
-    case 'fileFormat':
+    case 'format':
       return {
         ...state,
-        fileFormat: action.payload,
+        format: action.payload,
       };
     case 'dataProfile':
       return {
@@ -296,7 +291,7 @@ export function Home() {
     inputReducer,
     getDefaultInputs(),
   );
-  const { dataProfile, fileFormat } = inputState;
+  const { dataProfile, format } = inputState;
 
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
@@ -378,12 +373,13 @@ export function Home() {
                 onChange={(_ev) => setDontShowAgain(!dontShowAgain)}
                 styles={['margin-right-1 margin-y-auto']}
               />
-              <Button
+              <button
+                className="margin-top-2 usa-button"
                 onClick={() => setIntroVisible(false)}
-                styles={['margin-top-2']}
+                type="button"
               >
                 Close Intro
-              </Button>
+              </button>
             </div>
           </Summary>
         )}
@@ -414,26 +410,27 @@ export function Home() {
                   </>
                 }
                 onChange={(option) =>
-                  inputDispatch({ type: 'fileFormat', payload: option })
+                  inputDispatch({ type: 'format', payload: option })
                 }
-                options={listOptions.fileFormat}
-                selected={fileFormat}
+                options={listOptions.format}
+                selected={format}
                 styles={['margin-bottom-2']}
               />
               <div className="display-flex flex-column flex-1 margin-y-auto">
-                <Button
+                <button
+                  className="margin-x-auto margin-bottom-1 usa-button"
                   onClick={() => {}}
-                  styles={['margin-x-auto', 'margin-bottom-1']}
+                  type="button"
                 >
                   Download
-                </Button>
-                <Button
-                  color="white"
+                </button>
+                <button
+                  className="margin-x-auto usa-button usa-button--outline"
                   onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                  styles={['margin-x-auto']}
+                  type="button"
                 >
                   Clear Search
-                </Button>
+                </button>
               </div>
             </div>
             <h4>Current Query</h4>

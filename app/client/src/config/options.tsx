@@ -24,7 +24,7 @@ export const dataProfile = Object.entries(profiles).map(([id, profile]) => {
   };
 }) as Option<JSX.Element, keyof typeof profiles>[];
 
-export const fileFormat = [
+export const format = [
   {
     label: 'Comma-separated (CSV)',
     value: 'csv',
