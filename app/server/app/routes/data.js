@@ -87,15 +87,6 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
       appendToWhere(query, "state", queryParams.state);
       appendToWhere(query, "ir_category", queryParams.irCategory);
       break;
-    case "profile_test":
-      if (countOnly) {
-        query.count("id");
-      } else {
-        query.select("id", "assessment_name as assessmentName");
-      }
-      appendToWhere(query, "id", queryParams.id);
-      appendToWhere(query, "assessment_name", queryParams.assessmentName);
-      break;
     default:
       break;
   }
@@ -203,14 +194,6 @@ module.exports = function (app) {
   });
   router.get("/assessments/count", function (req, res) {
     executeQueryCountOnly("assessments", req, res);
-  });
-
-  // --- get profile_test from database
-  router.get("/profileTests", function (req, res) {
-    executeQuery("profile_test", req, res);
-  });
-  router.get("/profileTests/count", function (req, res) {
-    executeQueryCountOnly("profile_test", req, res);
   });
 
   app.use("/attains/data", router);

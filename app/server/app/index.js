@@ -112,10 +112,6 @@ if (isLocal) {
   });
 }
 
-function getUnauthorizedResponse(req) {
-  return req.auth ? "Invalid credentials" : "No credentials provided";
-}
-
 /****************************************************************
  Setup server and routes
 ****************************************************************/
@@ -159,9 +155,9 @@ app.listen(port, function () {
 /* Note, the React app should be handling 404 at this point 
    but we're leaving the below 404 check in for now */
 app.use(function (req, res, next) {
-  res.sendFile(path.join(__dirname, "public", "400.html"));
+  res.status(404).sendFile(path.join(__dirname, "public", "400.html"));
 });
 
 app.use(function (err, req, res, next) {
-  res.sendFile(path.join(__dirname, "public", "500.html"));
+  res.status(500).sendFile(path.join(__dirname, "public", "500.html"));
 });
