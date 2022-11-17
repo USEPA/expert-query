@@ -84,7 +84,7 @@ jobs:
           restore-keys: v1-npm-client-deps-
 
       - name: Install front-end dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
         working-directory: app/client
 
       - name: Build front-end files and move to server
