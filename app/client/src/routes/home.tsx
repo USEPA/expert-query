@@ -36,13 +36,15 @@ type InputAction =
   | { type: 'reset' }
   | { type: 'state'; payload: Readonly<Option<string, string>[]> };
 
-type QueryParameter = [string, QueryValue];
+type URLQueryParam = [string, URLQueryArg];
 
-interface QueryState {
-  [field: string]: QueryValue | QueryValue[];
+interface URLQueryState {
+  [field: string]: URLQueryArg | URLQueryArg[];
 }
 
-type QueryValue = string | number | boolean;
+type URLQueryArg = string | number | boolean;
+
+type InputValue = URLQueryArg | URLQueryArg[] | null;
 
 /*
 ## Constants
@@ -55,8 +57,8 @@ const controlFields = ['dataProfile', 'fileFormat'];
 ## Utilities
 */
 // Converts a JSON object into a parameter string
-function buildQueryString(query: QueryState, includeControl = true) {
-  const paramsList: Array<QueryParameter> = [];
+function buildQueryString(query: URLQueryState, includeControl = true) {
+  const paramsList: Array<URLQueryParam> = [];
   Object.entries(query).forEach(([field, value]) => {
     if (!includeControl && controlFields.includes(field)) return;
 
@@ -87,6 +89,17 @@ function getDefaultInputs(): InputState {
     ),
     state: null,
   };
+}
+
+function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
+  if (Array.isArray(input)) {
+    return input.map((v) => {
+      if (isOption(v)) return v.value;
+      return v;
+    });
+  }
+  if (isOption(input)) return input.value;
+  return input;
 }
 
 // Uses URL query parameters or default values for initial state
@@ -148,18 +161,18 @@ function inputReducer(state: InputState, action: InputAction): InputState {
 
 // Type narrowing for InputState
 function isOption(
-  maybeOption: Option<unknown, unknown> | QueryValue,
+  maybeOption: Option<unknown, unknown> | URLQueryArg,
 ): maybeOption is Option<unknown, unknown> {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
 // Wrapper function for `matchStaticOptions`
 function matchSingleStaticOption<S, T>(
-  values: QueryValue | QueryValue[] | null,
-  defaultValue: QueryValue | null,
+  value: InputValue,
+  defaultValue: URLQueryArg | null,
   options?: readonly Option<S, T>[],
 ): Option<S, T> | null {
-  return matchStaticOptions(values, defaultValue, options ?? null) as Option<
+  return matchStaticOptions(value, defaultValue, options ?? null) as Option<
     S,
     T
   > | null;
@@ -167,26 +180,26 @@ function matchSingleStaticOption<S, T>(
 
 // Wrapper function for `matchStaticOptions`
 function matchMultipleStaticOptions<S, T>(
-  values: QueryValue | QueryValue[] | null,
-  defaultValue: QueryValue | null,
+  value: InputValue,
+  defaultValue: URLQueryArg | null,
   options?: Option<S, T>[],
 ): Option<S, T>[] | null {
-  return matchStaticOptions(values, defaultValue, options ?? null, true) as
+  return matchStaticOptions(value, defaultValue, options ?? null, true) as
     | Option<S, T>[]
     | null;
 }
 
 // Produce the option/s corresponding to a particular value
 function matchStaticOptions<S, T>(
-  values: QueryValue | QueryValue[] | null,
-  defaultValue: QueryValue | null,
+  value: InputValue,
+  defaultValue: URLQueryArg | null,
   options: readonly Option<S, T>[] | null,
   multiple = false,
 ) {
   if (!options) return defaultValue;
-  const valuesArray: QueryValue[] = [];
-  if (Array.isArray(values)) valuesArray.push(...values);
-  else if (values !== null) valuesArray.push(values);
+  const valuesArray: URLQueryArg[] = [];
+  if (Array.isArray(value)) valuesArray.push(...value);
+  else if (value !== null) valuesArray.push(value);
   if (!valuesArray.length && defaultValue) valuesArray.push(defaultValue);
 
   const matches = new Set<Option<S, T>>(); // prevent duplicates
@@ -203,7 +216,7 @@ function matchStaticOptions<S, T>(
 
 // Parse parameters provided in the URL hash into a JSON object
 function parseInitialParams() {
-  const initialParams: QueryState = {};
+  const initialParams: URLQueryState = {};
   const initialParamsList = window.location.hash.replace('#', '').split('&');
   initialParamsList.forEach((param) => {
     const parsedParam = param.split('=');
@@ -301,22 +314,19 @@ export function Home() {
   }, [content, getAbortSignal]);
 
   // Track non-empty values relevant to the current profile
-  const [queryParams, setQueryParams] = useState<QueryState>({});
+  const [queryParams, setQueryParams] = useState<URLQueryState>({});
 
   // Update URL when inputs change
   useEffect(() => {
     if (!inputsLoaded) return;
 
     // Get selected parameters, including multiselectable fields
-    const newQueryParams: QueryState = {};
+    const newQueryParams: URLQueryState = {};
     Object.entries(inputState).forEach(([field, value]) => {
       if (value == null || (Array.isArray(value) && !value.length)) return;
+
       // Extract 'value' field from Option types
-      const flattenedValue = Array.isArray(value)
-        ? value.map((v) => (isOption(v) ? v.value : v))
-        : isOption(value)
-        ? value.value
-        : value;
+      const flattenedValue = getInputValue(value);
       if (
         controlFields.includes(field) ||
         (dataProfile &&

@@ -9,6 +9,10 @@ declare module '*.svg' {
   export default src;
 }
 
+interface ArrayConstructor {
+  isArray(arg: unknown): arg is unknown[] | readonly unknown[];
+}
+
 interface Option<S, T> {
   label: S;
   value: T;
