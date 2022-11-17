@@ -39,7 +39,8 @@
     "express": "4.18.2",
     "log4js": "6.7.0",
     "node-cron": "3.0.2",
-    "pg": "8.8.0"
+    "pg": "8.8.0",
+    "pg-promise": "10.14.0"
   },
   "devDependencies": {
     "browser-sync": "2.27.10",
