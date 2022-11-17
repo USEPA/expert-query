@@ -36,15 +36,15 @@ type InputAction =
   | { type: 'reset' }
   | { type: 'state'; payload: Readonly<Option<string, string>[]> };
 
-type urlQueryParam = [string, urlQueryArg];
+type URLQueryParam = [string, URLQueryArg];
 
-interface urlQueryState {
-  [field: string]: urlQueryArg | urlQueryArg[];
+interface URLQueryState {
+  [field: string]: URLQueryArg | URLQueryArg[];
 }
 
-type urlQueryArg = string | number | boolean;
+type URLQueryArg = string | number | boolean;
 
-type inputValue = urlQueryArg | urlQueryArg[] | null;
+type InputValue = URLQueryArg | URLQueryArg[] | null;
 
 /*
 ## Constants
@@ -57,8 +57,8 @@ const controlFields = ['dataProfile', 'fileFormat'];
 ## Utilities
 */
 // Converts a JSON object into a parameter string
-function buildQueryString(query: urlQueryState, includeControl = true) {
-  const paramsList: Array<urlQueryParam> = [];
+function buildQueryString(query: URLQueryState, includeControl = true) {
+  const paramsList: Array<URLQueryParam> = [];
   Object.entries(query).forEach(([field, value]) => {
     if (!includeControl && controlFields.includes(field)) return;
 
@@ -161,15 +161,15 @@ function inputReducer(state: InputState, action: InputAction): InputState {
 
 // Type narrowing for InputState
 function isOption(
-  maybeOption: Option<unknown, unknown> | urlQueryArg,
+  maybeOption: Option<unknown, unknown> | URLQueryArg,
 ): maybeOption is Option<unknown, unknown> {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
 // Wrapper function for `matchStaticOptions`
 function matchSingleStaticOption<S, T>(
-  value: inputValue,
-  defaultValue: urlQueryArg | null,
+  value: InputValue,
+  defaultValue: URLQueryArg | null,
   options?: readonly Option<S, T>[],
 ): Option<S, T> | null {
   return matchStaticOptions(value, defaultValue, options ?? null) as Option<
@@ -180,8 +180,8 @@ function matchSingleStaticOption<S, T>(
 
 // Wrapper function for `matchStaticOptions`
 function matchMultipleStaticOptions<S, T>(
-  value: inputValue,
-  defaultValue: urlQueryArg | null,
+  value: InputValue,
+  defaultValue: URLQueryArg | null,
   options?: Option<S, T>[],
 ): Option<S, T>[] | null {
   return matchStaticOptions(value, defaultValue, options ?? null, true) as
@@ -191,13 +191,13 @@ function matchMultipleStaticOptions<S, T>(
 
 // Produce the option/s corresponding to a particular value
 function matchStaticOptions<S, T>(
-  value: inputValue,
-  defaultValue: urlQueryArg | null,
+  value: InputValue,
+  defaultValue: URLQueryArg | null,
   options: readonly Option<S, T>[] | null,
   multiple = false,
 ) {
   if (!options) return defaultValue;
-  const valuesArray: urlQueryArg[] = [];
+  const valuesArray: URLQueryArg[] = [];
   if (Array.isArray(value)) valuesArray.push(...value);
   else if (value !== null) valuesArray.push(value);
   if (!valuesArray.length && defaultValue) valuesArray.push(defaultValue);
@@ -216,7 +216,7 @@ function matchStaticOptions<S, T>(
 
 // Parse parameters provided in the URL hash into a JSON object
 function parseInitialParams() {
-  const initialParams: urlQueryState = {};
+  const initialParams: URLQueryState = {};
   const initialParamsList = window.location.hash.replace('#', '').split('&');
   initialParamsList.forEach((param) => {
     const parsedParam = param.split('=');
@@ -314,14 +314,14 @@ export function Home() {
   }, [content, getAbortSignal]);
 
   // Track non-empty values relevant to the current profile
-  const [queryParams, setQueryParams] = useState<urlQueryState>({});
+  const [queryParams, setQueryParams] = useState<URLQueryState>({});
 
   // Update URL when inputs change
   useEffect(() => {
     if (!inputsLoaded) return;
 
     // Get selected parameters, including multiselectable fields
-    const newQueryParams: urlQueryState = {};
+    const newQueryParams: URLQueryState = {};
     Object.entries(inputState).forEach(([field, value]) => {
       if (value == null || (Array.isArray(value) && !value.length)) return;
 
