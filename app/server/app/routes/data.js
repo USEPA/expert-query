@@ -7,22 +7,12 @@ const log = logger.logger;
 const StreamingService = require("../utilities/streamingService");
 
 /**
- * Tries to parse the provided string value to JSON.
- * @param {string} value
- * @returns The json representation of the provided value along with whether or not the original value was json
+ * Gets the query parameters from the request.
+ * @param {express.Request} req
+ * @returns request query parameters
  */
-function tryParseJSON(value) {
-  try {
-    return {
-      isJSON: true,
-      value: JSON.parse(value),
-    };
-  } catch (e) {
-    return {
-      isJSON: false,
-      value,
-    };
-  }
+function getQueryParams(req) {
+  return req.method === "POST" ? req.body : req.query;
 }
 
 /**
@@ -34,12 +24,10 @@ function tryParseJSON(value) {
 function appendToWhere(query, paramName, paramValue) {
   if (!paramValue) return;
 
-  const parsedParam = tryParseJSON(paramValue);
-
-  if (Array.isArray(parsedParam.value)) {
-    query.whereIn(paramName, parsedParam.value);
+  if (Array.isArray(paramValue)) {
+    query.whereIn(paramName, paramValue);
   } else {
-    query.where(paramName, parsedParam.value);
+    query.where(paramName, paramValue);
   }
 }
 
@@ -104,14 +92,16 @@ async function executeQuery(profile, req, res) {
   try {
     const query = knex.withSchema(req.activeSchema).from(profile);
 
-    parseCriteria(query, profile, req.query);
+    const queryParams = getQueryParams(req);
+
+    parseCriteria(query, profile, queryParams);
 
     const stream = await query.stream({
       batchSize: 2000,
       highWaterMark: 10000,
     });
 
-    const format = req.query.format ?? req.query.f;
+    const format = queryParams.format ?? queryParams.f;
     switch (format) {
       case "csv":
       case "tsv":
@@ -169,7 +159,9 @@ function executeQueryCountOnly(profile, req, res) {
   try {
     const query = knex.withSchema(req.activeSchema).from(profile).first();
 
-    parseCriteria(query, profile, req.query, true);
+    const queryParams = getQueryParams(req);
+
+    parseCriteria(query, profile, queryParams, true);
 
     query
       .then((count) => res.status(200).send(count))
@@ -193,6 +185,12 @@ module.exports = function (app) {
     executeQuery("assessments", req, res);
   });
   router.get("/assessments/count", function (req, res) {
+    executeQueryCountOnly("assessments", req, res);
+  });
+  router.post("/assessments", function (req, res) {
+    executeQuery("assessments", req, res);
+  });
+  router.post("/assessments/count", function (req, res) {
     executeQueryCountOnly("assessments", req, res);
   });
 
