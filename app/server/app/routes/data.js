@@ -107,8 +107,8 @@ async function executeQuery(profile, req, res) {
     parseCriteria(query, profile, req.query);
 
     const stream = await query.stream({
-      batchSize: 2000,
-      highWaterMark: 10000,
+      batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
+      highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
     });
 
     const format = req.query.format ?? req.query.f;

@@ -61,11 +61,15 @@ jobs:
       CF_S3_PUB_BUCKET_ID: ${{ secrets.CF_DEV_S3_PUB_BUCKET_ID }}
       CF_S3_PUB_REGION: ${{ secrets.CF_DEV_S3_PUB_REGION }}
       CF_S3_PUB_SECRET_KEY: ${{ secrets.CF_DEV_S3_PUB_SECRET_KEY }}
+      DB_POOL_MAX: 20
+      DB_POOL_MIN: 5
       DB_NAME: ${{ secrets.DB_NAME_DEV }}
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       DB_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
       SERVER_URL: https://expert-query-dev.app.cloud.gov/
+      STREAM_BATCH_SIZE: 2000
+      STREAM_HIGH_WATER_MARK: 10000
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -111,10 +115,14 @@ jobs:
         run: |
           cf set-env $APP_NAME "CF_S3_PUB_BUCKET_ID" "$CF_S3_PUB_BUCKET_ID" > /dev/null
           cf set-env $APP_NAME "CF_S3_PUB_REGION" "$CF_S3_PUB_REGION" > /dev/null
+          cf set-env $APP_NAME "DB_POOL_MAX" "$DB_POOL_MAX" > /dev/null
+          cf set-env $APP_NAME "DB_POOL_MIN" "$DB_POOL_MIN" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
+          cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
 
       - name: Configure Public AWS Credentials

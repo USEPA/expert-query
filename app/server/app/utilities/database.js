@@ -41,7 +41,10 @@ const knex = require("knex")({
     password: dbPassword,
     database: dbName,
   },
-  pool: { min: 5, max: 20 },
+  pool: {
+    min: parseInt(process.env.DB_POOL_MIN),
+    max: parseInt(process.env.DB_POOL_MAX),
+  },
 });
 
 module.exports = {
