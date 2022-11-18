@@ -6,11 +6,11 @@ import {
   useReducer,
 } from 'react';
 
-interface Props {
+type Props = {
   children: ReactNode;
-}
+};
 
-export interface Content {
+export type Content = {
   services: {
     waterbodyService: {
       points: string;
@@ -41,15 +41,15 @@ export interface Content {
     definition: string;
     definitionHtml: string;
   }>;
-}
+};
 
-interface State {
+type State = {
   content:
     | { status: 'idle'; data: Record<string, never> }
     | { status: 'pending'; data: Record<string, never> }
     | { status: 'success'; data: Content }
     | { status: 'failure'; data: Record<string, never> };
-}
+};
 
 export type Action =
   | { type: 'FETCH_CONTENT_REQUEST' }

@@ -20,11 +20,11 @@ import { options as listOptions, profiles } from 'config';
 /*
 ## Types
 */
-interface InputState {
+type InputState = {
   format: Option<ReactNode, string> | null;
   dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
   state: ReadonlyArray<Option<string, string>> | null;
-}
+};
 
 type InputAction =
   | { type: 'format'; payload: Option<ReactNode, string> }
@@ -38,9 +38,9 @@ type InputAction =
 
 type URLQueryParam = [string, URLQueryArg];
 
-interface URLQueryState {
+type URLQueryState = {
   [field: string]: URLQueryArg | URLQueryArg[];
-}
+};
 
 type URLQueryArg = string | number | boolean;
 
@@ -480,12 +480,12 @@ export function Home() {
   return null;
 }
 
-interface FilterFieldsProps {
+type FilterFieldsProps = {
   dispatch: Dispatch<InputAction>;
   fields: readonly string[];
   options: typeof listOptions & DomainValues;
   state: InputState;
-}
+};
 
 function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
   return (

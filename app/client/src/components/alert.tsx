@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 
-interface Props {
+type Props = {
   children: ReactNode;
   heading?: string | null;
   icon?: boolean;
   slim?: boolean;
   styles?: string[];
   type?: 'info' | 'warning' | 'error' | 'success';
-}
+};
 
 export default function Alert({
   children,

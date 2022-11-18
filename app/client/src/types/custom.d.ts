@@ -9,30 +9,30 @@ declare module '*.svg' {
   export default src;
 }
 
-interface ArrayConstructor {
-  isArray(arg: unknown): arg is unknown[] | readonly unknown[];
-}
+type ArrayConstructor = {
+  isArray: (arg: unknown) => arg is unknown[] | readonly unknown[];
+};
 
-interface Option<S, T> {
+type Option<S, T> = {
   label: S;
   value: T;
-}
+};
 
-interface DomainValues {
-  actionAgency: Option<string, string>[];
-  assessmentUnitStatus: Option<string, string>[];
-  loadAllocationUnits: Option<string, string>[];
-  locationTypeCode: Option<string, string>[];
-  locationText: Option<string, string>[];
-  organizationId: Option<string, string>[];
-  parameterGroup: Option<string, string>[];
-  pollutant: Option<string, string>[];
-  sourceName: Option<string, string>[];
-  sourceScale: Option<string, string>[];
-  sourceType: Option<string, string>[];
-  state: Option<string, string>[];
-  stateIRCategory: Option<string, string>[];
-  useClassName: Option<string, string>[];
-  waterSizeUnits: Option<string, string>[];
-  waterType: Option<string, string>[];
-}
+type DomainValues = {
+  actionAgency: Array<Option<string, string>>;
+  assessmentUnitStatus: Array<Option<string, string>>;
+  loadAllocationUnits: Array<Option<string, string>>;
+  locationTypeCode: Array<Option<string, string>>;
+  locationText: Array<Option<string, string>>;
+  organizationId: Array<Option<string, string>>;
+  parameterGroup: Array<Option<string, string>>;
+  pollutant: Array<Option<string, string>>;
+  sourceName: Array<Option<string, string>>;
+  sourceScale: Array<Option<string, string>>;
+  sourceType: Array<Option<string, string>>;
+  state: Array<Option<string, string>>;
+  stateIRCategory: Array<Option<string, string>>;
+  useClassName: Array<Option<string, string>>;
+  waterSizeUnits: Array<Option<string, string>>;
+  waterType: Array<Option<string, string>>;
+};

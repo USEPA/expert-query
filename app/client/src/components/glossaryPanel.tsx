@@ -11,9 +11,9 @@ function termsInDOM() {
   return items && items.length > 0;
 }
 
-interface Props {
+type Props = {
   path: string;
-}
+};
 
 export default function GlossaryPanel({ path }: Props) {
   const { content } = useContentState();
@@ -121,10 +121,10 @@ export default function GlossaryPanel({ path }: Props) {
   );
 }
 
-interface GlossaryTermProps {
+type GlossaryTermProps = {
   children: typeof React.Children;
   term: string;
-}
+};
 
 export function GlossaryTerm({ term, children }: GlossaryTermProps) {
   const { content } = useContentState();
