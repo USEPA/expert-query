@@ -98,7 +98,8 @@ jobs:
             REACT_APP_CLOUD_SPACE="$CLOUD_SPACE" \
             npm run build
           cd build
-          mv * ../../server/app/public
+          cp -r * ../../server/app/public
+          rm -rf *
         working-directory: app/client
 
       # Run CloudFoundry/Cloud.gov deployment
