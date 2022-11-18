@@ -30,7 +30,7 @@ function useFetchedContent() {
           payload: res,
         });
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         if (err.name === 'AbortError') return;
         contentDispatch({ type: 'FETCH_CONTENT_FAILURE' });
       });

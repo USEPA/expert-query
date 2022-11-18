@@ -25,11 +25,11 @@ const centered: Position = (triggerRect, tooltipRect) => {
 /*
 ## Components
  */
-type TooltipProps = {
+interface TooltipProps {
   children: ReactElement;
   label: string;
   triggerRef: Ref<HTMLElement>;
-};
+}
 
 function Tooltip({ children, label, triggerRef }: TooltipProps) {
   const [trigger, tooltip] = useTooltip({
@@ -84,11 +84,11 @@ function Tooltip({ children, label, triggerRef }: TooltipProps) {
   );
 }
 
-type InfoTooltipProps = {
+interface InfoTooltipProps {
   description?: string;
   styles?: string[];
   text: string;
-};
+}
 
 export default function InfoTooltip({
   description,

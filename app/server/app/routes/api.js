@@ -21,6 +21,7 @@ module.exports = function (app) {
       "content/config/services.json",
       "content/alerts/config.json",
       "content-etl/domainValues.json",
+      "content-etl/glossary.json",
     ];
 
     const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
@@ -50,6 +51,7 @@ module.exports = function (app) {
           services: isLocal ? JSON.parse(data[0]) : data[0],
           alertsConfig: isLocal ? JSON.parse(data[1]) : data[1],
           domainValues: isLocal ? JSON.parse(data[2]) : data[2],
+          glossary: isLocal ? JSON.parse(data[3]) : data[3],
         });
       })
       .catch((error) => {

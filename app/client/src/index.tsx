@@ -1,13 +1,13 @@
-import { StrictMode } from "react";
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import reportWebVitals from "./reportWebVitals";
+import reportWebVitals from './reportWebVitals';
 // ---
-import { ContentProvider } from "contexts/content";
-import { ErrorBoundary } from "components/errorBoundary";
-import { App } from "components/app";
-import "./styles.css";
+import { ContentProvider } from 'contexts/content';
+import { ErrorBoundary } from 'components/errorBoundary';
+import { App } from 'components/app';
+import './styles.css';
 
-const container = document.getElementById("root") as HTMLElement;
+const container = document.getElementById('root') as HTMLElement;
 
 createRoot(container).render(
   <StrictMode>
@@ -16,7 +16,7 @@ createRoot(container).render(
         <App />
       </ContentProvider>
     </ErrorBoundary>
-  </StrictMode>
+  </StrictMode>,
 );
 
 // If you want to start measuring performance in your app, pass a function

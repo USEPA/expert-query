@@ -4,6 +4,7 @@ import Select from 'react-select';
 import Alert from 'components/alert';
 import Checkbox from 'components/checkbox';
 import CopyBox from 'components/copyBox';
+import GlossaryPanel from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
@@ -22,7 +23,7 @@ import { options as listOptions, profiles } from 'config';
 interface InputState {
   format: Option<ReactNode, string> | null;
   dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  state: Readonly<Option<string, string>[]> | null;
+  state: ReadonlyArray<Option<string, string>> | null;
 }
 
 type InputAction =
@@ -33,7 +34,7 @@ type InputAction =
     }
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' }
-  | { type: 'state'; payload: Readonly<Option<string, string>[]> };
+  | { type: 'state'; payload: ReadonlyArray<Option<string, string>> };
 
 type URLQueryParam = [string, URLQueryArg];
 
@@ -57,7 +58,7 @@ const controlFields = ['dataProfile', 'format'];
 */
 // Converts a JSON object into a parameter string
 function buildQueryString(query: URLQueryState, includeProfile = true) {
-  const paramsList: Array<URLQueryParam> = [];
+  const paramsList: URLQueryParam[] = [];
   Object.entries(query).forEach(([field, value]) => {
     if (!includeProfile && field === 'dataProfile') return;
 
@@ -98,8 +99,9 @@ function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
 }
 
 // Uses URL query parameters or default values for initial state
+// eslint-disable-next-line
 async function getUrlInputs(
-  signal: AbortSignal, // will need for DB checks
+  _signal: AbortSignal,
   domainOptions: DomainValues,
 ): Promise<InputState> {
   const params = parseInitialParams();
@@ -165,7 +167,7 @@ function isOption(
 function matchSingleStaticOption<S, T>(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options?: readonly Option<S, T>[],
+  options?: ReadonlyArray<Option<S, T>>,
 ): Option<S, T> | null {
   return matchStaticOptions(value, defaultValue, options ?? null) as Option<
     S,
@@ -177,18 +179,21 @@ function matchSingleStaticOption<S, T>(
 function matchMultipleStaticOptions<S, T>(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options?: Option<S, T>[],
-): Option<S, T>[] | null {
-  return matchStaticOptions(value, defaultValue, options ?? null, true) as
-    | Option<S, T>[]
-    | null;
+  options?: ReadonlyArray<Option<S, T>>,
+): ReadonlyArray<Option<S, T>> | null {
+  return matchStaticOptions(
+    value,
+    defaultValue,
+    options ?? null,
+    true,
+  ) as ReadonlyArray<Option<S, T>> | null;
 }
 
 // Produce the option/s corresponding to a particular value
 function matchStaticOptions<S, T>(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options: readonly Option<S, T>[] | null,
+  options: ReadonlyArray<Option<S, T>> | null,
   multiple = false,
 ) {
   if (!options) return defaultValue;
@@ -238,7 +243,7 @@ function setLocalStorageItem(item: string, value: string) {
 function storageAvailable(
   storageType: 'localStorage' | 'sessionStorage' = 'localStorage',
 ) {
-  let storage: Storage = window[storageType];
+  const storage: Storage = window[storageType];
   try {
     const x = '__storage_test__';
     storage.setItem(x, x);
@@ -280,6 +285,7 @@ function useAbortSignal() {
 
   return getSignal;
 }
+
 /*
 ## Components
 */
@@ -317,21 +323,23 @@ export function Home() {
 
     // Get selected parameters, including multiselectable fields
     const newQueryParams: URLQueryState = {};
-    Object.entries(inputState).forEach(([field, value]) => {
-      if (value == null || (Array.isArray(value) && !value.length)) return;
+    Object.entries(inputState).forEach(
+      ([field, value]: [string, InputState[keyof InputState]]) => {
+        if (value == null || (Array.isArray(value) && !value.length)) return;
 
-      // Extract 'value' field from Option types
-      const flattenedValue = getInputValue(value);
-      if (
-        controlFields.includes(field) ||
-        (dataProfile &&
-          (
-            profiles[dataProfile.value].fields as ReadonlyArray<string>
-          ).includes(field))
-      ) {
-        newQueryParams[field] = flattenedValue;
-      }
-    });
+        // Extract 'value' field from Option types
+        const flattenedValue = getInputValue(value);
+        if (
+          controlFields.includes(field) ||
+          (dataProfile &&
+            (profiles[dataProfile.value].fields as readonly string[]).includes(
+              field,
+            ))
+        ) {
+          newQueryParams[field] = flattenedValue;
+        }
+      },
+    );
 
     window.location.hash = buildQueryString(newQueryParams);
 
@@ -348,119 +356,136 @@ export function Home() {
     setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
   }, [dontShowAgain]);
 
+  const pathParts = window.location.pathname.split('/');
+  const pageName = pathParts.length > 1 ? pathParts[1] : '';
+
   if (content.status === 'pending') return <Loading />;
 
-  if (content.status === 'failure')
+  if (content.status === 'failure') {
     return (
       <Alert type="error">
         Expert Query is currently unavailable, please try again later.
       </Alert>
     );
+  }
 
-  if (content.status === 'success')
+  if (content.status === 'success') {
     return (
-      <div>
-        {introVisible && (
-          <Summary heading="How to Use This Application">
-            <p>
-              Select a data profile, then build a query by selecting options
-              from the input fields.
-            </p>
-            <div className="display-flex flex-justify flex-wrap">
-              <Checkbox
-                checked={dontShowAgain ?? false}
-                label="Don't show again on this computer"
-                onChange={(_ev) => setDontShowAgain(!dontShowAgain)}
-                styles={['margin-right-1 margin-y-auto']}
-              />
-              <button
-                className="margin-top-2 usa-button"
-                onClick={() => setIntroVisible(false)}
-                type="button"
-              >
-                Close Intro
-              </button>
-            </div>
-          </Summary>
-        )}
-        <h3>Data Profile</h3>
-        <Select
-          aria-label="Select a data profile"
-          onChange={(ev) => inputDispatch({ type: 'dataProfile', payload: ev })}
-          options={listOptions.dataProfile}
-          placeholder="Select a data profile..."
-          value={dataProfile}
-        />
-        {dataProfile && (
-          <>
-            <h3>Filters</h3>
-            <FilterFields
-              dispatch={inputDispatch}
-              fields={profiles[dataProfile.value].fields}
-              options={{ ...listOptions, ...content.data.domainValues }}
-              state={inputState}
-            />
-            <h3>Download the Data</h3>
-            <div className="display-flex flex-wrap">
-              <RadioButtons
-                legend={
-                  <>
-                    <b className="margin-right-1">File Format</b>
-                    <InfoTooltip text="Choose a file format for the result set" />
-                  </>
-                }
-                onChange={(option) =>
-                  inputDispatch({ type: 'format', payload: option })
-                }
-                options={listOptions.format}
-                selected={format}
-                styles={['margin-bottom-2']}
-              />
-              <div className="display-flex flex-column flex-1 margin-y-auto">
+      <>
+        <button
+          title="Glossary"
+          className="js-glossary-toggle"
+          data-disabled={content.status !== 'success'}
+        >
+          Glossary
+        </button>
+        <GlossaryPanel path={pageName} />
+        <div>
+          {introVisible && (
+            <Summary heading="How to Use This Application">
+              <p>
+                Select a data profile, then build a query by selecting options
+                from the input fields.
+              </p>
+              <div className="display-flex flex-justify flex-wrap">
+                <Checkbox
+                  checked={dontShowAgain ?? false}
+                  label="Don't show again on this computer"
+                  onChange={(_ev) => setDontShowAgain(!dontShowAgain)}
+                  styles={['margin-right-1 margin-y-auto']}
+                />
                 <button
-                  className="margin-x-auto margin-bottom-1 usa-button"
-                  onClick={() => {}}
+                  className="margin-top-2 usa-button"
+                  onClick={() => setIntroVisible(false)}
                   type="button"
                 >
-                  Download
-                </button>
-                <button
-                  className="margin-x-auto usa-button usa-button--outline"
-                  onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                  type="button"
-                >
-                  Clear Search
+                  Close Intro
                 </button>
               </div>
-            </div>
-            <h4>Current Query</h4>
-            <CopyBox
-              text={`${window.location.origin}/#${buildQueryString(
-                queryParams,
-              )}`}
-            />
+            </Summary>
+          )}
+          <h3>Data Profile</h3>
+          <Select
+            aria-label="Select a data profile"
+            onChange={(ev) =>
+              inputDispatch({ type: 'dataProfile', payload: ev })
+            }
+            options={listOptions.dataProfile}
+            placeholder="Select a data profile..."
+            value={dataProfile}
+          />
+          {dataProfile && (
             <>
-              <h4>{profiles[dataProfile.value].label} API Query</h4>
-              <CopyBox
-                text={`${window.location.origin}/data/${
-                  profiles[dataProfile.value].resource
-                }?${buildQueryString(queryParams, false)}`}
+              <h3>Filters</h3>
+              <FilterFields
+                dispatch={inputDispatch}
+                fields={profiles[dataProfile.value].fields}
+                options={{ ...listOptions, ...content.data.domainValues }}
+                state={inputState}
               />
+              <h3>Download the Data</h3>
+              <div className="display-flex flex-wrap">
+                <RadioButtons
+                  legend={
+                    <>
+                      <b className="margin-right-1">File Format</b>
+                      <InfoTooltip text="Choose a file format for the result set" />
+                    </>
+                  }
+                  onChange={(option) =>
+                    inputDispatch({ type: 'format', payload: option })
+                  }
+                  options={listOptions.format}
+                  selected={format}
+                  styles={['margin-bottom-2']}
+                />
+                <div className="display-flex flex-column flex-1 margin-y-auto">
+                  <button
+                    className="margin-x-auto margin-bottom-1 usa-button"
+                    onClick={() => null}
+                    type="button"
+                  >
+                    Download
+                  </button>
+                  <button
+                    className="margin-x-auto usa-button usa-button--outline"
+                    onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                    type="button"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              </div>
+              <h4>Current Query</h4>
+              <CopyBox
+                text={`${window.location.origin}/#${buildQueryString(
+                  queryParams,
+                )}`}
+              />
+              <>
+                <h4>{profiles[dataProfile.value].label} API Query</h4>
+                <CopyBox
+                  text={`${window.location.origin}/data/${
+                    profiles[dataProfile.value].resource
+                  }?${buildQueryString(queryParams, false)}`}
+                />
+              </>
             </>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      </>
     );
+  }
 
   return null;
 }
 
-type FilterFieldsProps = {
+interface FilterFieldsProps {
   dispatch: Dispatch<InputAction>;
   fields: readonly string[];
   options: typeof listOptions & DomainValues;
   state: InputState;
-};
+}
 
 function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
   return (
