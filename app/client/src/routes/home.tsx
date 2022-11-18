@@ -435,14 +435,14 @@ export function Home() {
             </div>
             <h4>Current Query</h4>
             <CopyBox
-              text={`${window.location.origin}/#${buildQueryString(
+              text={`${window.location.origin}${window.location.pathname}/#${buildQueryString(
                 queryParams,
               )}`}
             />
             <>
               <h4>{profiles[dataProfile.value].label} API Query</h4>
               <CopyBox
-                text={`${window.location.origin}/data/${
+                text={`${window.location.origin}${window.location.pathname}/${
                   profiles[dataProfile.value].resource
                 }?${buildQueryString(queryParams, false)}`}
               />
