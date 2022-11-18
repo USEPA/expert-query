@@ -6,23 +6,34 @@ const logger = require("../utilities/logger");
 const log = logger.logger;
 const StreamingService = require("../utilities/streamingService");
 
+// mapping to dynamically build GET/POST endpoints and queries
+const mapping = {
+  assessments: {
+    tableName: "assessments",
+    idColumn: "id",
+    columns: [
+      { name: "id", alias: "id" },
+      { name: "reporting_cycle", alias: "reportingCycle" },
+      { name: "assessment_unit_id", alias: "assessmentUnitId" },
+      { name: "assessment_unit_name", alias: "assessmentUnitName" },
+      { name: "organization_id", alias: "organizationId" },
+      { name: "organization_name", alias: "organizationName" },
+      { name: "organization_type", alias: "organizationType" },
+      { name: "overall_status", alias: "overallStatus" },
+      { name: "region", alias: "region" },
+      { name: "state", alias: "state" },
+      { name: "ir_category", alias: "irCategory" },
+    ],
+  },
+};
+
 /**
- * Tries to parse the provided string value to JSON.
- * @param {string} value
- * @returns The json representation of the provided value along with whether or not the original value was json
+ * Gets the query parameters from the request.
+ * @param {express.Request} req
+ * @returns request query parameters
  */
-function tryParseJSON(value) {
-  try {
-    return {
-      isJSON: true,
-      value: JSON.parse(value),
-    };
-  } catch (e) {
-    return {
-      isJSON: false,
-      value,
-    };
-  }
+function getQueryParams(req) {
+  return req.method === "POST" ? req.body : req.query;
 }
 
 /**
@@ -34,12 +45,10 @@ function tryParseJSON(value) {
 function appendToWhere(query, paramName, paramValue) {
   if (!paramValue) return;
 
-  const parsedParam = tryParseJSON(paramValue);
-
-  if (Array.isArray(parsedParam.value)) {
-    query.whereIn(paramName, parsedParam.value);
+  if (Array.isArray(paramValue)) {
+    query.whereIn(paramName, paramValue);
   } else {
-    query.where(paramName, parsedParam.value);
+    query.where(paramName, paramValue);
   }
 }
 
@@ -47,85 +56,62 @@ function appendToWhere(query, paramName, paramValue) {
  * Builds the select clause and where clause of the query based on the provided
  * profile name.
  * @param {Object} query KnexJS query object
- * @param {string} profile name of the profile being queried
+ * @param {Object} profile definition of the profile being queried
  * @param {Object} queryParams URL query value
+ * @param {boolean} countOnly (Optional) should query for count only
  */
 function parseCriteria(query, profile, queryParams, countOnly = false) {
-  switch (profile) {
-    case "assessments":
-      if (countOnly) {
-        query.count("id");
-      } else {
-        query.select(
-          "id",
-          "reporting_cycle as reportingCycle",
-          "assessment_unit_id as assessmentUnitId",
-          "assessment_unit_name as assessmentUnitName",
-          "organization_id as organizationId",
-          "organization_name as organizationName",
-          "organization_type as organizationType",
-          "overall_status as overallStatus",
-          "region",
-          "state",
-          "ir_category as irCategory"
-        );
-      }
-
-      appendToWhere(query, "id", queryParams.id);
-      appendToWhere(query, "reporting_cycle", queryParams.reportingCycle);
-      appendToWhere(query, "assessment_unit_id", queryParams.assessmentUnitId);
-      appendToWhere(
-        query,
-        "assessment_unit_name",
-        queryParams.assessmentUnitName
-      );
-      appendToWhere(query, "organization_id", queryParams.organizationId);
-      appendToWhere(query, "organization_name", queryParams.organizationName);
-      appendToWhere(query, "organization_type", queryParams.organizationType);
-      appendToWhere(query, "overall_status", queryParams.overallStatus);
-      appendToWhere(query, "region", queryParams.region);
-      appendToWhere(query, "state", queryParams.state);
-      appendToWhere(query, "ir_category", queryParams.irCategory);
-      break;
-    default:
-      break;
+  // build select statement of the query
+  if (countOnly) query.count(profile.idColumn);
+  else {
+    const selectText = profile.columns.map((col) =>
+      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`
+    );
+    query.select(selectText);
   }
+
+  // build where clause of the query
+  profile.columns.forEach((col) => {
+    appendToWhere(query, col.name, queryParams[col.alias]);
+  });
 }
 
 /**
  * Runs a query against the provided profile name and streams the result to the
  * client as csv, tsv, xlsx, json file, or inline json.
- * @param {string} profile name of the profile being queried
+ * @param {Object} profile definition of the profile being queried
  * @param {express.Request} req
  * @param {express.Response} res
  */
 async function executeQuery(profile, req, res) {
   // output types csv, tab-separated, Excel, or JSON
   try {
-    const query = knex.withSchema(req.activeSchema).from(profile);
+    const query = knex.withSchema(req.activeSchema).from(profile.tableName);
 
-    parseCriteria(query, profile, req.query);
+    const queryParams = getQueryParams(req);
+
+    parseCriteria(query, profile, queryParams);
 
     const stream = await query.stream({
       batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
       highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
     });
 
-    const format = req.query.format ?? req.query.f;
+    const format = queryParams.format ?? queryParams.f;
     switch (format) {
       case "csv":
       case "tsv":
         // output the data
         res.setHeader(
           "Content-disposition",
-          `attachment; filename=${profile}.${format}`
+          `attachment; filename=${profile.tableName}.${format}`
         );
         StreamingService.streamResponse(res, stream, format);
         break;
       case "xlsx":
         res.setHeader(
           "Content-Disposition",
-          `attachment; filename=${profile}.xlsx`
+          `attachment; filename=${profile.tableName}.xlsx`
         );
 
         const workbook = new Excel.stream.xlsx.WorkbookWriter({
@@ -133,8 +119,8 @@ async function executeQuery(profile, req, res) {
           useStyles: true,
         });
 
-        workbook.addWorksheet(profile);
-        const worksheet = workbook.getWorksheet(profile);
+        workbook.addWorksheet(profile.tableName);
+        const worksheet = workbook.getWorksheet(profile.tableName);
 
         StreamingService.streamResponse(res, stream, format, {
           workbook,
@@ -144,7 +130,7 @@ async function executeQuery(profile, req, res) {
       case "json":
         res.setHeader(
           "Content-disposition",
-          `attachment; filename=${profile}.json`
+          `attachment; filename=${profile.tableName}.json`
         );
         StreamingService.streamResponse(res, stream, format);
         break;
@@ -153,32 +139,39 @@ async function executeQuery(profile, req, res) {
         break;
     }
   } catch (error) {
-    log.error(`Failed to get data from the "${profile}" profile...`);
+    log.error(`Failed to get data from the "${profile.tableName}" table...`);
     return res.status(500).send("Error !" + error);
   }
 }
 
 /**
  * Runs a query against the provided profile name and returns the number of records.
- * @param {string} profile name of the profile being queried
+ * @param {Object} profile definition of the profile being queried
  * @param {express.Request} req
  * @param {express.Response} res
  */
 function executeQueryCountOnly(profile, req, res) {
   // always return json with the count
   try {
-    const query = knex.withSchema(req.activeSchema).from(profile).first();
+    const query = knex
+      .withSchema(req.activeSchema)
+      .from(profile.tableName)
+      .first();
 
-    parseCriteria(query, profile, req.query, true);
+    const queryParams = getQueryParams(req);
+
+    parseCriteria(query, profile, queryParams, true);
 
     query
       .then((count) => res.status(200).send(count))
       .catch((error) => {
-        log.error(`Failed to get count from the "${profile.name}" profile...`);
+        log.error(
+          `Failed to get count from the "${profile.tableName}" table...`
+        );
         res.status(500).send("Error! " + error);
       });
   } catch (error) {
-    log.error(`Failed to get count from the "${profile.name}" profile...`);
+    log.error(`Failed to get count from the "${profile.tableName}" table...`);
     return res.status(500).send("Error !" + error);
   }
 }
@@ -188,12 +181,22 @@ module.exports = function (app) {
 
   router.use(getActiveSchema);
 
-  // --- get assessments from database
-  router.get("/assessments", function (req, res) {
-    executeQuery("assessments", req, res);
-  });
-  router.get("/assessments/count", function (req, res) {
-    executeQueryCountOnly("assessments", req, res);
+  Object.entries(mapping).forEach(([profileName, profile]) => {
+    // create get requests
+    router.get(`/${profileName}`, function (req, res) {
+      executeQuery(profile, req, res);
+    });
+    router.get(`/${profileName}/count`, function (req, res) {
+      executeQueryCountOnly(profile, req, res);
+    });
+
+    // create post requests
+    router.post(`/${profileName}`, function (req, res) {
+      executeQuery(profile, req, res);
+    });
+    router.post(`/${profileName}/count`, function (req, res) {
+      executeQueryCountOnly(profile, req, res);
+    });
   });
 
   app.use("/attains/data", router);
