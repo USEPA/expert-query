@@ -145,23 +145,22 @@ export function GlossaryTerm({ term, children }: GlossaryTermProps) {
       data-disabled={content.status !== 'success'}
       data-term={term}
       style={{
-        cursor: 'pointer',
+        cursor: content.status === 'success' ? 'pointer' : 'initial',
         pointerEvents: content.status === 'success' ? 'initial' : 'none',
       }}
       title="Click to define"
       tabIndex={0}
     >
-      <>
-        <Book
-          className="height-2 text-primary-light text-semibold top-2px width-2 usa-icon"
-          style={{ fontSize: content.status === 'pending' ? '75%' : '87.5%' }}
-          aria-hidden="true"
-          focusable="false"
-          role="img"
-        />
-        &nbsp;
-        {children}
-      </>
+      <Book
+        className={`height-2 ${
+          content.status === 'success' ? 'text-primary-light' : 'text-base'
+        } text-semibold top-2px width-2 usa-icon`}
+        aria-hidden="true"
+        focusable="false"
+        role="img"
+      />
+      &nbsp;
+      {children}
     </span>
   );
 }

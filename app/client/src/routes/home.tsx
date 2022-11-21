@@ -377,7 +377,6 @@ export function Home() {
         <button
           title="Glossary"
           className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
-          data-disabled={content.status !== 'success'}
           style={{ cursor: 'pointer' }}
           type="button"
         >
