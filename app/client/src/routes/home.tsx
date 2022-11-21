@@ -470,14 +470,16 @@ export function Home() {
                 <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
               </h4>
               <CopyBox
-                text={`${window.location.origin}/#${buildQueryString(
-                  queryParams,
-                )}`}
+                text={`${window.location.origin}${
+                  window.location.pathname
+                }/#${buildQueryString(queryParams)}`}
               />
               <>
                 <h4>{profiles[dataProfile.value].label} API Query</h4>
                 <CopyBox
-                  text={`${window.location.origin}/data/${
+                  text={`${window.location.origin}${
+                    window.location.pathname
+                  }/data/${
                     profiles[dataProfile.value].resource
                   }?${buildQueryString(queryParams, false)}`}
                 />

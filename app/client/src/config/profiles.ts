@@ -21,7 +21,7 @@ export default {
       'waterType',
     ],
     label: 'Assessment Units',
-    resource: 'assessment-units',
+    resource: 'assessmentUnits',
   },
   assessmentUnitsMonitoring: {
     description: 'Description of assessment units with monitoring locations',
@@ -47,7 +47,7 @@ export default {
       'waterType',
     ],
     label: 'Assessment Units with Monitoring Locations',
-    resource: 'assessment-units-monitoring-locations',
+    resource: 'assessmentUnitsMonitoringLocations',
   },
   catchmentCorrespondence: {
     description: 'Description of Catchment Correspondence',
@@ -63,7 +63,7 @@ export default {
       'state',
     ],
     label: 'Catchment Correspondence',
-    resource: 'catchment-correspondence',
+    resource: 'catchmentCorrespondence',
   },
   sources: {
     description: 'Description of Sources',
