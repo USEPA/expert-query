@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Select from 'react-select';
+import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
+import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
 import Alert from 'components/alert';
 import Checkbox from 'components/checkbox';
 import CopyBox from 'components/copyBox';
-import GlossaryPanel from 'components/glossaryPanel';
+import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
@@ -374,10 +376,18 @@ export function Home() {
       <>
         <button
           title="Glossary"
-          className="js-glossary-toggle"
+          className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
           data-disabled={content.status !== 'success'}
+          style={{ cursor: 'pointer' }}
+          type="button"
         >
-          Glossary
+          <Book
+            aria-hidden="true"
+            className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
+            focusable="false"
+            role="img"
+          />
+          <span className="font-ui-md text-bold text-primary">Glossary</span>
         </button>
         <GlossaryPanel path={pageName} />
         <div>
@@ -428,7 +438,7 @@ export function Home() {
                 <RadioButtons
                   legend={
                     <>
-                      <b className="margin-right-1">File Format</b>
+                      <b className="margin-right-05">File Format</b>
                       <InfoTooltip text="Choose a file format for the result set" />
                     </>
                   }
@@ -441,10 +451,11 @@ export function Home() {
                 />
                 <div className="display-flex flex-column flex-1 margin-y-auto">
                   <button
-                    className="margin-x-auto margin-bottom-1 usa-button"
+                    className="align-items-center display-flex margin-x-auto margin-bottom-1 usa-button"
                     onClick={() => null}
                     type="button"
                   >
+                    <Download className="height-205 margin-right-1 usa-icon width-205" />
                     Download
                   </button>
                   <button
@@ -456,7 +467,9 @@ export function Home() {
                   </button>
                 </div>
               </div>
-              <h4>Current Query</h4>
+              <h4>
+                <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+              </h4>
               <CopyBox
                 text={`${window.location.origin}/#${buildQueryString(
                   queryParams,

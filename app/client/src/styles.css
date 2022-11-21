@@ -106,7 +106,7 @@
   border-color: rgba(0, 0, 0, 0.375);
   text-decoration: none;
   color: #1b1b1b;
-  background-color: #d9e8f6;
+  background-color: rgba(217, 232, 246, 0.5);
 }
 
 .glossary__term[aria-expanded='true']::after {
@@ -133,4 +133,12 @@
 
 .glossary__definition p:last-of-type {
   padding-bottom: 0;
+}
+
+.glossary-term svg {
+  transition: color 0.05s;
+}
+
+.glossary-term:hover svg {
+  color: #1a4480;
 }

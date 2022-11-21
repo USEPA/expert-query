@@ -1,10 +1,12 @@
 import Glossary from 'glossary-panel';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 // components
 import Alert from 'components/alert';
 // contexts
 import { useContentState } from 'contexts/content';
+// types
+import type { ReactNode } from 'react';
 
 function termsInDOM() {
   const items = document.getElementsByClassName('glossary__item');
@@ -122,7 +124,7 @@ export default function GlossaryPanel({ path }: Props) {
 }
 
 type GlossaryTermProps = {
-  children: typeof React.Children;
+  children: ReactNode;
   term: string;
 };
 
@@ -132,12 +134,15 @@ export function GlossaryTerm({ term, children }: GlossaryTermProps) {
     <span
       className={[
         'border-bottom-1px',
+        'border-top-0',
+        'border-x-0',
         'border-dotted',
         'border-primary-light',
+        'glossary-term',
         'hover:bg-primary-lighter',
-        'hover:text-primary-light',
         'focus:bg-primary-lighter',
       ].join(' ')}
+      data-disabled={content.status !== 'success'}
       data-term={term}
       style={{
         cursor: 'pointer',
@@ -148,9 +153,11 @@ export function GlossaryTerm({ term, children }: GlossaryTermProps) {
     >
       <>
         <Book
-          className="text-primary-light text-semibold"
+          className="height-2 text-primary-light text-semibold top-2px width-2 usa-icon"
           style={{ fontSize: content.status === 'pending' ? '75%' : '87.5%' }}
           aria-hidden="true"
+          focusable="false"
+          role="img"
         />
         &nbsp;
         {children}

@@ -9,9 +9,14 @@ declare module '*.svg' {
   export default src;
 }
 
-type ArrayConstructor = {
-  isArray: (arg: unknown) => arg is unknown[] | readonly unknown[];
-};
+// This extends the `Array.isArray` function so that
+// readonly arrays are properly narrowed
+
+// eslint-disable-next-line
+interface ArrayConstructor {
+  // eslint-disable-next-line
+  isArray(arg: unknown): arg is unknown[] | readonly unknown[];
+}
 
 type Option<S, T> = {
   label: S;
