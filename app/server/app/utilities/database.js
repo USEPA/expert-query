@@ -31,6 +31,12 @@ log.info(`host: ${dbHost}`);
 log.info(`port: ${dbPort}`);
 log.info(`dbName: ${dbName}`);
 log.info(`user: ${dbUser}`);
+log.info(`DB_POOL_MIN: ${parseInt(process.env.DB_POOL_MIN)}`);
+log.info(`DB_POOL_MAX: ${parseInt(process.env.DB_POOL_MAX)}`);
+log.info(`STREAM_BATCH_SIZE: ${parseInt(process.env.STREAM_BATCH_SIZE)}`);
+log.info(
+  `STREAM_HIGH_WATER_MARK: ${parseInt(process.env.STREAM_HIGH_WATER_MARK)}`
+);
 
 const knex = require("knex")({
   client: "pg",
@@ -41,7 +47,10 @@ const knex = require("knex")({
     password: dbPassword,
     database: dbName,
   },
-  pool: { min: 5, max: 20 },
+  pool: {
+    min: parseInt(process.env.DB_POOL_MIN),
+    max: parseInt(process.env.DB_POOL_MAX),
+  },
 });
 
 module.exports = {

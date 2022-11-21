@@ -33,7 +33,7 @@ module.exports = function (app) {
         ? readFile(resolve(__dirname, "../", filename), "utf8")
         : axios({
             method: "get",
-            url: `${s3BucketUrl}/content/${filename}`,
+            url: `${s3BucketUrl}/${filename}`,
             timeout: 10000,
           });
     });
