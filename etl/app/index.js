@@ -53,8 +53,7 @@ app.on('ready', async () => {
     log.error(err);
   }
 
-  log.info('Creating tables, running load, and scheduling load to run daily');
-  etlJob();
+  log.info('Scheduling load to run daily at 3AM');
 
   // Schedule ETL to run daily at 3AM
   cron.schedule(
