@@ -233,123 +233,33 @@ async function getUrlInputs(
   return newState;
 }
 
-// Manages the state of all query field inputs
-function inputReducer(state: InputState, action: InputAction): InputState {
-  switch (action.type) {
-    case 'actionAgency':
-      return {
-        ...state,
-        actionAgency: action.payload,
-      };
-    case 'assessmentUnitStatus':
-      return {
-        ...state,
-        assessmentUnitStatus: action.payload,
-      };
-    case 'confirmed':
-      return {
-        ...state,
-        confirmed: action.payload,
-      };
-    case 'dataProfile':
-      return {
-        ...state,
-        dataProfile: action.payload,
-      };
-    case 'format':
-      return {
-        ...state,
-        format: action.payload,
-      };
-    case 'inIndianCountry':
-      return {
-        ...state,
-        inIndianCountry: action.payload,
-      };
-    case 'initialize':
+// Creates a reducer to manage the state of all query field inputs
+function createReducer() {
+  const handlers: Partial<{
+    [field in keyof InputState]: (
+      state: InputState,
+      action: InputAction,
+    ) => InputState;
+  }> = {};
+  let field: keyof InputState;
+  for (field in getDefaultInputs()) {
+    handlers[field] = (state, action) => {
+      if (action.type === 'initialize' || action.type === 'reset') return state;
+      return { ...state, [action.type]: action.payload };
+    };
+  }
+  return function reducer(state: InputState, action: InputAction) {
+    if (action.type === 'initialize') {
       return action.payload;
-    case 'loadAllocationUnits':
-      return {
-        ...state,
-        loadAllocationUnits: action.payload,
-      };
-    case 'locationText':
-      return {
-        ...state,
-        locationText: action.payload,
-      };
-    case 'locationTypeCode':
-      return {
-        ...state,
-        locationTypeCode: action.payload,
-      };
-    case 'organizationId':
-      return {
-        ...state,
-        organizationId: action.payload,
-      };
-    case 'organizationType':
-      return {
-        ...state,
-        organizationType: action.payload,
-      };
-    case 'parameterGroup':
-      return {
-        ...state,
-        parameterGroup: action.payload,
-      };
-    case 'pollutant':
-      return {
-        ...state,
-        pollutant: action.payload,
-      };
-    case 'sourceName':
-      return {
-        ...state,
-        sourceName: action.payload,
-      };
-    case 'sourceScale':
-      return {
-        ...state,
-        sourceScale: action.payload,
-      };
-    case 'sourceType':
-      return {
-        ...state,
-        sourceType: action.payload,
-      };
-    case 'stateIrCategory':
-      return {
-        ...state,
-        stateIrCategory: action.payload,
-      };
-    case 'useClassName':
-      return {
-        ...state,
-        useClassName: action.payload,
-      };
-    case 'waterSizeUnits':
-      return {
-        ...state,
-        waterSizeUnits: action.payload,
-      };
-    case 'waterType':
-      return {
-        ...state,
-        waterType: action.payload,
-      };
-    case 'reset':
+    } else if (action.type === 'reset') {
       return getDefaultInputs();
-    case 'state':
-      return {
-        ...state,
-        state: action.payload,
-      };
-    default: {
+    } else if (handlers.hasOwnProperty(action.type)) {
+      return handlers[action.type]?.(state, action) ?? state;
+    } else {
       const message = `Unhandled action type: ${action}`;
       throw new Error(message);
     }
-  }
+  };
 }
 
 // Type narrowing for InputState
@@ -490,7 +400,7 @@ export function Home() {
   const getAbortSignal = useAbortSignal();
 
   const [inputState, inputDispatch] = useReducer(
-    inputReducer,
+    createReducer(),
     getDefaultInputs(),
   );
   const { dataProfile, format } = inputState;
