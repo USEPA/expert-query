@@ -33,7 +33,26 @@ const mapping = {
  * @returns request query parameters
  */
 function getQueryParams(req) {
-  return req.method === "POST" ? req.body : req.query;
+  // return post parameters, default to empty objects if not provided
+  if (req.method === "POST") {
+    return {
+      filters: req.body.filters ?? {},
+      options: req.body.options ?? {},
+    };
+  }
+
+  // organize GET parameters to follow what we expect from POST
+  const optionsParams = ["f", "format"];
+  const parameters = {
+    filters: {},
+    options: {},
+  };
+  Object.entries(req.query).forEach(([name, value]) => {
+    if (optionsParams.includes(name)) parameters.options[name] = value;
+    else parameters.filters[name] = value;
+  });
+
+  return parameters;
 }
 
 /**
@@ -72,7 +91,7 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    appendToWhere(query, col.name, queryParams[col.alias]);
+    appendToWhere(query, col.name, queryParams.filters[col.alias]);
   });
 }
 
@@ -97,7 +116,7 @@ async function executeQuery(profile, req, res) {
       highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
     });
 
-    const format = queryParams.format ?? queryParams.f;
+    const format = queryParams.options.format ?? queryParams.options.f;
     switch (format) {
       case "csv":
       case "tsv":
