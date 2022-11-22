@@ -125,6 +125,9 @@ async function executeQuery(profile, req, res) {
       highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
     });
 
+    // close the stream if the request is canceled
+    stream.on("close", stream.end.bind(stream));
+
     const format = queryParams.options.format ?? queryParams.options.f;
     switch (format) {
       case "csv":
