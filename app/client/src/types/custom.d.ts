@@ -11,10 +11,7 @@ declare module '*.svg' {
 
 // This extends the `Array.isArray` function so that
 // readonly arrays are properly narrowed
-
-// eslint-disable-next-line
 interface ArrayConstructor {
-  // eslint-disable-next-line
   isArray(arg: unknown): arg is unknown[] | readonly unknown[];
 }
 

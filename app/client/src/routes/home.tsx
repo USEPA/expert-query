@@ -101,10 +101,9 @@ function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
 }
 
 // Uses URL query parameters or default values for initial state
-// eslint-disable-next-line
 async function getUrlInputs(
-  _signal: AbortSignal,
   domainOptions: DomainValues,
+  _signal: AbortSignal,
 ): Promise<InputState> {
   const params = parseInitialParams();
 
@@ -306,7 +305,7 @@ export function Home() {
   useEffect(() => {
     if (content.status === 'failure') return setInputsLoaded(true);
     if (content.status !== 'success') return;
-    getUrlInputs(getAbortSignal(), content.data.domainValues)
+    getUrlInputs(content.data.domainValues, getAbortSignal())
       .then((initialInputs) => {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
@@ -467,6 +466,7 @@ export function Home() {
                 </div>
               </div>
               <h4>
+                {/* TODO - Remove the glossary linkage before production deployment */}
                 <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
               </h4>
               <CopyBox
