@@ -38,6 +38,7 @@ function getQueryParams(req) {
     return {
       filters: req.body.filters ?? {},
       options: req.body.options ?? {},
+      columns: req.body.columns ?? null,
     };
   }
 
@@ -46,9 +47,11 @@ function getQueryParams(req) {
   const parameters = {
     filters: {},
     options: {},
+    columns: null,
   };
   Object.entries(req.query).forEach(([name, value]) => {
     if (optionsParams.includes(name)) parameters.options[name] = value;
+    else if (name === "columns") parameters.columns = value;
     else parameters.filters[name] = value;
   });
 
@@ -83,7 +86,13 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   // build select statement of the query
   if (countOnly) query.count(profile.idColumn);
   else {
-    const selectText = profile.columns.map((col) =>
+    // filter down to requested columns, if the user provided that option
+    const columnsToReturn = profile.columns.filter(
+      (col) => queryParams.columns && queryParams.columns.includes(col.alias)
+    );
+
+    // build the select query
+    const selectText = columnsToReturn.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`
     );
     query.select(selectText);
