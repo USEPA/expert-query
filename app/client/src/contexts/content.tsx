@@ -23,11 +23,11 @@ export type Content = {
       serviceUrlDev: string;
       serviceUrl: string;
     };
-    googleAnalyticsMapping: {
+    googleAnalyticsMapping: Array<{
       urlLookup: string;
       wildcardUrl: string;
       name: string;
-    }[];
+    }>;
   };
   alertsConfig: {
     [page: string]: {
@@ -36,14 +36,19 @@ export type Content = {
     };
   };
   domainValues: DomainValues;
+  glossary: Array<{
+    term: string;
+    definition: string;
+    definitionHtml: string;
+  }>;
 };
 
 type State = {
   content:
-    | { status: 'idle'; data: {} }
-    | { status: 'pending'; data: {} }
+    | { status: 'idle'; data: Record<string, never> }
+    | { status: 'pending'; data: Record<string, never> }
     | { status: 'success'; data: Content }
-    | { status: 'failure'; data: {} };
+    | { status: 'failure'; data: Record<string, never> };
 };
 
 export type Action =
@@ -70,7 +75,7 @@ function reducer(state: State, action: Action): State {
     }
 
     case 'FETCH_CONTENT_SUCCESS': {
-      const { services, alertsConfig, domainValues } = action.payload;
+      const { services, alertsConfig, domainValues, glossary } = action.payload;
 
       return {
         ...state,
@@ -80,6 +85,7 @@ function reducer(state: State, action: Action): State {
             services,
             alertsConfig,
             domainValues,
+            glossary,
           },
         },
       };
@@ -127,7 +133,7 @@ export function ContentProvider({ children }: Props) {
 export function useContentState() {
   const context = useContext(StateContext);
   if (context === undefined) {
-    const message = `useContentState must be called within a ContentProvider`;
+    const message = 'useContentState must be called within a ContentProvider';
     throw new Error(message);
   }
   return context;
@@ -140,7 +146,7 @@ export function useContentState() {
 export function useContentDispatch() {
   const context = useContext(DispatchContext);
   if (context === undefined) {
-    const message = `useContentDispatch must be used within a ContentProvider`;
+    const message = 'useContentDispatch must be used within a ContentProvider';
     throw new Error(message);
   }
   return context;

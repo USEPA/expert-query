@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Select from 'react-select';
+import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
+import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
 import Alert from 'components/alert';
 import Checkbox from 'components/checkbox';
 import CopyBox from 'components/copyBox';
+import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
@@ -19,11 +22,11 @@ import { options as listOptions, profiles } from 'config';
 /*
 ## Types
 */
-interface InputState {
+type InputState = {
   format: Option<ReactNode, string> | null;
   dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  state: Readonly<Option<string, string>[]> | null;
-}
+  state: ReadonlyArray<Option<string, string>> | null;
+};
 
 type InputAction =
   | { type: 'format'; payload: Option<ReactNode, string> }
@@ -33,13 +36,13 @@ type InputAction =
     }
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' }
-  | { type: 'state'; payload: Readonly<Option<string, string>[]> };
+  | { type: 'state'; payload: ReadonlyArray<Option<string, string>> };
 
 type URLQueryParam = [string, URLQueryArg];
 
-interface URLQueryState {
+type URLQueryState = {
   [field: string]: URLQueryArg | URLQueryArg[];
-}
+};
 
 type URLQueryArg = string | number | boolean;
 
@@ -57,7 +60,7 @@ const controlFields = ['dataProfile', 'format'];
 */
 // Converts a JSON object into a parameter string
 function buildQueryString(query: URLQueryState, includeProfile = true) {
-  const paramsList: Array<URLQueryParam> = [];
+  const paramsList: URLQueryParam[] = [];
   Object.entries(query).forEach(([field, value]) => {
     if (!includeProfile && field === 'dataProfile') return;
 
@@ -99,8 +102,8 @@ function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
 
 // Uses URL query parameters or default values for initial state
 async function getUrlInputs(
-  signal: AbortSignal, // will need for DB checks
   domainOptions: DomainValues,
+  _signal: AbortSignal,
 ): Promise<InputState> {
   const params = parseInitialParams();
 
@@ -165,7 +168,7 @@ function isOption(
 function matchSingleStaticOption<S, T>(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options?: readonly Option<S, T>[],
+  options?: ReadonlyArray<Option<S, T>>,
 ): Option<S, T> | null {
   return matchStaticOptions(value, defaultValue, options ?? null) as Option<
     S,
@@ -177,18 +180,21 @@ function matchSingleStaticOption<S, T>(
 function matchMultipleStaticOptions<S, T>(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options?: Option<S, T>[],
-): Option<S, T>[] | null {
-  return matchStaticOptions(value, defaultValue, options ?? null, true) as
-    | Option<S, T>[]
-    | null;
+  options?: ReadonlyArray<Option<S, T>>,
+): ReadonlyArray<Option<S, T>> | null {
+  return matchStaticOptions(
+    value,
+    defaultValue,
+    options ?? null,
+    true,
+  ) as ReadonlyArray<Option<S, T>> | null;
 }
 
 // Produce the option/s corresponding to a particular value
 function matchStaticOptions<S, T>(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options: readonly Option<S, T>[] | null,
+  options: ReadonlyArray<Option<S, T>> | null,
   multiple = false,
 ) {
   if (!options) return defaultValue;
@@ -238,7 +244,7 @@ function setLocalStorageItem(item: string, value: string) {
 function storageAvailable(
   storageType: 'localStorage' | 'sessionStorage' = 'localStorage',
 ) {
-  let storage: Storage = window[storageType];
+  const storage: Storage = window[storageType];
   try {
     const x = '__storage_test__';
     storage.setItem(x, x);
@@ -280,6 +286,7 @@ function useAbortSignal() {
 
   return getSignal;
 }
+
 /*
 ## Components
 */
@@ -298,7 +305,7 @@ export function Home() {
   useEffect(() => {
     if (content.status === 'failure') return setInputsLoaded(true);
     if (content.status !== 'success') return;
-    getUrlInputs(getAbortSignal(), content.data.domainValues)
+    getUrlInputs(content.data.domainValues, getAbortSignal())
       .then((initialInputs) => {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
@@ -317,21 +324,23 @@ export function Home() {
 
     // Get selected parameters, including multiselectable fields
     const newQueryParams: URLQueryState = {};
-    Object.entries(inputState).forEach(([field, value]) => {
-      if (value == null || (Array.isArray(value) && !value.length)) return;
+    Object.entries(inputState).forEach(
+      ([field, value]: [string, InputState[keyof InputState]]) => {
+        if (value == null || (Array.isArray(value) && !value.length)) return;
 
-      // Extract 'value' field from Option types
-      const flattenedValue = getInputValue(value);
-      if (
-        controlFields.includes(field) ||
-        (dataProfile &&
-          (
-            profiles[dataProfile.value].fields as ReadonlyArray<string>
-          ).includes(field))
-      ) {
-        newQueryParams[field] = flattenedValue;
-      }
-    });
+        // Extract 'value' field from Option types
+        const flattenedValue = getInputValue(value);
+        if (
+          controlFields.includes(field) ||
+          (dataProfile &&
+            (profiles[dataProfile.value].fields as readonly string[]).includes(
+              field,
+            ))
+        ) {
+          newQueryParams[field] = flattenedValue;
+        }
+      },
+    );
 
     window.location.hash = buildQueryString(newQueryParams);
 
@@ -348,109 +357,139 @@ export function Home() {
     setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
   }, [dontShowAgain]);
 
+  const pathParts = window.location.pathname.split('/');
+  const pageName = pathParts.length > 1 ? pathParts[1] : '';
+
   if (content.status === 'pending') return <Loading />;
 
-  if (content.status === 'failure')
+  if (content.status === 'failure') {
     return (
       <Alert type="error">
         Expert Query is currently unavailable, please try again later.
       </Alert>
     );
+  }
 
-  if (content.status === 'success')
+  if (content.status === 'success') {
     return (
-      <div>
-        {introVisible && (
-          <Summary heading="How to Use This Application">
-            <p>
-              Select a data profile, then build a query by selecting options
-              from the input fields.
-            </p>
-            <div className="display-flex flex-justify flex-wrap">
-              <Checkbox
-                checked={dontShowAgain ?? false}
-                label="Don't show again on this computer"
-                onChange={(_ev) => setDontShowAgain(!dontShowAgain)}
-                styles={['margin-right-1 margin-y-auto']}
-              />
-              <button
-                className="margin-top-2 usa-button"
-                onClick={() => setIntroVisible(false)}
-                type="button"
-              >
-                Close Intro
-              </button>
-            </div>
-          </Summary>
-        )}
-        <h3>Data Profile</h3>
-        <Select
-          aria-label="Select a data profile"
-          onChange={(ev) => inputDispatch({ type: 'dataProfile', payload: ev })}
-          options={listOptions.dataProfile}
-          placeholder="Select a data profile..."
-          value={dataProfile}
-        />
-        {dataProfile && (
-          <>
-            <h3>Filters</h3>
-            <FilterFields
-              dispatch={inputDispatch}
-              fields={profiles[dataProfile.value].fields}
-              options={{ ...listOptions, ...content.data.domainValues }}
-              state={inputState}
-            />
-            <h3>Download the Data</h3>
-            <div className="display-flex flex-wrap">
-              <RadioButtons
-                legend={
-                  <>
-                    <b className="margin-right-1">File Format</b>
-                    <InfoTooltip text="Choose a file format for the result set" />
-                  </>
-                }
-                onChange={(option) =>
-                  inputDispatch({ type: 'format', payload: option })
-                }
-                options={listOptions.format}
-                selected={format}
-                styles={['margin-bottom-2']}
-              />
-              <div className="display-flex flex-column flex-1 margin-y-auto">
+      <>
+        <button
+          title="Glossary"
+          className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
+          style={{ cursor: 'pointer' }}
+          type="button"
+        >
+          <Book
+            aria-hidden="true"
+            className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
+            focusable="false"
+            role="img"
+          />
+          <span className="font-ui-md text-bold text-primary">Glossary</span>
+        </button>
+        <GlossaryPanel path={pageName} />
+        <div>
+          {introVisible && (
+            <Summary heading="How to Use This Application">
+              <p>
+                Select a data profile, then build a query by selecting options
+                from the input fields.
+              </p>
+              <div className="display-flex flex-justify flex-wrap">
+                <Checkbox
+                  checked={dontShowAgain ?? false}
+                  label="Don't show again on this computer"
+                  onChange={(_ev) => setDontShowAgain(!dontShowAgain)}
+                  styles={['margin-right-1 margin-y-auto']}
+                />
                 <button
-                  className="margin-x-auto margin-bottom-1 usa-button"
-                  onClick={() => {}}
+                  className="margin-top-2 usa-button"
+                  onClick={() => setIntroVisible(false)}
                   type="button"
                 >
-                  Download
-                </button>
-                <button
-                  className="margin-x-auto usa-button usa-button--outline"
-                  onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                  type="button"
-                >
-                  Clear Search
+                  Close Intro
                 </button>
               </div>
-            </div>
-            <h4>Current Query</h4>
-            <CopyBox
-              text={`${window.location.origin}${window.location.pathname}/#${buildQueryString(
-                queryParams,
-              )}`}
-            />
+            </Summary>
+          )}
+          <h3>Data Profile</h3>
+          <Select
+            aria-label="Select a data profile"
+            onChange={(ev) =>
+              inputDispatch({ type: 'dataProfile', payload: ev })
+            }
+            options={listOptions.dataProfile}
+            placeholder="Select a data profile..."
+            value={dataProfile}
+          />
+          {dataProfile && (
             <>
-              <h4>{profiles[dataProfile.value].label} API Query</h4>
-              <CopyBox
-                text={`${window.location.origin}${window.location.pathname}/${
-                  profiles[dataProfile.value].resource
-                }?${buildQueryString(queryParams, false)}`}
+              <h3>Filters</h3>
+              <FilterFields
+                dispatch={inputDispatch}
+                fields={profiles[dataProfile.value].fields}
+                options={{ ...listOptions, ...content.data.domainValues }}
+                state={inputState}
               />
+              <h3>Download the Data</h3>
+              <div className="display-flex flex-wrap">
+                <RadioButtons
+                  legend={
+                    <>
+                      <b className="margin-right-05">File Format</b>
+                      <InfoTooltip text="Choose a file format for the result set" />
+                    </>
+                  }
+                  onChange={(option) =>
+                    inputDispatch({ type: 'format', payload: option })
+                  }
+                  options={listOptions.format}
+                  selected={format}
+                  styles={['margin-bottom-2']}
+                />
+                <div className="display-flex flex-column flex-1 margin-y-auto">
+                  <button
+                    className="align-items-center display-flex margin-x-auto margin-bottom-1 usa-button"
+                    onClick={() => null}
+                    type="button"
+                  >
+                    <Download className="height-205 margin-right-1 usa-icon width-205" />
+                    Download
+                  </button>
+                  <button
+                    className="margin-x-auto usa-button usa-button--outline"
+                    onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                    type="button"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              </div>
+              <h4>
+                {/* TODO - Remove the glossary linkage before production deployment */}
+                <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+              </h4>
+              <CopyBox
+                text={`${window.location.origin}${
+                  window.location.pathname
+                }/#${buildQueryString(queryParams)}`}
+              />
+              <>
+                <h4>{profiles[dataProfile.value].label} API Query</h4>
+                <CopyBox
+                  text={`${window.location.origin}${
+                    window.location.pathname
+                  }/data/${
+                    profiles[dataProfile.value].resource
+                  }?${buildQueryString(queryParams, false)}`}
+                />
+              </>
             </>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      </>
     );
+  }
 
   return null;
 }

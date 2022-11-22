@@ -22,7 +22,7 @@ export const dataProfile = Object.entries(profiles).map(([id, profile]) => {
       </p>
     ),
   };
-}) as Option<JSX.Element, keyof typeof profiles>[];
+}) as Array<Option<JSX.Element, keyof typeof profiles>>;
 
 export const format = [
   {

@@ -37,6 +37,7 @@
     "@reach/portal": "0.18.0",
     "@reach/tooltip": "0.18.0",
     "bootstrap": "5.2.2",
+    "glossary-panel": "github:Eastern-Research-Group/glossary",
     "lodash": "4.17.21",
     "react": "18.2.0",
     "react-dom": "18.2.0",

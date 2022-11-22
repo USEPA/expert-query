@@ -23,7 +23,11 @@ export default function RadioButtons({
 }: Props) {
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
-      {legend && <legend className="usa-legend">{legend}</legend>}
+      {legend && (
+        <legend className="align-items-center display-flex usa-legend">
+          {legend}
+        </legend>
+      )}
       {options.map((option) => {
         const id = uniqueId('radio-');
         return (
