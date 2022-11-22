@@ -266,17 +266,13 @@ async function logEtlLoadStart(pool) {
 }
 
 // Load new data into a fresh schema, then discard old schemas
-export async function runJob(s3Config, first = false) {
+export async function runJob(s3Config) {
   const pool = startConnPool();
   try {
     await runLoad(pool, s3Config);
     await trimSchema(pool, s3Config);
   } catch (err) {
-    log.warn(
-      `${
-        first ? 'First run' : 'Run'
-      } failed, continuing to schedule cron task: ${err}`,
-    );
+    log.warn(`Run failed, continuing to schedule cron task: ${err}`);
   } finally {
     await endConnPool(pool);
   }
