@@ -25,7 +25,8 @@
   "scripts": {
     "start": "npm run start_local_cmd",
     "start_local_cmd": "cross-env nodemon -r dotenv/config --ignore 'app/tests' --inspect app/index.js dotenv_config_path=.env.local",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "etl_glossary": "node -r dotenv/config --inspect tasks/etl-glossary.js dotenv_config_path=./.env.local"
   },
   "husky": {
     "hooks": {
