@@ -12,7 +12,6 @@ import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
-import RangeSlider from 'components/rangeSlider';
 import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
@@ -24,24 +23,42 @@ import { options as listOptions, profiles } from 'config';
 /*
 ## Types
 */
-type DomainValueInputStateValue = ReadonlyArray<
-  Option<ReactNode | string, string>
-> | null;
+type InputStateMultiOption = ReadonlyArray<Option<ReactNode, string>> | null;
+type InputStateSingleOption = Option<ReactNode, string> | null;
 
-type DomainValueInputState = {
-  [Property in keyof DomainValues]: DomainValueInputStateValue;
-};
-
-type InputState = DomainValueInputState & {
+type InputState = {
+  actionAgency: InputStateMultiOption;
+  assessmentUnitStatus: InputStateMultiOption;
+  confirmed: InputStateMultiOption;
   dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  format: Option<ReactNode, string> | null;
+  format: InputStateSingleOption;
+  inIndianCountry: InputStateMultiOption;
+  loadAllocationUnits: InputStateMultiOption;
+  locationText: InputStateMultiOption;
+  locationTypeCode: InputStateMultiOption;
+  organizationId: InputStateMultiOption;
+  organizationType: InputStateMultiOption;
+  parameterGroup: InputStateMultiOption;
+  pollutant: InputStateMultiOption;
+  sourceName: InputStateMultiOption;
+  sourceScale: InputStateMultiOption;
+  sourceType: InputStateMultiOption;
+  state: InputStateMultiOption;
+  stateIrCategory: InputStateMultiOption;
+  useClassName: InputStateMultiOption;
+  waterSizeUnits: InputStateMultiOption;
+  waterType: InputStateMultiOption;
 };
+
+type InputFieldAction = {
+  [k in keyof InputState]: {
+    type: k;
+    payload: InputState[k];
+  };
+}[keyof InputState];
 
 type InputAction =
-  | {
-      type: keyof DomainValues;
-      payload: ReadonlyArray<Option<string | ReactNode, string>> | null;
-    }
+  | InputFieldAction
   | {
       type: 'dataProfile';
       payload: Option<JSX.Element, keyof typeof profiles> | null;
@@ -135,12 +152,15 @@ function getDefaultInputs(): InputState {
   return {
     actionAgency: null,
     assessmentUnitStatus: null,
+    confirmed: null,
     dataProfile: null,
     format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
+    inIndianCountry: null,
     loadAllocationUnits: null,
     locationText: null,
     locationTypeCode: null,
     organizationId: null,
+    organizationType: null,
     parameterGroup: null,
     pollutant: null,
     sourceName: null,
@@ -167,7 +187,6 @@ function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
 }
 
 // Uses URL query parameters or default values for initial state
-// eslint-disable-next-line
 async function getUrlInputs(
   _signal: AbortSignal,
   domainOptions: DomainValues,
@@ -176,25 +195,39 @@ async function getUrlInputs(
 
   const newState = getDefaultInputs();
 
-  let key: keyof typeof domainOptions;
-  for (key in domainOptions) {
-    newState[key] = matchMultipleStaticOptions(
-      params[key] ?? null,
+  // Domain service values
+  let dKey: keyof typeof domainOptions;
+  for (dKey in domainOptions) {
+    newState[dKey] = matchMultipleStaticOptions(
+      params[dKey] ?? null,
       null,
-      domainOptions[key],
+      domainOptions[dKey],
     );
   }
+
+  const { dataProfile, format, ...multiListOptions } = listOptions;
+
+  // Constant list values
+  let lKey: keyof typeof multiListOptions;
+  for (lKey in multiListOptions) {
+    newState[lKey] = matchMultipleStaticOptions(
+      params[lKey] ?? null,
+      null,
+      listOptions[lKey],
+    );
+  }
+
+  // Special cases
+  newState.dataProfile = matchSingleStaticOption(
+    params.dataProfile ?? null,
+    null,
+    listOptions.dataProfile,
+  );
 
   newState.format = matchSingleStaticOption(
     params.format ?? null,
     defaultFormat,
     listOptions.format,
-  );
-
-  newState.dataProfile = matchSingleStaticOption(
-    params.dataProfile ?? null,
-    null,
-    listOptions.dataProfile,
   );
 
   return newState;
@@ -213,15 +246,25 @@ function inputReducer(state: InputState, action: InputAction): InputState {
         ...state,
         assessmentUnitStatus: action.payload,
       };
-    case 'format':
+    case 'confirmed':
       return {
         ...state,
-        format: action.payload,
+        confirmed: action.payload,
       };
     case 'dataProfile':
       return {
         ...state,
         dataProfile: action.payload,
+      };
+    case 'format':
+      return {
+        ...state,
+        format: action.payload,
+      };
+    case 'inIndianCountry':
+      return {
+        ...state,
+        inIndianCountry: action.payload,
       };
     case 'initialize':
       return action.payload;
@@ -244,6 +287,11 @@ function inputReducer(state: InputState, action: InputAction): InputState {
       return {
         ...state,
         organizationId: action.payload,
+      };
+    case 'organizationType':
+      return {
+        ...state,
+        organizationType: action.payload,
       };
     case 'parameterGroup':
       return {
@@ -571,7 +619,7 @@ export function Home() {
           />
           {dataProfile && (
             <>
-              <h3>Filters</h3>
+              <h3 className="margin-bottom-0">Filters</h3>
               <FilterFields
                 dispatch={inputDispatch}
                 fields={profiles[dataProfile.value].fields}
@@ -648,17 +696,16 @@ type FilterFieldsProps = {
 };
 
 function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
-  const checkboxFields = [
+  const allFields = [
     { key: 'actionAgency', label: 'Action Agency' },
     { key: 'assessmentUnitStatus', label: 'Assessment Unit Status' },
-    { key: 'waterSizeUnits', label: 'Water Size Units' },
-  ] as const;
-
-  const selectFields = [
+    { key: 'confirmed', label: 'Confirmed' },
+    { key: 'inIndianCountry', label: 'In Indian Country' },
     { key: 'loadAllocationUnits', label: 'Load Allocation Unit' },
     { key: 'locationText', label: 'Location Text' },
     { key: 'locationTypeCode', label: 'Location Type Code' },
     { key: 'organizationId', label: 'Organization ID' },
+    { key: 'organizationType', label: 'Organization Type' },
     { key: 'parameterGroup', label: 'Parameter Group' },
     { key: 'pollutant', label: 'Pollutant' },
     { key: 'sourceName', label: 'Source Name' },
@@ -666,71 +713,52 @@ function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
     { key: 'sourceType', label: 'Source Type' },
     { key: 'state', label: 'State' },
     { key: 'stateIrCategory', label: 'State IR Category' },
+    { key: 'waterSizeUnits', label: 'Water Size Units' },
     { key: 'waterType', label: 'Water Type' },
   ] as const;
 
+  const fieldsJsx = allFields
+    .filter((field) => fields.includes(field.key))
+    .map((field) => {
+      if (!(field.key in options)) return null;
+      if (Array.isArray(state[field.key]) && options[field.key].length <= 5)
+        return (
+          <Checkboxes
+            legend={<b>{field.label}</b>}
+            onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+            options={options[field.key]}
+            selected={state[field.key] ?? []}
+            styles={['margin-top-3']}
+          />
+        );
+      return (
+        <label className="usa-label">
+          <b>{field.label}</b>
+          <AsyncSelect
+            aria-label={`${field.label} input`}
+            className="margin-top-1"
+            isMulti
+            onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+            defaultOptions={
+              options[field.key].length > staticOptionLimit
+                ? options[field.key].slice(0, staticOptionLimit)
+                : options[field.key]
+            }
+            loadOptions={filterStaticOptions(options[field.key])}
+            placeholder={`Select ${getArticle(field.label)} ${field.label}...`}
+            value={state[field.key]}
+          />
+        </label>
+      );
+    });
+
   return (
-    <div>
-      {checkboxFields
-        .filter((field) => fields.includes(field.key))
-        .map((field) => (
-          <div key={field.key}>
-            <Checkboxes
-              legend={<b>{field.label}</b>}
-              onChange={(ev) => dispatch({ type: field.key, payload: ev })}
-              options={options[field.key]}
-              selected={state[field.key] ?? []}
-            />
-          </div>
-        ))}
-
-      {selectFields
-        .filter((field) => fields.includes(field.key))
-        .map((field) => (
-          <div>
-            <label className="usa-label">
-              <b>{field.label}</b>
-              <AsyncSelect
-                aria-label={`${field.label} input`}
-                isMulti
-                onChange={(ev) => dispatch({ type: field.key, payload: ev })}
-                defaultOptions={
-                  options[field.key].length > staticOptionLimit
-                    ? options[field.key].slice(0, staticOptionLimit)
-                    : options[field.key]
-                }
-                loadOptions={filterStaticOptions(options[field.key])}
-                placeholder={`Select ${getArticle(field.label)} ${
-                  field.label
-                }...`}
-                value={state[field.key]}
-              />
-            </label>
-          </div>
-        ))}
-
-      {fields.includes('region') && (
-        <div>
-          <label className="usa-label">
-            <b>Region</b>
-            <Select
-              aria-label="Select a region"
-              // onChange={(ev) => dispatch({ type: 'state', payload: ev })}
-              // options={dataProfileOptions}
-              placeholder="Select a region..."
-              // value={state}
-            />
-          </label>
+    <div className="display-flex flex-wrap">
+      {fieldsJsx.map((field, i) => (
+        <div className="margin-right-3" key={i}>
+          {field}
         </div>
-      )}
-
-      {fields.includes('reportingCycle') && (
-        <RangeSlider
-          label={<b>Reporting Cycle</b>}
-          onChange={(value) => console.log(value)}
-          value={0}
-        />
-      )}
+      ))}
     </div>
   );
 }
