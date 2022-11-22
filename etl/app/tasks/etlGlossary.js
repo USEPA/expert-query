@@ -1,5 +1,5 @@
-import * as s3 from '../app/server/s3.js'; // './server/s3.js';
-import { logger as log } from '../app/server/utilities/logger.js';
+import * as s3 from '../server/s3.js';
+import { logger as log } from '../server/utilities/logger.js';
 
 log.info('Starting Task: etl_glossary');
 

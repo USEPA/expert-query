@@ -23,10 +23,10 @@
   },
   "repository": "github:USEPA/expert-query",
   "scripts": {
+    "etl_glossary": "node -r dotenv/config --inspect app/tasks/etlGlossary.js dotenv_config_path=./.env.local",
     "start": "npm run start_local_cmd",
     "start_local_cmd": "cross-env nodemon -r dotenv/config --ignore 'app/tests' --inspect app/index.js dotenv_config_path=.env.local",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "etl_glossary": "node -r dotenv/config --inspect tasks/etl-glossary.js dotenv_config_path=./.env.local"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "husky": {
     "hooks": {
