@@ -1,7 +1,6 @@
 import cron from 'node-cron';
 import express from 'express';
 
-import { routes } from './routes/index.js';
 import * as database from './server/database.js';
 import * as s3 from './server/s3.js';
 import { logger as log } from './server/utilities/logger.js';
@@ -42,9 +41,6 @@ requiredEnvVars.forEach((envVar) => {
     process.exit();
   }
 });
-
-// setup server routes
-routes(app);
 
 async function etlJob(first = false) {
   // load config from private s3 bucket
