@@ -156,7 +156,7 @@ function fetchSingleDomain(name, mapping) {
   };
 }
 
-export function syncDomainValues(s3Config) {
+export async function syncDomainValues(s3Config) {
   const fetchPromises = [];
   const domainValues = {};
   fetchPromises.push(
@@ -172,9 +172,8 @@ export function syncDomainValues(s3Config) {
     );
   });
 
-  Promise.all(fetchPromises).then(() =>
-    uploadFilePublic('domainValues.json', JSON.stringify(domainValues)),
-  );
+  await Promise.all(fetchPromises);
+  uploadFilePublic('domainValues.json', JSON.stringify(domainValues));
 }
 
 // Sync state codes and labels from the states service
