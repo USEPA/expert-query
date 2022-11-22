@@ -244,7 +244,7 @@ function createReducer() {
   let field: keyof InputState;
   for (field in getDefaultInputs()) {
     handlers[field] = (state, action) => {
-      if (action.type === 'initialize' || action.type === 'reset') return state;
+      if (!('payload' in action)) return state;
       return { ...state, [action.type]: action.payload };
     };
   }
@@ -554,7 +554,7 @@ export function Home() {
                 />
                 <div className="display-flex flex-column flex-1 margin-y-auto">
                   <button
-                    className="align-items-center display-flex margin-x-auto margin-bottom-1 usa-button"
+                    className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
                     onClick={() => null}
                     type="button"
                   >
@@ -662,13 +662,31 @@ function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
       );
     });
 
+  const rows: (JSX.Element | null)[][] = [];
+  for (let i = 0; i < fieldsJsx.length; i += 3) {
+    rows.push(fieldsJsx.slice(i, i + 3));
+  }
+
   return (
-    <div className="display-flex flex-wrap">
-      {fieldsJsx.map((field, i) => (
-        <div className="margin-right-3" key={i}>
-          {field}
+    <div>
+      {rows.map((row, i) => (
+        <div className="grid-gap grid-row" key={`filter-row-${i}`}>
+          {row.map((field, j) => (
+            <div className="tablet:grid-col" key={`field-${i}-${j}`}>
+              {field}
+            </div>
+          ))}
         </div>
       ))}
     </div>
   );
+  // return (
+  //   <div className="display-flex flex-wrap">
+  //     {fieldsJsx.map((field, i) => (
+  //       <div className="margin-right-3" key={i}>
+  //         {field}
+  //       </div>
+  //     ))}
+  //   </div>
+  // );
 }
