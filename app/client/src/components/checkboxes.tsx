@@ -9,14 +9,17 @@ type CheckboxOption = Option<ReactNode, string> & {
 
 type Props = {
   legend?: ReactNode;
-  onChange: (selected: CheckboxOption[]) => void;
-  options: CheckboxOption[];
-  selected?: CheckboxOption[];
+  onChange: (selected: readonly CheckboxOption[]) => void;
+  options: readonly CheckboxOption[];
+  selected?: readonly CheckboxOption[];
   styles?: string[];
   tile?: boolean;
 };
 
-function isSelected(option: CheckboxOption, selected: CheckboxOption[]) {
+function isSelected(
+  option: CheckboxOption,
+  selected: readonly CheckboxOption[],
+) {
   return !!selected.find((s) => s.value === option.value);
 }
 

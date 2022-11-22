@@ -36,7 +36,7 @@ type DomainValues = {
   sourceScale: Array<Option<string, string>>;
   sourceType: Array<Option<string, string>>;
   state: Array<Option<string, string>>;
-  stateIRCategory: Array<Option<string, string>>;
+  stateIrCategory: Array<Option<string, string>>;
   useClassName: Array<Option<string, string>>;
   waterSizeUnits: Array<Option<string, string>>;
   waterType: Array<Option<string, string>>;

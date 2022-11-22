@@ -137,16 +137,23 @@ function fetchSingleDomain(name, mapping) {
           `Domain Values (${mapping.domainName})`,
           retryCount,
           s3Config,
-          syncSingleDomain(name, mapping),
+          fetchSingleDomain(name, mapping),
         );
       }
 
-      const values = res.data.map((value) => {
-        return {
-          label: value[mapping.labelField ?? 'name'],
-          value: value[mapping.valueField ?? 'code'],
-        };
-      });
+      const valuesAdded = new Set();
+      const values = res.data
+        .map((value) => {
+          return {
+            label: value[mapping.labelField ?? 'name'],
+            value: value[mapping.valueField ?? 'code'],
+          };
+        })
+        .filter((item) => {
+          return valuesAdded.has(item.value)
+            ? false
+            : valuesAdded.add(item.value);
+        });
 
       return values;
     } catch (err) {
@@ -186,12 +193,19 @@ async function fetchStateValues(s3Config, retryCount = 0) {
       return retryRequest('States', retryCount, s3Config, syncStateValues);
     }
 
-    const states = res.data.data.map((state) => {
-      return {
-        label: state.name,
-        value: state.code,
-      };
-    });
+    const valuesAdded = new Set();
+    const states = res.data.data
+      .map((state) => {
+        return {
+          label: state.name,
+          value: state.code,
+        };
+      })
+      .filter((item) => {
+        return valuesAdded.has(item.value)
+          ? false
+          : valuesAdded.add(item.value);
+      });
 
     return states;
   } catch (err) {

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
 import Alert from 'components/alert';
 import Checkbox from 'components/checkbox';
+import Checkboxes from 'components/checkboxes';
 import CopyBox from 'components/copyBox';
 import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
@@ -22,21 +24,31 @@ import { options as listOptions, profiles } from 'config';
 /*
 ## Types
 */
-type InputState = {
-  format: Option<ReactNode, string> | null;
+type DomainValueInputStateValue = ReadonlyArray<
+  Option<ReactNode | string, string>
+> | null;
+
+type DomainValueInputState = {
+  [Property in keyof DomainValues]: DomainValueInputStateValue;
+};
+
+type InputState = DomainValueInputState & {
   dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  state: ReadonlyArray<Option<string, string>> | null;
+  format: Option<ReactNode, string> | null;
 };
 
 type InputAction =
-  | { type: 'format'; payload: Option<ReactNode, string> }
+  | {
+      type: keyof DomainValues;
+      payload: ReadonlyArray<Option<string | ReactNode, string>> | null;
+    }
   | {
       type: 'dataProfile';
       payload: Option<JSX.Element, keyof typeof profiles> | null;
     }
+  | { type: 'format'; payload: Option<ReactNode, string> }
   | { type: 'initialize'; payload: InputState }
-  | { type: 'reset' }
-  | { type: 'state'; payload: ReadonlyArray<Option<string, string>> };
+  | { type: 'reset' };
 
 type URLQueryParam = [string, URLQueryArg];
 
@@ -51,6 +63,8 @@ type InputValue = URLQueryArg | URLQueryArg[] | null;
 /*
 ## Constants
 */
+const staticOptionLimit = 100;
+
 const defaultFormat = 'csv';
 
 const controlFields = ['dataProfile', 'format'];
@@ -74,6 +88,42 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
     .replace('&', ''); // trim the leading ampersand
 }
 
+// Filters options by search input, returning a maximum number of options
+function filterStaticOptions<T>(options: ReadonlyArray<Option<string, T>>) {
+  return function (inputValue: string) {
+    const value = inputValue.trim().toLowerCase();
+    if (value.length < 3) {
+      return Promise.resolve(
+        options.length < staticOptionLimit
+          ? options
+          : options.slice(0, staticOptionLimit),
+      );
+    }
+
+    const matches: Array<Option<string, T>> = [];
+    options.every((option) => {
+      if (matches.length >= staticOptionLimit) return false;
+      if (option.label.toLowerCase().includes(value)) matches.push(option);
+      else if (
+        typeof option.value === 'string' &&
+        option.value.toLowerCase().includes(value)
+      ) {
+        matches.push(option);
+      }
+      return true;
+    });
+    return Promise.resolve(matches);
+  };
+}
+
+function getArticle(noun: string) {
+  if (!noun.length) return '';
+  if (['a', 'e', 'i', 'o', 'u'].includes(noun.charAt(0).toLowerCase())) {
+    return 'an';
+  }
+  return 'a';
+}
+
 function getLocalStorageItem(item: string) {
   if (storageAvailable()) {
     return localStorage.getItem(item) ?? null;
@@ -83,12 +133,28 @@ function getLocalStorageItem(item: string) {
 // Empty or default values for inputs
 function getDefaultInputs(): InputState {
   return {
+    actionAgency: null,
+    assessmentUnitStatus: null,
     dataProfile: null,
     format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
+    loadAllocationUnits: null,
+    locationText: null,
+    locationTypeCode: null,
+    organizationId: null,
+    parameterGroup: null,
+    pollutant: null,
+    sourceName: null,
+    sourceScale: null,
+    sourceType: null,
     state: null,
+    stateIrCategory: null,
+    useClassName: null,
+    waterSizeUnits: null,
+    waterType: null,
   };
 }
 
+// Extracts the value field from Option items, otherwise returns the item
 function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
   if (Array.isArray(input)) {
     return input.map((v) => {
@@ -108,30 +174,45 @@ async function getUrlInputs(
 ): Promise<InputState> {
   const params = parseInitialParams();
 
-  const format = matchSingleStaticOption(
+  const newState = getDefaultInputs();
+
+  let key: keyof typeof domainOptions;
+  for (key in domainOptions) {
+    newState[key] = matchMultipleStaticOptions(
+      params[key] ?? null,
+      null,
+      domainOptions[key],
+    );
+  }
+
+  newState.format = matchSingleStaticOption(
     params.format ?? null,
     defaultFormat,
     listOptions.format,
   );
 
-  const dataProfile = matchSingleStaticOption(
+  newState.dataProfile = matchSingleStaticOption(
     params.dataProfile ?? null,
     null,
     listOptions.dataProfile,
   );
 
-  const state = matchMultipleStaticOptions(
-    params.state ?? null,
-    null,
-    domainOptions.state,
-  );
-
-  return { dataProfile, format, state };
+  return newState;
 }
 
 // Manages the state of all query field inputs
 function inputReducer(state: InputState, action: InputAction): InputState {
   switch (action.type) {
+    case 'actionAgency':
+      return {
+        ...state,
+        actionAgency: action.payload,
+      };
+    case 'assessmentUnitStatus':
+      return {
+        ...state,
+        assessmentUnitStatus: action.payload,
+      };
     case 'format':
       return {
         ...state,
@@ -144,6 +225,71 @@ function inputReducer(state: InputState, action: InputAction): InputState {
       };
     case 'initialize':
       return action.payload;
+    case 'loadAllocationUnits':
+      return {
+        ...state,
+        loadAllocationUnits: action.payload,
+      };
+    case 'locationText':
+      return {
+        ...state,
+        locationText: action.payload,
+      };
+    case 'locationTypeCode':
+      return {
+        ...state,
+        locationTypeCode: action.payload,
+      };
+    case 'organizationId':
+      return {
+        ...state,
+        organizationId: action.payload,
+      };
+    case 'parameterGroup':
+      return {
+        ...state,
+        parameterGroup: action.payload,
+      };
+    case 'pollutant':
+      return {
+        ...state,
+        pollutant: action.payload,
+      };
+    case 'sourceName':
+      return {
+        ...state,
+        sourceName: action.payload,
+      };
+    case 'sourceScale':
+      return {
+        ...state,
+        sourceScale: action.payload,
+      };
+    case 'sourceType':
+      return {
+        ...state,
+        sourceType: action.payload,
+      };
+    case 'stateIrCategory':
+      return {
+        ...state,
+        stateIrCategory: action.payload,
+      };
+    case 'useClassName':
+      return {
+        ...state,
+        useClassName: action.payload,
+      };
+    case 'waterSizeUnits':
+      return {
+        ...state,
+        waterSizeUnits: action.payload,
+      };
+    case 'waterType':
+      return {
+        ...state,
+        waterType: action.payload,
+      };
     case 'reset':
       return getDefaultInputs();
     case 'state':
@@ -502,23 +648,66 @@ type FilterFieldsProps = {
 };
 
 function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
+  const checkboxFields = [
+    { key: 'actionAgency', label: 'Action Agency' },
+    { key: 'assessmentUnitStatus', label: 'Assessment Unit Status' },
+    { key: 'waterSizeUnits', label: 'Water Size Units' },
+  ] as const;
+
+  const selectFields = [
+    { key: 'loadAllocationUnits', label: 'Load Allocation Unit' },
+    { key: 'locationText', label: 'Location Text' },
+    { key: 'locationTypeCode', label: 'Location Type Code' },
+    { key: 'organizationId', label: 'Organization ID' },
+    { key: 'parameterGroup', label: 'Parameter Group' },
+    { key: 'pollutant', label: 'Pollutant' },
+    { key: 'sourceName', label: 'Source Name' },
+    { key: 'sourceScale', label: 'Source Scale' },
+    { key: 'sourceType', label: 'Source Type' },
+    { key: 'state', label: 'State' },
+    { key: 'stateIrCategory', label: 'State IR Category' },
+    { key: 'waterType', label: 'Water Type' },
+  ] as const;
+
   return (
     <div>
-      {fields.includes('state') && (
-        <div>
-          <label className="usa-label">
-            <b>State</b>
-            <Select
-              aria-label="Select a state..."
-              isMulti
-              onChange={(ev) => dispatch({ type: 'state', payload: ev })}
-              options={options.state}
-              placeholder="Select a state..."
-              value={state.state}
+      {checkboxFields
+        .filter((field) => fields.includes(field.key))
+        .map((field) => (
+          <div key={field.key}>
+            <Checkboxes
+              legend={<b>{field.label}</b>}
+              onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+              options={options[field.key]}
+              selected={state[field.key] ?? []}
             />
-          </label>
-        </div>
-      )}
+          </div>
+        ))}
+
+      {selectFields
+        .filter((field) => fields.includes(field.key))
+        .map((field) => (
+          <div>
+            <label className="usa-label">
+              <b>{field.label}</b>
+              <AsyncSelect
+                aria-label={`${field.label} input`}
+                isMulti
+                onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+                defaultOptions={
+                  options[field.key].length > staticOptionLimit
+                    ? options[field.key].slice(0, staticOptionLimit)
+                    : options[field.key]
+                }
+                loadOptions={filterStaticOptions(options[field.key])}
+                placeholder={`Select ${getArticle(field.label)} ${
+                  field.label
+                }...`}
+                value={state[field.key]}
+              />
+            </label>
+          </div>
+        ))}
 
       {fields.includes('region') && (
         <div>
