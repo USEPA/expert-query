@@ -106,7 +106,7 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
 }
 
 // Filters options by search input, returning a maximum number of options
-function filterStaticOptions<T>(options: ReadonlyArray<Option<string, T>>) {
+function filterStaticOptions<S, T>(options: ReadonlyArray<Option<S, T>>) {
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     if (value.length < 3) {
@@ -117,11 +117,15 @@ function filterStaticOptions<T>(options: ReadonlyArray<Option<string, T>>) {
       );
     }
 
-    const matches: Array<Option<string, T>> = [];
+    const matches: Array<Option<S, T>> = [];
     options.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
-      if (option.label.toLowerCase().includes(value)) matches.push(option);
-      else if (
+      if (
+        typeof option.label === 'string' &&
+        option.label.toLowerCase().includes(value)
+      ) {
+        matches.push(option);
+      } else if (
         typeof option.value === 'string' &&
         option.value.toLowerCase().includes(value)
       ) {
@@ -680,13 +684,4 @@ function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
       ))}
     </div>
   );
-  // return (
-  //   <div className="display-flex flex-wrap">
-  //     {fieldsJsx.map((field, i) => (
-  //       <div className="margin-right-3" key={i}>
-  //         {field}
-  //       </div>
-  //     ))}
-  //   </div>
-  // );
 }
