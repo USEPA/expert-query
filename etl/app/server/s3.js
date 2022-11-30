@@ -3,6 +3,7 @@ import axios from 'axios';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
+import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
 import { fileURLToPath } from 'url';
@@ -112,13 +113,11 @@ export async function uploadFilePublic(filePath, fileToUpload) {
 }
 
 // Retries an HTTP request in response to a failure
-function retryRequest(serviceName, count, s3Config, callback) {
+async function retryRequest(serviceName, count, s3Config, callback) {
   log.info(`Non-200 response returned from ${serviceName} service, retrying`);
   if (count < s3Config.config.retryLimit) {
-    return setTimeout(
-      () => callback(s3Config, count + 1),
-      s3Config.config.retryIntervalSeconds * 1000,
-    );
+    await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
+    return callback(s3Config, count + 1);
   } else {
     throw new Error(`Sync ${serviceName} retry count exceeded`);
   }
@@ -133,11 +132,11 @@ function fetchSingleDomain(name, mapping) {
       );
 
       if (res.status !== 200) {
-        return retryRequest(
+        return await retryRequest(
           `Domain Values (${mapping.domainName})`,
           retryCount,
           s3Config,
-          syncSingleDomain(name, mapping),
+          fetchSingleDomain(name, mapping),
         );
       }
 
@@ -149,14 +148,23 @@ function fetchSingleDomain(name, mapping) {
       });
 
       return values;
-    } catch (err) {
-      log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
-      return [];
+    } catch (errOuter) {
+      try {
+        return await retryRequest(
+          `Domain Values (${mapping.domainName})`,
+          retryCount,
+          s3Config,
+          fetchSingleDomain(name, mapping),
+        );
+      } catch (err) {
+        log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
+        return [];
+      }
     }
   };
 }
 
-export function syncDomainValues(s3Config) {
+export async function syncDomainValues(s3Config) {
   const fetchPromises = [];
   const domainValues = {};
   fetchPromises.push(
@@ -172,9 +180,8 @@ export function syncDomainValues(s3Config) {
     );
   });
 
-  Promise.all(fetchPromises).then(() =>
-    uploadFilePublic('domainValues.json', JSON.stringify(domainValues)),
-  );
+  await Promise.all(fetchPromises);
+  uploadFilePublic('domainValues.json', JSON.stringify(domainValues));
 }
 
 // Sync state codes and labels from the states service
@@ -183,7 +190,12 @@ async function fetchStateValues(s3Config, retryCount = 0) {
     const res = await axios.get(s3Config.services.stateCodes);
 
     if (res.status !== 200) {
-      return retryRequest('States', retryCount, s3Config, syncStateValues);
+      return await retryRequest(
+        'States',
+        retryCount,
+        s3Config,
+        fetchStateValues,
+      );
     }
 
     const states = res.data.data.map((state) => {
@@ -194,9 +206,18 @@ async function fetchStateValues(s3Config, retryCount = 0) {
     });
 
     return states;
-  } catch (err) {
-    log.warn(`Sync States failed! ${err}`);
-    return [];
+  } catch (errOuter) {
+    try {
+      return await retryRequest(
+        'States',
+        retryCount,
+        s3Config,
+        fetchStateValues,
+      );
+    } catch (err) {
+      log.warn(`Sync States failed! ${err}`);
+      return [];
+    }
   }
 }
 
@@ -211,7 +232,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
 
     // check response, retry on failure
     if (res.status !== 200) {
-      return retryRequest('Glossary', retryCount, s3Config, syncGlossary);
+      return await retryRequest('Glossary', retryCount, s3Config, syncGlossary);
     }
 
     // build the glossary json output
@@ -235,7 +256,11 @@ export async function syncGlossary(s3Config, retryCount = 0) {
 
     // upload the glossary.json file
     uploadFilePublic('glossary.json', JSON.stringify(terms));
-  } catch (err) {
-    log.warn(`Sync Glossary failed! ${err}`);
+  } catch (errOuter) {
+    try {
+      return await retryRequest('Glossary', retryCount, s3Config, syncGlossary);
+    } catch (err) {
+      log.warn(`Sync Glossary failed! ${err}`);
+    }
   }
 }

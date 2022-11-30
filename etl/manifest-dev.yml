@@ -2,8 +2,7 @@
 applications:
   - name: expert-query-etl-dev
     instances: 1
-    routes:
-      - route: expert-query-dev.apps.internal
+    no-route: true
     memory: 128MB
     disk_quota: 512MB
     timeout: 180

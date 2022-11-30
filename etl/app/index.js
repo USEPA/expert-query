@@ -1,9 +1,8 @@
 import cron from 'node-cron';
 import express from 'express';
 
-import { routes } from './routes/index.js';
+import etlJob from './server/etlJob.js';
 import * as database from './server/database.js';
-import * as s3 from './server/s3.js';
 import { logger as log } from './server/utilities/logger.js';
 import { getEnvironment } from './server/utilities/environment.js';
 
@@ -43,27 +42,6 @@ requiredEnvVars.forEach((envVar) => {
   }
 });
 
-// setup server routes
-routes(app);
-
-async function etlJob(first = false) {
-  // load config from private s3 bucket
-  const s3Config = await s3.loadConfig();
-
-  if (!s3Config) {
-    log.warn(
-      'Failed to get config from private S3 bucket, aborting etl process',
-    );
-    return;
-  }
-
-  s3.syncGlossary(s3Config);
-  s3.syncDomainValues(s3Config);
-
-  // Create and load new schema
-  await database.runJob(s3Config, first);
-}
-
 app.on('ready', async () => {
   app.listen(port, () => {
     log.info(`Expert Query ETL app listening on port ${port}!`);
@@ -75,8 +53,7 @@ app.on('ready', async () => {
     log.error(err);
   }
 
-  log.info('Creating tables, running load, and scheduling load to run daily');
-  etlJob();
+  log.info('Scheduling load to run daily at 3AM');
 
   // Schedule ETL to run daily at 3AM
   cron.schedule(
