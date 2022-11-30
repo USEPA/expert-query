@@ -4,6 +4,7 @@ const bl = require("bl");
 const util = require("util");
 const logger = require("../utilities/logger");
 const log = logger.logger;
+const setImmediatePromise = util.promisify(setImmediate);
 
 class StreamingService {
   static getOptions = (outStream, format) => {
@@ -114,7 +115,7 @@ class StreamingService {
     return new Transform({
       writableObjectMode: true,
       readableObjectMode: false,
-      transform(data, encoding, callback) {
+      async transform(data, encoding, callback) {
         // preHook on first data only
         if (!this.comma) {
           excelDoc.worksheet.columns = Object.keys(data).map((key) => {
@@ -124,6 +125,7 @@ class StreamingService {
 
         // convert the json to csv
         excelDoc.worksheet.addRow(data).commit();
+        await setImmediatePromise();
 
         // set comma for subsequent data
         if (!this.comma) this.comma = "\n";
