@@ -11,6 +11,21 @@ export const confirmed = [
   },
 ] as const;
 
+export const cwa303dPriorityRanking = [
+  {
+    label: 'High',
+    value: 'High',
+  },
+  {
+    label: 'Medium',
+    value: 'Medium',
+  },
+  {
+    label: 'Low',
+    value: 'Low',
+  },
+] as const;
+
 export const dataProfile = Object.entries(profiles).map(([id, profile]) => {
   return {
     value: id,

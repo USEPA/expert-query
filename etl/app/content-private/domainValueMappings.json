@@ -2,9 +2,17 @@
   "actionAgency": {
     "domainName": "AgencyCode"
   },
+  "assessmentTypes": {
+    "domainName": "AssessmentTypeCode"
+  },
   "assessmentUnitStatus": {
-    "domainName": "StatusIndicator",
-    "valueField": "name"
+    "domainName": "StatusIndicator"
+  },
+  "associatedActionType": {
+    "domainName": "ActionType"
+  },
+  "delistedReason": {
+    "domainName": "DelistingReasonCode"
   },
   "loadAllocationUnits": {
     "domainName": "LoadAllocationUnitCode"
@@ -22,6 +30,9 @@
   },
   "parameterGroup": {
     "domainName": "ParameterGroupCodeType"
+  },
+  "parameterStatus": {
+    "domainName": "ParameterStatus"
   },
   "pollutant": {
     "domainName": "ParameterName"
@@ -41,6 +52,9 @@
   "useClassName": {
     "domainName": "UseClassType",
     "valueField": "name"
+  },
+  "useName": {
+    "domainName": "UseName"
   },
   "waterSizeUnits": {
     "domainName": "WaterTypeUnitsCode"

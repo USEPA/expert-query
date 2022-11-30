@@ -18,7 +18,7 @@ import { useContentState } from 'contexts/content';
 // types
 import type { Dispatch, ReactNode } from 'react';
 // config
-import { options as listOptions, profiles } from 'config';
+import { fields as allFields, options as listOptions, profiles } from 'config';
 
 /*
 ## Types
@@ -29,7 +29,10 @@ type InputStateSingleOption = Option<ReactNode, string> | null;
 type InputState = {
   actionAgency: InputStateMultiOption;
   assessmentUnitStatus: InputStateMultiOption;
+  associatedActionAgency: InputStateMultiOption;
+  associatedActionStatus: InputStateMultiOption;
   confirmed: InputStateMultiOption;
+  cwa303dPriorityRanking: InputStateMultiOption;
   dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
   format: InputStateSingleOption;
   inIndianCountry: InputStateMultiOption;
@@ -38,7 +41,10 @@ type InputState = {
   locationTypeCode: InputStateMultiOption;
   organizationId: InputStateMultiOption;
   organizationType: InputStateMultiOption;
+  parameter: InputStateMultiOption;
   parameterGroup: InputStateMultiOption;
+  parameterName: InputStateMultiOption;
+  parameterStateIrCategory: InputStateMultiOption;
   pollutant: InputStateMultiOption;
   sourceName: InputStateMultiOption;
   sourceScale: InputStateMultiOption;
@@ -46,6 +52,7 @@ type InputState = {
   state: InputStateMultiOption;
   stateIrCategory: InputStateMultiOption;
   useClassName: InputStateMultiOption;
+  useStateIrCategory: InputStateMultiOption;
   waterSizeUnits: InputStateMultiOption;
   waterType: InputStateMultiOption;
 };
@@ -89,6 +96,15 @@ const controlFields = ['dataProfile', 'format'];
 /*
 ## Utilities
 */
+function addDomainAliases(values: DomainValues) {
+  values.associatedActionAgency = values.actionAgency;
+  values.associatedActionStatus = values.assessmentUnitStatus;
+  values.parameter = values.pollutant;
+  values.parameterName = values.pollutant;
+  values.parameterStateIrCategory = values.pollutant;
+  values.useStateIrCategory = values.pollutant;
+}
+
 // Converts a JSON object into a parameter string
 function buildQueryString(query: URLQueryState, includeProfile = true) {
   const paramsList: URLQueryParam[] = [];
@@ -156,7 +172,10 @@ function getDefaultInputs(): InputState {
   return {
     actionAgency: null,
     assessmentUnitStatus: null,
+    associatedActionAgency: null,
+    associatedActionStatus: null,
     confirmed: null,
+    cwa303dPriorityRanking: null,
     dataProfile: null,
     format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
     inIndianCountry: null,
@@ -165,7 +184,10 @@ function getDefaultInputs(): InputState {
     locationTypeCode: null,
     organizationId: null,
     organizationType: null,
+    parameter: null,
     parameterGroup: null,
+    parameterName: null,
+    parameterStateIrCategory: null,
     pollutant: null,
     sourceName: null,
     sourceScale: null,
@@ -173,6 +195,7 @@ function getDefaultInputs(): InputState {
     state: null,
     stateIrCategory: null,
     useClassName: null,
+    useStateIrCategory: null,
     waterSizeUnits: null,
     waterType: null,
   };
@@ -401,6 +424,12 @@ function useAbortSignal() {
 */
 export function Home() {
   const { content } = useContentState();
+
+  useEffect(() => {
+    if (content.status !== 'success') return;
+    addDomainAliases(content.data.domainValues);
+  }, [content]);
+
   const getAbortSignal = useAbortSignal();
 
   const [inputState, inputDispatch] = useReducer(
@@ -610,37 +639,17 @@ type FilterFieldsProps = {
 };
 
 function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
-  const allFields = [
-    { key: 'actionAgency', label: 'Action Agency' },
-    { key: 'assessmentUnitStatus', label: 'Assessment Unit Status' },
-    { key: 'confirmed', label: 'Confirmed' },
-    { key: 'inIndianCountry', label: 'In Indian Country' },
-    { key: 'loadAllocationUnits', label: 'Load Allocation Unit' },
-    { key: 'locationText', label: 'Location Text' },
-    { key: 'locationTypeCode', label: 'Location Type Code' },
-    { key: 'organizationId', label: 'Organization ID' },
-    { key: 'organizationType', label: 'Organization Type' },
-    { key: 'parameterGroup', label: 'Parameter Group' },
-    { key: 'pollutant', label: 'Pollutant' },
-    { key: 'sourceName', label: 'Source Name' },
-    { key: 'sourceScale', label: 'Source Scale' },
-    { key: 'sourceType', label: 'Source Type' },
-    { key: 'state', label: 'State' },
-    { key: 'stateIrCategory', label: 'State IR Category' },
-    { key: 'waterSizeUnits', label: 'Water Size Units' },
-    { key: 'waterType', label: 'Water Type' },
-  ] as const;
-
   const fieldsJsx = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
       if (!(field.key in options)) return null;
-      if (Array.isArray(state[field.key]) && options[field.key].length <= 5)
+      const fieldOptions = options[field.key] ?? [];
+      if (Array.isArray(state[field.key]) && fieldOptions.length <= 5)
         return (
           <Checkboxes
             legend={<b>{field.label}</b>}
             onChange={(ev) => dispatch({ type: field.key, payload: ev })}
-            options={options[field.key]}
+            options={fieldOptions}
             selected={state[field.key] ?? []}
             styles={['margin-top-3']}
           />
@@ -654,11 +663,11 @@ function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
             isMulti
             onChange={(ev) => dispatch({ type: field.key, payload: ev })}
             defaultOptions={
-              options[field.key].length > staticOptionLimit
-                ? options[field.key].slice(0, staticOptionLimit)
-                : options[field.key]
+              fieldOptions.length > staticOptionLimit
+                ? fieldOptions.slice(0, staticOptionLimit)
+                : fieldOptions
             }
-            loadOptions={filterStaticOptions(options[field.key])}
+            loadOptions={filterStaticOptions(fieldOptions)}
             placeholder={`Select ${getArticle(field.label)} ${field.label}...`}
             value={state[field.key]}
           />

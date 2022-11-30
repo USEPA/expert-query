@@ -26,11 +26,16 @@ type Option<S, T> = {
 type DomainValues = {
   actionAgency: Array<Option<string, string>>;
   assessmentUnitStatus: Array<Option<string, string>>;
+  associatedActionAgency?: Array<Option<string, string>>;
+  associatedActionStatus?: Array<Option<string, string>>;
   loadAllocationUnits: Array<Option<string, string>>;
   locationTypeCode: Array<Option<string, string>>;
   locationText: Array<Option<string, string>>;
   organizationId: Array<Option<string, string>>;
+  parameter?: Array<Option<string, string>>;
   parameterGroup: Array<Option<string, string>>;
+  parameterName?: Array<Option<string, string>>;
+  parameterStateIrCategory?: Array<Option<string, string>>;
   pollutant: Array<Option<string, string>>;
   sourceName: Array<Option<string, string>>;
   sourceScale: Array<Option<string, string>>;
@@ -38,6 +43,7 @@ type DomainValues = {
   state: Array<Option<string, string>>;
   stateIrCategory: Array<Option<string, string>>;
   useClassName: Array<Option<string, string>>;
+  useStateIrCategory?: Array<Option<string, string>>;
   waterSizeUnits: Array<Option<string, string>>;
   waterType: Array<Option<string, string>>;
 };
