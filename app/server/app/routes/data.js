@@ -1,3 +1,4 @@
+const cors = require("cors");
 const express = require("express");
 const Excel = require("exceljs");
 const { getActiveSchema } = require("../middleware");
@@ -212,22 +213,30 @@ module.exports = function (app) {
 
   router.use(getActiveSchema);
 
+  const corsOptions = {
+    methods: "GET,HEAD,POST",
+  };
+
   Object.entries(mapping).forEach(([profileName, profile]) => {
     // create get requests
-    router.get(`/${profileName}`, function (req, res) {
+    router.get(`/${profileName}`, cors(corsOptions), function (req, res) {
       executeQuery(profile, req, res);
     });
-    router.get(`/${profileName}/count`, function (req, res) {
+    router.get(`/${profileName}/count`, cors(corsOptions), function (req, res) {
       executeQueryCountOnly(profile, req, res);
     });
 
     // create post requests
-    router.post(`/${profileName}`, function (req, res) {
+    router.post(`/${profileName}`, cors(corsOptions), function (req, res) {
       executeQuery(profile, req, res);
     });
-    router.post(`/${profileName}/count`, function (req, res) {
-      executeQueryCountOnly(profile, req, res);
-    });
+    router.post(
+      `/${profileName}/count`,
+      cors(corsOptions),
+      function (req, res) {
+        executeQueryCountOnly(profile, req, res);
+      }
+    );
   });
 
   app.use("/attains/data", router);
