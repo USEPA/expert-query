@@ -120,13 +120,10 @@ function filterStaticOptions<S, T>(options: ReadonlyArray<Option<S, T>>) {
     options.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
       if (
-        typeof option.label === 'string' &&
-        option.label.toLowerCase().includes(value)
-      ) {
-        matches.push(option);
-      } else if (
-        typeof option.value === 'string' &&
-        option.value.toLowerCase().includes(value)
+        (typeof option.label === 'string' &&
+          option.label.toLowerCase().includes(value)) ||
+        (typeof option.value === 'string' &&
+          option.value.toLowerCase().includes(value))
       ) {
         matches.push(option);
       }
@@ -650,44 +647,41 @@ function FilterFields({
   const fieldsJsx = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
-      switch (field.type) {
-        case 'multiselect':
-          const defaultOptions = getInitialOptions(staticOptions, field.key);
-          if (defaultOptions.length <= 5)
-            return (
-              <Checkboxes
-                legend={<b>{field.label}</b>}
-                onChange={(ev) => dispatch({ type: field.key, payload: ev })}
-                options={defaultOptions}
-                selected={state[field.key] ?? []}
-                styles={['margin-top-3']}
-              />
-            );
+      if (field.type === 'multiselect') {
+        const defaultOptions = getInitialOptions(staticOptions, field.key);
+        if (defaultOptions.length <= 5)
           return (
-            <label className="usa-label">
-              <b>{field.label}</b>
-              <AsyncSelect
-                aria-label={`${field.label} input`}
-                className="margin-top-1"
-                isMulti
-                onChange={(ev) => dispatch({ type: field.key, payload: ev })}
-                defaultOptions={defaultOptions}
-                loadOptions={
-                  staticOptions.hasOwnProperty(field.key)
-                    ? filterStaticOptions(defaultOptions)
-                    : // TODO: Add handler for dynamic options
-                      async () => []
-                }
-                placeholder={`Select ${getArticle(field.label)} ${
-                  field.label
-                }...`}
-                value={state[field.key]}
-              />
-            </label>
+            <Checkboxes
+              legend={<b>{field.label}</b>}
+              onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+              options={defaultOptions}
+              selected={state[field.key] ?? []}
+              styles={['margin-top-3']}
+            />
           );
-        default:
-          return null;
-      }
+        return (
+          <label className="usa-label">
+            <b>{field.label}</b>
+            <AsyncSelect
+              aria-label={`${field.label} input`}
+              className="margin-top-1"
+              isMulti
+              onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+              defaultOptions={defaultOptions}
+              loadOptions={
+                staticOptions.hasOwnProperty(field.key)
+                  ? filterStaticOptions(defaultOptions)
+                  : // TODO: Add handler for dynamic options
+                    async () => []
+              }
+              placeholder={`Select ${getArticle(field.label)} ${
+                field.label
+              }...`}
+              value={state[field.key]}
+            />
+          </label>
+        );
+      } else return null;
     });
 
   const rows: (JSX.Element | null)[][] = [];
