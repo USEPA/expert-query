@@ -68,9 +68,11 @@ export async function loadConfig() {
 }
 
 // Uploads file to public S3 bucket
-export async function uploadFilePublic(filePath, fileToUpload) {
-  const subFolder = 'content-etl';
-
+export async function uploadFilePublic(
+  filePath,
+  fileToUpload,
+  subFolder = 'content-etl',
+) {
   try {
     // local development: write files directly to disk on the client app side
     // Cloud.gov: upload files to the public s3 bucket
@@ -140,14 +142,27 @@ function fetchSingleDomain(name, mapping) {
         );
       }
 
-      const values = res.data.map((value) => {
-        return {
-          label: value[mapping.labelField ?? 'name'],
-          value: value[mapping.valueField ?? 'code'],
-        };
-      });
+      const valuesAdded = new Set();
+      const values = res.data
+        .map((value) => {
+          return {
+            label: value[mapping.labelField ?? 'name'],
+            value: value[mapping.valueField ?? 'code'],
+          };
+        })
+        .filter((item) => {
+          return valuesAdded.has(item.value)
+            ? false
+            : valuesAdded.add(item.value);
+        });
 
-      return values;
+      const output = {};
+      output[name] = values;
+      uploadFilePublic(
+        `${name}.json`,
+        JSON.stringify(output),
+        'content-etl/domainValues',
+      );
     } catch (errOuter) {
       try {
         return await retryRequest(
@@ -158,30 +173,35 @@ function fetchSingleDomain(name, mapping) {
         );
       } catch (err) {
         log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
-        return [];
       }
     }
   };
 }
 
 export async function syncDomainValues(s3Config) {
-  const fetchPromises = [];
-  const domainValues = {};
-  fetchPromises.push(
-    fetchStateValues(s3Config).then((values) => (domainValues.state = values)),
-  );
+  try {
+    const fetchPromises = [];
+    fetchPromises.push(fetchStateValues(s3Config));
 
-  Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
-    fetchPromises.push(
-      fetchSingleDomain(
-        name,
-        mapping,
-      )(s3Config).then((values) => (domainValues[name] = values)),
+    Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
+      fetchPromises.push(fetchSingleDomain(name, mapping)(s3Config));
+    });
+
+    await Promise.all(fetchPromises);
+    const filenames = [
+      'state.json',
+      ...Object.keys(s3Config.domainValueMappings).map(
+        (domain) => `${domain}.json`,
+      ),
+    ];
+    await uploadFilePublic(
+      'index.json',
+      JSON.stringify(filenames),
+      'content-etl/domainValues',
     );
-  });
-
-  await Promise.all(fetchPromises);
-  uploadFilePublic('domainValues.json', JSON.stringify(domainValues));
+  } catch (err) {
+    console.error(`Sync Domain Values failed! ${err}`);
+  }
 }
 
 // Sync state codes and labels from the states service
@@ -198,14 +218,27 @@ async function fetchStateValues(s3Config, retryCount = 0) {
       );
     }
 
-    const states = res.data.data.map((state) => {
-      return {
-        label: state.name,
-        value: state.code,
-      };
-    });
+    const valuesAdded = new Set();
+    const states = res.data.data
+      .map((state) => {
+        return {
+          label: state.name,
+          value: state.code,
+        };
+      })
+      .filter((item) => {
+        return valuesAdded.has(item.value)
+          ? false
+          : valuesAdded.add(item.value);
+      });
 
-    return states;
+    const output = {};
+    output.state = states;
+    uploadFilePublic(
+      'state.json',
+      JSON.stringify(output),
+      'content-etl/domainValues',
+    );
   } catch (errOuter) {
     try {
       return await retryRequest(
@@ -216,7 +249,6 @@ async function fetchStateValues(s3Config, retryCount = 0) {
       );
     } catch (err) {
       log.warn(`Sync States failed! ${err}`);
-      return [];
     }
   }
 }
