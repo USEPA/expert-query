@@ -2,6 +2,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 import https from 'https';
 import { logger as log } from '../utilities/logger.js';
+import { setTimeout } from 'timers/promises';
 
 export async function extract(profileName, s3Config, next = 0, retryCount = 0) {
   const chunkSize = s3Config.config.chunkSize;
