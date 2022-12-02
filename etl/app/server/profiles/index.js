@@ -1,1 +1,1 @@
-export * as assessments from './assessments.js';
+export * as gisAssessments from './gisAssessments.js';
