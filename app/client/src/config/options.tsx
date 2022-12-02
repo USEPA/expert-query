@@ -1,6 +1,6 @@
 import profiles from './profiles';
 
-export const confirmed = [
+const yesNo = [
   {
     label: 'Yes',
     value: 'Y',
@@ -10,6 +10,8 @@ export const confirmed = [
     value: 'N',
   },
 ] as const;
+
+export const confirmed = yesNo;
 
 export const cwa303dPriorityRanking = [
   {
@@ -39,6 +41,8 @@ export const dataProfile = Object.entries(profiles).map(([id, profile]) => {
   };
 }) as Array<Option<JSX.Element, keyof typeof profiles>>;
 
+export const delisted = yesNo;
+
 export const format = [
   {
     label: 'Comma-separated (CSV)',
@@ -58,7 +62,7 @@ export const format = [
   },
 ] as const;
 
-export const inIndianCountry = confirmed;
+export const inIndianCountry = yesNo;
 
 export const organizationType = [
   {

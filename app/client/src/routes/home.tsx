@@ -23,47 +23,6 @@ import { fields as allFields, options as listOptions, profiles } from 'config';
 /*
 ## Types
 */
-type InputStateMultiOption = ReadonlyArray<Option<ReactNode, string>> | null;
-type InputStateSingleOption = Option<ReactNode, string> | null;
-
-type InputState = {
-  actionAgency: InputStateMultiOption;
-  assessmentUnitStatus: InputStateMultiOption;
-  associatedActionAgency: InputStateMultiOption;
-  associatedActionStatus: InputStateMultiOption;
-  confirmed: InputStateMultiOption;
-  cwa303dPriorityRanking: InputStateMultiOption;
-  dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  format: InputStateSingleOption;
-  inIndianCountry: InputStateMultiOption;
-  loadAllocationUnits: InputStateMultiOption;
-  locationText: InputStateMultiOption;
-  locationTypeCode: InputStateMultiOption;
-  organizationId: InputStateMultiOption;
-  organizationType: InputStateMultiOption;
-  parameter: InputStateMultiOption;
-  parameterGroup: InputStateMultiOption;
-  parameterName: InputStateMultiOption;
-  parameterStateIrCategory: InputStateMultiOption;
-  pollutant: InputStateMultiOption;
-  sourceName: InputStateMultiOption;
-  sourceScale: InputStateMultiOption;
-  sourceType: InputStateMultiOption;
-  state: InputStateMultiOption;
-  stateIrCategory: InputStateMultiOption;
-  useClassName: InputStateMultiOption;
-  useStateIrCategory: InputStateMultiOption;
-  waterSizeUnits: InputStateMultiOption;
-  waterType: InputStateMultiOption;
-};
-
-type InputFieldAction = {
-  [k in keyof InputState]: {
-    type: k;
-    payload: InputState[k];
-  };
-}[keyof InputState];
-
 type InputAction =
   | InputFieldAction
   | {
@@ -74,15 +33,38 @@ type InputAction =
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' };
 
+type InputFieldAction = {
+  [k in keyof InputState]: {
+    type: k;
+    payload: InputState[k];
+  };
+}[keyof InputState];
+
+type InputState = MultiValueState & {
+  dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
+  format: InputStateSingleOption;
+};
+
+type InputStateMultiOption = ReadonlyArray<Option<ReactNode, string>> | null;
+type InputStateSingleOption = Option<ReactNode, string> | null;
+
+type InputValue = URLQueryArg | URLQueryArg[] | null;
+
+type MultiValueField = Exclude<keyof StaticOptions, 'dataProfile' | 'format'>;
+
+type MultiValueState = {
+  [key in MultiValueField]: InputStateMultiOption;
+};
+
+type StaticOptions = typeof listOptions & Required<DomainOptions>;
+
+type URLQueryArg = string | number | boolean;
+
 type URLQueryParam = [string, URLQueryArg];
 
 type URLQueryState = {
   [field: string]: URLQueryArg | URLQueryArg[];
 };
-
-type URLQueryArg = string | number | boolean;
-
-type InputValue = URLQueryArg | URLQueryArg[] | null;
 
 /*
 ## Constants
@@ -96,13 +78,14 @@ const controlFields = ['dataProfile', 'format'];
 /*
 ## Utilities
 */
-function addDomainAliases(values: DomainValues) {
+function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   values.associatedActionAgency = values.actionAgency;
   values.associatedActionStatus = values.assessmentUnitStatus;
   values.parameter = values.pollutant;
   values.parameterName = values.pollutant;
   values.parameterStateIrCategory = values.pollutant;
   values.useStateIrCategory = values.pollutant;
+  return values;
 }
 
 // Converts a JSON object into a parameter string
@@ -161,26 +144,25 @@ function getArticle(noun: string) {
   return 'a';
 }
 
-function getLocalStorageItem(item: string) {
-  if (storageAvailable()) {
-    return localStorage.getItem(item) ?? null;
-  } else return null;
-}
-
 // Empty or default values for inputs
 function getDefaultInputs(): InputState {
   return {
     actionAgency: null,
+    assessmentTypes: null,
     assessmentUnitStatus: null,
     associatedActionAgency: null,
     associatedActionStatus: null,
+    associatedActionType: null,
     confirmed: null,
     cwa303dPriorityRanking: null,
     dataProfile: null,
+    delisted: null,
+    delistedReason: null,
     format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
     inIndianCountry: null,
     loadAllocationUnits: null,
-    locationText: null,
+    // TODO: Add after endpoint is created for values
+    // locationText: null,
     locationTypeCode: null,
     organizationId: null,
     organizationType: null,
@@ -195,10 +177,27 @@ function getDefaultInputs(): InputState {
     state: null,
     stateIrCategory: null,
     useClassName: null,
+    useName: null,
     useStateIrCategory: null,
     waterSizeUnits: null,
     waterType: null,
   };
+}
+
+// Returns unfiltered options for a field, up to a maximum length
+// TODO: `field` should also include dynamic fields
+function getInitialOptions(
+  staticOptions: StaticOptions,
+  field: typeof allFields[number]['key'],
+) {
+  if (field in staticOptions) {
+    const fieldOptions = staticOptions[field] ?? [];
+    return fieldOptions.length > staticOptionLimit
+      ? fieldOptions.slice(0, staticOptionLimit)
+      : fieldOptions;
+  }
+  // TODO: Handle dynamic fields
+  return [];
 }
 
 // Extracts the value field from Option items, otherwise returns the item
@@ -213,48 +212,44 @@ function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
   return input;
 }
 
+function getLocalStorageItem(item: string) {
+  if (storageAvailable()) {
+    return localStorage.getItem(item) ?? null;
+  } else return null;
+}
+
 // Uses URL query parameters or default values for initial state
 async function getUrlInputs(
   _signal: AbortSignal,
-  domainOptions: DomainValues,
+  options: StaticOptions,
 ): Promise<InputState> {
   const params = parseInitialParams();
 
   const newState = getDefaultInputs();
 
-  // Domain service values
-  let dKey: keyof typeof domainOptions;
-  for (dKey in domainOptions) {
-    newState[dKey] = matchMultipleStaticOptions(
-      params[dKey] ?? null,
+  const { dataProfile, format, ...multiListOptions } = options;
+
+  // Multi-select inputs
+  let key: keyof typeof multiListOptions;
+  for (key in multiListOptions) {
+    newState[key] = matchMultipleStaticOptions(
+      params[key] ?? null,
       null,
-      domainOptions[dKey],
+      multiListOptions[key],
     );
   }
 
-  const { dataProfile, format, ...multiListOptions } = listOptions;
-
-  // Constant list values
-  let lKey: keyof typeof multiListOptions;
-  for (lKey in multiListOptions) {
-    newState[lKey] = matchMultipleStaticOptions(
-      params[lKey] ?? null,
-      null,
-      listOptions[lKey],
-    );
-  }
-
-  // Special cases
+  // Single-select inputs
   newState.dataProfile = matchSingleStaticOption(
     params.dataProfile ?? null,
     null,
-    listOptions.dataProfile,
+    options.dataProfile,
   );
 
   newState.format = matchSingleStaticOption(
     params.format ?? null,
     defaultFormat,
-    listOptions.format,
+    options.format,
   );
 
   return newState;
@@ -424,10 +419,14 @@ function useAbortSignal() {
 */
 export function Home() {
   const { content } = useContentState();
+  const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
+    null,
+  );
 
   useEffect(() => {
     if (content.status !== 'success') return;
-    addDomainAliases(content.data.domainValues);
+    const domainOptions = addDomainAliases(content.data.domainValues);
+    setStaticOptions({ ...domainOptions, ...listOptions });
   }, [content]);
 
   const getAbortSignal = useAbortSignal();
@@ -441,9 +440,8 @@ export function Home() {
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
-    if (content.status === 'failure') return setInputsLoaded(true);
-    if (content.status !== 'success') return;
-    getUrlInputs(getAbortSignal(), content.data.domainValues)
+    if (!staticOptions) return;
+    getUrlInputs(getAbortSignal(), staticOptions)
       .then((initialInputs) => {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
@@ -451,7 +449,7 @@ export function Home() {
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setInputsLoaded(true));
-  }, [content, getAbortSignal]);
+  }, [getAbortSignal, staticOptions]);
 
   // Track non-empty values relevant to the current profile
   const [queryParams, setQueryParams] = useState<URLQueryState>({});
@@ -550,77 +548,81 @@ export function Home() {
               </div>
             </Summary>
           )}
-          <h3>Data Profile</h3>
-          <Select
-            aria-label="Select a data profile"
-            onChange={(ev) =>
-              inputDispatch({ type: 'dataProfile', payload: ev })
-            }
-            options={listOptions.dataProfile}
-            placeholder="Select a data profile..."
-            value={dataProfile}
-          />
-          {dataProfile && (
+          {staticOptions && (
             <>
-              <h3 className="margin-bottom-0">Filters</h3>
-              <FilterFields
-                dispatch={inputDispatch}
-                fields={profiles[dataProfile.value].fields}
-                options={{ ...listOptions, ...content.data.domainValues }}
-                state={inputState}
+              <h3>Data Profile</h3>
+              <Select
+                aria-label="Select a data profile"
+                onChange={(ev) =>
+                  inputDispatch({ type: 'dataProfile', payload: ev })
+                }
+                options={staticOptions.dataProfile}
+                placeholder="Select a data profile..."
+                value={dataProfile}
               />
-              <h3>Download the Data</h3>
-              <div className="display-flex flex-wrap">
-                <RadioButtons
-                  legend={
-                    <>
-                      <b className="margin-right-05">File Format</b>
-                      <InfoTooltip text="Choose a file format for the result set" />
-                    </>
-                  }
-                  onChange={(option) =>
-                    inputDispatch({ type: 'format', payload: option })
-                  }
-                  options={listOptions.format}
-                  selected={format}
-                  styles={['margin-bottom-2']}
-                />
-                <div className="display-flex flex-column flex-1 margin-y-auto">
-                  <button
-                    className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
-                    onClick={() => null}
-                    type="button"
-                  >
-                    <Download className="height-205 margin-right-1 usa-icon width-205" />
-                    Download
-                  </button>
-                  <button
-                    className="margin-x-auto usa-button usa-button--outline"
-                    onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                    type="button"
-                  >
-                    Clear Search
-                  </button>
-                </div>
-              </div>
-              <h4>
-                <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-              </h4>
-              <CopyBox
-                text={`${window.location.origin}${
-                  window.location.pathname
-                }/#${buildQueryString(queryParams)}`}
-              />
-              <>
-                <h4>{profiles[dataProfile.value].label} API Query</h4>
-                <CopyBox
-                  text={`${window.location.origin}${
-                    window.location.pathname
-                  }/data/${
-                    profiles[dataProfile.value].resource
-                  }?${buildQueryString(queryParams, false)}`}
-                />
-              </>
+              {dataProfile && (
+                <>
+                  <h3 className="margin-bottom-0">Filters</h3>
+                  <FilterFields
+                    dispatch={inputDispatch}
+                    fields={profiles[dataProfile.value].fields}
+                    staticOptions={staticOptions}
+                    state={inputState}
+                  />
+                  <h3>Download the Data</h3>
+                  <div className="display-flex flex-wrap">
+                    <RadioButtons
+                      legend={
+                        <>
+                          <b className="margin-right-05">File Format</b>
+                          <InfoTooltip text="Choose a file format for the result set" />
+                        </>
+                      }
+                      onChange={(option) =>
+                        inputDispatch({ type: 'format', payload: option })
+                      }
+                      options={staticOptions.format}
+                      selected={format}
+                      styles={['margin-bottom-2']}
+                    />
+                    <div className="display-flex flex-column flex-1 margin-y-auto">
+                      <button
+                        className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
+                        onClick={() => null}
+                        type="button"
+                      >
+                        <Download className="height-205 margin-right-1 usa-icon width-205" />
+                        Download
+                      </button>
+                      <button
+                        className="margin-x-auto usa-button usa-button--outline"
+                        onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                        type="button"
+                      >
+                        Clear Search
+                      </button>
+                    </div>
+                  </div>
+                  <h4>
+                    <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+                  </h4>
+                  <CopyBox
+                    text={`${window.location.origin}${
+                      window.location.pathname
+                    }/#${buildQueryString(queryParams)}`}
+                  />
+                  <>
+                    <h4>{profiles[dataProfile.value].label} API Query</h4>
+                    <CopyBox
+                      text={`${window.location.origin}${
+                        window.location.pathname
+                      }/data/${
+                        profiles[dataProfile.value].resource
+                      }?${buildQueryString(queryParams, false)}`}
+                    />
+                  </>
+                </>
+              )}
             </>
           )}
         </div>
@@ -634,45 +636,57 @@ export function Home() {
 type FilterFieldsProps = {
   dispatch: Dispatch<InputAction>;
   fields: readonly string[];
-  options: typeof listOptions & DomainValues;
   state: InputState;
+  staticOptions: StaticOptions;
 };
 
-function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
+function FilterFields({
+  dispatch,
+  fields,
+  state,
+  staticOptions,
+}: FilterFieldsProps) {
   const fieldsJsx = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
-      if (!(field.key in options)) return null;
-      const fieldOptions = options[field.key] ?? [];
-      if (Array.isArray(state[field.key]) && fieldOptions.length <= 5)
-        return (
-          <Checkboxes
-            legend={<b>{field.label}</b>}
-            onChange={(ev) => dispatch({ type: field.key, payload: ev })}
-            options={fieldOptions}
-            selected={state[field.key] ?? []}
-            styles={['margin-top-3']}
-          />
-        );
-      return (
-        <label className="usa-label">
-          <b>{field.label}</b>
-          <AsyncSelect
-            aria-label={`${field.label} input`}
-            className="margin-top-1"
-            isMulti
-            onChange={(ev) => dispatch({ type: field.key, payload: ev })}
-            defaultOptions={
-              fieldOptions.length > staticOptionLimit
-                ? fieldOptions.slice(0, staticOptionLimit)
-                : fieldOptions
-            }
-            loadOptions={filterStaticOptions(fieldOptions)}
-            placeholder={`Select ${getArticle(field.label)} ${field.label}...`}
-            value={state[field.key]}
-          />
-        </label>
-      );
+      switch (field.type) {
+        case 'multiselect':
+          const defaultOptions = getInitialOptions(staticOptions, field.key);
+          if (defaultOptions.length <= 5)
+            return (
+              <Checkboxes
+                legend={<b>{field.label}</b>}
+                onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+                options={defaultOptions}
+                selected={state[field.key] ?? []}
+                styles={['margin-top-3']}
+              />
+            );
+          return (
+            <label className="usa-label">
+              <b>{field.label}</b>
+              <AsyncSelect
+                aria-label={`${field.label} input`}
+                className="margin-top-1"
+                isMulti
+                onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+                defaultOptions={defaultOptions}
+                loadOptions={
+                  staticOptions.hasOwnProperty(field.key)
+                    ? filterStaticOptions(defaultOptions)
+                    : // TODO: Add handler for dynamic options
+                      async () => []
+                }
+                placeholder={`Select ${getArticle(field.label)} ${
+                  field.label
+                }...`}
+                value={state[field.key]}
+              />
+            </label>
+          );
+        default:
+          return null;
+      }
     });
 
   const rows: (JSX.Element | null)[][] = [];

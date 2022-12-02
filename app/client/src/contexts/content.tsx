@@ -35,7 +35,7 @@ export type Content = {
       content: string;
     };
   };
-  domainValues: DomainValues;
+  domainValues: DomainOptions;
   glossary: Array<{
     term: string;
     definition: string;

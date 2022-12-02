@@ -20,9 +20,6 @@
   "locationTypeCode": {
     "domainName": "LocationTypeCode"
   },
-  "locationText": {
-    "domainName": "LocationTypeValue"
-  },
   "organizationId": {
     "domainName": "OrgStateCode",
     "labelField": "context",
