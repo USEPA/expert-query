@@ -27,6 +27,9 @@ const selectColumns = [
 
 export const tableName = 'gis_assessments';
 
+// load all data
+export const maxChunksOverride = Number.MAX_SAFE_INTEGER;
+
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
     id SERIAL PRIMARY KEY,
