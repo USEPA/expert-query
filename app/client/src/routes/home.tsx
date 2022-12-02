@@ -604,6 +604,7 @@ export function Home() {
                     </div>
                   </div>
                   <h4>
+                    {/* TODO - Remove the glossary linkage before production deployment */}
                     <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
                   </h4>
                   <CopyBox

@@ -25,9 +25,7 @@ type AliasedOptions = {
   [key in AliasedField]: Array<Option<string, string>> | undefined;
 };
 
-// eslint-disable-next-line
 interface ArrayConstructor {
-  // eslint-disable-next-line
   isArray(arg: unknown): arg is unknown[] | readonly unknown[];
 }
 

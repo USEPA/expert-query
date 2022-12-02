@@ -1,3 +1,4 @@
+const cors = require("cors");
 const express = require("express");
 const Excel = require("exceljs");
 const { getActiveSchema } = require("../middleware");
@@ -33,7 +34,29 @@ const mapping = {
  * @returns request query parameters
  */
 function getQueryParams(req) {
-  return req.method === "POST" ? req.body : req.query;
+  // return post parameters, default to empty objects if not provided
+  if (req.method === "POST") {
+    return {
+      filters: req.body.filters ?? {},
+      options: req.body.options ?? {},
+      columns: req.body.columns ?? null,
+    };
+  }
+
+  // organize GET parameters to follow what we expect from POST
+  const optionsParams = ["f", "format"];
+  const parameters = {
+    filters: {},
+    options: {},
+    columns: null,
+  };
+  Object.entries(req.query).forEach(([name, value]) => {
+    if (optionsParams.includes(name)) parameters.options[name] = value;
+    else if (name === "columns") parameters.columns = value;
+    else parameters.filters[name] = value;
+  });
+
+  return parameters;
 }
 
 /**
@@ -64,7 +87,13 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   // build select statement of the query
   if (countOnly) query.count(profile.idColumn);
   else {
-    const selectText = profile.columns.map((col) =>
+    // filter down to requested columns, if the user provided that option
+    const columnsToReturn = profile.columns.filter(
+      (col) => queryParams.columns && queryParams.columns.includes(col.alias)
+    );
+
+    // build the select query
+    const selectText = columnsToReturn.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`
     );
     query.select(selectText);
@@ -72,7 +101,7 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    appendToWhere(query, col.name, queryParams[col.alias]);
+    appendToWhere(query, col.name, queryParams.filters[col.alias]);
   });
 }
 
@@ -97,7 +126,10 @@ async function executeQuery(profile, req, res) {
       highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
     });
 
-    const format = queryParams.format ?? queryParams.f;
+    // close the stream if the request is canceled
+    stream.on("close", stream.end.bind(stream));
+
+    const format = queryParams.options.format ?? queryParams.options.f;
     switch (format) {
       case "csv":
       case "tsv":
@@ -181,22 +213,30 @@ module.exports = function (app) {
 
   router.use(getActiveSchema);
 
+  const corsOptions = {
+    methods: "GET,HEAD,POST",
+  };
+
   Object.entries(mapping).forEach(([profileName, profile]) => {
     // create get requests
-    router.get(`/${profileName}`, function (req, res) {
+    router.get(`/${profileName}`, cors(corsOptions), function (req, res) {
       executeQuery(profile, req, res);
     });
-    router.get(`/${profileName}/count`, function (req, res) {
+    router.get(`/${profileName}/count`, cors(corsOptions), function (req, res) {
       executeQueryCountOnly(profile, req, res);
     });
 
     // create post requests
-    router.post(`/${profileName}`, function (req, res) {
+    router.post(`/${profileName}`, cors(corsOptions), function (req, res) {
       executeQuery(profile, req, res);
     });
-    router.post(`/${profileName}/count`, function (req, res) {
-      executeQueryCountOnly(profile, req, res);
-    });
+    router.post(
+      `/${profileName}/count`,
+      cors(corsOptions),
+      function (req, res) {
+        executeQueryCountOnly(profile, req, res);
+      }
+    );
   });
 
   app.use("/attains/data", router);
