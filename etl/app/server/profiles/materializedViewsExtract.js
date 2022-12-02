@@ -11,7 +11,7 @@ export async function extract(profileName, s3Config, next = 0, retryCount = 0) {
     `?p_limit=${chunkSize}&p_offset=${next}`;
 
   const res = await axios.get(url, {
-    headers: { 'API-key': '{887b8dd6-3cc5-4184-8c00-dc2b414f4a83}' },
+    headers: { 'API-key': process.env.MV_API_KEY },
     httpsAgent: new https.Agent({
       // TODO - Remove this when ordspub supports OpenSSL 3.0
       // This is needed to allow node 18 to talk with ordspub, which does
