@@ -400,11 +400,17 @@ function getProfileEtl(
     try {
       client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
       let res = await extract(s3Config);
-      while (res.data !== null) {
+      let chunksProcessed = 0;
+      const maxChunks = process.env.MAX_CHUNKS;
+      while (
+        res.data !== null &&
+        (!maxChunks || (maxChunks && chunksProcessed < maxChunks))
+      ) {
         const query = transform(res.data);
         await client.query(query);
         log.info(`Next record offset for table ${tableName}: ${res.next}`);
         res = await extract(s3Config, res.next);
+        chunksProcessed += 1;
       }
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
