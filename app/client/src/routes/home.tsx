@@ -145,7 +145,7 @@ function getArticle(noun: string) {
 }
 
 // Empty or default values for inputs
-function getDefaultInputs(): InputState {
+function getDefaultInputState(): InputState {
   return {
     actionAgency: null,
     assessmentTypes: null,
@@ -225,21 +225,21 @@ async function getUrlInputs(
 ): Promise<InputState> {
   const params = parseInitialParams();
 
-  const newState = getDefaultInputs();
+  const newState = getDefaultInputState();
 
-  const { dataProfile, format, ...multiListOptions } = options;
+  const { dataProfile, format, ...rest } = options;
 
-  // Multi-select inputs
-  let key: keyof typeof multiListOptions;
-  for (key in multiListOptions) {
+  // Multi-select inputs with static options
+  let key: keyof typeof rest;
+  for (key in rest) {
     newState[key] = matchMultipleStaticOptions(
       params[key] ?? null,
       null,
-      multiListOptions[key],
+      rest[key],
     );
   }
 
-  // Single-select inputs
+  // Single-select inputs with static options
   newState.dataProfile = matchSingleStaticOption(
     params.dataProfile ?? null,
     null,
@@ -264,7 +264,7 @@ function createReducer() {
     ) => InputState;
   }> = {};
   let field: keyof InputState;
-  for (field in getDefaultInputs()) {
+  for (field in getDefaultInputState()) {
     handlers[field] = (state, action) => {
       if (!('payload' in action)) return state;
       return { ...state, [action.type]: action.payload };
@@ -274,7 +274,7 @@ function createReducer() {
     if (action.type === 'initialize') {
       return action.payload;
     } else if (action.type === 'reset') {
-      return getDefaultInputs();
+      return getDefaultInputState();
     } else if (handlers.hasOwnProperty(action.type)) {
       return handlers[action.type]?.(state, action) ?? state;
     } else {
@@ -433,7 +433,7 @@ export function Home() {
 
   const [inputState, inputDispatch] = useReducer(
     createReducer(),
-    getDefaultInputs(),
+    getDefaultInputState(),
   );
   const { dataProfile, format } = inputState;
 
