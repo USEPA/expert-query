@@ -12,6 +12,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
 
+const defaultTimeout = 60000;
+
 // Loads etl config from private S3 bucket
 export async function loadConfig() {
   // NOTE: static content files found in `etl/app/content-private/` directory
@@ -131,6 +133,7 @@ function fetchSingleDomain(name, mapping) {
     try {
       const res = await axios.get(
         `${s3Config.services.domainValues}?domainName=${mapping.domainName}`,
+        { timeout: defaultTimeout },
       );
 
       if (res.status !== 200) {
@@ -207,7 +210,9 @@ export async function syncDomainValues(s3Config) {
 // Sync state codes and labels from the states service
 async function fetchStateValues(s3Config, retryCount = 0) {
   try {
-    const res = await axios.get(s3Config.services.stateCodes);
+    const res = await axios.get(s3Config.services.stateCodes, {
+      timeout: defaultTimeout,
+    });
 
     if (res.status !== 200) {
       return await retryRequest(
@@ -260,6 +265,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
       headers: {
         authorization: `basic ${process.env.GLOSSARY_AUTH}`,
       },
+      timeout: defaultTimeout,
     });
 
     // check response, retry on failure
