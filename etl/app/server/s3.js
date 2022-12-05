@@ -158,7 +158,7 @@ function fetchSingleDomain(name, mapping) {
 
       const output = {};
       output[name] = values;
-      uploadFilePublic(
+      await uploadFilePublic(
         `${name}.json`,
         JSON.stringify(output),
         'content-etl/domainValues',
@@ -234,7 +234,7 @@ async function fetchStateValues(s3Config, retryCount = 0) {
 
     const output = {};
     output.state = states;
-    uploadFilePublic(
+    await uploadFilePublic(
       'state.json',
       JSON.stringify(output),
       'content-etl/domainValues',
@@ -287,7 +287,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
     });
 
     // upload the glossary.json file
-    uploadFilePublic('glossary.json', JSON.stringify(terms));
+    await uploadFilePublic('glossary.json', JSON.stringify(terms));
   } catch (errOuter) {
     try {
       return await retryRequest('Glossary', retryCount, s3Config, syncGlossary);
