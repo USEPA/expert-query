@@ -48,6 +48,16 @@ type URLQueryArg = string | number | boolean;
 
 type InputValue = URLQueryArg | URLQueryArg[] | null;
 
+type PostData = {
+  filters: {
+    [field: string]: URLQueryArg | URLQueryArg[];
+  };
+  options: {
+    f?: string;
+    format?: string;
+  };
+};
+
 /*
 ## Constants
 */
@@ -58,6 +68,25 @@ const controlFields = ['dataProfile', 'format'];
 /*
 ## Utilities
 */
+function buildPostData(query: URLQueryState) {
+  const postData: PostData = {
+    filters: {},
+    options: {},
+  };
+  Object.entries(query).forEach(([field, value]) => {
+    if (value === undefined) return;
+    if (field === 'format') {
+      const singleValue = Array.isArray(value) ? value.pop() : value;
+      if (typeof singleValue !== 'string') return;
+      postData.options.format = singleValue;
+    } else if (field === 'dataProfile') return;
+    else {
+      postData.filters[field] = value;
+    }
+  });
+  return postData;
+}
+
 // Converts a JSON object into a parameter string
 function buildQueryString(query: URLQueryState, includeProfile = true) {
   const paramsList: URLQueryParam[] = [];
@@ -474,16 +503,24 @@ export function Home() {
                   window.location.pathname
                 }/#${buildQueryString(queryParams)}`}
               />
-              <>
-                <h4>{profiles[dataProfile.value].label} API Query</h4>
-                <CopyBox
-                  text={`${window.location.origin}${
-                    window.location.pathname
-                  }/data/${
-                    profiles[dataProfile.value].resource
-                  }?${buildQueryString(queryParams, false)}`}
-                />
-              </>
+              <h4>{profiles[dataProfile.value].label} API Query</h4>
+              <CopyBox
+                lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+                maxLength={2048}
+                text={`${window.location.origin}${
+                  window.location.pathname
+                }/data/${
+                  profiles[dataProfile.value].resource
+                }?${buildQueryString(queryParams, false)}`}
+              />
+              <h4>cURL</h4>
+              <CopyBox
+                text={`curl -X POST --json '${JSON.stringify(
+                  buildPostData(queryParams),
+                )}' ${window.location.origin}${window.location.pathname}/data/${
+                  profiles[dataProfile.value].resource
+                }`}
+              />
             </>
           )}
         </div>
