@@ -13,7 +13,7 @@ const port = process.env.PORT || 3001;
 
 const environment = getEnvironment();
 
-const requiredEnvVars = ['EQ_PASSWORD', 'GLOSSARY_AUTH'];
+const requiredEnvVars = ['EQ_PASSWORD', 'GLOSSARY_AUTH', 'MV_API_KEY'];
 
 if (environment.isLocal) {
   requiredEnvVars.push('DB_USERNAME', 'DB_PASSWORD', 'DB_PORT', 'DB_HOST');

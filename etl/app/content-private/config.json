@@ -1,5 +1,6 @@
 {
-    "chunkSize": 2000,
+    "chunkSize": 10000,
+    "gisChunkSize": 2000,
     "retryLimit": 5,
     "retryIntervalSeconds": 5,
     "schemaRetentionDays": 5
