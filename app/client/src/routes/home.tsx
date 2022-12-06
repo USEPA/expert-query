@@ -210,9 +210,7 @@ function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
 }
 
 function getLocalStorageItem(item: string) {
-  if (storageAvailable()) {
-    return localStorage.getItem(item) ?? null;
-  } else return null;
+  return localStorage.getItem(item) ?? null;
 }
 
 // Uses URL query parameters or default values for initial state
