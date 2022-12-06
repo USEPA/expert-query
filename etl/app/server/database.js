@@ -402,10 +402,7 @@ function getProfileEtl(
       let res = await extract(s3Config);
       let chunksProcessed = 0;
       const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
-      while (
-        res.data !== null &&
-        (!maxChunks || (maxChunks && chunksProcessed < maxChunks))
-      ) {
+      while (res.data !== null && (!maxChunks || chunksProcessed < maxChunks)) {
         const query = transform(res.data);
         await client.query(query);
         log.info(`Next record offset for table ${tableName}: ${res.next}`);

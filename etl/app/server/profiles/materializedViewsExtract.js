@@ -29,6 +29,7 @@ export async function extract(profileName, s3Config, next = 0, retryCount = 0) {
       throw new Error('Retry count exceeded');
     }
   }
-  const data = res.data.records.map((record) => record);
+
+  const data = res.data.records;
   return { data: data.length ? data : null, next: next + chunkSize };
 }
