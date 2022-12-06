@@ -518,11 +518,11 @@ export function Home() {
               />
               <h4>cURL</h4>
               <CopyBox
-                text={`curl -X POST --json '${JSON.stringify(
+                text={`curl -X POST --json "${JSON.stringify(
                   buildPostData(queryParams),
-                )}' ${origin}${window.location.pathname}/data/${
-                  profiles[dataProfile.value].resource
-                }`}
+                ).replaceAll('"', '\\"')}" ${origin}${
+                  window.location.pathname
+                }/data/${profiles[dataProfile.value].resource}`}
               />
             </>
           )}
