@@ -389,6 +389,11 @@ export function Home() {
   const pathParts = window.location.pathname.split('/');
   const pageName = pathParts.length > 1 ? pathParts[1] : '';
 
+  let origin = window.location.origin;
+  if (window.location.hostname === 'localhost') {
+    origin = `${window.location.protocol}//${window.location.hostname}:9090`;
+  }
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -499,17 +504,15 @@ export function Home() {
                 <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
               </h4>
               <CopyBox
-                text={`${window.location.origin}${
-                  window.location.pathname
-                }/#${buildQueryString(queryParams)}`}
+                text={`${origin}${window.location.pathname}/#${buildQueryString(
+                  queryParams,
+                )}`}
               />
               <h4>{profiles[dataProfile.value].label} API Query</h4>
               <CopyBox
                 lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
                 maxLength={2048}
-                text={`${window.location.origin}${
-                  window.location.pathname
-                }/data/${
+                text={`${origin}${window.location.pathname}/data/${
                   profiles[dataProfile.value].resource
                 }?${buildQueryString(queryParams, false)}`}
               />
@@ -517,7 +520,7 @@ export function Home() {
               <CopyBox
                 text={`curl -X POST --json '${JSON.stringify(
                   buildPostData(queryParams),
-                )}' ${window.location.origin}${window.location.pathname}/data/${
+                )}' ${origin}${window.location.pathname}/data/${
                   profiles[dataProfile.value].resource
                 }`}
               />
