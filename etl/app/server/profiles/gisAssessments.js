@@ -25,7 +25,10 @@ const selectColumns = [
 
 // Properties
 
-export const tableName = 'assessments';
+export const tableName = 'gis_assessments';
+
+// load all data
+export const maxChunksOverride = Number.MAX_SAFE_INTEGER;
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
@@ -58,12 +61,12 @@ const insertColumns = new pgp.helpers.ColumnSet([
 // Methods
 
 export async function extract(s3Config, next = 0, retryCount = 0) {
-  const chunkSize = s3Config.config.chunkSize;
+  const gisChunkSize = s3Config.config.gisChunkSize;
 
   const baseUrl =
     `${s3Config.services.attainsGis.summary}/query?` +
     'f=pjson&orderByFields=objectid&returnGeometry=false' +
-    `&outFields=${selectColumns.join(',')}&resultRecordCount=${chunkSize}`;
+    `&outFields=${selectColumns.join(',')}&resultRecordCount=${gisChunkSize}`;
 
   const url = baseUrl + `&where=objectid+>=+${next}`;
   const res = await axios.get(url);
@@ -77,7 +80,7 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
     }
   }
   const data = res.data.features.map((feature) => feature.attributes);
-  return { data: data.length ? data : null, next: next + chunkSize };
+  return { data: data.length ? data : null, next: next + gisChunkSize };
 }
 
 export function transform(data) {

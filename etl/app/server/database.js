@@ -380,7 +380,7 @@ export async function trimSchema(pool, s3Config) {
 
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  { createQuery, extract, tableName, transform },
+  { createQuery, extract, maxChunksOverride, tableName, transform },
   s3Config,
 ) {
   return async function (client, schemaName) {
@@ -400,11 +400,14 @@ function getProfileEtl(
     try {
       client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
       let res = await extract(s3Config);
-      while (res.data !== null) {
+      let chunksProcessed = 0;
+      const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
+      while (res.data !== null && (!maxChunks || chunksProcessed < maxChunks)) {
         const query = transform(res.data);
         await client.query(query);
         log.info(`Next record offset for table ${tableName}: ${res.next}`);
         res = await extract(s3Config, res.next);
+        chunksProcessed += 1;
       }
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
