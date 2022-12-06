@@ -58,6 +58,7 @@ type ConcreteOptions = {
 type DomainOptions = ConcreteOptions & AliasedOptions;
 
 type Option<S, T> = {
+  context?: string;
   label: S;
   value: T;
 };

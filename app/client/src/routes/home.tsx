@@ -12,6 +12,7 @@ import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
+import SourceSelect from 'components/sourceSelect';
 import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
@@ -25,11 +26,6 @@ import { fields as allFields, options as listOptions, profiles } from 'config';
 */
 type InputAction =
   | InputFieldAction
-  | {
-      type: 'dataProfile';
-      payload: Option<JSX.Element, keyof typeof profiles> | null;
-    }
-  | { type: 'format'; payload: Option<ReactNode, string> }
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' };
 
@@ -40,20 +36,25 @@ type InputFieldAction = {
   };
 }[keyof InputState];
 
-type InputState = MultiValueState & {
-  dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  format: InputStateSingleOption;
-};
+type InputState = MultiOptionState & SingleOptionState;
 
 type InputStateMultiOption = ReadonlyArray<Option<ReactNode, string>> | null;
 type InputStateSingleOption = Option<ReactNode, string> | null;
 
 type InputValue = URLQueryArg | URLQueryArg[] | null;
 
-type MultiValueField = Exclude<keyof StaticOptions, 'dataProfile' | 'format'>;
+const multiOptionFields = getMultiOptionFields(allFields);
+type MultiOptionField = typeof multiOptionFields[number];
 
-type MultiValueState = {
-  [key in MultiValueField]: InputStateMultiOption;
+type MultiOptionState = {
+  [key in MultiOptionField]: InputStateMultiOption;
+};
+
+const singleOptionFields = getSingleOptionFields(allFields);
+type SingleOptionField = typeof singleOptionFields[number];
+
+type SingleOptionState = {
+  [key in SingleOptionField]: InputStateSingleOption;
 };
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
@@ -105,7 +106,9 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
 }
 
 // Filters options by search input, returning a maximum number of options
-function filterStaticOptions<S, T>(options: ReadonlyArray<Option<S, T>>) {
+function filterStaticOptions(
+  options: ReadonlyArray<Option<ReactNode, string>>,
+) {
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     if (value.length < 3) {
@@ -116,7 +119,7 @@ function filterStaticOptions<S, T>(options: ReadonlyArray<Option<S, T>>) {
       );
     }
 
-    const matches: Array<Option<S, T>> = [];
+    const matches: Array<Option<ReactNode, string>> = [];
     options.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
       if (
@@ -215,6 +218,36 @@ function getLocalStorageItem(item: string) {
   } else return null;
 }
 
+function getMultiOptionFields(fields: typeof allFields) {
+  const multiFields = fields.map((field) => {
+    return field.type === 'multiselect' ? field.key : null;
+  });
+  const filtered = multiFields.reduce<
+    Array<Exclude<typeof multiFields[number], null>>
+  >((a, b) => {
+    if (b !== null) {
+      a.push(b);
+    }
+    return a;
+  }, []);
+  return filtered;
+}
+
+function getSingleOptionFields(fields: typeof allFields) {
+  const singleFields = fields.map((field) => {
+    return field.type === 'radio' || field.type === 'select' ? field.key : null;
+  });
+  const filtered = singleFields.reduce<
+    Array<Exclude<typeof singleFields[number], null>>
+  >((a, b) => {
+    if (b !== null) {
+      a.push(b);
+    }
+    return a;
+  }, []);
+  return filtered;
+}
+
 // Uses URL query parameters or default values for initial state
 async function getUrlInputs(
   _signal: AbortSignal,
@@ -224,30 +257,23 @@ async function getUrlInputs(
 
   const newState = getDefaultInputState();
 
-  const { dataProfile, format, ...rest } = options;
-
   // Multi-select inputs with static options
-  let key: keyof typeof rest;
-  for (key in rest) {
+  for (let key of multiOptionFields) {
     newState[key] = matchMultipleStaticOptions(
       params[key] ?? null,
       null,
-      rest[key],
+      options[key],
     );
   }
 
   // Single-select inputs with static options
-  newState.dataProfile = matchSingleStaticOption(
-    params.dataProfile ?? null,
-    null,
-    options.dataProfile,
-  );
-
-  newState.format = matchSingleStaticOption(
-    params.format ?? null,
-    defaultFormat,
-    options.format,
-  );
+  for (let key of singleOptionFields) {
+    newState[key] = matchSingleStaticOption(
+      params[key] ?? null,
+      null,
+      options[key],
+    );
+  }
 
   return newState;
 }
@@ -289,45 +315,45 @@ function isOption(
 }
 
 // Wrapper function for `matchStaticOptions`
-function matchSingleStaticOption<S, T>(
+function matchSingleStaticOption(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options?: ReadonlyArray<Option<S, T>>,
-): Option<S, T> | null {
-  return matchStaticOptions(value, defaultValue, options ?? null) as Option<
-    S,
-    T
+  options?: ReadonlyArray<Option<ReactNode, string>>,
+) {
+  return matchStaticOptions(value, defaultValue, options) as Option<
+    ReactNode,
+    string
   > | null;
 }
 
 // Wrapper function for `matchStaticOptions`
-function matchMultipleStaticOptions<S, T>(
+function matchMultipleStaticOptions(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options?: ReadonlyArray<Option<S, T>>,
-): ReadonlyArray<Option<S, T>> | null {
+  options?: ReadonlyArray<Option<ReactNode, string>>,
+) {
   return matchStaticOptions(
     value,
     defaultValue,
-    options ?? null,
+    options,
     true,
-  ) as ReadonlyArray<Option<S, T>> | null;
+  ) as ReadonlyArray<Option<ReactNode, string>> | null;
 }
 
 // Produce the option/s corresponding to a particular value
-function matchStaticOptions<S, T>(
+function matchStaticOptions(
   value: InputValue,
   defaultValue: URLQueryArg | null,
-  options: ReadonlyArray<Option<S, T>> | null,
+  options?: ReadonlyArray<Option<ReactNode, string>>,
   multiple = false,
 ) {
-  if (!options) return defaultValue;
+  if (!options) return null;
   const valuesArray: URLQueryArg[] = [];
   if (Array.isArray(value)) valuesArray.push(...value);
   else if (value !== null) valuesArray.push(value);
   if (!valuesArray.length && defaultValue) valuesArray.push(defaultValue);
 
-  const matches = new Set<Option<S, T>>(); // prevent duplicates
+  const matches = new Set<Option<ReactNode, string>>(); // prevent duplicates
   // Check if the value is valid, otherwise use a default value
   valuesArray.forEach((value) => {
     const match =
@@ -433,6 +459,9 @@ export function Home() {
     getDefaultInputState(),
   );
   const { dataProfile, format } = inputState;
+  const profile = dataProfile
+    ? (dataProfile.value as keyof typeof profiles)
+    : null;
 
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
@@ -465,10 +494,8 @@ export function Home() {
         const flattenedValue = getInputValue(value);
         if (
           controlFields.includes(field) ||
-          (dataProfile &&
-            (profiles[dataProfile.value].fields as readonly string[]).includes(
-              field,
-            ))
+          (profile &&
+            (profiles[profile].fields as readonly string[]).includes(field))
         ) {
           newQueryParams[field] = flattenedValue;
         }
@@ -478,7 +505,7 @@ export function Home() {
     window.location.hash = buildQueryString(newQueryParams);
 
     setQueryParams(newQueryParams);
-  }, [dataProfile, inputState, inputsLoaded]);
+  }, [inputState, inputsLoaded, profile]);
 
   const [introVisible, setIntroVisible] = useState(
     !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
@@ -557,12 +584,12 @@ export function Home() {
                 placeholder="Select a data profile..."
                 value={dataProfile}
               />
-              {dataProfile && (
+              {profile && (
                 <>
                   <h3 className="margin-bottom-0">Filters</h3>
                   <FilterFields
                     dispatch={inputDispatch}
-                    fields={profiles[dataProfile.value].fields}
+                    fields={profiles[profile].fields}
                     staticOptions={staticOptions}
                     state={inputState}
                   />
@@ -610,13 +637,14 @@ export function Home() {
                     }/#${buildQueryString(queryParams)}`}
                   />
                   <>
-                    <h4>{profiles[dataProfile.value].label} API Query</h4>
+                    <h4>{profiles[profile].label} API Query</h4>
                     <CopyBox
                       text={`${window.location.origin}${
                         window.location.pathname
-                      }/data/${
-                        profiles[dataProfile.value].resource
-                      }?${buildQueryString(queryParams, false)}`}
+                      }/data/${profiles[profile].resource}?${buildQueryString(
+                        queryParams,
+                        false,
+                      )}`}
                     />
                   </>
                 </>
@@ -647,13 +675,16 @@ function FilterFields({
   const fieldsJsx = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
+      const sourceField = 'source' in field ? field.source : null;
+      const defaultOptions = getInitialOptions(staticOptions, field.key);
       if (field.type === 'multiselect') {
-        const defaultOptions = getInitialOptions(staticOptions, field.key);
-        if (defaultOptions.length <= 5)
+        if (!sourceField && defaultOptions.length <= 5)
           return (
             <Checkboxes
               legend={<b>{field.label}</b>}
-              onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+              onChange={(ev) =>
+                dispatch({ type: field.key, payload: ev } as InputFieldAction)
+              }
               options={defaultOptions}
               selected={state[field.key] ?? []}
               styles={['margin-top-3']}
@@ -662,23 +693,36 @@ function FilterFields({
         return (
           <label className="usa-label">
             <b>{field.label}</b>
-            <AsyncSelect
-              aria-label={`${field.label} input`}
-              className="margin-top-1"
-              isMulti
-              onChange={(ev) => dispatch({ type: field.key, payload: ev })}
-              defaultOptions={defaultOptions}
-              loadOptions={
-                staticOptions.hasOwnProperty(field.key)
-                  ? filterStaticOptions(defaultOptions)
-                  : // TODO: Add handler for dynamic options
-                    async () => []
-              }
-              placeholder={`Select ${getArticle(field.label)} ${
-                field.label
-              }...`}
-              value={state[field.key]}
-            />
+            <div>
+              {sourceField && (
+                <SourceSelect
+                  allSources={staticOptions[sourceField]}
+                  onChange={(selected) =>
+                    dispatch({ type: sourceField, payload: selected })
+                  }
+                  selected={state[sourceField]}
+                />
+              )}
+              <AsyncSelect
+                aria-label={`${field.label} input`}
+                className="margin-top-1"
+                isMulti
+                onChange={(ev) =>
+                  dispatch({ type: field.key, payload: ev } as InputFieldAction)
+                }
+                defaultOptions={defaultOptions}
+                loadOptions={
+                  staticOptions.hasOwnProperty(field.key)
+                    ? filterStaticOptions(staticOptions[field.key] ?? [])
+                    : // TODO: Add handler for dynamic options
+                      async () => []
+                }
+                placeholder={`Select ${getArticle(field.label)} ${
+                  field.label
+                }...`}
+                value={state[field.key]}
+              />
+            </div>
           </label>
         );
       } else return null;
