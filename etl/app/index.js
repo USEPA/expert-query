@@ -55,6 +55,8 @@ app.on('ready', async () => {
 
   log.info('Scheduling load to run daily at 3AM');
 
+  etlJob();
+
   // Schedule ETL to run daily at 3AM
   cron.schedule(
     '0 3 * * *',
