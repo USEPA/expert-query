@@ -6,54 +6,91 @@ const logger = require("../utilities/logger");
 const log = logger.logger;
 
 const isLocal = process.env.NODE_ENV === "local";
+const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
+const s3Region = process.env.CF_S3_PUB_REGION;
+const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
+
+// local development: read files directly from disk
+// Cloud.gov: fetch files from the public s3 bucket
+function getFile(filename) {
+  return isLocal
+    ? readFile(resolve(__dirname, "../", filename), "utf8")
+    : axios({
+        method: "get",
+        url: `${s3BucketUrl}/${filename}`,
+        timeout: 10000,
+      });
+}
+
+// local development: no further processing of strings needed
+// Cloud.gov: get data from responses
+function parseResponse(res) {
+  if (Array.isArray(res)) {
+    return isLocal ? res.map((r) => JSON.parse(r)) : res.map((r) => r.data);
+  } else {
+    return isLocal ? JSON.parse(res) : res.data;
+  }
+}
 
 module.exports = function (app) {
   const router = express.Router();
 
   // --- get static content from S3
   router.get("/lookupFiles", (req, res) => {
-    const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
-    const s3Region = process.env.CF_S3_PUB_REGION;
     const metadataObj = logger.populateMetdataObjFromRequest(req);
 
     // NOTE: static content files found in `app/server/app/content/` directory
     const filenames = [
       "content/config/services.json",
       "content/alerts/config.json",
-      "content-etl/domainValues.json",
       "content-etl/glossary.json",
     ];
 
-    const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
-
-    const promises = filenames.map((filename) => {
-      // local development: read files directly from disk
-      // Cloud.gov: fetch files from the public s3 bucket
-      return isLocal
-        ? readFile(resolve(__dirname, "../", filename), "utf8")
-        : axios({
-            method: "get",
-            url: `${s3BucketUrl}/${filename}`,
-            timeout: 10000,
-          });
-    });
-
-    Promise.all(promises)
+    const filePromises = Promise.all(
+      filenames.map((filename) => {
+        return getFile(filename);
+      })
+    )
       .then((stringsOrResponses) => {
-        // local development: no further processing of strings needed
-        // Cloud.gov: get data from responses
-        return isLocal
-          ? stringsOrResponses
-          : stringsOrResponses.map((axiosRes) => axiosRes.data);
+        return parseResponse(stringsOrResponses);
       })
       .then((data) => {
-        return res.json({
-          services: isLocal ? JSON.parse(data[0]) : data[0],
-          alertsConfig: isLocal ? JSON.parse(data[1]) : data[1],
-          domainValues: isLocal ? JSON.parse(data[2]) : data[2],
-          glossary: isLocal ? JSON.parse(data[3]) : data[3],
+        return {
+          services: data[0],
+          alertsConfig: data[1],
+          glossary: data[2],
+        };
+      });
+
+    const directories = ["content-etl/domainValues"];
+
+    const directoryPromises = Promise.all(
+      directories.map((directory) => {
+        return getFile(`${directory}/index.json`).then((stringOrResponse) => {
+          const dirFiles = parseResponse(stringOrResponse);
+          return Promise.all(
+            dirFiles.map((dirFile) => {
+              return getFile(`${directory}/${dirFile}`);
+            })
+          )
+            .then((stringsOrResponses) => {
+              return parseResponse(stringsOrResponses);
+            })
+            .then((data) => {
+              return data.reduce((a, b) => {
+                return Object.assign(a, b);
+              }, {});
+            });
         });
       })
+    ).then((data) => {
+      return {
+        domainValues: data[0],
+      };
+    });
+
+    Promise.all([filePromises, directoryPromises])
+      .then((data) => res.json({ ...data[0], ...data[1] }))
       .catch((error) => {
         if (typeof error.toJSON === "function") {
           log.debug(logger.formatLogMsg(metadataObj, error.toJSON()));

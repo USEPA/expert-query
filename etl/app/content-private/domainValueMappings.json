@@ -12,9 +12,6 @@
   "locationTypeCode": {
     "domainName": "LocationTypeCode"
   },
-  "locationText": {
-    "domainName": "LocationTypeValue"
-  },
   "organizationId": {
     "domainName": "OrgStateCode",
     "labelField": "context",
@@ -35,7 +32,7 @@
   "sourceType": {
     "domainName": "PollutantSourceType"
   },
-  "stateIRCategory": {
+  "stateIrCategory": {
     "domainName": "StateIRCategoryCode"
   },
   "useClassName": {
