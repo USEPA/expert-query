@@ -11,11 +11,54 @@ declare module '*.svg' {
 
 // This extends the `Array.isArray` function so that
 // readonly arrays are properly narrowed
+
+// Columns that share values with those in the `domainValues` object
+type AliasedField =
+  | 'associatedActionAgency'
+  | 'associatedActionStatus'
+  | 'parameter'
+  | 'parameterName'
+  | 'parameterStateIrCategory'
+  | 'useStateIrCategory';
+
+type AliasedOptions = {
+  [key in AliasedField]: Array<Option<string, string>> | undefined;
+};
+
 interface ArrayConstructor {
   isArray(arg: unknown): arg is unknown[] | readonly unknown[];
 }
 
+// Fields provided in the `domainValues` of the Content context
+type ConcreteField =
+  | 'actionAgency'
+  | 'assessmentTypes'
+  | 'assessmentUnitStatus'
+  | 'associatedActionType'
+  | 'delistedReason'
+  | 'loadAllocationUnits'
+  | 'locationTypeCode'
+  | 'organizationId'
+  | 'parameterGroup'
+  | 'pollutant'
+  | 'sourceName'
+  | 'sourceScale'
+  | 'sourceType'
+  | 'state'
+  | 'stateIrCategory'
+  | 'useClassName'
+  | 'useName'
+  | 'waterSizeUnits'
+  | 'waterType';
+
+type ConcreteOptions = {
+  [key in ConcreteField]: Array<Option<string, string>>;
+};
+
+type DomainOptions = ConcreteOptions & AliasedOptions;
+
 type Option<S, T> = {
+  description?: ReactNode;
   label: S;
   value: T;
 };

@@ -3,20 +3,19 @@ import Checkbox from 'components/checkbox';
 // types
 import type { ReactNode } from 'react';
 
-type CheckboxOption = Option<ReactNode, string> & {
-  description?: ReactNode;
-};
-
 type Props = {
   legend?: ReactNode;
-  onChange: (selected: CheckboxOption[]) => void;
-  options: CheckboxOption[];
-  selected?: CheckboxOption[];
+  onChange: (selected: ReadonlyArray<Option<ReactNode, string>>) => void;
+  options: ReadonlyArray<Option<ReactNode, string>>;
+  selected?: ReadonlyArray<Option<ReactNode, string>>;
   styles?: string[];
   tile?: boolean;
 };
 
-function isSelected(option: CheckboxOption, selected: CheckboxOption[]) {
+function isSelected(
+  option: Option<ReactNode, string>,
+  selected: ReadonlyArray<Option<ReactNode, string>>,
+) {
   return !!selected.find((s) => s.value === option.value);
 }
 
