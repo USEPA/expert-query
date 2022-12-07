@@ -13,7 +13,7 @@ const mapping = {
     tableName: "assessment_units",
     idColumn: "id",
     columns: [
-      { name: "id", alias: "id", alias: "id" },
+      { name: "id", alias: "id" },
       { name: "assessmentunitid", alias: "assessmentUnitId" },
       { name: "assessmentunitname", alias: "assessmentUnitName" },
       { name: "assessmentunitstate", alias: "assessmentUnitState" },
