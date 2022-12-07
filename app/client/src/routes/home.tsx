@@ -23,8 +23,6 @@ import SourceSelect from 'components/sourceSelect';
 import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
-// types
-import type { Dispatch, ReactNode } from 'react';
 // config
 import { fields as allFields, options as listOptions, profiles } from 'config';
 
@@ -43,50 +41,45 @@ type InputFieldAction = {
   };
 }[keyof InputState];
 
+type InputHandlers = MultiOptionHandlers & SingleOptionHandlers;
+
 type InputState = MultiOptionState & SingleOptionState;
 
-type InputStateMultiOption = ReadonlyArray<Option<ReactNode, string>> | null;
-type InputStateSingleOption = Option<ReactNode, string> | null;
-
-type InputValue = URLQueryArg | URLQueryArg[] | null;
+type InputValue = Primitive | Primitive[] | null;
 
 const multiOptionFields = getMultiOptionFields(allFields);
 type MultiOptionField = typeof multiOptionFields[number];
 
 type MultiOptionHandlers = {
-  [key in MultiOptionField]: (
-    ev: ReadonlyArray<Option<ReactNode, string>>,
-  ) => void;
+  [key in MultiOptionField]: (ev: ReadonlyArray<Option>) => void;
 };
 
 type MultiOptionState = {
-  [key in MultiOptionField]: InputStateMultiOption;
+  [key in MultiOptionField]: ReadonlyArray<Option> | null;
 };
 
 const singleOptionFields = getSingleOptionFields(allFields);
 type SingleOptionField = typeof singleOptionFields[number];
 
 type SingleOptionHandlers = {
-  [key in SingleOptionField]: (ev: Option<ReactNode, string>) => void;
+  [key in SingleOptionField]: (ev: Option | null) => void;
 };
 
 type SingleOptionState = {
-  [key in SingleOptionField]: InputStateSingleOption;
+  [key in SingleOptionField]: Option | null;
 };
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
-type URLQueryParam = [string, URLQueryArg];
+type URLQueryParam = [string, Primitive];
 
 type URLQueryState = {
-  [field: string]: URLQueryArg | URLQueryArg[];
+  [field: string]: Primitive | Primitive[];
 };
-
-type URLQueryArg = string | number | boolean;
 
 type PostData = {
   filters: {
-    [field: string]: URLQueryArg | URLQueryArg[];
+    [field: string]: Primitive | Primitive[];
   };
   options: {
     f?: string;
@@ -186,9 +179,7 @@ function filterDynamicOptions(_field: string) {
 }
 
 // Filters options by search input, returning a maximum number of options
-function filterStaticOptions(
-  options: ReadonlyArray<Option<ReactNode, string>>,
-) {
+function filterStaticOptions(options: ReadonlyArray<Option>) {
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     if (value.length < 3) {
@@ -199,7 +190,7 @@ function filterStaticOptions(
       );
     }
 
-    const matches: Array<Option<ReactNode, string>> = [];
+    const matches: Array<Option> = [];
     options.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
       if (
@@ -357,22 +348,17 @@ async function getUrlInputs(
 }
 
 // Type narrowing for InputState
-function isOption(
-  maybeOption: Option<unknown, unknown> | URLQueryArg,
-): maybeOption is Option<unknown, unknown> {
+function isOption(maybeOption: Option | Primitive): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
 // Wrapper function for `matchStaticOptions`
 function matchSingleStaticOption(
   value: InputValue,
-  defaultValue: URLQueryArg | null,
-  options?: ReadonlyArray<Option<ReactNode, string>>,
+  defaultValue: Primitive | null,
+  options?: ReadonlyArray<Option>,
 ) {
-  return matchStaticOptions(value, defaultValue, options) as Option<
-    ReactNode,
-    string
-  > | null;
+  return matchStaticOptions(value, defaultValue, options) as Option | null;
 }
 
 function isMultiOptionField(
@@ -390,31 +376,31 @@ function isSingleOptionField(
 // Wrapper function for `matchStaticOptions`
 function matchMultipleStaticOptions(
   value: InputValue,
-  defaultValue: URLQueryArg | null,
-  options?: ReadonlyArray<Option<ReactNode, string>>,
+  defaultValue: Primitive | null,
+  options?: ReadonlyArray<Option>,
 ) {
   return matchStaticOptions(
     value,
     defaultValue,
     options,
     true,
-  ) as ReadonlyArray<Option<ReactNode, string>> | null;
+  ) as ReadonlyArray<Option> | null;
 }
 
 // Produce the option/s corresponding to a particular value
 function matchStaticOptions(
   value: InputValue,
-  defaultValue: URLQueryArg | null,
-  options?: ReadonlyArray<Option<ReactNode, string>>,
+  defaultValue: Primitive | null,
+  options?: ReadonlyArray<Option>,
   multiple = false,
 ) {
   if (!options) return null;
-  const valuesArray: URLQueryArg[] = [];
+  const valuesArray: Primitive[] = [];
   if (Array.isArray(value)) valuesArray.push(...value);
   else if (value !== null) valuesArray.push(value);
   if (!valuesArray.length && defaultValue) valuesArray.push(defaultValue);
 
-  const matches = new Set<Option<ReactNode, string>>(); // prevent duplicates
+  const matches = new Set<Option>(); // prevent duplicates
   // Check if the value is valid, otherwise use a default value
   valuesArray.forEach((value) => {
     const match =
@@ -519,6 +505,22 @@ export function Home() {
     createReducer(),
     getDefaultInputState(),
   );
+
+  // Memoize individual dispatch functions
+  const inputHandlers = useMemo(() => {
+    const newHandlers: Partial<InputHandlers> = {};
+    allFields.forEach((field) => {
+      if (isMultiOptionField(field.key)) {
+        newHandlers[field.key] = (ev: ReadonlyArray<Option>) =>
+          inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
+      } else if (isSingleOptionField(field.key)) {
+        newHandlers[field.key] = (ev: Option | null) =>
+          inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
+      }
+    });
+    return newHandlers as InputHandlers;
+  }, [inputDispatch]);
+
   const { dataProfile, format } = inputState;
   const profile = dataProfile
     ? (dataProfile.value as keyof typeof profiles)
@@ -643,9 +645,7 @@ export function Home() {
               <h3>Data Profile</h3>
               <Select
                 aria-label="Select a data profile"
-                onChange={(ev) =>
-                  inputDispatch({ type: 'dataProfile', payload: ev })
-                }
+                onChange={inputHandlers.dataProfile}
                 options={staticOptions.dataProfile}
                 placeholder="Select a data profile..."
                 value={dataProfile}
@@ -654,8 +654,8 @@ export function Home() {
                 <>
                   <h3 className="margin-bottom-0">Filters</h3>
                   <FilterFields
-                    dispatch={inputDispatch}
                     fields={profiles[profile].fields}
+                    handlers={inputHandlers}
                     staticOptions={staticOptions}
                     state={inputState}
                   />
@@ -668,9 +668,7 @@ export function Home() {
                           <InfoTooltip text="Choose a file format for the result set" />
                         </>
                       }
-                      onChange={(option) =>
-                        inputDispatch({ type: 'format', payload: option })
-                      }
+                      onChange={inputHandlers.format}
                       options={staticOptions.format}
                       selected={format}
                       styles={['margin-bottom-2']}
@@ -731,33 +729,18 @@ export function Home() {
 }
 
 type FilterFieldsProps = {
-  dispatch: Dispatch<InputAction>;
   fields: readonly string[];
+  handlers: InputHandlers;
   state: InputState;
   staticOptions: StaticOptions;
 };
 
 function FilterFields({
-  dispatch,
   fields,
+  handlers,
   state,
   staticOptions,
 }: FilterFieldsProps) {
-  const handlers = useMemo(() => {
-    const newHandlers: Partial<SingleOptionHandlers & MultiOptionHandlers> = {};
-    allFields.forEach((field) => {
-      if (isMultiOptionField(field.key)) {
-        newHandlers[field.key] = (
-          ev: ReadonlyArray<Option<ReactNode, string>>,
-        ) => dispatch({ type: field.key, payload: ev } as InputFieldAction);
-      } else if (isSingleOptionField(field.key)) {
-        newHandlers[field.key] = (ev: Option<ReactNode, string>) =>
-          dispatch({ type: field.key, payload: ev } as InputFieldAction);
-      }
-    });
-    return newHandlers as SingleOptionHandlers & MultiOptionHandlers;
-  }, [dispatch]);
-
   // Store each field's element in a tuple with its key
   const fieldsJsx: Array<[JSX.Element, string]> = allFields
     .filter((field) => fields.includes(field.key))

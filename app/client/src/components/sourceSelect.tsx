@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 // types
-import type { MutableRefObject, ReactNode } from 'react';
+import type { MutableRefObject } from 'react';
 
 // Custom hook that is used for handling key presses. This can be used for
 // navigating lists with a keyboard.
@@ -40,9 +40,9 @@ function useKeyPress(
 }
 
 type Props = {
-  allSources: ReadonlyArray<Option<ReactNode, string>>;
-  onChange: (selected: Option<ReactNode, string>) => void;
-  selected: Option<ReactNode, string> | null;
+  allSources: ReadonlyArray<Option>;
+  onChange: (selected: Option) => void;
+  selected: Option | null;
 };
 
 export default function SourceSelect({
