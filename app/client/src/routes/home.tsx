@@ -53,12 +53,22 @@ type InputValue = URLQueryArg | URLQueryArg[] | null;
 const multiOptionFields = getMultiOptionFields(allFields);
 type MultiOptionField = typeof multiOptionFields[number];
 
+type MultiOptionHandlers = {
+  [key in MultiOptionField]: (
+    ev: ReadonlyArray<Option<ReactNode, string>>,
+  ) => void;
+};
+
 type MultiOptionState = {
   [key in MultiOptionField]: InputStateMultiOption;
 };
 
 const singleOptionFields = getSingleOptionFields(allFields);
 type SingleOptionField = typeof singleOptionFields[number];
+
+type SingleOptionHandlers = {
+  [key in SingleOptionField]: (ev: Option<ReactNode, string>) => void;
+};
 
 type SingleOptionState = {
   [key in SingleOptionField]: InputStateSingleOption;
@@ -139,6 +149,35 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
   return paramsList
     .reduce((a, b) => a + `&${b[0]}=${b[1]}`, '')
     .replace('&', ''); // trim the leading ampersand
+}
+
+// Creates a reducer to manage the state of all query field inputs
+function createReducer() {
+  const handlers: Partial<{
+    [field in keyof InputState]: (
+      state: InputState,
+      action: InputAction,
+    ) => InputState;
+  }> = {};
+  let field: keyof InputState;
+  for (field in getDefaultInputState()) {
+    handlers[field] = (state, action) => {
+      if (!('payload' in action)) return state;
+      return { ...state, [action.type]: action.payload };
+    };
+  }
+  return function reducer(state: InputState, action: InputAction) {
+    if (action.type === 'initialize') {
+      return action.payload;
+    } else if (action.type === 'reset') {
+      return getDefaultInputState();
+    } else if (handlers.hasOwnProperty(action.type)) {
+      return handlers[action.type]?.(state, action) ?? state;
+    } else {
+      const message = `Unhandled action type: ${action}`;
+      throw new Error(message);
+    }
+  };
 }
 
 // TODO: Add handler for dynamic options
@@ -317,35 +356,6 @@ async function getUrlInputs(
   return newState;
 }
 
-// Creates a reducer to manage the state of all query field inputs
-function createReducer() {
-  const handlers: Partial<{
-    [field in keyof InputState]: (
-      state: InputState,
-      action: InputAction,
-    ) => InputState;
-  }> = {};
-  let field: keyof InputState;
-  for (field in getDefaultInputState()) {
-    handlers[field] = (state, action) => {
-      if (!('payload' in action)) return state;
-      return { ...state, [action.type]: action.payload };
-    };
-  }
-  return function reducer(state: InputState, action: InputAction) {
-    if (action.type === 'initialize') {
-      return action.payload;
-    } else if (action.type === 'reset') {
-      return getDefaultInputState();
-    } else if (handlers.hasOwnProperty(action.type)) {
-      return handlers[action.type]?.(state, action) ?? state;
-    } else {
-      const message = `Unhandled action type: ${action}`;
-      throw new Error(message);
-    }
-  };
-}
-
 // Type narrowing for InputState
 function isOption(
   maybeOption: Option<unknown, unknown> | URLQueryArg,
@@ -363,6 +373,18 @@ function matchSingleStaticOption(
     ReactNode,
     string
   > | null;
+}
+
+function isMultiOptionField(
+  field: MultiOptionField | SingleOptionField,
+): field is MultiOptionField {
+  return (multiOptionFields as string[]).includes(field);
+}
+
+function isSingleOptionField(
+  field: MultiOptionField | SingleOptionField,
+): field is SingleOptionField {
+  return (singleOptionFields as string[]).includes(field);
 }
 
 // Wrapper function for `matchStaticOptions`
@@ -721,38 +743,41 @@ function FilterFields({
   state,
   staticOptions,
 }: FilterFieldsProps) {
-  const dispatches = useMemo(() => {
-    // TODO: Update to include single-select fields
-    const newDispatches: {
-      [field: string]: (ev: ReadonlyArray<Option<ReactNode, string>>) => void;
-    } = {};
+  const handlers = useMemo(() => {
+    const newHandlers: Partial<SingleOptionHandlers & MultiOptionHandlers> = {};
     allFields.forEach((field) => {
-      newDispatches[field.key] = (
-        ev: ReadonlyArray<Option<ReactNode, string>>,
-      ) => dispatch({ type: field.key, payload: ev });
+      if (isMultiOptionField(field.key)) {
+        newHandlers[field.key] = (
+          ev: ReadonlyArray<Option<ReactNode, string>>,
+        ) => dispatch({ type: field.key, payload: ev } as InputFieldAction);
+      } else if (isSingleOptionField(field.key)) {
+        newHandlers[field.key] = (ev: Option<ReactNode, string>) =>
+          dispatch({ type: field.key, payload: ev } as InputFieldAction);
+      }
     });
-    return newDispatches;
+    return newHandlers as SingleOptionHandlers & MultiOptionHandlers;
   }, [dispatch]);
 
   // Store each field's element in a tuple with its key
-  const fieldsJsx: [JSX.Element, string][] = allFields
+  const fieldsJsx: Array<[JSX.Element, string]> = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
       const sourceField = 'source' in field ? field.source : null;
       const defaultOptions = getInitialOptions(staticOptions, field.key);
       if (field.type === 'multiselect') {
-        if (!sourceField && defaultOptions.length <= 5)
+        if (!sourceField && defaultOptions.length <= 5) {
           return [
             <Checkboxes
               key={field.key}
               legend={<b>{field.label}</b>}
-              onChange={dispatches[field.key]}
+              onChange={handlers[field.key]}
               options={defaultOptions}
               selected={state[field.key] ?? []}
               styles={['margin-top-3']}
             />,
             field.key,
           ];
+        }
         return [
           <label className="usa-label" key={field.key}>
             <b>{field.label}</b>
@@ -760,7 +785,7 @@ function FilterFields({
               {sourceField && (
                 <SourceSelect
                   allSources={staticOptions[sourceField]}
-                  onChange={dispatches[sourceField]}
+                  onChange={handlers[sourceField]}
                   selected={state[sourceField]}
                 />
               )}
@@ -768,7 +793,7 @@ function FilterFields({
                 aria-label={`${field.label} input`}
                 className="margin-top-1"
                 isMulti
-                onChange={dispatches[field.key]}
+                onChange={handlers[field.key]}
                 defaultOptions={defaultOptions}
                 loadOptions={
                   staticOptions.hasOwnProperty(field.key)
@@ -788,7 +813,7 @@ function FilterFields({
     });
 
   // Store each row as a tuple with its row key
-  const rows: [[JSX.Element, string][], string][] = [];
+  const rows: Array<[Array<[JSX.Element, string]>, string]> = [];
   for (let i = 0; i < fieldsJsx.length; i += 3) {
     const row = fieldsJsx.slice(i, i + 3);
     const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
