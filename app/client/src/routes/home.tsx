@@ -753,7 +753,9 @@ function FilterFields({
   // Store each row as a tuple with its row key
   const rows: [[JSX.Element, string][], string][] = [];
   for (let i = 0; i < fieldsJsx.length; i += 3) {
-    rows.push([fieldsJsx.slice(i, i + 3), `filter-row-${i}`]);
+    const row = fieldsJsx.slice(i, i + 3);
+    const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
+    rows.push([row, rowKey]);
   }
 
   return (
@@ -761,7 +763,7 @@ function FilterFields({
       {rows.map(([row, rowKey]) => (
         <div className="grid-gap grid-row" key={rowKey}>
           {row.map(([field, fieldKey]) => (
-            <div className="tablet:grid-col" key={`${rowKey}-${fieldKey}`}>
+            <div className="tablet:grid-col" key={fieldKey}>
               {field}
             </div>
           ))}
