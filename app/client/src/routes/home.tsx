@@ -405,6 +405,9 @@ export function Home() {
   }
 
   if (content.status === 'success') {
+    const eqDataUrl =
+      content.data.services.eqDataApi || origin + window.location.pathname;
+
     return (
       <>
         <button
@@ -512,7 +515,7 @@ export function Home() {
               <CopyBox
                 lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
                 maxLength={2048}
-                text={`${origin}${window.location.pathname}/data/${
+                text={`${eqDataUrl}/data/${
                   profiles[dataProfile.value].resource
                 }?${buildQueryString(queryParams, false)}`}
               />
@@ -520,9 +523,9 @@ export function Home() {
               <CopyBox
                 text={`curl -X POST --json "${JSON.stringify(
                   buildPostData(queryParams),
-                ).replaceAll('"', '\\"')}" ${origin}${
-                  window.location.pathname
-                }/data/${profiles[dataProfile.value].resource}`}
+                ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
+                  profiles[dataProfile.value].resource
+                }`}
               />
             </>
           )}

@@ -11,7 +11,7 @@ import { MarkdownContent } from 'components/markdownContent';
 // contexts
 import { useContentState, useContentDispatch } from 'contexts/content';
 // config
-import { cloudSpace, getData, serverBasePath, serverUrl } from '../config';
+import { cloudSpace, getData, serverUrl } from '../config';
 // types
 import type { Content } from 'contexts/content';
 
@@ -115,7 +115,7 @@ export function App() {
   useSiteAlertBanner();
 
   return (
-    <BrowserRouter basename={serverBasePath}>
+    <BrowserRouter>
       <Routes>
         <Route index element={<Navigate to="/attains" replace />} />
         <Route path="/attains" element={<Home />} />
