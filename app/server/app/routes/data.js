@@ -176,7 +176,9 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
     );
 
     // build the select query
-    const selectText = columnsToReturn.map((col) =>
+    const selectColumns =
+      columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
+    const selectText = selectColumns.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`
     );
     query.select(selectText);
