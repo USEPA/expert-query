@@ -178,6 +178,7 @@ jobs:
       EQ_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       EQ_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
+      MV_API_KEY: ${{ secrets.MV_API_KEY }}
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -210,6 +211,7 @@ jobs:
           cf set-env $APP_NAME "EQ_USERNAME" "$EQ_USERNAME" > /dev/null
           cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "MV_API_KEY" "$MV_API_KEY" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
 
       - name: Configure Private AWS Credentials

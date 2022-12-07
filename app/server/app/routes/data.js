@@ -9,8 +9,8 @@ const StreamingService = require("../utilities/streamingService");
 
 // mapping to dynamically build GET/POST endpoints and queries
 const mapping = {
-  assessments: {
-    tableName: "assessments",
+  gisAssessments: {
+    tableName: "gis_assessments",
     idColumn: "id",
     columns: [
       { name: "id", alias: "id" },
