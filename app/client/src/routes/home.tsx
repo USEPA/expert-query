@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
@@ -131,6 +138,11 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
   return paramsList
     .reduce((a, b) => a + `&${b[0]}=${b[1]}`, '')
     .replace('&', ''); // trim the leading ampersand
+}
+
+// TODO: Add handler for dynamic options
+function filterDynamicOptions(_field: string) {
+  return function (_inputValue: string) {};
 }
 
 // Filters options by search input, returning a maximum number of options
@@ -682,6 +694,19 @@ function FilterFields({
   state,
   staticOptions,
 }: FilterFieldsProps) {
+  const dispatches = useMemo(() => {
+    // TODO: Update to include single-select fields
+    const newDispatches: {
+      [field: string]: (ev: ReadonlyArray<Option<ReactNode, string>>) => void;
+    } = {};
+    allFields.forEach((field) => {
+      newDispatches[field.key] = (
+        ev: ReadonlyArray<Option<ReactNode, string>>,
+      ) => dispatch({ type: field.key, payload: ev });
+    });
+    return newDispatches;
+  }, [dispatch]);
+
   const fieldsJsx = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
@@ -690,27 +715,27 @@ function FilterFields({
         if (defaultOptions.length <= 5)
           return (
             <Checkboxes
+              key={field.key}
               legend={<b>{field.label}</b>}
-              onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+              onChange={dispatches[field.key]}
               options={defaultOptions}
               selected={state[field.key] ?? []}
               styles={['margin-top-3']}
             />
           );
         return (
-          <label className="usa-label">
+          <label className="usa-label" key={field.key}>
             <b>{field.label}</b>
             <AsyncSelect
               aria-label={`${field.label} input`}
               className="margin-top-1"
               isMulti
-              onChange={(ev) => dispatch({ type: field.key, payload: ev })}
+              onChange={dispatches[field.key]}
               defaultOptions={defaultOptions}
               loadOptions={
                 staticOptions.hasOwnProperty(field.key)
                   ? filterStaticOptions(defaultOptions)
-                  : // TODO: Add handler for dynamic options
-                    async () => []
+                  : filterDynamicOptions(field.key)
               }
               placeholder={`Select ${getArticle(field.label)} ${
                 field.label
@@ -732,7 +757,7 @@ function FilterFields({
       {rows.map((row, i) => (
         <div className="grid-gap grid-row" key={`filter-row-${i}`}>
           {row.map((field, j) => (
-            <div className="tablet:grid-col" key={`field-${i}-${j}`}>
+            <div className="tablet:grid-col" key={`filter-cell-${i}-${j}`}>
               {field}
             </div>
           ))}
