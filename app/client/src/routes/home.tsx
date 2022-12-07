@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
@@ -59,12 +66,22 @@ type SingleOptionState = {
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
-type URLQueryArg = string | number | boolean;
-
 type URLQueryParam = [string, URLQueryArg];
 
 type URLQueryState = {
   [field: string]: URLQueryArg | URLQueryArg[];
+};
+
+type URLQueryArg = string | number | boolean;
+
+type PostData = {
+  filters: {
+    [field: string]: URLQueryArg | URLQueryArg[];
+  };
+  options: {
+    f?: string;
+    format?: string;
+  };
 };
 
 /*
@@ -89,6 +106,25 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   return values;
 }
 
+function buildPostData(query: URLQueryState) {
+  const postData: PostData = {
+    filters: {},
+    options: {},
+  };
+  Object.entries(query).forEach(([field, value]) => {
+    if (value === undefined) return;
+    if (field === 'format') {
+      const singleValue = Array.isArray(value) ? value.pop() : value;
+      if (typeof singleValue !== 'string') return;
+      postData.options.format = singleValue;
+    } else if (field === 'dataProfile') return;
+    else {
+      postData.filters[field] = value;
+    }
+  });
+  return postData;
+}
+
 // Converts a JSON object into a parameter string
 function buildQueryString(query: URLQueryState, includeProfile = true) {
   const paramsList: URLQueryParam[] = [];
@@ -103,6 +139,11 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
   return paramsList
     .reduce((a, b) => a + `&${b[0]}=${b[1]}`, '')
     .replace('&', ''); // trim the leading ampersand
+}
+
+// TODO: Add handler for dynamic options
+function filterDynamicOptions(_field: string) {
+  return function (_inputValue: string) {};
 }
 
 // Filters options by search input, returning a maximum number of options
@@ -213,9 +254,7 @@ function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
 }
 
 function getLocalStorageItem(item: string) {
-  if (storageAvailable()) {
-    return localStorage.getItem(item) ?? null;
-  } else return null;
+  return localStorage.getItem(item) ?? null;
 }
 
 function getMultiOptionFields(fields: typeof allFields) {
@@ -520,6 +559,11 @@ export function Home() {
   const pathParts = window.location.pathname.split('/');
   const pageName = pathParts.length > 1 ? pathParts[1] : '';
 
+  let origin = window.location.origin;
+  if (window.location.hostname === 'localhost') {
+    origin = `${window.location.protocol}//${window.location.hostname}:9090`;
+  }
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -632,21 +676,26 @@ export function Home() {
                     <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
                   </h4>
                   <CopyBox
-                    text={`${window.location.origin}${
+                    text={`${origin}${
                       window.location.pathname
                     }/#${buildQueryString(queryParams)}`}
                   />
-                  <>
-                    <h4>{profiles[profile].label} API Query</h4>
-                    <CopyBox
-                      text={`${window.location.origin}${
-                        window.location.pathname
-                      }/data/${profiles[profile].resource}?${buildQueryString(
-                        queryParams,
-                        false,
-                      )}`}
-                    />
-                  </>
+                  <h4>{profiles[profile].label} API Query</h4>
+                  <CopyBox
+                    lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+                    maxLength={2048}
+                    text={`${origin}${window.location.pathname}/data/${
+                      profiles[profile].resource
+                    }?${buildQueryString(queryParams, false)}`}
+                  />
+                  <h4>cURL</h4>
+                  <CopyBox
+                    text={`curl -X POST --json "${JSON.stringify(
+                      buildPostData(queryParams),
+                    ).replaceAll('"', '\\"')}" ${origin}${
+                      window.location.pathname
+                    }/data/${profiles[profile].resource}`}
+                  />
                 </>
               )}
             </>
@@ -672,34 +721,46 @@ function FilterFields({
   state,
   staticOptions,
 }: FilterFieldsProps) {
-  const fieldsJsx = allFields
+  const dispatches = useMemo(() => {
+    // TODO: Update to include single-select fields
+    const newDispatches: {
+      [field: string]: (ev: ReadonlyArray<Option<ReactNode, string>>) => void;
+    } = {};
+    allFields.forEach((field) => {
+      newDispatches[field.key] = (
+        ev: ReadonlyArray<Option<ReactNode, string>>,
+      ) => dispatch({ type: field.key, payload: ev });
+    });
+    return newDispatches;
+  }, [dispatch]);
+
+  // Store each field's element in a tuple with its key
+  const fieldsJsx: [JSX.Element, string][] = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
       const sourceField = 'source' in field ? field.source : null;
       const defaultOptions = getInitialOptions(staticOptions, field.key);
       if (field.type === 'multiselect') {
         if (!sourceField && defaultOptions.length <= 5)
-          return (
+          return [
             <Checkboxes
+              key={field.key}
               legend={<b>{field.label}</b>}
-              onChange={(ev) =>
-                dispatch({ type: field.key, payload: ev } as InputFieldAction)
-              }
+              onChange={dispatches[field.key]}
               options={defaultOptions}
               selected={state[field.key] ?? []}
               styles={['margin-top-3']}
-            />
-          );
-        return (
-          <label className="usa-label">
+            />,
+            field.key,
+          ];
+        return [
+          <label className="usa-label" key={field.key}>
             <b>{field.label}</b>
             <div>
               {sourceField && (
                 <SourceSelect
                   allSources={staticOptions[sourceField]}
-                  onChange={(selected) =>
-                    dispatch({ type: sourceField, payload: selected })
-                  }
+                  onChange={dispatches[sourceField]}
                   selected={state[sourceField]}
                 />
               )}
@@ -707,15 +768,12 @@ function FilterFields({
                 aria-label={`${field.label} input`}
                 className="margin-top-1"
                 isMulti
-                onChange={(ev) =>
-                  dispatch({ type: field.key, payload: ev } as InputFieldAction)
-                }
+                onChange={dispatches[field.key]}
                 defaultOptions={defaultOptions}
                 loadOptions={
                   staticOptions.hasOwnProperty(field.key)
-                    ? filterStaticOptions(staticOptions[field.key] ?? [])
-                    : // TODO: Add handler for dynamic options
-                      async () => []
+                    ? filterStaticOptions(defaultOptions)
+                    : filterDynamicOptions(field.key)
                 }
                 placeholder={`Select ${getArticle(field.label)} ${
                   field.label
@@ -723,22 +781,26 @@ function FilterFields({
                 value={state[field.key]}
               />
             </div>
-          </label>
-        );
-      } else return null;
+          </label>,
+          field.key,
+        ];
+      } else return [<></>, field.key];
     });
 
-  const rows: (JSX.Element | null)[][] = [];
+  // Store each row as a tuple with its row key
+  const rows: [[JSX.Element, string][], string][] = [];
   for (let i = 0; i < fieldsJsx.length; i += 3) {
-    rows.push(fieldsJsx.slice(i, i + 3));
+    const row = fieldsJsx.slice(i, i + 3);
+    const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
+    rows.push([row, rowKey]);
   }
 
   return (
     <div>
-      {rows.map((row, i) => (
-        <div className="grid-gap grid-row" key={`filter-row-${i}`}>
-          {row.map((field, j) => (
-            <div className="tablet:grid-col" key={`field-${i}-${j}`}>
+      {rows.map(([row, rowKey]) => (
+        <div className="grid-gap grid-row" key={rowKey}>
+          {row.map(([field, fieldKey]) => (
+            <div className="tablet:grid-col" key={fieldKey}>
               {field}
             </div>
           ))}

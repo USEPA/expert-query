@@ -59,6 +59,26 @@ type DomainOptions = ConcreteOptions & AliasedOptions;
 
 type Option<S, T> = {
   context?: string;
+  description?: ReactNode;
   label: S;
   value: T;
+};
+
+type DomainValues = {
+  actionAgency: Array<Option<string, string>>;
+  assessmentUnitStatus: Array<Option<string, string>>;
+  loadAllocationUnits: Array<Option<string, string>>;
+  locationTypeCode: Array<Option<string, string>>;
+  locationText: Array<Option<string, string>>;
+  organizationId: Array<Option<string, string>>;
+  parameterGroup: Array<Option<string, string>>;
+  pollutant: Array<Option<string, string>>;
+  sourceName: Array<Option<string, string>>;
+  sourceScale: Array<Option<string, string>>;
+  sourceType: Array<Option<string, string>>;
+  state: Array<Option<string, string>>;
+  stateIrCategory: Array<Option<string, string>>;
+  useClassName: Array<Option<string, string>>;
+  waterSizeUnits: Array<Option<string, string>>;
+  waterType: Array<Option<string, string>>;
 };
