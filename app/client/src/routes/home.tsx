@@ -707,13 +707,14 @@ function FilterFields({
     return newDispatches;
   }, [dispatch]);
 
-  const fieldsJsx = allFields
+  // Store each field's element in a tuple with its key
+  const fieldsJsx: [JSX.Element, string][] = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
       if (field.type === 'multiselect') {
         const defaultOptions = getInitialOptions(staticOptions, field.key);
         if (defaultOptions.length <= 5)
-          return (
+          return [
             <Checkboxes
               key={field.key}
               legend={<b>{field.label}</b>}
@@ -721,9 +722,10 @@ function FilterFields({
               options={defaultOptions}
               selected={state[field.key] ?? []}
               styles={['margin-top-3']}
-            />
-          );
-        return (
+            />,
+            field.key,
+          ];
+        return [
           <label className="usa-label" key={field.key}>
             <b>{field.label}</b>
             <AsyncSelect
@@ -742,22 +744,24 @@ function FilterFields({
               }...`}
               value={state[field.key]}
             />
-          </label>
-        );
-      } else return null;
+          </label>,
+          field.key,
+        ];
+      } else return [<></>, field.key];
     });
 
-  const rows: (JSX.Element | null)[][] = [];
+  // Store each row as a tuple with its row key
+  const rows: [[JSX.Element, string][], string][] = [];
   for (let i = 0; i < fieldsJsx.length; i += 3) {
-    rows.push(fieldsJsx.slice(i, i + 3));
+    rows.push([fieldsJsx.slice(i, i + 3), `filter-row-${i}`]);
   }
 
   return (
     <div>
-      {rows.map((row, i) => (
-        <div className="grid-gap grid-row" key={`filter-row-${i}`}>
-          {row.map((field, j) => (
-            <div className="tablet:grid-col" key={`filter-cell-${i}-${j}`}>
+      {rows.map(([row, rowKey]) => (
+        <div className="grid-gap grid-row" key={rowKey}>
+          {row.map(([field, fieldKey]) => (
+            <div className="tablet:grid-col" key={`${rowKey}-${fieldKey}`}>
               {field}
             </div>
           ))}
