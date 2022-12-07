@@ -68,9 +68,11 @@ export async function loadConfig() {
 }
 
 // Uploads file to public S3 bucket
-export async function uploadFilePublic(filePath, fileToUpload) {
-  const subFolder = 'content-etl';
-
+export async function uploadFilePublic(
+  filePath,
+  fileToUpload,
+  subFolder = 'content-etl',
+) {
   try {
     // local development: write files directly to disk on the client app side
     // Cloud.gov: upload files to the public s3 bucket
@@ -129,6 +131,7 @@ function fetchSingleDomain(name, mapping) {
     try {
       const res = await axios.get(
         `${s3Config.services.domainValues}?domainName=${mapping.domainName}`,
+        { timeout: s3Config.config.webServiceTimeout },
       );
 
       if (res.status !== 200) {
@@ -154,7 +157,13 @@ function fetchSingleDomain(name, mapping) {
             : valuesAdded.add(item.value);
         });
 
-      return values;
+      const output = {};
+      output[name] = values;
+      await uploadFilePublic(
+        `${name}.json`,
+        JSON.stringify(output),
+        'content-etl/domainValues',
+      );
     } catch (errOuter) {
       try {
         return await retryRequest(
@@ -165,36 +174,43 @@ function fetchSingleDomain(name, mapping) {
         );
       } catch (err) {
         log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
-        return [];
       }
     }
   };
 }
 
 export async function syncDomainValues(s3Config) {
-  const fetchPromises = [];
-  const domainValues = {};
-  fetchPromises.push(
-    fetchStateValues(s3Config).then((values) => (domainValues.state = values)),
-  );
+  try {
+    const fetchPromises = [];
+    fetchPromises.push(fetchStateValues(s3Config));
 
-  Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
-    fetchPromises.push(
-      fetchSingleDomain(
-        name,
-        mapping,
-      )(s3Config).then((values) => (domainValues[name] = values)),
+    Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
+      fetchPromises.push(fetchSingleDomain(name, mapping)(s3Config));
+    });
+
+    await Promise.all(fetchPromises);
+    const filenames = [
+      'state.json',
+      ...Object.keys(s3Config.domainValueMappings).map(
+        (domain) => `${domain}.json`,
+      ),
+    ];
+    await uploadFilePublic(
+      'index.json',
+      JSON.stringify(filenames),
+      'content-etl/domainValues',
     );
-  });
-
-  await Promise.all(fetchPromises);
-  uploadFilePublic('domainValues.json', JSON.stringify(domainValues));
+  } catch (err) {
+    console.error(`Sync Domain Values failed! ${err}`);
+  }
 }
 
 // Sync state codes and labels from the states service
 async function fetchStateValues(s3Config, retryCount = 0) {
   try {
-    const res = await axios.get(s3Config.services.stateCodes);
+    const res = await axios.get(s3Config.services.stateCodes, {
+      timeout: s3Config.config.webServiceTimeout,
+    });
 
     if (res.status !== 200) {
       return await retryRequest(
@@ -219,7 +235,13 @@ async function fetchStateValues(s3Config, retryCount = 0) {
           : valuesAdded.add(item.value);
       });
 
-    return states;
+    const output = {};
+    output.state = states;
+    await uploadFilePublic(
+      'state.json',
+      JSON.stringify(output),
+      'content-etl/domainValues',
+    );
   } catch (errOuter) {
     try {
       return await retryRequest(
@@ -230,7 +252,6 @@ async function fetchStateValues(s3Config, retryCount = 0) {
       );
     } catch (err) {
       log.warn(`Sync States failed! ${err}`);
-      return [];
     }
   }
 }
@@ -242,6 +263,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
       headers: {
         authorization: `basic ${process.env.GLOSSARY_AUTH}`,
       },
+      timeout: s3Config.config.webServiceTimeout,
     });
 
     // check response, retry on failure
@@ -269,7 +291,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
     });
 
     // upload the glossary.json file
-    uploadFilePublic('glossary.json', JSON.stringify(terms));
+    await uploadFilePublic('glossary.json', JSON.stringify(terms));
   } catch (errOuter) {
     try {
       return await retryRequest('Glossary', retryCount, s3Config, syncGlossary);
