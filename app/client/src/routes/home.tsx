@@ -272,7 +272,7 @@ async function getUrlInputs(
       params[key] ?? null,
       null,
       rest[key],
-    );
+  );
   }
 
   // Single-select inputs with static options
@@ -304,7 +304,7 @@ function createReducer() {
     handlers[field] = (state, action) => {
       if (!('payload' in action)) return state;
       return { ...state, [action.type]: action.payload };
-    };
+      };
   }
   return function reducer(state: InputState, action: InputAction) {
     if (action.type === 'initialize') {
@@ -532,11 +532,6 @@ export function Home() {
   const pathParts = window.location.pathname.split('/');
   const pageName = pathParts.length > 1 ? pathParts[1] : '';
 
-  let origin = window.location.origin;
-  if (window.location.hostname === 'localhost') {
-    origin = `${window.location.protocol}//${window.location.hostname}:9090`;
-  }
-
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -548,6 +543,10 @@ export function Home() {
   }
 
   if (content.status === 'success') {
+    const eqDataUrl =
+      content.data.services.eqDataApi ||
+      `${window.location.protocol}//${window.location.hostname}:9090${window.location.pathname}`;
+
     return (
       <>
         <button
@@ -591,86 +590,85 @@ export function Home() {
           )}
           {staticOptions && (
             <>
-              <h3>Data Profile</h3>
-              <Select
-                aria-label="Select a data profile"
-                onChange={(ev) =>
-                  inputDispatch({ type: 'dataProfile', payload: ev })
-                }
+          <h3>Data Profile</h3>
+          <Select
+            aria-label="Select a data profile"
+            onChange={(ev) =>
+              inputDispatch({ type: 'dataProfile', payload: ev })
+            }
                 options={staticOptions.dataProfile}
-                placeholder="Select a data profile..."
-                value={dataProfile}
-              />
-              {dataProfile && (
-                <>
+            placeholder="Select a data profile..."
+            value={dataProfile}
+          />
+          {dataProfile && (
+            <>
                   <h3 className="margin-bottom-0">Filters</h3>
-                  <FilterFields
-                    dispatch={inputDispatch}
-                    fields={profiles[dataProfile.value].fields}
+              <FilterFields
+                dispatch={inputDispatch}
+                fields={profiles[dataProfile.value].fields}
                     staticOptions={staticOptions}
-                    state={inputState}
-                  />
-                  <h3>Download the Data</h3>
-                  <div className="display-flex flex-wrap">
-                    <RadioButtons
-                      legend={
-                        <>
-                          <b className="margin-right-05">File Format</b>
-                          <InfoTooltip text="Choose a file format for the result set" />
-                        </>
-                      }
-                      onChange={(option) =>
-                        inputDispatch({ type: 'format', payload: option })
-                      }
+                state={inputState}
+              />
+              <h3>Download the Data</h3>
+              <div className="display-flex flex-wrap">
+                <RadioButtons
+                  legend={
+                    <>
+                      <b className="margin-right-05">File Format</b>
+                      <InfoTooltip text="Choose a file format for the result set" />
+                    </>
+                  }
+                  onChange={(option) =>
+                    inputDispatch({ type: 'format', payload: option })
+                  }
                       options={staticOptions.format}
-                      selected={format}
-                      styles={['margin-bottom-2']}
-                    />
-                    <div className="display-flex flex-column flex-1 margin-y-auto">
-                      <button
+                  selected={format}
+                  styles={['margin-bottom-2']}
+                />
+                <div className="display-flex flex-column flex-1 margin-y-auto">
+                  <button
                         className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
-                        onClick={() => null}
-                        type="button"
-                      >
-                        <Download className="height-205 margin-right-1 usa-icon width-205" />
-                        Download
-                      </button>
-                      <button
-                        className="margin-x-auto usa-button usa-button--outline"
-                        onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                        type="button"
-                      >
-                        Clear Search
-                      </button>
-                    </div>
-                  </div>
-                  <h4>
-                    {/* TODO - Remove the glossary linkage before production deployment */}
-                    <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-                  </h4>
-                  <CopyBox
-                    text={`${origin}${
-                      window.location.pathname
-                    }/#${buildQueryString(queryParams)}`}
-                  />
-                  <h4>{profiles[dataProfile.value].label} API Query</h4>
-                  <CopyBox
-                    lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
-                    maxLength={2048}
-                    text={`${origin}${window.location.pathname}/data/${
-                      profiles[dataProfile.value].resource
-                    }?${buildQueryString(queryParams, false)}`}
-                  />
-                  <h4>cURL</h4>
-                  <CopyBox
-                    text={`curl -X POST --json "${JSON.stringify(
-                      buildPostData(queryParams),
-                    ).replaceAll('"', '\\"')}" ${origin}${
-                      window.location.pathname
-                    }/data/${profiles[dataProfile.value].resource}`}
-                  />
-                </>
-              )}
+                    onClick={() => null}
+                    type="button"
+                  >
+                    <Download className="height-205 margin-right-1 usa-icon width-205" />
+                    Download
+                  </button>
+                  <button
+                    className="margin-x-auto usa-button usa-button--outline"
+                    onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                    type="button"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              </div>
+              <h4>
+                {/* TODO - Remove the glossary linkage before production deployment */}
+                <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+              </h4>
+              <CopyBox
+                text={`${window.location.origin}${
+                  window.location.pathname
+                }/#${buildQueryString(queryParams)}`}              />
+              <h4>{profiles[dataProfile.value].label} API Query</h4>
+              <CopyBox
+                lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+                maxLength={2048}
+                text={`${eqDataUrl}/data/${
+                  profiles[dataProfile.value].resource
+                }?${buildQueryString(queryParams, false)}`}
+              />
+              <h4>cURL</h4>
+              <CopyBox
+                text={`curl -X POST --json "${JSON.stringify(
+                  buildPostData(queryParams),
+                ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
+                  profiles[dataProfile.value].resource
+                }`}
+              />
+            </>
+          )}
             </>
           )}
         </div>
@@ -759,15 +757,15 @@ function FilterFields({
   }
 
   return (
-    <div>
+        <div>
       {rows.map(([row, rowKey]) => (
         <div className="grid-gap grid-row" key={rowKey}>
           {row.map(([field, fieldKey]) => (
             <div className="tablet:grid-col" key={fieldKey}>
               {field}
-            </div>
-          ))}
         </div>
+          ))}
+    </div>
       ))}
     </div>
   );

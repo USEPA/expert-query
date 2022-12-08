@@ -12,17 +12,7 @@ type Props = {
 
 export type Content = {
   services: {
-    waterbodyService: {
-      points: string;
-      lines: string;
-      areas: string;
-      controlTable: string;
-    };
-    glossaryURL: string;
-    attains: {
-      serviceUrlDev: string;
-      serviceUrl: string;
-    };
+    eqDataApi: string;
     googleAnalyticsMapping: Array<{
       urlLookup: string;
       wildcardUrl: string;
