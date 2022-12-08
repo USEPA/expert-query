@@ -389,11 +389,6 @@ export function Home() {
   const pathParts = window.location.pathname.split('/');
   const pageName = pathParts.length > 1 ? pathParts[1] : '';
 
-  let origin = window.location.origin;
-  if (window.location.hostname === 'localhost') {
-    origin = `${window.location.protocol}//${window.location.hostname}:9090`;
-  }
-
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -406,7 +401,8 @@ export function Home() {
 
   if (content.status === 'success') {
     const eqDataUrl =
-      content.data.services.eqDataApi || origin + window.location.pathname;
+      content.data.services.eqDataApi ||
+      `${window.location.protocol}//${window.location.hostname}:9090${window.location.pathname}`;
 
     return (
       <>
