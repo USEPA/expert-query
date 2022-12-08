@@ -23,7 +23,8 @@
   "organizationId": {
     "domainName": "OrgStateCode",
     "labelField": "context",
-    "valueField": "context"
+    "valueField": "context",
+    "contextField": "context2"
   },
   "parameterGroup": {
     "domainName": "ParameterGroupCodeType"

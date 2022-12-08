@@ -42,7 +42,7 @@ export default [
     key: 'locationText',
     label: 'Location Text',
     type: 'multiselect',
-    source: 'locationTypeCode',
+    context: 'locationTypeCode',
   }, */
   // TODO: Remove this field after it is paired with the `locationText` field
   { key: 'locationTypeCode', label: 'Location Type Code', type: 'multiselect' },
@@ -50,7 +50,7 @@ export default [
     key: 'organizationId',
     label: 'Organization ID',
     type: 'multiselect',
-    source: 'organizationType',
+    context: 'organizationType',
   },
   { key: 'organizationType', label: 'Organization Type', type: 'select' },
   { key: 'parameter', label: 'Parameter', type: 'multiselect' },

@@ -179,19 +179,28 @@ function filterDynamicOptions(_field: string) {
 }
 
 // Filters options by search input, returning a maximum number of options
-function filterStaticOptions(options: ReadonlyArray<Option>) {
+function filterStaticOptions(
+  options: ReadonlyArray<Option>,
+  context?: Primitive | null,
+) {
+  const contextOptions = context
+    ? options.filter((option) => {
+        if ('context' in option && option.context === context) return true;
+        return false;
+      })
+    : options;
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     if (value.length < 3) {
       return Promise.resolve(
-        options.length < staticOptionLimit
-          ? options
-          : options.slice(0, staticOptionLimit),
+        contextOptions.length < staticOptionLimit
+          ? contextOptions
+          : contextOptions.slice(0, staticOptionLimit),
       );
     }
 
     const matches: Array<Option> = [];
-    options.every((option) => {
+    contextOptions.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
       if (
         (typeof option.label === 'string' &&
@@ -260,12 +269,20 @@ function getDefaultInputState(): InputState {
 function getInitialOptions(
   staticOptions: StaticOptions,
   field: typeof allFields[number]['key'],
+  context?: Primitive | null,
 ) {
   if (field in staticOptions) {
-    const fieldOptions = staticOptions[field] ?? [];
-    return fieldOptions.length > staticOptionLimit
-      ? fieldOptions.slice(0, staticOptionLimit)
+    const fieldOptions = (staticOptions[field] ?? []) as Option[];
+    const contextOptions = context
+      ? fieldOptions.filter((option) => {
+          if ('context' in option && option.context === context) return true;
+          return false;
+        })
       : fieldOptions;
+
+    return contextOptions.length > staticOptionLimit
+      ? contextOptions.slice(0, staticOptionLimit)
+      : contextOptions;
   }
   // TODO: Handle dynamic fields
   return [];
@@ -347,9 +364,23 @@ async function getUrlInputs(
   return newState;
 }
 
-// Type narrowing for InputState
+// Type narrowing
 function isOption(maybeOption: Option | Primitive): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
+}
+
+// Type narrowing
+function isMultiOptionField(
+  field: MultiOptionField | SingleOptionField,
+): field is MultiOptionField {
+  return (multiOptionFields as string[]).includes(field);
+}
+
+// Type narrowing
+function isSingleOptionField(
+  field: MultiOptionField | SingleOptionField,
+): field is SingleOptionField {
+  return (singleOptionFields as string[]).includes(field);
 }
 
 // Wrapper function for `matchStaticOptions`
@@ -359,18 +390,6 @@ function matchSingleStaticOption(
   options?: ReadonlyArray<Option>,
 ) {
   return matchStaticOptions(value, defaultValue, options) as Option | null;
-}
-
-function isMultiOptionField(
-  field: MultiOptionField | SingleOptionField,
-): field is MultiOptionField {
-  return (multiOptionFields as string[]).includes(field);
-}
-
-function isSingleOptionField(
-  field: MultiOptionField | SingleOptionField,
-): field is SingleOptionField {
-  return (singleOptionFields as string[]).includes(field);
 }
 
 // Wrapper function for `matchStaticOptions`
@@ -745,10 +764,14 @@ function FilterFields({
   const fieldsJsx: Array<[JSX.Element, string]> = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
-      const sourceField = 'source' in field ? field.source : null;
-      const defaultOptions = getInitialOptions(staticOptions, field.key);
+      const contextField = 'context' in field ? field.context : null;
+      const defaultOptions = getInitialOptions(
+        staticOptions,
+        field.key,
+        contextField ? state[contextField]?.value : null,
+      );
       if (field.type === 'multiselect') {
-        if (!sourceField && defaultOptions.length <= 5) {
+        if (!contextField && defaultOptions.length <= 5) {
           return [
             <Checkboxes
               key={field.key}
@@ -769,9 +792,9 @@ function FilterFields({
           >
             <b>{field.label}</b>
             <SourceSelect
-              allSources={sourceField ? staticOptions[sourceField] : undefined}
-              onChange={sourceField ? handlers[sourceField] : undefined}
-              selected={sourceField ? state[sourceField] : undefined}
+              sources={contextField && staticOptions[contextField]}
+              onChange={contextField && handlers[contextField]}
+              selected={contextField && state[contextField]}
             >
               <AsyncSelect
                 aria-label={`${field.label} input`}
@@ -782,7 +805,10 @@ function FilterFields({
                 defaultOptions={defaultOptions}
                 loadOptions={
                   staticOptions.hasOwnProperty(field.key)
-                    ? filterStaticOptions(defaultOptions)
+                    ? filterStaticOptions(
+                        staticOptions[field.key] ?? [],
+                        contextField ? state[contextField]?.value : null,
+                      )
                     : filterDynamicOptions(field.key)
                 }
                 placeholder={`Select ${getArticle(field.label)} ${
@@ -792,7 +818,7 @@ function FilterFields({
                   control: (base) => ({
                     ...base,
                     border: '1px solid #adadad',
-                    borderRadius: sourceField ? '0 4px 4px 0' : '4px',
+                    borderRadius: contextField ? '0 4px 4px 0' : '4px',
                   }),
                 }}
                 value={state[field.key]}

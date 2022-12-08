@@ -41,17 +41,17 @@ function useKeyPress(
 }
 
 type Props = {
-  allSources?: ReadonlyArray<Option>;
+  sources?: ReadonlyArray<Option> | null;
   children: ReactNode;
-  onChange?: (selected: Option) => void;
+  onChange?: ((selected: Option | null) => void) | null;
   selected?: Option | null;
 };
 
 export default function SourceSelect({
-  allSources = [],
+  sources,
   children,
-  onChange = () => null,
-  selected = null,
+  onChange,
+  selected,
 }: Props) {
   const sourceList = useRef<HTMLButtonElement | null>(null);
   const sourceDownPress = useKeyPress('ArrowDown', sourceList);
@@ -60,13 +60,23 @@ export default function SourceSelect({
   const [sourcesVisible, setSourcesVisible] = useState(false);
   const [sourceCursor, setSourceCursor] = useState(-1);
 
+  const [allSources, setAllSources] = useState<ReadonlyArray<Option> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    setAllSources(
+      sources ? [{ label: 'All', value: Infinity }, ...sources] : null,
+    );
+  }, [sources]);
+
   useEffect(() => {
     setSourceCursor(-1);
   }, [sourcesVisible]);
 
   // Handle arrow down key press (sources list)
   useEffect(() => {
-    if (allSources.length > 0 && sourceDownPress) {
+    if (allSources && sourceDownPress) {
       setSourceCursor((prevState) => {
         const newIndex = prevState < allSources.length - 1 ? prevState + 1 : 0;
 
@@ -82,7 +92,7 @@ export default function SourceSelect({
 
   // Handle arrow up key press (sources list)
   useEffect(() => {
-    if (allSources.length > 0 && sourceUpPress) {
+    if (allSources && sourceUpPress) {
       setSourceCursor((prevState) => {
         const newIndex = prevState > 0 ? prevState - 1 : allSources.length - 1;
 
@@ -98,7 +108,7 @@ export default function SourceSelect({
 
   // Handle enter key press (sources list)
   useEffect(() => {
-    if (!sourceEnterPress) return;
+    if (!allSources || !sourceEnterPress) return;
 
     // determine if the sources menu is visible
     const sourcesShown =
@@ -120,19 +130,18 @@ export default function SourceSelect({
     // handle selecting a source
     if (sourceCursor < 0 || sourceCursor > allSources.length) return;
     if (allSources[sourceCursor]) {
-      onChange(allSources[sourceCursor]);
+      onChange?.(
+        allSources[sourceCursor].value === Infinity
+          ? null
+          : allSources[sourceCursor],
+      );
       setSourceCursor(-1);
-
-      setTimeout(() => {
-        const searchInput = document.getElementById('hmw-search-input');
-        if (searchInput) searchInput.focus();
-      }, 250);
     }
   }, [allSources, onChange, sourceCursor, sourceEnterPress]);
 
   return (
     <div className="display-flex margin-top-1 position-relative">
-      {allSources.length > 0 && (
+      {allSources && (
         <button
           data-node-ref="_sourceMenuButtonNode"
           aria-haspopup="true"
@@ -170,9 +179,11 @@ export default function SourceSelect({
             className="padding-left-0"
             style={{ marginBottom: 0 }}
           >
-            {allSources.map((source, sourceIndex) => {
+            {allSources?.map((source, sourceIndex) => {
               let bgClass = 'hover:bg-base-lightest';
               if (selected === source) {
+                bgClass = 'bg-primary-lighter border-left-2px border-primary';
+              } else if (!selected && source.value === Infinity) {
                 bgClass = 'bg-primary-lighter border-left-2px border-primary';
               } else if (sourceIndex === sourceCursor) {
                 bgClass = 'bg-primary-lighter';
@@ -190,12 +201,8 @@ export default function SourceSelect({
                   tabIndex={-1}
                   key={`source-key-${sourceIndex}`}
                   onClick={() => {
-                    onChange(source);
+                    onChange?.(source.value === Infinity ? null : source);
                     setSourcesVisible(false);
-
-                    const searchInput =
-                      document.getElementById('hmw-search-input');
-                    if (searchInput) searchInput.focus();
                   }}
                   style={{ cursor: 'pointer' }}
                 >
