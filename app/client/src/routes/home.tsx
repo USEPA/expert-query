@@ -507,9 +507,9 @@ export function Home() {
                 <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
               </h4>
               <CopyBox
-                text={`${origin}${window.location.pathname}/#${buildQueryString(
-                  queryParams,
-                )}`}
+                text={`${window.location.origin}${
+                  window.location.pathname
+                }/#${buildQueryString(queryParams)}`}
               />
               <h4>{profiles[dataProfile.value].label} API Query</h4>
               <CopyBox
