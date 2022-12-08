@@ -1,4 +1,5 @@
 import { uniqueId } from 'lodash';
+import { useState } from 'react';
 // types
 import type { ReactNode } from 'react';
 
@@ -21,6 +22,7 @@ export default function RadioButtons({
   styles = [],
   tile = false,
 }: Props) {
+  const [id] = useState(uniqueId('radio-'));
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && (
@@ -29,18 +31,20 @@ export default function RadioButtons({
         </legend>
       )}
       {options.map((option) => {
-        const id = uniqueId('radio-');
         return (
-          <div key={id} className="usa-radio">
+          <div key={option.value} className="usa-radio">
             <input
               className={`usa-radio__input ${tile && 'usa-radio__input--tile'}`}
-              id={id}
+              id={`${id}-${option.value}`}
               type="radio"
               value={option.value}
               checked={option.value === selected?.value}
               onChange={(_ev) => onChange(option)}
             />
-            <label className="usa-radio__label" htmlFor={id}>
+            <label
+              className="usa-radio__label"
+              htmlFor={`${id}-${option.value}`}
+            >
               {option.label}
             </label>
           </div>

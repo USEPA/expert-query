@@ -1,5 +1,6 @@
-export { default as profiles } from './profiles';
+export { default as fields } from './fields';
 export * as options from './options';
+export { default as profiles } from './profiles';
 
 const { NODE_ENV, REACT_APP_CLOUD_SPACE } = process.env;
 

@@ -48,7 +48,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
 const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'assessment_unit_id', prop: 'assessmentUnitId' },
   { name: 'assessment_unit_name', prop: 'assessmentUnitName' },
-  { name: 'ir_category', prop: 'iRCategory' },
+  { name: 'ir_category', prop: 'irCategory' },
   { name: 'organization_id', prop: 'organizationId' },
   { name: 'organization_name', prop: 'organizationName' },
   { name: 'organization_type', prop: 'organizationType' },
@@ -89,7 +89,7 @@ export function transform(data) {
     rows.push({
       assessmentUnitId: datum.assessmentunitidentifier,
       assessmentUnitName: datum.assessmentunitname,
-      iRCategory: datum.ircategory,
+      irCategory: datum.ircategory,
       organizationId: datum.organizationid,
       organizationName: datum.organizationname,
       organizationType: datum.orgtype,

@@ -46,6 +46,9 @@ const pgConfig = {
 const eqConfig = {
   ...pgConfig,
   database: dbName,
+  connectionTimeoutMillis: 0,
+  idleTimeoutMillis: 0,
+  max: 10,
 };
 
 function startConnPool() {
@@ -398,7 +401,8 @@ function getProfileEtl(
 
     // Extract, transform, and load the new data
     try {
-      client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
+      log.info(`Setting ${tableName} to unlogged`);
+      await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
       let res = await extract(s3Config);
       let chunksProcessed = 0;
       const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
@@ -413,7 +417,8 @@ function getProfileEtl(
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
     } finally {
-      client.query(`ALTER TABLE ${tableName} SET LOGGED`);
+      log.info(`Setting ${tableName} back to logged`);
+      await client.query(`ALTER TABLE ${tableName} SET LOGGED`);
     }
 
     log.info(`Table ${tableName} load success`);

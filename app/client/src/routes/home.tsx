@@ -1,42 +1,69 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
 import Alert from 'components/alert';
 import Checkbox from 'components/checkbox';
+import Checkboxes from 'components/checkboxes';
 import CopyBox from 'components/copyBox';
 import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
-import RangeSlider from 'components/rangeSlider';
 import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
 // types
 import type { Dispatch, ReactNode } from 'react';
 // config
-import { options as listOptions, profiles } from 'config';
+import { fields as allFields, options as listOptions, profiles } from 'config';
 
 /*
 ## Types
 */
-type InputState = {
-  format: Option<ReactNode, string> | null;
-  dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  state: ReadonlyArray<Option<string, string>> | null;
-};
-
 type InputAction =
-  | { type: 'format'; payload: Option<ReactNode, string> }
+  | InputFieldAction
   | {
       type: 'dataProfile';
       payload: Option<JSX.Element, keyof typeof profiles> | null;
     }
+  | { type: 'format'; payload: Option<ReactNode, string> }
   | { type: 'initialize'; payload: InputState }
-  | { type: 'reset' }
-  | { type: 'state'; payload: ReadonlyArray<Option<string, string>> };
+  | { type: 'reset' };
+
+type InputFieldAction = {
+  [k in keyof InputState]: {
+    type: k;
+    payload: InputState[k];
+  };
+}[keyof InputState];
+
+type InputState = MultiValueState & {
+  dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
+  format: InputStateSingleOption;
+};
+
+type InputStateMultiOption = ReadonlyArray<Option<ReactNode, string>> | null;
+type InputStateSingleOption = Option<ReactNode, string> | null;
+
+type InputValue = URLQueryArg | URLQueryArg[] | null;
+
+type MultiValueField = Exclude<keyof StaticOptions, 'dataProfile' | 'format'>;
+
+type MultiValueState = {
+  [key in MultiValueField]: InputStateMultiOption;
+};
+
+type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
 type URLQueryParam = [string, URLQueryArg];
 
@@ -45,8 +72,6 @@ type URLQueryState = {
 };
 
 type URLQueryArg = string | number | boolean;
-
-type InputValue = URLQueryArg | URLQueryArg[] | null;
 
 type PostData = {
   filters: {
@@ -61,6 +86,8 @@ type PostData = {
 /*
 ## Constants
 */
+const staticOptionLimit = 100;
+
 const defaultFormat = 'csv';
 
 const controlFields = ['dataProfile', 'format'];
@@ -68,6 +95,16 @@ const controlFields = ['dataProfile', 'format'];
 /*
 ## Utilities
 */
+function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
+  values.associatedActionAgency = values.actionAgency;
+  values.associatedActionStatus = values.assessmentUnitStatus;
+  values.parameter = values.pollutant;
+  values.parameterName = values.pollutant;
+  values.parameterStateIrCategory = values.pollutant;
+  values.useStateIrCategory = values.pollutant;
+  return values;
+}
+
 function buildPostData(query: URLQueryState) {
   const postData: PostData = {
     filters: {},
@@ -103,21 +140,105 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
     .replace('&', ''); // trim the leading ampersand
 }
 
-function getLocalStorageItem(item: string) {
-  if (storageAvailable()) {
-    return localStorage.getItem(item) ?? null;
-  } else return null;
+// TODO: Add handler for dynamic options
+function filterDynamicOptions(_field: string) {
+  return function (_inputValue: string) {};
 }
 
-// Empty or default values for inputs
-function getDefaultInputs(): InputState {
-  return {
-    dataProfile: null,
-    format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
-    state: null,
+// Filters options by search input, returning a maximum number of options
+function filterStaticOptions<S, T>(options: ReadonlyArray<Option<S, T>>) {
+  return function (inputValue: string) {
+    const value = inputValue.trim().toLowerCase();
+    if (value.length < 3) {
+      return Promise.resolve(
+        options.length < staticOptionLimit
+          ? options
+          : options.slice(0, staticOptionLimit),
+      );
+    }
+
+    const matches: Array<Option<S, T>> = [];
+    options.every((option) => {
+      if (matches.length >= staticOptionLimit) return false;
+      if (
+        (typeof option.label === 'string' &&
+          option.label.toLowerCase().includes(value)) ||
+        (typeof option.value === 'string' &&
+          option.value.toLowerCase().includes(value))
+      ) {
+        matches.push(option);
+      }
+      return true;
+    });
+    return Promise.resolve(matches);
   };
 }
 
+function getArticle(noun: string) {
+  if (!noun.length) return '';
+  if (['a', 'e', 'i', 'o', 'u'].includes(noun.charAt(0).toLowerCase())) {
+    return 'an';
+  }
+  return 'a';
+}
+
+// Empty or default values for inputs
+function getDefaultInputState(): InputState {
+  return {
+    actionAgency: null,
+    assessmentTypes: null,
+    assessmentUnitStatus: null,
+    associatedActionAgency: null,
+    associatedActionStatus: null,
+    associatedActionType: null,
+    confirmed: null,
+    cwa303dPriorityRanking: null,
+    dataProfile: null,
+    delisted: null,
+    delistedReason: null,
+    format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
+    inIndianCountry: null,
+    loadAllocationUnits: null,
+    // TODO: Add after endpoint is created for values
+    // locationText: null,
+    locationTypeCode: null,
+    organizationId: null,
+    organizationType: null,
+    parameter: null,
+    parameterGroup: null,
+    parameterName: null,
+    parameterStateIrCategory: null,
+    pollutant: null,
+    sourceName: null,
+    sourceScale: null,
+    sourceType: null,
+    state: null,
+    stateIrCategory: null,
+    useClassName: null,
+    useName: null,
+    useStateIrCategory: null,
+    waterSizeUnits: null,
+    waterType: null,
+  };
+}
+
+// Returns unfiltered options for a field, up to a maximum length
+// TODO: `field` should also include dynamic fields
+function getInitialOptions(
+  staticOptions: StaticOptions,
+  field: typeof allFields[number]['key'],
+) {
+  if (field in staticOptions) {
+    const fieldOptions = staticOptions[field] ?? [];
+    return fieldOptions.length > staticOptionLimit
+      ? fieldOptions.slice(0, staticOptionLimit)
+      : fieldOptions;
+  }
+  // TODO: Handle dynamic fields
+  return [];
+}
+
+// Extracts the value field from Option items, otherwise returns the item
 function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
   if (Array.isArray(input)) {
     return input.map((v) => {
@@ -129,61 +250,74 @@ function getInputValue(input: Exclude<InputState[keyof InputState], null>) {
   return input;
 }
 
+function getLocalStorageItem(item: string) {
+  return localStorage.getItem(item) ?? null;
+}
+
 // Uses URL query parameters or default values for initial state
 async function getUrlInputs(
-  domainOptions: DomainValues,
   _signal: AbortSignal,
+  options: StaticOptions,
 ): Promise<InputState> {
   const params = parseInitialParams();
 
-  const format = matchSingleStaticOption(
-    params.format ?? null,
-    defaultFormat,
-    listOptions.format,
-  );
+  const newState = getDefaultInputState();
 
-  const dataProfile = matchSingleStaticOption(
+  const { dataProfile, format, ...rest } = options;
+
+  // Multi-select inputs with static options
+  let key: keyof typeof rest;
+  for (key in rest) {
+    newState[key] = matchMultipleStaticOptions(
+      params[key] ?? null,
+      null,
+      rest[key],
+  );
+  }
+
+  // Single-select inputs with static options
+  newState.dataProfile = matchSingleStaticOption(
     params.dataProfile ?? null,
     null,
-    listOptions.dataProfile,
+    options.dataProfile,
   );
 
-  const state = matchMultipleStaticOptions(
-    params.state ?? null,
-    null,
-    domainOptions.state,
+  newState.format = matchSingleStaticOption(
+    params.format ?? null,
+    defaultFormat,
+    options.format,
   );
 
-  return { dataProfile, format, state };
+  return newState;
 }
 
-// Manages the state of all query field inputs
-function inputReducer(state: InputState, action: InputAction): InputState {
-  switch (action.type) {
-    case 'format':
-      return {
-        ...state,
-        format: action.payload,
+// Creates a reducer to manage the state of all query field inputs
+function createReducer() {
+  const handlers: Partial<{
+    [field in keyof InputState]: (
+      state: InputState,
+      action: InputAction,
+    ) => InputState;
+  }> = {};
+  let field: keyof InputState;
+  for (field in getDefaultInputState()) {
+    handlers[field] = (state, action) => {
+      if (!('payload' in action)) return state;
+      return { ...state, [action.type]: action.payload };
       };
-    case 'dataProfile':
-      return {
-        ...state,
-        dataProfile: action.payload,
-      };
-    case 'initialize':
+  }
+  return function reducer(state: InputState, action: InputAction) {
+    if (action.type === 'initialize') {
       return action.payload;
-    case 'reset':
-      return getDefaultInputs();
-    case 'state':
-      return {
-        ...state,
-        state: action.payload,
-      };
-    default: {
+    } else if (action.type === 'reset') {
+      return getDefaultInputState();
+    } else if (handlers.hasOwnProperty(action.type)) {
+      return handlers[action.type]?.(state, action) ?? state;
+    } else {
       const message = `Unhandled action type: ${action}`;
       throw new Error(message);
     }
-  }
+  };
 }
 
 // Type narrowing for InputState
@@ -321,20 +455,29 @@ function useAbortSignal() {
 */
 export function Home() {
   const { content } = useContentState();
+  const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (content.status !== 'success') return;
+    const domainOptions = addDomainAliases(content.data.domainValues);
+    setStaticOptions({ ...domainOptions, ...listOptions });
+  }, [content]);
+
   const getAbortSignal = useAbortSignal();
 
   const [inputState, inputDispatch] = useReducer(
-    inputReducer,
-    getDefaultInputs(),
+    createReducer(),
+    getDefaultInputState(),
   );
   const { dataProfile, format } = inputState;
 
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
-    if (content.status === 'failure') return setInputsLoaded(true);
-    if (content.status !== 'success') return;
-    getUrlInputs(content.data.domainValues, getAbortSignal())
+    if (!staticOptions) return;
+    getUrlInputs(getAbortSignal(), staticOptions)
       .then((initialInputs) => {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
@@ -342,7 +485,7 @@ export function Home() {
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setInputsLoaded(true));
-  }, [content, getAbortSignal]);
+  }, [getAbortSignal, staticOptions]);
 
   // Track non-empty values relevant to the current profile
   const [queryParams, setQueryParams] = useState<URLQueryState>({});
@@ -445,23 +588,25 @@ export function Home() {
               </div>
             </Summary>
           )}
+          {staticOptions && (
+            <>
           <h3>Data Profile</h3>
           <Select
             aria-label="Select a data profile"
             onChange={(ev) =>
               inputDispatch({ type: 'dataProfile', payload: ev })
             }
-            options={listOptions.dataProfile}
+                options={staticOptions.dataProfile}
             placeholder="Select a data profile..."
             value={dataProfile}
           />
           {dataProfile && (
             <>
-              <h3>Filters</h3>
+                  <h3 className="margin-bottom-0">Filters</h3>
               <FilterFields
                 dispatch={inputDispatch}
                 fields={profiles[dataProfile.value].fields}
-                options={{ ...listOptions, ...content.data.domainValues }}
+                    staticOptions={staticOptions}
                 state={inputState}
               />
               <h3>Download the Data</h3>
@@ -476,13 +621,13 @@ export function Home() {
                   onChange={(option) =>
                     inputDispatch({ type: 'format', payload: option })
                   }
-                  options={listOptions.format}
+                      options={staticOptions.format}
                   selected={format}
                   styles={['margin-bottom-2']}
                 />
                 <div className="display-flex flex-column flex-1 margin-y-auto">
                   <button
-                    className="align-items-center display-flex margin-x-auto margin-bottom-1 usa-button"
+                        className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
                     onClick={() => null}
                     type="button"
                   >
@@ -505,8 +650,7 @@ export function Home() {
               <CopyBox
                 text={`${window.location.origin}${
                   window.location.pathname
-                }/#${buildQueryString(queryParams)}`}
-              />
+                }/#${buildQueryString(queryParams)}`}              />
               <h4>{profiles[dataProfile.value].label} API Query</h4>
               <CopyBox
                 lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
@@ -525,6 +669,8 @@ export function Home() {
               />
             </>
           )}
+            </>
+          )}
         </div>
       </>
     );
@@ -536,51 +682,91 @@ export function Home() {
 type FilterFieldsProps = {
   dispatch: Dispatch<InputAction>;
   fields: readonly string[];
-  options: typeof listOptions & DomainValues;
   state: InputState;
+  staticOptions: StaticOptions;
 };
 
-function FilterFields({ dispatch, fields, options, state }: FilterFieldsProps) {
-  return (
-    <div>
-      {fields.includes('state') && (
-        <div>
-          <label className="usa-label">
-            <b>State</b>
-            <Select
-              aria-label="Select a state..."
+function FilterFields({
+  dispatch,
+  fields,
+  state,
+  staticOptions,
+}: FilterFieldsProps) {
+  const dispatches = useMemo(() => {
+    // TODO: Update to include single-select fields
+    const newDispatches: {
+      [field: string]: (ev: ReadonlyArray<Option<ReactNode, string>>) => void;
+    } = {};
+    allFields.forEach((field) => {
+      newDispatches[field.key] = (
+        ev: ReadonlyArray<Option<ReactNode, string>>,
+      ) => dispatch({ type: field.key, payload: ev });
+    });
+    return newDispatches;
+  }, [dispatch]);
+
+  // Store each field's element in a tuple with its key
+  const fieldsJsx: [JSX.Element, string][] = allFields
+    .filter((field) => fields.includes(field.key))
+    .map((field) => {
+      if (field.type === 'multiselect') {
+        const defaultOptions = getInitialOptions(staticOptions, field.key);
+        if (defaultOptions.length <= 5)
+          return [
+            <Checkboxes
+              key={field.key}
+              legend={<b>{field.label}</b>}
+              onChange={dispatches[field.key]}
+              options={defaultOptions}
+              selected={state[field.key] ?? []}
+              styles={['margin-top-3']}
+            />,
+            field.key,
+          ];
+        return [
+          <label className="usa-label" key={field.key}>
+            <b>{field.label}</b>
+            <AsyncSelect
+              aria-label={`${field.label} input`}
+              className="margin-top-1"
               isMulti
-              onChange={(ev) => dispatch({ type: 'state', payload: ev })}
-              options={options.state}
-              placeholder="Select a state..."
-              value={state.state}
+              onChange={dispatches[field.key]}
+              defaultOptions={defaultOptions}
+              loadOptions={
+                staticOptions.hasOwnProperty(field.key)
+                  ? filterStaticOptions(defaultOptions)
+                  : filterDynamicOptions(field.key)
+              }
+              placeholder={`Select ${getArticle(field.label)} ${
+                field.label
+              }...`}
+              value={state[field.key]}
             />
-          </label>
-        </div>
-      )}
+          </label>,
+          field.key,
+        ];
+      } else return [<></>, field.key];
+    });
 
-      {fields.includes('region') && (
+  // Store each row as a tuple with its row key
+  const rows: [[JSX.Element, string][], string][] = [];
+  for (let i = 0; i < fieldsJsx.length; i += 3) {
+    const row = fieldsJsx.slice(i, i + 3);
+    const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
+    rows.push([row, rowKey]);
+  }
+
+  return (
         <div>
-          <label className="usa-label">
-            <b>Region</b>
-            <Select
-              aria-label="Select a region"
-              // onChange={(ev) => dispatch({ type: 'state', payload: ev })}
-              // options={dataProfileOptions}
-              placeholder="Select a region..."
-              // value={state}
-            />
-          </label>
+      {rows.map(([row, rowKey]) => (
+        <div className="grid-gap grid-row" key={rowKey}>
+          {row.map(([field, fieldKey]) => (
+            <div className="tablet:grid-col" key={fieldKey}>
+              {field}
         </div>
-      )}
-
-      {fields.includes('reportingCycle') && (
-        <RangeSlider
-          label={<b>Reporting Cycle</b>}
-          onChange={(value) => console.log(value)}
-          value={0}
-        />
-      )}
+          ))}
+    </div>
+      ))}
     </div>
   );
 }
