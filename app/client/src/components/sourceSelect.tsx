@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { ReactComponent as Filter } from 'uswds/img/usa-icons/filter_list.svg';
 // types
-import type { MutableRefObject } from 'react';
+import type { MutableRefObject, ReactNode } from 'react';
 
 // Custom hook that is used for handling key presses. This can be used for
 // navigating lists with a keyboard.
@@ -40,15 +41,17 @@ function useKeyPress(
 }
 
 type Props = {
-  allSources: ReadonlyArray<Option>;
-  onChange: (selected: Option) => void;
-  selected: Option | null;
+  allSources?: ReadonlyArray<Option>;
+  children: ReactNode;
+  onChange?: (selected: Option) => void;
+  selected?: Option | null;
 };
 
 export default function SourceSelect({
-  allSources,
-  onChange,
-  selected,
+  allSources = [],
+  children,
+  onChange = () => null,
+  selected = null,
 }: Props) {
   const sourceList = useRef<HTMLButtonElement | null>(null);
   const sourceDownPress = useKeyPress('ArrowDown', sourceList);
@@ -56,6 +59,10 @@ export default function SourceSelect({
   const sourceEnterPress = useKeyPress('Enter', sourceList);
   const [sourcesVisible, setSourcesVisible] = useState(false);
   const [sourceCursor, setSourceCursor] = useState(-1);
+
+  useEffect(() => {
+    setSourceCursor(-1);
+  }, [sourcesVisible]);
 
   // Handle arrow down key press (sources list)
   useEffect(() => {
@@ -124,62 +131,62 @@ export default function SourceSelect({
   }, [allSources, onChange, sourceCursor, sourceEnterPress]);
 
   return (
-    <>
-      <button
-        type="button"
-        title="Search in"
-        aria-haspopup="true"
-        aria-controls="search-container-source-menu"
-        className="width-8"
-        ref={sourceList}
-        data-node-ref="_sourceMenuButtonNode"
-        onClick={() => {
-          setSourcesVisible(!sourcesVisible);
-        }}
-      >
-        <span
-          aria-hidden="true"
-          role="presentation"
-          className="esri-icon-down-arrow esri-search__sources-button--down"
-        ></span>
-        <span
-          aria-hidden="true"
-          role="presentation"
-          className="esri-icon-up-arrow esri-search__sources-button--up"
-        ></span>
-        <span
-          aria-hidden="true"
-          role="presentation"
-          className="esri-search__source-name"
+    <div className="display-flex margin-top-1 position-relative">
+      {allSources.length > 0 && (
+        <button
+          data-node-ref="_sourceMenuButtonNode"
+          aria-haspopup="true"
+          aria-controls="search-container-source-menu"
+          className="bg-white border-gray-30 border-1px radius-left-md hover:bg-base-lightest"
+          ref={sourceList}
+          onClick={() => {
+            setSourcesVisible(!sourcesVisible);
+          }}
+          style={{ cursor: 'pointer' }}
+          title="Search in"
+          type="button"
         >
-          {selected?.label}
-        </span>
-      </button>
+          <Filter
+            aria-hidden="true"
+            className="height-3 width-3 text-gray-50 top-2px usa-icon"
+            role="presentation"
+          />
+        </button>
+      )}
+
+      {children}
+
       {sourcesVisible && (
         <div
           id="search-container-source-menu-div"
           tabIndex={-1}
-          className="esri-menu esri-search__sources-menu"
+          className="bg-white position-absolute shadow-2 width-full z-top"
+          style={{ top: '100%' }}
         >
           <ul
             id="search-container-source-menu"
             role="menu"
             data-node-ref="_sourceListNode"
-            className="esri-menu__list"
+            className="padding-left-0"
+            style={{ marginBottom: 0 }}
           >
             {allSources.map((source, sourceIndex) => {
-              let secondClass = '';
+              let bgClass = 'hover:bg-base-lightest';
               if (selected === source) {
-                secondClass = 'esri-menu__list-item--active';
+                bgClass = 'bg-primary-lighter border-left-2px border-primary';
               } else if (sourceIndex === sourceCursor) {
-                secondClass = 'esri-menu__list-item-active';
+                bgClass = 'bg-primary-lighter';
               }
+              const border =
+                sourceIndex === allSources.length - 1
+                  ? null
+                  : 'border-bottom-1px border-gray-10';
 
               return (
                 <li
                   id={`source-${sourceIndex}`}
                   role="menuitem"
-                  className={`esri-search__source esri-menu__list-item ${secondClass}`}
+                  className={`add-list-reset ${bgClass}`}
                   tabIndex={-1}
                   key={`source-key-${sourceIndex}`}
                   onClick={() => {
@@ -190,14 +197,17 @@ export default function SourceSelect({
                       document.getElementById('hmw-search-input');
                     if (searchInput) searchInput.focus();
                   }}
+                  style={{ cursor: 'pointer' }}
                 >
-                  {source.label}
+                  <div className={`margin-x-1 ${border} padding-y-1`}>
+                    {source.label}
+                  </div>
                 </li>
               );
             })}
           </ul>
         </div>
       )}
-    </>
+    </div>
   );
 }

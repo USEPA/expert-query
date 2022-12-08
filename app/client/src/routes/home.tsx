@@ -762,19 +762,21 @@ function FilterFields({
           ];
         }
         return [
-          <label className="usa-label" key={field.key}>
+          <label
+            className="usa-label"
+            key={field.key}
+            htmlFor={`input-${field.key}`}
+          >
             <b>{field.label}</b>
-            <div>
-              {sourceField && (
-                <SourceSelect
-                  allSources={staticOptions[sourceField]}
-                  onChange={handlers[sourceField]}
-                  selected={state[sourceField]}
-                />
-              )}
+            <SourceSelect
+              allSources={sourceField ? staticOptions[sourceField] : undefined}
+              onChange={sourceField ? handlers[sourceField] : undefined}
+              selected={sourceField ? state[sourceField] : undefined}
+            >
               <AsyncSelect
                 aria-label={`${field.label} input`}
-                className="margin-top-1"
+                className="width-full"
+                inputId={`input-${field.key}`}
                 isMulti
                 onChange={handlers[field.key]}
                 defaultOptions={defaultOptions}
@@ -786,9 +788,16 @@ function FilterFields({
                 placeholder={`Select ${getArticle(field.label)} ${
                   field.label
                 }...`}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    border: '1px solid #adadad',
+                    borderRadius: sourceField ? '0 4px 4px 0' : '4px',
+                  }),
+                }}
                 value={state[field.key]}
               />
-            </div>
+            </SourceSelect>
           </label>,
           field.key,
         ];
