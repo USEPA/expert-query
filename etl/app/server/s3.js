@@ -317,7 +317,7 @@ export function createS3Stream({ contentType, filePath, stream }) {
       Bucket: process.env.CF_S3_PUB_BUCKET_ID,
       Key: filePath,
       ACL: 'public-read',
-      ContentType: 'application/gzip',
+      ContentType: contentType,
       Body: stream,
     })
     .promise();
