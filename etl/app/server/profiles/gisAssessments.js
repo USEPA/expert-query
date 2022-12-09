@@ -1,4 +1,8 @@
 import axios from 'axios';
+import {
+  createPipeline as innerCreatePipeline,
+  transformToZip,
+} from './materializedViewsExtract.js';
 import { setTimeout } from 'timers/promises';
 import pgPromise from 'pg-promise';
 
@@ -83,7 +87,11 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   return { data: data.length ? data : null, next: next + gisChunkSize };
 }
 
-export function transform(data) {
+export function createPipeline() {
+  return innerCreatePipeline(tableName);
+}
+
+export async function transform(data, pipeline, first) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({
@@ -99,5 +107,8 @@ export function transform(data) {
       state: datum.state,
     });
   });
+
+  await transformToZip(rows, pipeline, first);
+
   return pgp.helpers.insert(rows, insertColumns, tableName);
 }

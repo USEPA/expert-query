@@ -300,3 +300,25 @@ export async function syncGlossary(s3Config, retryCount = 0) {
     }
   }
 }
+
+export function createS3Stream({ contentType, filePath, stream }) {
+  // setup public s3 bucket
+  const config = new AWS.Config({
+    accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+    secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
+    region: process.env.CF_S3_PUB_REGION,
+  });
+  AWS.config.update(config);
+
+  const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+
+  return s3
+    .upload({
+      Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+      Key: filePath,
+      ACL: 'public-read',
+      ContentType: 'application/gzip',
+      Body: stream,
+    })
+    .promise();
+}

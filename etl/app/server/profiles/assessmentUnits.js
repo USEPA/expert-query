@@ -1,4 +1,8 @@
-import { extract as innerExtract } from './materializedViewsExtract.js';
+import {
+  createPipeline as innerCreatePipeline,
+  extract as innerExtract,
+  transformToZip,
+} from './materializedViewsExtract.js';
 import pgPromise from 'pg-promise';
 
 const pgp = pgPromise({ capSQL: true });
@@ -66,10 +70,14 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   );
 }
 
-export function transform(data) {
+export function createPipeline() {
+  return innerCreatePipeline(tableName);
+}
+
+export async function transform(data, pipeline, first) {
   const rows = [];
-  data.forEach((datum) => {
-    rows.push({
+  data.forEach((datum, idx) => {
+    const row = {
       assessmentunitid: datum.assessmentunitid,
       assessmentunitname: datum.assessmentunitname,
       assessmentunitstate: datum.assessmentunitstate,
@@ -88,7 +96,11 @@ export function transform(data) {
       watersize: datum.watersize,
       watersizeunits: datum.watersizeunits,
       watertype: datum.watertype,
-    });
+    };
+    rows.push(row);
   });
+
+  await transformToZip(rows, pipeline, first);
+
   return pgp.helpers.insert(rows, insertColumns, tableName);
 }

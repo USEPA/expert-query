@@ -383,7 +383,14 @@ export async function trimSchema(pool, s3Config) {
 
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  { createQuery, extract, maxChunksOverride, tableName, transform },
+  {
+    createQuery,
+    createPipeline,
+    extract,
+    maxChunksOverride,
+    tableName,
+    transform,
+  },
   s3Config,
 ) {
   return async function (client, schemaName) {
@@ -404,15 +411,22 @@ function getProfileEtl(
       log.info(`Setting ${tableName} to unlogged`);
       await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
       let res = await extract(s3Config);
+      const pipeline = createPipeline();
       let chunksProcessed = 0;
       const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
       while (res.data !== null && (!maxChunks || chunksProcessed < maxChunks)) {
-        const query = transform(res.data);
+        const query = await transform(
+          res.data,
+          pipeline,
+          chunksProcessed === 0,
+        );
         await client.query(query);
         log.info(`Next record offset for table ${tableName}: ${res.next}`);
         res = await extract(s3Config, res.next);
         chunksProcessed += 1;
       }
+      await finishNationalUploads(pipeline);
+      log.info(`National uploads for table ${tableName} uploaded`);
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
@@ -423,4 +437,21 @@ function getProfileEtl(
 
     log.info(`Table ${tableName} load success`);
   };
+}
+
+async function finishNationalUploads(pipeline) {
+  // close zip streams
+  pipeline.json.zipStream.write(']');
+  pipeline.json.zipStream.end();
+  pipeline.csv.zipStream.end();
+  pipeline.tsv.zipStream.end();
+  pipeline.xlsx.workbook.commit();
+
+  // await file streams
+  await Promise.all([
+    pipeline.json.fileStream,
+    pipeline.csv.fileStream,
+    pipeline.tsv.fileStream,
+    pipeline.xlsx.fileStream,
+  ]);
 }
