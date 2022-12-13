@@ -602,11 +602,6 @@ export function Home() {
   const pathParts = window.location.pathname.split('/');
   const pageName = pathParts.length > 1 ? pathParts[1] : '';
 
-  let origin = window.location.origin;
-  if (window.location.hostname === 'localhost') {
-    origin = `${window.location.protocol}//${window.location.hostname}:9090`;
-  }
-
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -618,6 +613,10 @@ export function Home() {
   }
 
   if (content.status === 'success') {
+    const eqDataUrl =
+      content.data.services.eqDataApi ||
+      `${window.location.protocol}//${window.location.hostname}:9090${window.location.pathname}`;
+
     return (
       <>
         <button
@@ -715,7 +714,7 @@ export function Home() {
                     <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
                   </h4>
                   <CopyBox
-                    text={`${origin}${
+                    text={`${window.location.origin}${
                       window.location.pathname
                     }/#${buildQueryString(queryParams)}`}
                   />
@@ -723,7 +722,7 @@ export function Home() {
                   <CopyBox
                     lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
                     maxLength={2048}
-                    text={`${origin}${window.location.pathname}/data/${
+                    text={`${eqDataUrl}/data/${
                       profiles[profile].resource
                     }?${buildQueryString(queryParams, false)}`}
                   />
@@ -731,9 +730,9 @@ export function Home() {
                   <CopyBox
                     text={`curl -X POST --json "${JSON.stringify(
                       buildPostData(queryParams),
-                    ).replaceAll('"', '\\"')}" ${origin}${
-                      window.location.pathname
-                    }/data/${profiles[profile].resource}`}
+                    ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
+                      profiles[profile].resource
+                    }`}
                   />
                 </>
               )}
