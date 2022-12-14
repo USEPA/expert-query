@@ -15,7 +15,10 @@ const { NODE_ENV, REACT_APP_CLOUD_SPACE } = process.env;
 // When deployed to Cloud.gov, the React app is built and served as static files
 // from the Express app, so it's one app running from a single port so no proxy
 // is needed for production.
-export const serverUrl = window.location.origin;
+export const serverUrl =
+  window.location.origin === 'localhost'
+    ? `${window.location.protocol}//${window.location.hostname}:9090`
+    : window.location.origin;
 
 export const cloudSpace =
   NODE_ENV === 'development' ? 'dev' : REACT_APP_CLOUD_SPACE || '';
@@ -37,7 +40,7 @@ async function fetchData(url: string, options: RequestInit) {
  * Fetches data and returns a promise containing JSON fetched from a provided
  * web service URL or handles any other OK response returned from the server
  */
-export function getData<T>(url: string, signal: AbortSignal): Promise<T> {
+export function getData<T>(url: string, signal?: AbortSignal): Promise<T> {
   return fetchData(url, {
     method: 'GET',
     credentials: 'include' as const,

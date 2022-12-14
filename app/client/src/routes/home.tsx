@@ -24,7 +24,13 @@ import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
 // config
-import { fields as allFields, options as listOptions, profiles } from 'config';
+import {
+  fields as allFields,
+  getData,
+  options as listOptions,
+  profiles,
+  serverUrl,
+} from 'config';
 
 /*
 ## Types
@@ -92,8 +98,6 @@ type PostData = {
 */
 const staticOptionLimit = 100;
 
-const defaultFormat = 'csv';
-
 const controlFields = ['dataProfile', 'format'];
 
 /*
@@ -144,6 +148,14 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
     .replace('&', ''); // trim the leading ampersand
 }
 
+async function checkColumnValue(
+  values: Primitive,
+  fieldName: string,
+  profile: string,
+) {
+  return false;
+}
+
 // Creates a reducer to manage the state of all query field inputs
 function createReducer() {
   const handlers: Partial<{
@@ -173,26 +185,41 @@ function createReducer() {
   };
 }
 
-// TODO: Add handler for dynamic options
-function filterDynamicOptions(_field: string) {
-  return function (_inputValue: string) {};
+function filterDynamicOptions(
+  profile: string,
+  fieldName: string,
+  contextField?: string | null,
+  contextValue?: Primitive | null,
+) {
+  return async function (inputValue: string): Promise<Array<Option>> {
+    let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}`;
+    if (isNotEmpty(contextField) && isNotEmpty(contextValue)) {
+      url += `&${contextField}=${contextValue}`;
+    }
+    const values = await getData<Primitive[]>(url);
+    return values.map((value) => ({ label: value, value }));
+  };
 }
 
-// Filters options by context value, if present
-function filterStaticOptionsByContext(
-  options: ReadonlyArray<Option>,
-  context?: Primitive | null,
+function filterOptions(
+  profile: string,
+  field: string,
+  staticOptions: StaticOptions,
+  contextField?: string | null,
+  contextValue?: Primitive | null,
 ) {
-  if (context !== null && context !== undefined) {
-    return options.filter((option) => {
-      if ('context' in option && option.context === context) return true;
-      return false;
-    });
-  } else return options;
+  if (staticOptions.hasOwnProperty(field)) {
+    return filterStaticOptions(
+      staticOptions[field as keyof StaticOptions] ?? [],
+      contextValue,
+    );
+  } else {
+    return filterDynamicOptions(profile, field, contextField, contextValue);
+  }
 }
 
 // Filters options by search input, returning a maximum number of options
-function filterStaticOptionsByInput(
+function filterStaticOptions(
   options: ReadonlyArray<Option>,
   context?: Primitive | null,
 ) {
@@ -208,7 +235,7 @@ function filterStaticOptionsByInput(
       );
     }
 
-    const matches: Array<Option> = [];
+    const matches: Option[] = [];
     contextOptions.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
       if (
@@ -225,6 +252,19 @@ function filterStaticOptionsByInput(
   };
 }
 
+// Filters options by context value, if present
+function filterStaticOptionsByContext(
+  options: ReadonlyArray<Option>,
+  context?: Primitive | null,
+) {
+  if (isNotEmpty(context)) {
+    return options.filter((option) => {
+      if ('context' in option && option.context === context) return true;
+      return false;
+    });
+  } else return options;
+}
+
 function getArticle(noun: string) {
   if (!noun.length) return '';
   if (['a', 'e', 'i', 'o', 'u'].includes(noun.charAt(0).toLowerCase())) {
@@ -238,6 +278,7 @@ function getDefaultInputState(): InputState {
   return {
     actionAgency: null,
     assessmentTypes: null,
+    assessmentUnitId: null,
     assessmentUnitStatus: null,
     associatedActionAgency: null,
     associatedActionStatus: null,
@@ -247,7 +288,7 @@ function getDefaultInputState(): InputState {
     dataProfile: null,
     delisted: null,
     delistedReason: null,
-    format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
+    format: null,
     inIndianCountry: null,
     loadAllocationUnits: null,
     // TODO: Add after endpoint is created for values
@@ -273,23 +314,26 @@ function getDefaultInputState(): InputState {
   };
 }
 
+function getDefaultValue(fieldName: string) {
+  const field = allFields.find((f) => f.key === fieldName);
+  return field && 'default' in field ? field.default : null;
+}
+
 // Returns unfiltered options for a field, up to a maximum length
-// TODO: `field` should also include dynamic fields
 function getInitialOptions(
   staticOptions: StaticOptions,
-  field: typeof allFields[number]['key'],
+  fieldName: typeof allFields[number]['key'],
   context?: Primitive | null,
 ) {
-  if (field in staticOptions) {
-    const fieldOptions = (staticOptions[field] ?? []) as Option[];
+  if (staticOptions.hasOwnProperty(fieldName)) {
+    const fieldOptions = staticOptions[fieldName as keyof StaticOptions] ?? [];
     const contextOptions = filterStaticOptionsByContext(fieldOptions, context);
 
     return contextOptions.length > staticOptionLimit
       ? contextOptions.slice(0, staticOptionLimit)
       : contextOptions;
   }
-  // TODO: Handle dynamic fields
-  return [];
+  return true;
 }
 
 // Extracts the value field from Option items, otherwise returns the item
@@ -338,36 +382,52 @@ function getSingleOptionFields(fields: typeof allFields) {
   return filtered;
 }
 
+function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
+  return staticOptions.hasOwnProperty(fieldName)
+    ? staticOptions[fieldName as keyof StaticOptions] ?? null
+    : null;
+}
+
 // Uses URL query parameters or default values for initial state
 async function getUrlInputs(
   _signal: AbortSignal,
-  options: StaticOptions,
+  staticOptions: StaticOptions,
+  profile: string | null = null,
 ): Promise<InputState> {
   const params = parseInitialParams();
 
   const newState = getDefaultInputState();
 
-  // Multi-select inputs with static options
-  for (let key of multiOptionFields) {
-    newState[key] = matchMultipleStaticOptions(
-      params[key] ?? null,
-      null,
-      options[key],
-    );
-  }
+  // Multi-select inputs
+  await Promise.all(
+    multiOptionFields.map(async (key) => {
+      newState[key] = await matchMultipleOptions(
+        params[key] ?? null,
+        key,
+        getStaticOptions(key, staticOptions),
+        profile,
+      );
+    }),
+  );
 
-  // Single-select inputs with static options
-  for (let key of singleOptionFields) {
-    newState[key] = matchSingleStaticOption(
-      params[key] ?? null,
-      null,
-      options[key],
-    );
-  }
+  // Single-select inputs
+  await Promise.all(
+    singleOptionFields.map(async (key) => {
+      newState[key] = await matchSingleOption(
+        params[key] ?? null,
+        key,
+        getStaticOptions(key, staticOptions),
+        profile,
+      );
+    }),
+  );
 
   return newState;
 }
 
+function isNotEmpty<T>(v: T | null | undefined): v is T {
+  return v !== undefined && v !== null;
+}
 // Type narrowing
 function isOption(maybeOption: Option | Primitive): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
@@ -387,50 +447,71 @@ function isSingleOptionField(
   return (singleOptionFields as string[]).includes(field);
 }
 
-// Wrapper function for `matchStaticOptions`
-function matchSingleStaticOption(
-  value: InputValue,
-  defaultValue: Primitive | null,
-  options?: ReadonlyArray<Option>,
+async function matchMultipleOptions(
+  values: InputValue,
+  fieldName: MultiOptionField,
+  options: ReadonlyArray<Option> | null = null,
+  profile: string | null = null,
 ) {
-  return matchStaticOptions(value, defaultValue, options) as Option | null;
+  return (await matchOptions(
+    values,
+    fieldName,
+    options,
+    profile,
+    true,
+  )) as ReadonlyArray<Option>;
 }
 
-// Wrapper function for `matchStaticOptions`
-function matchMultipleStaticOptions(
-  value: InputValue,
-  defaultValue: Primitive | null,
-  options?: ReadonlyArray<Option>,
+async function matchSingleOption(
+  values: InputValue,
+  fieldName: SingleOptionField,
+  options: ReadonlyArray<Option> | null = null,
+  profile: string | null = null,
 ) {
-  return matchStaticOptions(
-    value,
-    defaultValue,
+  return (await matchOptions(
+    values,
+    fieldName,
     options,
-    true,
-  ) as ReadonlyArray<Option> | null;
+    profile,
+  )) as Option | null;
 }
 
 // Produce the option/s corresponding to a particular value
-function matchStaticOptions(
-  value: InputValue,
-  defaultValue: Primitive | null,
-  options?: ReadonlyArray<Option>,
+async function matchOptions(
+  values: InputValue,
+  fieldName: MultiOptionField | SingleOptionField,
+  options: ReadonlyArray<Option> | null = null,
+  profile: string | null = null,
   multiple = false,
 ) {
-  if (!options) return null;
   const valuesArray: Primitive[] = [];
-  if (Array.isArray(value)) valuesArray.push(...value);
-  else if (value !== null) valuesArray.push(value);
-  if (!valuesArray.length && defaultValue) valuesArray.push(defaultValue);
+  if (Array.isArray(values)) valuesArray.push(...values);
+  else if (values !== null) valuesArray.push(values);
 
   const matches = new Set<Option>(); // prevent duplicates
   // Check if the value is valid, otherwise use a default value
-  valuesArray.forEach((value) => {
-    const match =
-      options.find((option) => option.value === value) ??
-      options.find((option) => option.value === defaultValue);
-    if (match) matches.add(match);
-  });
+  await Promise.all(
+    valuesArray.map(async (value) => {
+      if (options) {
+        const match = options.find((option) => option.value === value);
+        if (match) matches.add(match);
+      } else if (profile) {
+        const isValid = await checkColumnValue(value, fieldName, profile);
+        if (isValid) matches.add({ label: value, value });
+      }
+    }),
+  );
+
+  if (matches.size === 0) {
+    const defaultValue = getDefaultValue(fieldName);
+    if (defaultValue) {
+      const defaultOption = options
+        ? options.find((option) => option.value === defaultValue)
+        : { label: defaultValue, value: defaultValue };
+      defaultOption && matches.add(defaultOption);
+    }
+  }
+
   const matchesArray = Array.from(matches);
   return multiple ? matchesArray : matchesArray.pop() ?? null;
 }
@@ -676,7 +757,6 @@ export function Home() {
                 <>
                   <h3 className="margin-bottom-0">Filters</h3>
                   <FilterFields
-                    fields={profiles[profile].fields}
                     handlers={inputHandlers}
                     staticOptions={staticOptions}
                     state={inputState}
@@ -751,18 +831,17 @@ export function Home() {
 }
 
 type FilterFieldsProps = {
-  fields: readonly string[];
   handlers: InputHandlers;
   state: InputState;
   staticOptions: StaticOptions;
 };
 
-function FilterFields({
-  fields,
-  handlers,
-  state,
-  staticOptions,
-}: FilterFieldsProps) {
+function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
+  const profile = (state.dataProfile?.value as keyof typeof profiles) ?? null;
+  if (!profile) return null;
+
+  const fields: readonly string[] = profiles[profile].fields;
+
   // Store each field's element in a tuple with its key
   const fieldsJsx: Array<[JSX.Element, string]> = allFields
     .filter((field) => fields.includes(field.key))
@@ -775,7 +854,11 @@ function FilterFields({
         contextValue,
       );
       if (field.type === 'multiselect') {
-        if (!contextField && defaultOptions.length <= 5) {
+        if (
+          !contextField &&
+          Array.isArray(defaultOptions) &&
+          defaultOptions.length <= 5
+        ) {
           return [
             <Checkboxes
               key={field.key}
@@ -807,14 +890,13 @@ function FilterFields({
                 isMulti
                 onChange={handlers[field.key]}
                 defaultOptions={defaultOptions}
-                loadOptions={
-                  staticOptions.hasOwnProperty(field.key)
-                    ? filterStaticOptionsByInput(
-                        staticOptions[field.key] ?? [],
-                        contextValue,
-                      )
-                    : filterDynamicOptions(field.key)
-                }
+                loadOptions={filterOptions(
+                  profile,
+                  field.key,
+                  staticOptions,
+                  contextField,
+                  contextValue,
+                )}
                 placeholder={`Select ${getArticle(field.label)} ${
                   field.label
                 }...`}

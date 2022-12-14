@@ -1,6 +1,7 @@
 export default [
   { key: 'actionAgency', label: 'Action Agency', type: 'multiselect' },
   { key: 'assessmentTypes', label: 'Assessment Type', type: 'multiselect' },
+  { key: 'assessmentUnitId', label: 'Assessment Unit ID', type: 'multiselect' },
   {
     key: 'assessmentUnitStatus',
     label: 'Assessment Unit Status',
@@ -30,7 +31,7 @@ export default [
   { key: 'dataProfile', label: 'Data Profile', type: 'select' },
   { key: 'delisted', label: 'Delisted', type: 'multiselect' },
   { key: 'delistedReason', label: 'Delisted Reason', type: 'multiselect' },
-  { key: 'format', label: 'File Format', type: 'radio' },
+  { key: 'format', label: 'File Format', type: 'radio', default: 'csv' },
   { key: 'inIndianCountry', label: 'In Indian Country', type: 'multiselect' },
   {
     key: 'loadAllocationUnits',
