@@ -143,8 +143,22 @@ function fetchSingleDomain(name, mapping) {
         );
       }
 
+      // Filter out specific values from the result
+      let filteredData = res.data;
+      if ('filters' in mapping) {
+        mapping.filters.forEach(([field, filter]) => {
+          filteredData = filteredData.filter((domainValue) => {
+            if (Array.isArray(filter)) {
+              return !filter.includes(domainValue[field]);
+            } else {
+              return !(filter === domainValue[field]);
+            }
+          });
+        });
+      }
+
       const valuesAdded = new Set();
-      const values = res.data
+      let values = filteredData
         .map((value) => {
           return {
             label: value[mapping.labelField ?? 'name'],

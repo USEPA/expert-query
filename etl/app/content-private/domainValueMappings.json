@@ -24,7 +24,11 @@
     "domainName": "OrgStateCode",
     "labelField": "context",
     "valueField": "context",
-    "contextField": "context2"
+    "contextField": "context2",
+    "filters": [
+      ["context2", ["EPA", "Test"]],
+      ["context", "TEST_TRIBE_B"]
+    ]
   },
   "parameterGroup": {
     "domainName": "ParameterGroupCodeType"
