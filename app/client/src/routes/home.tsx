@@ -149,10 +149,14 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
 }
 
 async function checkColumnValue(
-  values: Primitive,
+  value: Primitive,
   fieldName: string,
   profile: string,
 ) {
+  let url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
+  const res = await getData<Primitive[]>(url);
+  console.log(res);
+  if (res.length) return true;
   return false;
 }
 
@@ -392,9 +396,17 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
 async function getUrlInputs(
   _signal: AbortSignal,
   staticOptions: StaticOptions,
-  profile: string | null = null,
 ): Promise<InputState> {
   const params = parseInitialParams();
+
+  // Get the data profile first, so it can be
+  // used to check values against the database
+  const profileArg = Array.isArray(params.dataProfile)
+    ? params.dataProfile[0]
+    : params.dataProfile;
+  const profile = Object.keys(profiles).find((p) => {
+    return p === profileArg;
+  });
 
   const newState = getDefaultInputState();
 
