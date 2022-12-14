@@ -195,11 +195,11 @@ export default function SourceSelect({
 
               return (
                 <li
-                  id={`source-${sourceIndex}`}
+                  id={`source-${source.value}`}
                   role="menuitem"
                   className={`add-list-reset ${bgClass}`}
                   tabIndex={-1}
-                  key={`source-key-${sourceIndex}`}
+                  key={`source-key-${source.value}`}
                   onClick={() => {
                     onChange?.(source.value === Infinity ? null : source);
                     setSourcesVisible(false);

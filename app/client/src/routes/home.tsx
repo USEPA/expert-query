@@ -178,17 +178,26 @@ function filterDynamicOptions(_field: string) {
   return function (_inputValue: string) {};
 }
 
-// Filters options by search input, returning a maximum number of options
-function filterStaticOptions(
+// Filters options by context value, if present
+function filterStaticOptionsByContext(
   options: ReadonlyArray<Option>,
   context?: Primitive | null,
 ) {
-  const contextOptions = context
-    ? options.filter((option) => {
-        if ('context' in option && option.context === context) return true;
-        return false;
-      })
-    : options;
+  if (context !== null && context !== undefined) {
+    return options.filter((option) => {
+      if ('context' in option && option.context === context) return true;
+      return false;
+    });
+  } else return options;
+}
+
+// Filters options by search input, returning a maximum number of options
+function filterStaticOptionsByInput(
+  options: ReadonlyArray<Option>,
+  context?: Primitive | null,
+) {
+  const contextOptions = filterStaticOptionsByContext(options, context);
+
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     if (value.length < 3) {
@@ -273,12 +282,7 @@ function getInitialOptions(
 ) {
   if (field in staticOptions) {
     const fieldOptions = (staticOptions[field] ?? []) as Option[];
-    const contextOptions = context
-      ? fieldOptions.filter((option) => {
-          if ('context' in option && option.context === context) return true;
-          return false;
-        })
-      : fieldOptions;
+    const contextOptions = filterStaticOptionsByContext(fieldOptions, context);
 
     return contextOptions.length > staticOptionLimit
       ? contextOptions.slice(0, staticOptionLimit)
@@ -764,10 +768,11 @@ function FilterFields({
     .filter((field) => fields.includes(field.key))
     .map((field) => {
       const contextField = 'context' in field ? field.context : null;
+      const contextValue = contextField ? state[contextField]?.value : null;
       const defaultOptions = getInitialOptions(
         staticOptions,
         field.key,
-        contextField ? state[contextField]?.value : null,
+        contextValue,
       );
       if (field.type === 'multiselect') {
         if (!contextField && defaultOptions.length <= 5) {
@@ -804,9 +809,9 @@ function FilterFields({
                 defaultOptions={defaultOptions}
                 loadOptions={
                   staticOptions.hasOwnProperty(field.key)
-                    ? filterStaticOptions(
+                    ? filterStaticOptionsByInput(
                         staticOptions[field.key] ?? [],
-                        contextField ? state[contextField]?.value : null,
+                        contextValue,
                       )
                     : filterDynamicOptions(field.key)
                 }

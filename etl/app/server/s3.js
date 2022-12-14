@@ -151,7 +151,7 @@ function fetchSingleDomain(name, mapping) {
             if (Array.isArray(filter)) {
               return !filter.includes(domainValue[field]);
             } else {
-              return !(filter === domainValue[field]);
+              return filter !== domainValue[field];
             }
           });
         });
