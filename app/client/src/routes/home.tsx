@@ -239,14 +239,6 @@ function filterStaticOptions(
 
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
-    if (value.length < 3) {
-      return Promise.resolve(
-        contextOptions.length < staticOptionLimit
-          ? contextOptions
-          : contextOptions.slice(0, staticOptionLimit),
-      );
-    }
-
     const matches: Option[] = [];
     contextOptions.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
@@ -902,7 +894,6 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
             field.key,
           ];
         }
-        console.log(contextValue);
         return [
           <label
             className="usa-label"
@@ -922,6 +913,8 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
                 className="width-full"
                 inputId={`input-${field.key}`}
                 isMulti
+                // re-renders default options when `contextValue` changes
+                key={JSON.stringify(contextValue)}
                 onChange={handlers[field.key]}
                 defaultOptions={defaultOptions}
                 loadOptions={filterOptions(
@@ -939,6 +932,9 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
                     ...base,
                     border: '1px solid #adadad',
                     borderRadius: contextField ? '0 4px 4px 0' : '4px',
+                  }),
+                  loadingIndicator: () => ({
+                    display: 'none',
                   }),
                 }}
                 value={state[field.key]}
