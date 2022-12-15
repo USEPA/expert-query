@@ -38,7 +38,7 @@ async function queryColumnValues(profile, column, params, schema) {
   const parsedParams = {
     text: "",
     filters: {},
-    limit: 20,
+    limit: null,
   };
 
   Object.entries(params).forEach(([name, value]) => {
@@ -53,8 +53,9 @@ async function queryColumnValues(profile, column, params, schema) {
     .column(column.name)
     .whereILike(column.name, `%${parsedParams.text}%`)
     .distinctOn(column.name)
-    .limit(parsedParams.limit)
     .select();
+
+  if (parsedParams.limit) query.limit(parsedParams.limit);
 
   // build where clause of the query
   profile.columns.forEach((col) => {

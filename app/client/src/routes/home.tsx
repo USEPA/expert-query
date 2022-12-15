@@ -96,6 +96,7 @@ type PostData = {
 /*
 ## Constants
 */
+const dynamicOptionLimit = 20;
 const staticOptionLimit = 100;
 
 const controlFields = ['dataProfile', 'format'];
@@ -155,7 +156,6 @@ async function checkColumnValue(
 ) {
   let url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
   const res = await getData<Primitive[]>(url);
-  console.log(res);
   if (res.length) return true;
   return false;
 }
@@ -194,9 +194,11 @@ function filterDynamicOptions(
   fieldName: string,
   contextField?: string | null,
   contextValue?: Primitive | null,
+  limit?: number | null,
 ) {
-  return async function (inputValue: string): Promise<Array<Option>> {
+  return async function (inputValue?: string): Promise<Array<Option>> {
     let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}`;
+    if (isNotEmpty(limit)) url += `&limit=${limit}`;
     if (isNotEmpty(contextField) && isNotEmpty(contextValue)) {
       url += `&${contextField}=${contextValue}`;
     }
@@ -218,7 +220,13 @@ function filterOptions(
       contextValue,
     );
   } else {
-    return filterDynamicOptions(profile, field, contextField, contextValue);
+    return filterDynamicOptions(
+      profile,
+      field,
+      contextField,
+      contextValue,
+      dynamicOptionLimit,
+    );
   }
 }
 
@@ -271,6 +279,8 @@ function filterStaticOptionsByContext(
 
 function getArticle(noun: string) {
   if (!noun.length) return '';
+  const aExceptions = ['use'];
+  if (aExceptions.includes(noun.toLowerCase())) return 'a';
   if (['a', 'e', 'i', 'o', 'u'].includes(noun.charAt(0).toLowerCase())) {
     return 'an';
   }
@@ -295,8 +305,7 @@ function getDefaultInputState(): InputState {
     format: null,
     inIndianCountry: null,
     loadAllocationUnits: null,
-    // TODO: Add after endpoint is created for values
-    // locationText: null,
+    locationText: null,
     locationTypeCode: null,
     organizationId: null,
     organizationType: null,
@@ -337,6 +346,7 @@ function getInitialOptions(
       ? contextOptions.slice(0, staticOptionLimit)
       : contextOptions;
   }
+  // Return true to trigger an immediate fetch from the database
   return true;
 }
 
@@ -369,6 +379,18 @@ function getMultiOptionFields(fields: typeof allFields) {
     return a;
   }, []);
   return filtered;
+}
+
+function getOptions(
+  profile: string,
+  field: string,
+  staticOptions: StaticOptions,
+) {
+  if (staticOptions.hasOwnProperty(field)) {
+    return Promise.resolve(staticOptions[field as keyof StaticOptions] ?? []);
+  } else {
+    return filterDynamicOptions(profile, field)();
+  }
 }
 
 function getSingleOptionFields(fields: typeof allFields) {
@@ -410,9 +432,9 @@ async function getUrlInputs(
 
   const newState = getDefaultInputState();
 
-  // Multi-select inputs
-  await Promise.all(
-    multiOptionFields.map(async (key) => {
+  await Promise.all([
+    // Multi-select inputs
+    ...multiOptionFields.map(async (key) => {
       newState[key] = await matchMultipleOptions(
         params[key] ?? null,
         key,
@@ -420,11 +442,8 @@ async function getUrlInputs(
         profile,
       );
     }),
-  );
-
-  // Single-select inputs
-  await Promise.all(
-    singleOptionFields.map(async (key) => {
+    // Single-select inputs
+    ...singleOptionFields.map(async (key) => {
       newState[key] = await matchSingleOption(
         params[key] ?? null,
         key,
@@ -432,7 +451,7 @@ async function getUrlInputs(
         profile,
       );
     }),
-  );
+  ]);
 
   return newState;
 }
@@ -883,6 +902,7 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
             field.key,
           ];
         }
+        console.log(contextValue);
         return [
           <label
             className="usa-label"
@@ -891,7 +911,9 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
           >
             <b>{field.label}</b>
             <SourceSelect
-              sources={contextField && staticOptions[contextField]}
+              sources={
+                contextField && getOptions(profile, contextField, staticOptions)
+              }
               onChange={contextField && handlers[contextField]}
               selected={contextField && state[contextField]}
             >
@@ -909,7 +931,7 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
                   contextField,
                   contextValue,
                 )}
-                placeholder={`Select ${getArticle(field.label)} ${
+                placeholder={`Select ${getArticle(field.label.split(' ')[0])} ${
                   field.label
                 }...`}
                 styles={{

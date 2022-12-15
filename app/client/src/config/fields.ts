@@ -38,15 +38,13 @@ export default [
     label: 'Load Allocation Unit',
     type: 'multiselect',
   },
-  // TODO: Add after value endpoint is created
-  /* {
+  {
     key: 'locationText',
     label: 'Location Text',
     type: 'multiselect',
     context: 'locationTypeCode',
-  }, */
-  // TODO: Remove this field after it is paired with the `locationText` field
-  { key: 'locationTypeCode', label: 'Location Type Code', type: 'multiselect' },
+  },
+  { key: 'locationTypeCode', label: 'Location Type Code', type: 'select' },
   {
     key: 'organizationId',
     label: 'Organization ID',
