@@ -144,7 +144,7 @@ export default function SourceSelect({
       onBlur={(ev) => {
         if (
           !ev.currentTarget.contains(ev.relatedTarget) ||
-          !(ev.relatedTarget?.tagName === 'LI')
+          ev.relatedTarget?.tagName !== 'LI'
         ) {
           setSourcesVisible(false);
         }
