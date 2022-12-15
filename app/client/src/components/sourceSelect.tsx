@@ -140,7 +140,17 @@ export default function SourceSelect({
   }, [allSources, onChange, sourceCursor, sourceEnterPress]);
 
   return (
-    <div className="display-flex margin-top-1 position-relative">
+    <div
+      onBlur={(ev) => {
+        if (
+          !ev.currentTarget.contains(ev.relatedTarget) ||
+          !(ev.relatedTarget?.tagName === 'LI')
+        ) {
+          setSourcesVisible(false);
+        }
+      }}
+      className="display-flex margin-top-1 position-relative"
+    >
       {allSources && (
         <button
           data-node-ref="_sourceMenuButtonNode"
@@ -148,9 +158,7 @@ export default function SourceSelect({
           aria-controls="search-container-source-menu"
           className="bg-white border-gray-30 border-1px radius-left-md hover:bg-base-lightest"
           ref={sourceList}
-          onClick={() => {
-            setSourcesVisible(!sourcesVisible);
-          }}
+          onClick={() => setSourcesVisible(!sourcesVisible)}
           style={{ cursor: 'pointer' }}
           title="Search in"
           type="button"
@@ -176,7 +184,7 @@ export default function SourceSelect({
             id="search-container-source-menu"
             role="menu"
             data-node-ref="_sourceListNode"
-            className="padding-left-0"
+            className="maxh-mobile overflow-y-scroll padding-left-0"
             style={{ marginBottom: 0 }}
           >
             {allSources?.map((source, sourceIndex) => {
