@@ -104,6 +104,8 @@ const controlFields = ['dataProfile', 'format'];
 /*
 ## Utilities
 */
+
+// Adds aliases for fields that share the same set of possible values
 function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   values.associatedActionAgency = values.actionAgency;
   values.associatedActionStatus = values.assessmentUnitStatus;
@@ -149,6 +151,8 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
     .replace('&', ''); // trim the leading ampersand
 }
 
+// Returns a boolean, specifying if a value is found in the
+// specified table and column of the database
 async function checkColumnValue(
   value: Primitive,
   fieldName: string,
@@ -189,6 +193,7 @@ function createReducer() {
   };
 }
 
+// Filters options that require fetching values from the database
 function filterDynamicOptions(
   profile: string,
   fieldName: string,
@@ -207,6 +212,7 @@ function filterDynamicOptions(
   };
 }
 
+// Filters options by search input, returning a maximum number of options
 function filterOptions(
   profile: string,
   field: string,
@@ -230,7 +236,7 @@ function filterOptions(
   }
 }
 
-// Filters options by search input, returning a maximum number of options
+// Filters options that have values held in memory
 function filterStaticOptions(
   options: ReadonlyArray<Option>,
   context?: Primitive | null,
@@ -269,6 +275,7 @@ function filterStaticOptionsByContext(
   } else return options;
 }
 
+// Utility function to choose between 'a' or 'an'
 function getArticle(noun: string) {
   if (!noun.length) return '';
   const aExceptions = ['use'];
@@ -279,46 +286,14 @@ function getArticle(noun: string) {
   return 'a';
 }
 
-// Empty or default values for inputs
+// Returns the empty state for inputs (default values populated in `getUrlInputs`)
 function getDefaultInputState(): InputState {
-  return {
-    actionAgency: null,
-    assessmentTypes: null,
-    assessmentUnitId: null,
-    assessmentUnitStatus: null,
-    associatedActionAgency: null,
-    associatedActionStatus: null,
-    associatedActionType: null,
-    confirmed: null,
-    cwa303dPriorityRanking: null,
-    dataProfile: null,
-    delisted: null,
-    delistedReason: null,
-    format: null,
-    inIndianCountry: null,
-    loadAllocationUnits: null,
-    locationText: null,
-    locationTypeCode: null,
-    organizationId: null,
-    organizationType: null,
-    parameter: null,
-    parameterGroup: null,
-    parameterName: null,
-    parameterStateIrCategory: null,
-    pollutant: null,
-    sourceName: null,
-    sourceScale: null,
-    sourceType: null,
-    state: null,
-    stateIrCategory: null,
-    useClassName: null,
-    useName: null,
-    useStateIrCategory: null,
-    waterSizeUnits: null,
-    waterType: null,
-  };
+  return [...singleOptionFields, ...multiOptionFields].reduce((a, b) => {
+    return { ...a, [b]: null };
+  }, {}) as InputState;
 }
 
+// Returns the default value for a field, if specified
 function getDefaultValue(fieldName: string) {
   const field = allFields.find((f) => f.key === fieldName);
   return field && 'default' in field ? field.default : null;
@@ -373,13 +348,15 @@ function getMultiOptionFields(fields: typeof allFields) {
   return filtered;
 }
 
+// Retrieves all possible options for a given field
 function getOptions(
   profile: string,
   field: string,
   staticOptions: StaticOptions,
 ) {
-  if (staticOptions.hasOwnProperty(field)) {
-    return Promise.resolve(staticOptions[field as keyof StaticOptions] ?? []);
+  const options = getStaticOptions(field, staticOptions);
+  if (options !== null) {
+    return Promise.resolve(options);
   } else {
     return filterDynamicOptions(profile, field)();
   }
@@ -402,7 +379,7 @@ function getSingleOptionFields(fields: typeof allFields) {
 
 function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
   return staticOptions.hasOwnProperty(fieldName)
-    ? staticOptions[fieldName as keyof StaticOptions] ?? null
+    ? staticOptions[fieldName as keyof StaticOptions] ?? []
     : null;
 }
 
@@ -451,6 +428,7 @@ async function getUrlInputs(
 function isNotEmpty<T>(v: T | null | undefined): v is T {
   return v !== undefined && v !== null;
 }
+
 // Type narrowing
 function isOption(maybeOption: Option | Primitive): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
@@ -470,6 +448,7 @@ function isSingleOptionField(
   return (singleOptionFields as string[]).includes(field);
 }
 
+// Wrapper function to add type assertion
 async function matchMultipleOptions(
   values: InputValue,
   fieldName: MultiOptionField,
@@ -485,6 +464,7 @@ async function matchMultipleOptions(
   )) as ReadonlyArray<Option>;
 }
 
+// Wrapper function to add type assertion
 async function matchSingleOption(
   values: InputValue,
   fieldName: SingleOptionField,
