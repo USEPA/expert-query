@@ -3,7 +3,7 @@ import { useState } from 'react';
 // types
 import type { ReactNode } from 'react';
 
-type RadioOption = Option<ReactNode, string>;
+type RadioOption = Option;
 
 type Props = {
   legend?: ReactNode;
@@ -32,12 +32,12 @@ export default function RadioButtons({
       )}
       {options.map((option) => {
         return (
-          <div key={option.value} className="usa-radio">
+          <div key={option.value.toString()} className="usa-radio">
             <input
               className={`usa-radio__input ${tile && 'usa-radio__input--tile'}`}
               id={`${id}-${option.value}`}
               type="radio"
-              value={option.value}
+              value={option.value.toString()}
               checked={option.value === selected?.value}
               onChange={(_ev) => onChange(option)}
             />

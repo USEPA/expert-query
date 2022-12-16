@@ -38,8 +38,8 @@ export const dataProfile = Object.entries(profiles).map(([id, profile]) => {
         <em>{profile.description}</em>
       </p>
     ),
-  };
-}) as Array<Option<JSX.Element, keyof typeof profiles>>;
+  } as const;
+});
 
 export const delisted = yesNo;
 
