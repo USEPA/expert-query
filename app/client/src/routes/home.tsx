@@ -882,6 +882,10 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
           >
             <b>{field.label}</b>
             <SourceSelect
+              label={
+                contextField &&
+                allFields.find((f) => f.key === contextField)?.label
+              }
               sources={
                 contextField && getOptions(profile, contextField, staticOptions)
               }
