@@ -293,10 +293,19 @@ function getDefaultInputState(): InputState {
   }, {}) as InputState;
 }
 
-// Returns the default value for a field, if specified
-function getDefaultValue(fieldName: string) {
+// Returns the default option for a field, if specified
+function getDefaultOption(
+  fieldName: string,
+  options: ReadonlyArray<Option> | null = null,
+) {
   const field = allFields.find((f) => f.key === fieldName);
-  return field && 'default' in field ? field.default : null;
+  const defaultValue = field && 'default' in field ? field.default : null;
+  if (defaultValue) {
+    const defaultOption = options?.find(
+      (option) => option.value === defaultValue,
+    );
+    return defaultOption ?? { label: defaultValue, value: defaultValue };
+  } else return null;
 }
 
 // Returns unfiltered options for a field, up to a maximum length
@@ -506,13 +515,8 @@ async function matchOptions(
   );
 
   if (matches.size === 0) {
-    const defaultValue = getDefaultValue(fieldName);
-    if (defaultValue) {
-      const defaultOption = options
-        ? options.find((option) => option.value === defaultValue)
-        : { label: defaultValue, value: defaultValue };
-      defaultOption && matches.add(defaultOption);
-    }
+    const defaultOption = getDefaultOption(fieldName, options);
+    defaultOption && matches.add(defaultOption);
   }
 
   const matchesArray = Array.from(matches);
