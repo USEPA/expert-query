@@ -63,23 +63,6 @@ const mapping = {
       { name: "watertype", alias: "waterType" },
     ],
   },
-  gisAssessments: {
-    tableName: "gis_assessments",
-    idColumn: "id",
-    columns: [
-      { name: "id", alias: "id" },
-      { name: "reporting_cycle", alias: "reportingCycle" },
-      { name: "assessment_unit_id", alias: "assessmentUnitId" },
-      { name: "assessment_unit_name", alias: "assessmentUnitName" },
-      { name: "organization_id", alias: "organizationId" },
-      { name: "organization_name", alias: "organizationName" },
-      { name: "organization_type", alias: "organizationType" },
-      { name: "overall_status", alias: "overallStatus" },
-      { name: "region", alias: "region" },
-      { name: "state", alias: "state" },
-      { name: "ir_category", alias: "irCategory" },
-    ],
-  },
   sources: {
     tableName: "sources",
     idColumn: "id",
