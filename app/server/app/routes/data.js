@@ -2,111 +2,10 @@ const cors = require("cors");
 const express = require("express");
 const Excel = require("exceljs");
 const { getActiveSchema } = require("../middleware");
-const { knex } = require("../utilities/database");
+const { appendToWhere, knex, mapping } = require("../utilities/database");
 const logger = require("../utilities/logger");
 const log = logger.logger;
 const StreamingService = require("../utilities/streamingService");
-
-// mapping to dynamically build GET/POST endpoints and queries
-const mapping = {
-  assessmentUnits: {
-    tableName: "assessment_units",
-    idColumn: "id",
-    columns: [
-      { name: "id", alias: "id" },
-      { name: "assessmentunitid", alias: "assessmentUnitId" },
-      { name: "assessmentunitname", alias: "assessmentUnitName" },
-      { name: "assessmentunitstate", alias: "assessmentUnitState" },
-      { name: "locationdescription", alias: "locationDescription" },
-      { name: "locationtext", alias: "locationText" },
-      { name: "locationtypecode", alias: "locationTypeCode" },
-      { name: "organizationid", alias: "organizationId" },
-      { name: "organizationname", alias: "organizationName" },
-      { name: "organizationtype", alias: "organizationType" },
-      { name: "region", alias: "region" },
-      { name: "reportingcycle", alias: "reportingCycle" },
-      { name: "sizesource", alias: "sizeSource" },
-      { name: "sourcescale", alias: "sourceScale" },
-      { name: "state", alias: "state" },
-      { name: "useclassname", alias: "useClassName" },
-      { name: "watersize", alias: "waterSize" },
-      { name: "watersizeunits", alias: "waterSizeUnits" },
-      { name: "watertype", alias: "waterType" },
-    ],
-  },
-  assessmentUnitsMonitoringLocations: {
-    tableName: "assessment_units_monitoring_locations",
-    idColumn: "id",
-    columns: [
-      { name: "id", alias: "id" },
-      { name: "assessmentunitid", alias: "assessmentUnitId" },
-      { name: "assessmentunitname", alias: "assessmentUnitName" },
-      { name: "assessmentunitstatus", alias: "assessmentUnitStatus" },
-      { name: "locationdescription", alias: "locationDescription" },
-      {
-        name: "monitoringlocationdatalink",
-        alias: "monitoringLocationDataLink",
-      },
-      { name: "monitoringlocationid", alias: "monitoringLocationId" },
-      { name: "monitoringlocationorgid", alias: "monitoringLocationOrgId" },
-      { name: "organizationid", alias: "organizationId" },
-      { name: "organizationname", alias: "organizationName" },
-      { name: "organizationtype", alias: "organizationType" },
-      { name: "region", alias: "region" },
-      { name: "reportingcycle", alias: "reportingCycle" },
-      { name: "sizesource", alias: "sizeSource" },
-      { name: "sourcescale", alias: "sourceScale" },
-      { name: "state", alias: "state" },
-      { name: "useclassname", alias: "useClassName" },
-      { name: "watersize", alias: "waterSize" },
-      { name: "watersizeunits", alias: "waterSizeUnits" },
-      { name: "watertype", alias: "waterType" },
-    ],
-  },
-  gisAssessments: {
-    tableName: "gis_assessments",
-    idColumn: "id",
-    columns: [
-      { name: "id", alias: "id" },
-      { name: "reporting_cycle", alias: "reportingCycle" },
-      { name: "assessment_unit_id", alias: "assessmentUnitId" },
-      { name: "assessment_unit_name", alias: "assessmentUnitName" },
-      { name: "organization_id", alias: "organizationId" },
-      { name: "organization_name", alias: "organizationName" },
-      { name: "organization_type", alias: "organizationType" },
-      { name: "overall_status", alias: "overallStatus" },
-      { name: "region", alias: "region" },
-      { name: "state", alias: "state" },
-      { name: "ir_category", alias: "irCategory" },
-    ],
-  },
-  sources: {
-    tableName: "sources",
-    idColumn: "id",
-    columns: [
-      { name: "id", alias: "id" },
-      { name: "assessmentunitid", alias: "assessmentUnitId" },
-      { name: "assessmentunitname", alias: "assessmentUnitName" },
-      { name: "causename", alias: "causeName" },
-      { name: "confirmed", alias: "confirmed" },
-      { name: "epaircategory", alias: "epaIrCategory" },
-      { name: "locationdescription", alias: "locationDescription" },
-      { name: "organizationid", alias: "organizationId" },
-      { name: "organizationname", alias: "organizationName" },
-      { name: "organizationtype", alias: "organizationType" },
-      { name: "overallstatus", alias: "overallStatus" },
-      { name: "parametergroup", alias: "parameterGroup" },
-      { name: "region", alias: "region" },
-      { name: "reportingcycle", alias: "reportingCycle" },
-      { name: "sourcename", alias: "sourceName" },
-      { name: "state", alias: "state" },
-      { name: "stateircategory", alias: "stateIrCategory" },
-      { name: "watersize", alias: "waterSize" },
-      { name: "watersizeunits", alias: "waterSizeUnits" },
-      { name: "watertype", alias: "waterType" },
-    ],
-  },
-};
 
 /**
  * Gets the query parameters from the request.
@@ -137,22 +36,6 @@ function getQueryParams(req) {
   });
 
   return parameters;
-}
-
-/**
- * Appends to the where clause of the provided query.
- * @param {Object} query KnexJS query object
- * @param {string} paramName column name
- * @param {string} paramValue URL query value
- */
-function appendToWhere(query, paramName, paramValue) {
-  if (!paramValue) return;
-
-  if (Array.isArray(paramValue)) {
-    query.whereIn(paramName, paramValue);
-  } else {
-    query.where(paramName, paramValue);
-  }
 }
 
 /**

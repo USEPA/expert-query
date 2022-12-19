@@ -19,24 +19,24 @@ import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import RadioButtons from 'components/radioButtons';
+import SourceSelect from 'components/sourceSelect';
 import Summary from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
-// types
-import type { Dispatch, ReactNode } from 'react';
 // config
-import { fields as allFields, options as listOptions, profiles } from 'config';
+import {
+  fields as allFields,
+  getData,
+  options as listOptions,
+  profiles,
+  serverUrl,
+} from 'config';
 
 /*
 ## Types
 */
 type InputAction =
   | InputFieldAction
-  | {
-      type: 'dataProfile';
-      payload: Option<JSX.Element, keyof typeof profiles> | null;
-    }
-  | { type: 'format'; payload: Option<ReactNode, string> }
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' };
 
@@ -47,35 +47,45 @@ type InputFieldAction = {
   };
 }[keyof InputState];
 
-type InputState = MultiValueState & {
-  dataProfile: Option<JSX.Element, keyof typeof profiles> | null;
-  format: InputStateSingleOption;
+type InputHandlers = MultiOptionHandlers & SingleOptionHandlers;
+
+type InputState = MultiOptionState & SingleOptionState;
+
+type InputValue = Primitive | Primitive[] | null;
+
+const multiOptionFields = getMultiOptionFields(allFields);
+type MultiOptionField = typeof multiOptionFields[number];
+
+type MultiOptionHandlers = {
+  [key in MultiOptionField]: (ev: ReadonlyArray<Option>) => void;
 };
 
-type InputStateMultiOption = ReadonlyArray<Option<ReactNode, string>> | null;
-type InputStateSingleOption = Option<ReactNode, string> | null;
+type MultiOptionState = {
+  [key in MultiOptionField]: ReadonlyArray<Option> | null;
+};
 
-type InputValue = URLQueryArg | URLQueryArg[] | null;
+const singleOptionFields = getSingleOptionFields(allFields);
+type SingleOptionField = typeof singleOptionFields[number];
 
-type MultiValueField = Exclude<keyof StaticOptions, 'dataProfile' | 'format'>;
+type SingleOptionHandlers = {
+  [key in SingleOptionField]: (ev: Option | null) => void;
+};
 
-type MultiValueState = {
-  [key in MultiValueField]: InputStateMultiOption;
+type SingleOptionState = {
+  [key in SingleOptionField]: Option | null;
 };
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
-type URLQueryParam = [string, URLQueryArg];
+type URLQueryParam = [string, Primitive];
 
 type URLQueryState = {
-  [field: string]: URLQueryArg | URLQueryArg[];
+  [field: string]: Primitive | Primitive[];
 };
-
-type URLQueryArg = string | number | boolean;
 
 type PostData = {
   filters: {
-    [field: string]: URLQueryArg | URLQueryArg[];
+    [field: string]: Primitive | Primitive[];
   };
   options: {
     f?: string;
@@ -86,15 +96,16 @@ type PostData = {
 /*
 ## Constants
 */
+const dynamicOptionLimit = 20;
 const staticOptionLimit = 100;
-
-const defaultFormat = 'csv';
 
 const controlFields = ['dataProfile', 'format'];
 
 /*
 ## Utilities
 */
+
+// Adds aliases for fields that share the same set of possible values
 function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   values.associatedActionAgency = values.actionAgency;
   values.associatedActionStatus = values.assessmentUnitStatus;
@@ -140,25 +151,102 @@ function buildQueryString(query: URLQueryState, includeProfile = true) {
     .replace('&', ''); // trim the leading ampersand
 }
 
-// TODO: Add handler for dynamic options
-function filterDynamicOptions(_field: string) {
-  return function (_inputValue: string) {};
+// Returns a boolean, specifying if a value is found in the
+// specified table and column of the database
+async function checkColumnValue(
+  value: Primitive,
+  fieldName: string,
+  profile: string,
+) {
+  let url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
+  const res = await getData<Primitive[]>(url);
+  if (res.length) return true;
+  return false;
+}
+
+// Creates a reducer to manage the state of all query field inputs
+function createReducer() {
+  const handlers: Partial<{
+    [field in keyof InputState]: (
+      state: InputState,
+      action: InputAction,
+    ) => InputState;
+  }> = {};
+  let field: keyof InputState;
+  for (field in getDefaultInputState()) {
+    handlers[field] = (state, action) => {
+      if (!('payload' in action)) return state;
+      return { ...state, [action.type]: action.payload };
+    };
+  }
+  return function reducer(state: InputState, action: InputAction) {
+    if (action.type === 'initialize') {
+      return action.payload;
+    } else if (action.type === 'reset') {
+      return getDefaultInputState();
+    } else if (handlers.hasOwnProperty(action.type)) {
+      return handlers[action.type]?.(state, action) ?? state;
+    } else {
+      const message = `Unhandled action type: ${action}`;
+      throw new Error(message);
+    }
+  };
+}
+
+// Filters options that require fetching values from the database
+function filterDynamicOptions(
+  profile: string,
+  fieldName: string,
+  contextField?: string | null,
+  contextValue?: Primitive | null,
+  limit?: number | null,
+) {
+  return async function (inputValue?: string): Promise<Array<Option>> {
+    let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}`;
+    if (isNotEmpty(limit)) url += `&limit=${limit}`;
+    if (isNotEmpty(contextField) && isNotEmpty(contextValue)) {
+      url += `&${contextField}=${contextValue}`;
+    }
+    const values = await getData<Primitive[]>(url);
+    return values.map((value) => ({ label: value, value }));
+  };
 }
 
 // Filters options by search input, returning a maximum number of options
-function filterStaticOptions<S, T>(options: ReadonlyArray<Option<S, T>>) {
+function filterOptions(
+  profile: string,
+  field: string,
+  staticOptions: StaticOptions,
+  contextField?: string | null,
+  contextValue?: Primitive | null,
+) {
+  if (staticOptions.hasOwnProperty(field)) {
+    return filterStaticOptions(
+      staticOptions[field as keyof StaticOptions] ?? [],
+      contextValue,
+    );
+  } else {
+    return filterDynamicOptions(
+      profile,
+      field,
+      contextField,
+      contextValue,
+      dynamicOptionLimit,
+    );
+  }
+}
+
+// Filters options that have values held in memory
+function filterStaticOptions(
+  options: ReadonlyArray<Option>,
+  context?: Primitive | null,
+) {
+  const contextOptions = filterStaticOptionsByContext(options, context);
+
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
-    if (value.length < 3) {
-      return Promise.resolve(
-        options.length < staticOptionLimit
-          ? options
-          : options.slice(0, staticOptionLimit),
-      );
-    }
-
-    const matches: Array<Option<S, T>> = [];
-    options.every((option) => {
+    const matches: Option[] = [];
+    contextOptions.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
       if (
         (typeof option.label === 'string' &&
@@ -174,68 +262,68 @@ function filterStaticOptions<S, T>(options: ReadonlyArray<Option<S, T>>) {
   };
 }
 
+// Filters options by context value, if present
+function filterStaticOptionsByContext(
+  options: ReadonlyArray<Option>,
+  context?: Primitive | null,
+) {
+  if (isNotEmpty(context)) {
+    return options.filter((option) => {
+      if ('context' in option && option.context === context) return true;
+      return false;
+    });
+  } else return options;
+}
+
+// Utility function to choose between 'a' or 'an'
 function getArticle(noun: string) {
   if (!noun.length) return '';
+  const aExceptions = ['use'];
+  if (aExceptions.includes(noun.toLowerCase())) return 'a';
   if (['a', 'e', 'i', 'o', 'u'].includes(noun.charAt(0).toLowerCase())) {
     return 'an';
   }
   return 'a';
 }
 
-// Empty or default values for inputs
+// Returns the empty state for inputs (default values populated in `getUrlInputs`)
 function getDefaultInputState(): InputState {
-  return {
-    actionAgency: null,
-    assessmentTypes: null,
-    assessmentUnitStatus: null,
-    associatedActionAgency: null,
-    associatedActionStatus: null,
-    associatedActionType: null,
-    confirmed: null,
-    cwa303dPriorityRanking: null,
-    dataProfile: null,
-    delisted: null,
-    delistedReason: null,
-    format: matchSingleStaticOption(null, defaultFormat, listOptions.format),
-    inIndianCountry: null,
-    loadAllocationUnits: null,
-    // TODO: Add after endpoint is created for values
-    // locationText: null,
-    locationTypeCode: null,
-    organizationId: null,
-    organizationType: null,
-    parameter: null,
-    parameterGroup: null,
-    parameterName: null,
-    parameterStateIrCategory: null,
-    pollutant: null,
-    sourceName: null,
-    sourceScale: null,
-    sourceType: null,
-    state: null,
-    stateIrCategory: null,
-    useClassName: null,
-    useName: null,
-    useStateIrCategory: null,
-    waterSizeUnits: null,
-    waterType: null,
-  };
+  return [...singleOptionFields, ...multiOptionFields].reduce((a, b) => {
+    return { ...a, [b]: null };
+  }, {}) as InputState;
+}
+
+// Returns the default option for a field, if specified
+function getDefaultOption(
+  fieldName: string,
+  options: ReadonlyArray<Option> | null = null,
+) {
+  const field = allFields.find((f) => f.key === fieldName);
+  const defaultValue = field && 'default' in field ? field.default : null;
+  if (defaultValue) {
+    const defaultOption = options?.find(
+      (option) => option.value === defaultValue,
+    );
+    return defaultOption ?? { label: defaultValue, value: defaultValue };
+  } else return null;
 }
 
 // Returns unfiltered options for a field, up to a maximum length
-// TODO: `field` should also include dynamic fields
 function getInitialOptions(
   staticOptions: StaticOptions,
-  field: typeof allFields[number]['key'],
+  fieldName: typeof allFields[number]['key'],
+  context?: Primitive | null,
 ) {
-  if (field in staticOptions) {
-    const fieldOptions = staticOptions[field] ?? [];
-    return fieldOptions.length > staticOptionLimit
-      ? fieldOptions.slice(0, staticOptionLimit)
-      : fieldOptions;
+  if (staticOptions.hasOwnProperty(fieldName)) {
+    const fieldOptions = staticOptions[fieldName as keyof StaticOptions] ?? [];
+    const contextOptions = filterStaticOptionsByContext(fieldOptions, context);
+
+    return contextOptions.length > staticOptionLimit
+      ? contextOptions.slice(0, staticOptionLimit)
+      : contextOptions;
   }
-  // TODO: Handle dynamic fields
-  return [];
+  // Return true to trigger an immediate fetch from the database
+  return true;
 }
 
 // Extracts the value field from Option items, otherwise returns the item
@@ -254,126 +342,183 @@ function getLocalStorageItem(item: string) {
   return localStorage.getItem(item) ?? null;
 }
 
+function getMultiOptionFields(fields: typeof allFields) {
+  const multiFields = fields.map((field) => {
+    return field.type === 'multiselect' ? field.key : null;
+  });
+  const filtered = multiFields.reduce<
+    Array<Exclude<typeof multiFields[number], null>>
+  >((a, b) => {
+    if (b !== null) {
+      a.push(b);
+    }
+    return a;
+  }, []);
+  return filtered;
+}
+
+// Retrieves all possible options for a given field
+function getOptions(
+  profile: string,
+  field: string,
+  staticOptions: StaticOptions,
+) {
+  const options = getStaticOptions(field, staticOptions);
+  if (options !== null) {
+    return Promise.resolve(options);
+  } else {
+    return filterDynamicOptions(profile, field)();
+  }
+}
+
+function getSingleOptionFields(fields: typeof allFields) {
+  const singleFields = fields.map((field) => {
+    return field.type === 'radio' || field.type === 'select' ? field.key : null;
+  });
+  const filtered = singleFields.reduce<
+    Array<Exclude<typeof singleFields[number], null>>
+  >((a, b) => {
+    if (b !== null) {
+      a.push(b);
+    }
+    return a;
+  }, []);
+  return filtered;
+}
+
+function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
+  return staticOptions.hasOwnProperty(fieldName)
+    ? staticOptions[fieldName as keyof StaticOptions] ?? []
+    : null;
+}
+
 // Uses URL query parameters or default values for initial state
 async function getUrlInputs(
   _signal: AbortSignal,
-  options: StaticOptions,
+  staticOptions: StaticOptions,
 ): Promise<InputState> {
   const params = parseInitialParams();
 
+  // Get the data profile first, so it can be
+  // used to check values against the database
+  const profileArg = Array.isArray(params.dataProfile)
+    ? params.dataProfile[0]
+    : params.dataProfile;
+  const profile = Object.keys(profiles).find((p) => {
+    return p === profileArg;
+  });
+
   const newState = getDefaultInputState();
 
-  const { dataProfile, format, ...rest } = options;
-
-  // Multi-select inputs with static options
-  let key: keyof typeof rest;
-  for (key in rest) {
-    newState[key] = matchMultipleStaticOptions(
-      params[key] ?? null,
-      null,
-      rest[key],
-  );
-  }
-
-  // Single-select inputs with static options
-  newState.dataProfile = matchSingleStaticOption(
-    params.dataProfile ?? null,
-    null,
-    options.dataProfile,
-  );
-
-  newState.format = matchSingleStaticOption(
-    params.format ?? null,
-    defaultFormat,
-    options.format,
-  );
+  await Promise.all([
+    // Multi-select inputs
+    ...multiOptionFields.map(async (key) => {
+      newState[key] = await matchMultipleOptions(
+        params[key] ?? null,
+        key,
+        getStaticOptions(key, staticOptions),
+        profile,
+      );
+    }),
+    // Single-select inputs
+    ...singleOptionFields.map(async (key) => {
+      newState[key] = await matchSingleOption(
+        params[key] ?? null,
+        key,
+        getStaticOptions(key, staticOptions),
+        profile,
+      );
+    }),
+  ]);
 
   return newState;
 }
 
-// Creates a reducer to manage the state of all query field inputs
-function createReducer() {
-  const handlers: Partial<{
-    [field in keyof InputState]: (
-      state: InputState,
-      action: InputAction,
-    ) => InputState;
-  }> = {};
-  let field: keyof InputState;
-  for (field in getDefaultInputState()) {
-    handlers[field] = (state, action) => {
-      if (!('payload' in action)) return state;
-      return { ...state, [action.type]: action.payload };
-      };
-  }
-  return function reducer(state: InputState, action: InputAction) {
-    if (action.type === 'initialize') {
-      return action.payload;
-    } else if (action.type === 'reset') {
-      return getDefaultInputState();
-    } else if (handlers.hasOwnProperty(action.type)) {
-      return handlers[action.type]?.(state, action) ?? state;
-    } else {
-      const message = `Unhandled action type: ${action}`;
-      throw new Error(message);
-    }
-  };
+function isNotEmpty<T>(v: T | null | undefined): v is T {
+  return v !== undefined && v !== null;
 }
 
-// Type narrowing for InputState
-function isOption(
-  maybeOption: Option<unknown, unknown> | URLQueryArg,
-): maybeOption is Option<unknown, unknown> {
+// Type narrowing
+function isOption(maybeOption: Option | Primitive): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
-// Wrapper function for `matchStaticOptions`
-function matchSingleStaticOption<S, T>(
-  value: InputValue,
-  defaultValue: URLQueryArg | null,
-  options?: ReadonlyArray<Option<S, T>>,
-): Option<S, T> | null {
-  return matchStaticOptions(value, defaultValue, options ?? null) as Option<
-    S,
-    T
-  > | null;
+// Type narrowing
+function isMultiOptionField(
+  field: MultiOptionField | SingleOptionField,
+): field is MultiOptionField {
+  return (multiOptionFields as string[]).includes(field);
 }
 
-// Wrapper function for `matchStaticOptions`
-function matchMultipleStaticOptions<S, T>(
-  value: InputValue,
-  defaultValue: URLQueryArg | null,
-  options?: ReadonlyArray<Option<S, T>>,
-): ReadonlyArray<Option<S, T>> | null {
-  return matchStaticOptions(
-    value,
-    defaultValue,
-    options ?? null,
+// Type narrowing
+function isSingleOptionField(
+  field: MultiOptionField | SingleOptionField,
+): field is SingleOptionField {
+  return (singleOptionFields as string[]).includes(field);
+}
+
+// Wrapper function to add type assertion
+async function matchMultipleOptions(
+  values: InputValue,
+  fieldName: MultiOptionField,
+  options: ReadonlyArray<Option> | null = null,
+  profile: string | null = null,
+) {
+  return (await matchOptions(
+    values,
+    fieldName,
+    options,
+    profile,
     true,
-  ) as ReadonlyArray<Option<S, T>> | null;
+  )) as ReadonlyArray<Option>;
+}
+
+// Wrapper function to add type assertion
+async function matchSingleOption(
+  values: InputValue,
+  fieldName: SingleOptionField,
+  options: ReadonlyArray<Option> | null = null,
+  profile: string | null = null,
+) {
+  return (await matchOptions(
+    values,
+    fieldName,
+    options,
+    profile,
+  )) as Option | null;
 }
 
 // Produce the option/s corresponding to a particular value
-function matchStaticOptions<S, T>(
-  value: InputValue,
-  defaultValue: URLQueryArg | null,
-  options: ReadonlyArray<Option<S, T>> | null,
+async function matchOptions(
+  values: InputValue,
+  fieldName: MultiOptionField | SingleOptionField,
+  options: ReadonlyArray<Option> | null = null,
+  profile: string | null = null,
   multiple = false,
 ) {
-  if (!options) return defaultValue;
-  const valuesArray: URLQueryArg[] = [];
-  if (Array.isArray(value)) valuesArray.push(...value);
-  else if (value !== null) valuesArray.push(value);
-  if (!valuesArray.length && defaultValue) valuesArray.push(defaultValue);
+  const valuesArray: Primitive[] = [];
+  if (Array.isArray(values)) valuesArray.push(...values);
+  else if (values !== null) valuesArray.push(values);
 
-  const matches = new Set<Option<S, T>>(); // prevent duplicates
+  const matches = new Set<Option>(); // prevent duplicates
   // Check if the value is valid, otherwise use a default value
-  valuesArray.forEach((value) => {
-    const match =
-      options.find((option) => option.value === value) ??
-      options.find((option) => option.value === defaultValue);
-    if (match) matches.add(match);
-  });
+  await Promise.all(
+    valuesArray.map(async (value) => {
+      if (options) {
+        const match = options.find((option) => option.value === value);
+        if (match) matches.add(match);
+      } else if (profile) {
+        const isValid = await checkColumnValue(value, fieldName, profile);
+        if (isValid) matches.add({ label: value, value });
+      }
+    }),
+  );
+
+  if (matches.size === 0) {
+    const defaultOption = getDefaultOption(fieldName, options);
+    defaultOption && matches.add(defaultOption);
+  }
+
   const matchesArray = Array.from(matches);
   return multiple ? matchesArray : matchesArray.pop() ?? null;
 }
@@ -471,7 +616,26 @@ export function Home() {
     createReducer(),
     getDefaultInputState(),
   );
+
+  // Memoize individual dispatch functions
+  const inputHandlers = useMemo(() => {
+    const newHandlers: Partial<InputHandlers> = {};
+    allFields.forEach((field) => {
+      if (isMultiOptionField(field.key)) {
+        newHandlers[field.key] = (ev: ReadonlyArray<Option>) =>
+          inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
+      } else if (isSingleOptionField(field.key)) {
+        newHandlers[field.key] = (ev: Option | null) =>
+          inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
+      }
+    });
+    return newHandlers as InputHandlers;
+  }, [inputDispatch]);
+
   const { dataProfile, format } = inputState;
+  const profile = dataProfile
+    ? (dataProfile.value as keyof typeof profiles)
+    : null;
 
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
@@ -504,10 +668,8 @@ export function Home() {
         const flattenedValue = getInputValue(value);
         if (
           controlFields.includes(field) ||
-          (dataProfile &&
-            (profiles[dataProfile.value].fields as readonly string[]).includes(
-              field,
-            ))
+          (profile &&
+            (profiles[profile].fields as readonly string[]).includes(field))
         ) {
           newQueryParams[field] = flattenedValue;
         }
@@ -517,7 +679,7 @@ export function Home() {
     window.location.hash = buildQueryString(newQueryParams);
 
     setQueryParams(newQueryParams);
-  }, [dataProfile, inputState, inputsLoaded]);
+  }, [inputState, inputsLoaded, profile]);
 
   const [introVisible, setIntroVisible] = useState(
     !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
@@ -590,85 +752,81 @@ export function Home() {
           )}
           {staticOptions && (
             <>
-          <h3>Data Profile</h3>
-          <Select
-            aria-label="Select a data profile"
-            onChange={(ev) =>
-              inputDispatch({ type: 'dataProfile', payload: ev })
-            }
+              <h3>Data Profile</h3>
+              <Select
+                aria-label="Select a data profile"
+                onChange={inputHandlers.dataProfile}
                 options={staticOptions.dataProfile}
-            placeholder="Select a data profile..."
-            value={dataProfile}
-          />
-          {dataProfile && (
-            <>
+                placeholder="Select a data profile..."
+                value={dataProfile}
+              />
+              {profile && (
+                <>
                   <h3 className="margin-bottom-0">Filters</h3>
-              <FilterFields
-                dispatch={inputDispatch}
-                fields={profiles[dataProfile.value].fields}
+                  <FilterFields
+                    handlers={inputHandlers}
                     staticOptions={staticOptions}
-                state={inputState}
-              />
-              <h3>Download the Data</h3>
-              <div className="display-flex flex-wrap">
-                <RadioButtons
-                  legend={
-                    <>
-                      <b className="margin-right-05">File Format</b>
-                      <InfoTooltip text="Choose a file format for the result set" />
-                    </>
-                  }
-                  onChange={(option) =>
-                    inputDispatch({ type: 'format', payload: option })
-                  }
+                    state={inputState}
+                  />
+                  <h3>Download the Data</h3>
+                  <div className="display-flex flex-wrap">
+                    <RadioButtons
+                      legend={
+                        <>
+                          <b className="margin-right-05">File Format</b>
+                          <InfoTooltip text="Choose a file format for the result set" />
+                        </>
+                      }
+                      onChange={inputHandlers.format}
                       options={staticOptions.format}
-                  selected={format}
-                  styles={['margin-bottom-2']}
-                />
-                <div className="display-flex flex-column flex-1 margin-y-auto">
-                  <button
+                      selected={format}
+                      styles={['margin-bottom-2']}
+                    />
+                    <div className="display-flex flex-column flex-1 margin-y-auto">
+                      <button
                         className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
-                    onClick={() => null}
-                    type="button"
-                  >
-                    <Download className="height-205 margin-right-1 usa-icon width-205" />
-                    Download
-                  </button>
-                  <button
-                    className="margin-x-auto usa-button usa-button--outline"
-                    onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                    type="button"
-                  >
-                    Clear Search
-                  </button>
-                </div>
-              </div>
-              <h4>
-                {/* TODO - Remove the glossary linkage before production deployment */}
-                <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-              </h4>
-              <CopyBox
-                text={`${window.location.origin}${
-                  window.location.pathname
-                }/#${buildQueryString(queryParams)}`}              />
-              <h4>{profiles[dataProfile.value].label} API Query</h4>
-              <CopyBox
-                lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
-                maxLength={2048}
-                text={`${eqDataUrl}/data/${
-                  profiles[dataProfile.value].resource
-                }?${buildQueryString(queryParams, false)}`}
-              />
-              <h4>cURL</h4>
-              <CopyBox
-                text={`curl -X POST --json "${JSON.stringify(
-                  buildPostData(queryParams),
-                ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
-                  profiles[dataProfile.value].resource
-                }`}
-              />
-            </>
-          )}
+                        onClick={() => null}
+                        type="button"
+                      >
+                        <Download className="height-205 margin-right-1 usa-icon width-205" />
+                        Download
+                      </button>
+                      <button
+                        className="margin-x-auto usa-button usa-button--outline"
+                        onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                        type="button"
+                      >
+                        Clear Search
+                      </button>
+                    </div>
+                  </div>
+                  <h4>
+                    {/* TODO - Remove the glossary linkage before production deployment */}
+                    <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+                  </h4>
+                  <CopyBox
+                    text={`${window.location.origin}${
+                      window.location.pathname
+                    }/#${buildQueryString(queryParams)}`}
+                  />
+                  <h4>{profiles[profile].label} API Query</h4>
+                  <CopyBox
+                    lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+                    maxLength={2048}
+                    text={`${eqDataUrl}/data/${
+                      profiles[profile].resource
+                    }?${buildQueryString(queryParams, false)}`}
+                  />
+                  <h4>cURL</h4>
+                  <CopyBox
+                    text={`curl -X POST --json "${JSON.stringify(
+                      buildPostData(queryParams),
+                    ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
+                      profiles[profile].resource
+                    }`}
+                  />
+                </>
+              )}
             </>
           )}
         </div>
@@ -680,68 +838,96 @@ export function Home() {
 }
 
 type FilterFieldsProps = {
-  dispatch: Dispatch<InputAction>;
-  fields: readonly string[];
+  handlers: InputHandlers;
   state: InputState;
   staticOptions: StaticOptions;
 };
 
-function FilterFields({
-  dispatch,
-  fields,
-  state,
-  staticOptions,
-}: FilterFieldsProps) {
-  const dispatches = useMemo(() => {
-    // TODO: Update to include single-select fields
-    const newDispatches: {
-      [field: string]: (ev: ReadonlyArray<Option<ReactNode, string>>) => void;
-    } = {};
-    allFields.forEach((field) => {
-      newDispatches[field.key] = (
-        ev: ReadonlyArray<Option<ReactNode, string>>,
-      ) => dispatch({ type: field.key, payload: ev });
-    });
-    return newDispatches;
-  }, [dispatch]);
+function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
+  const profile = (state.dataProfile?.value as keyof typeof profiles) ?? null;
+  if (!profile) return null;
+
+  const fields: readonly string[] = profiles[profile].fields;
 
   // Store each field's element in a tuple with its key
-  const fieldsJsx: [JSX.Element, string][] = allFields
+  const fieldsJsx: Array<[JSX.Element, string]> = allFields
     .filter((field) => fields.includes(field.key))
     .map((field) => {
+      const contextField = 'context' in field ? field.context : null;
+      const contextValue = contextField ? state[contextField]?.value : null;
+      const defaultOptions = getInitialOptions(
+        staticOptions,
+        field.key,
+        contextValue,
+      );
       if (field.type === 'multiselect') {
-        const defaultOptions = getInitialOptions(staticOptions, field.key);
-        if (defaultOptions.length <= 5)
+        if (
+          !contextField &&
+          Array.isArray(defaultOptions) &&
+          defaultOptions.length <= 5
+        ) {
           return [
             <Checkboxes
               key={field.key}
               legend={<b>{field.label}</b>}
-              onChange={dispatches[field.key]}
+              onChange={handlers[field.key]}
               options={defaultOptions}
               selected={state[field.key] ?? []}
               styles={['margin-top-3']}
             />,
             field.key,
           ];
+        }
         return [
-          <label className="usa-label" key={field.key}>
+          <label
+            className="usa-label"
+            key={field.key}
+            htmlFor={`input-${field.key}`}
+          >
             <b>{field.label}</b>
-            <AsyncSelect
-              aria-label={`${field.label} input`}
-              className="margin-top-1"
-              isMulti
-              onChange={dispatches[field.key]}
-              defaultOptions={defaultOptions}
-              loadOptions={
-                staticOptions.hasOwnProperty(field.key)
-                  ? filterStaticOptions(defaultOptions)
-                  : filterDynamicOptions(field.key)
+            <SourceSelect
+              label={
+                contextField &&
+                allFields.find((f) => f.key === contextField)?.label
               }
-              placeholder={`Select ${getArticle(field.label)} ${
-                field.label
-              }...`}
-              value={state[field.key]}
-            />
+              sources={
+                contextField && getOptions(profile, contextField, staticOptions)
+              }
+              onChange={contextField && handlers[contextField]}
+              selected={contextField && state[contextField]}
+            >
+              <AsyncSelect
+                aria-label={`${field.label} input`}
+                className="width-full"
+                inputId={`input-${field.key}`}
+                isMulti
+                // re-renders default options when `contextValue` changes
+                key={JSON.stringify(contextValue)}
+                onChange={handlers[field.key]}
+                defaultOptions={defaultOptions}
+                loadOptions={filterOptions(
+                  profile,
+                  field.key,
+                  staticOptions,
+                  contextField,
+                  contextValue,
+                )}
+                placeholder={`Select ${getArticle(field.label.split(' ')[0])} ${
+                  field.label
+                }...`}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    border: '1px solid #adadad',
+                    borderRadius: contextField ? '0 4px 4px 0' : '4px',
+                  }),
+                  loadingIndicator: () => ({
+                    display: 'none',
+                  }),
+                }}
+                value={state[field.key]}
+              />
+            </SourceSelect>
           </label>,
           field.key,
         ];
@@ -749,7 +935,7 @@ function FilterFields({
     });
 
   // Store each row as a tuple with its row key
-  const rows: [[JSX.Element, string][], string][] = [];
+  const rows: Array<[Array<[JSX.Element, string]>, string]> = [];
   for (let i = 0; i < fieldsJsx.length; i += 3) {
     const row = fieldsJsx.slice(i, i + 3);
     const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
@@ -757,15 +943,15 @@ function FilterFields({
   }
 
   return (
-        <div>
+    <div>
       {rows.map(([row, rowKey]) => (
         <div className="grid-gap grid-row" key={rowKey}>
           {row.map(([field, fieldKey]) => (
             <div className="tablet:grid-col" key={fieldKey}>
               {field}
-        </div>
+            </div>
           ))}
-    </div>
+        </div>
       ))}
     </div>
   );

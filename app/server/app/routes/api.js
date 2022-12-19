@@ -2,6 +2,8 @@ const { resolve } = require("node:path");
 const { readFile } = require("node:fs/promises");
 const express = require("express");
 const axios = require("axios");
+const { getActiveSchema } = require("../middleware");
+const { appendToWhere, knex, mapping } = require("../utilities/database");
 const logger = require("../utilities/logger");
 const log = logger.logger;
 
@@ -32,8 +34,41 @@ function parseResponse(res) {
   }
 }
 
+async function queryColumnValues(profile, column, params, schema) {
+  const parsedParams = {
+    text: "",
+    filters: {},
+    limit: null,
+  };
+
+  Object.entries(params).forEach(([name, value]) => {
+    if (name === "text") parsedParams.text = value;
+    else if (name === "limit") parsedParams.limit = value;
+    else parsedParams.filters[name] = value;
+  });
+
+  const query = knex
+    .withSchema(schema)
+    .from(profile.tableName)
+    .column(column.name)
+    .whereILike(column.name, `%${parsedParams.text}%`)
+    .distinctOn(column.name)
+    .select();
+
+  if (parsedParams.limit) query.limit(parsedParams.limit);
+
+  // build where clause of the query
+  profile.columns.forEach((col) => {
+    appendToWhere(query, col.name, parsedParams.filters[col.alias]);
+  });
+
+  return await query;
+}
+
 module.exports = function (app) {
   const router = express.Router();
+
+  router.use(getActiveSchema);
 
   // --- get static content from S3
   router.get("/lookupFiles", (req, res) => {
@@ -146,6 +181,36 @@ module.exports = function (app) {
         return res
           .status(error?.response?.status || 500)
           .json({ message: "Error getting static content from S3 bucket" });
+      });
+  });
+
+  // create post requests
+  router.get("/:profile/values/:column", function (req, res) {
+    const profile = mapping[req.params.profile];
+    if (!profile) {
+      return res
+        .status(404)
+        .json({ message: "The requested profile does not exist" });
+    }
+
+    const column = profile.columns.find(
+      (col) => col.alias === req.params.column
+    );
+    if (!column) {
+      return res.status(404).json({
+        message: "The requested column does not exist on the selected profile",
+      });
+    }
+
+    queryColumnValues(profile, column, req.query, req.activeSchema)
+      .then((values) =>
+        res.status(200).json(values.map((value) => value[column.name]))
+      )
+      .catch((error) => {
+        log.error(
+          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table...`
+        );
+        res.status(500).send("Error! " + error);
       });
   });
 

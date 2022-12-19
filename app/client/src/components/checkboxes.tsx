@@ -5,17 +5,14 @@ import type { ReactNode } from 'react';
 
 type Props = {
   legend?: ReactNode;
-  onChange: (selected: ReadonlyArray<Option<ReactNode, string>>) => void;
-  options: ReadonlyArray<Option<ReactNode, string>>;
-  selected?: ReadonlyArray<Option<ReactNode, string>>;
+  onChange: (selected: ReadonlyArray<Option>) => void;
+  options: ReadonlyArray<Option>;
+  selected?: ReadonlyArray<Option>;
   styles?: string[];
   tile?: boolean;
 };
 
-function isSelected(
-  option: Option<ReactNode, string>,
-  selected: ReadonlyArray<Option<ReactNode, string>>,
-) {
+function isSelected(option: Option, selected: ReadonlyArray<Option>) {
   return !!selected.find((s) => s.value === option.value);
 }
 
@@ -45,7 +42,7 @@ export default function Checkboxes({
               }
             }}
             tile={tile}
-            value={option.value}
+            value={option.value.toString()}
           />
         );
       })}

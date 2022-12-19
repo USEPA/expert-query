@@ -22,7 +22,7 @@ type AliasedField =
   | 'useStateIrCategory';
 
 type AliasedOptions = {
-  [key in AliasedField]: Array<Option<string, string>> | undefined;
+  [key in AliasedField]: Array<Option> | undefined;
 };
 
 interface ArrayConstructor {
@@ -52,32 +52,16 @@ type ConcreteField =
   | 'waterType';
 
 type ConcreteOptions = {
-  [key in ConcreteField]: Array<Option<string, string>>;
+  [key in ConcreteField]: Array<Option>;
 };
 
 type DomainOptions = ConcreteOptions & AliasedOptions;
 
-type Option<S, T> = {
+type Option = {
+  context?: string;
   description?: ReactNode;
-  label: S;
-  value: T;
+  label: ReactNode;
+  value: Primitive;
 };
 
-type DomainValues = {
-  actionAgency: Array<Option<string, string>>;
-  assessmentUnitStatus: Array<Option<string, string>>;
-  loadAllocationUnits: Array<Option<string, string>>;
-  locationTypeCode: Array<Option<string, string>>;
-  locationText: Array<Option<string, string>>;
-  organizationId: Array<Option<string, string>>;
-  parameterGroup: Array<Option<string, string>>;
-  pollutant: Array<Option<string, string>>;
-  sourceName: Array<Option<string, string>>;
-  sourceScale: Array<Option<string, string>>;
-  sourceType: Array<Option<string, string>>;
-  state: Array<Option<string, string>>;
-  stateIrCategory: Array<Option<string, string>>;
-  useClassName: Array<Option<string, string>>;
-  waterSizeUnits: Array<Option<string, string>>;
-  waterType: Array<Option<string, string>>;
-};
+type Primitive = string | number | boolean;
