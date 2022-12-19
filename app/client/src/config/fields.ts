@@ -1,6 +1,7 @@
 export default [
   { key: 'actionAgency', label: 'Action Agency', type: 'multiselect' },
   { key: 'assessmentTypes', label: 'Assessment Type', type: 'multiselect' },
+  { key: 'assessmentUnitId', label: 'Assessment Unit ID', type: 'multiselect' },
   {
     key: 'assessmentUnitStatus',
     label: 'Assessment Unit Status',
@@ -30,22 +31,20 @@ export default [
   { key: 'dataProfile', label: 'Data Profile', type: 'select' },
   { key: 'delisted', label: 'Delisted', type: 'multiselect' },
   { key: 'delistedReason', label: 'Delisted Reason', type: 'multiselect' },
-  { key: 'format', label: 'File Format', type: 'radio' },
+  { key: 'format', label: 'File Format', type: 'radio', default: 'csv' },
   { key: 'inIndianCountry', label: 'In Indian Country', type: 'multiselect' },
   {
     key: 'loadAllocationUnits',
     label: 'Load Allocation Unit',
     type: 'multiselect',
   },
-  // TODO: Add after value endpoint is created
-  /* {
+  {
     key: 'locationText',
     label: 'Location Text',
     type: 'multiselect',
     context: 'locationTypeCode',
-  }, */
-  // TODO: Remove this field after it is paired with the `locationText` field
-  { key: 'locationTypeCode', label: 'Location Type Code', type: 'multiselect' },
+  },
+  { key: 'locationTypeCode', label: 'Location Type Code', type: 'select' },
   {
     key: 'organizationId',
     label: 'Organization ID',

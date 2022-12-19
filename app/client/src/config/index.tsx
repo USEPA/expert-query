@@ -37,7 +37,7 @@ async function fetchData(url: string, options: RequestInit) {
  * Fetches data and returns a promise containing JSON fetched from a provided
  * web service URL or handles any other OK response returned from the server
  */
-export function getData<T>(url: string, signal: AbortSignal): Promise<T> {
+export function getData<T>(url: string, signal?: AbortSignal): Promise<T> {
   return fetchData(url, {
     method: 'GET',
     credentials: 'include' as const,

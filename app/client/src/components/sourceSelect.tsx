@@ -41,13 +41,15 @@ function useKeyPress(
 }
 
 type Props = {
-  sources?: ReadonlyArray<Option> | null;
+  label?: string | null;
+  sources?: Promise<ReadonlyArray<Option>> | null;
   children: ReactNode;
   onChange?: ((selected: Option | null) => void) | null;
   selected?: Option | null;
 };
 
 export default function SourceSelect({
+  label = null,
   sources,
   children,
   onChange,
@@ -65,10 +67,20 @@ export default function SourceSelect({
   );
 
   useEffect(() => {
-    setAllSources(
-      sources ? [{ label: 'All', value: Infinity }, ...sources] : null,
-    );
-  }, [sources]);
+    if (sources) {
+      sources
+        .then((s) => {
+          const allSourcesLabel = label ? `All ${label}s` : 'All';
+          setAllSources([{ label: allSourcesLabel, value: Infinity }, ...s]);
+        })
+        .catch((err) => {
+          console.error(err);
+          setAllSources(null);
+        });
+    } else {
+      setAllSources(null);
+    }
+  }, [label, sources]);
 
   useEffect(() => {
     setSourceCursor(-1);
