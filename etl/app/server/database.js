@@ -275,7 +275,7 @@ export async function runJob(s3Config) {
   try {
     await runLoad(pool, s3Config);
     await trimSchema(pool, s3Config);
-    await trimNationalDownloads(pool, s3Config);
+    await trimNationalDownloads(pool);
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
   } finally {

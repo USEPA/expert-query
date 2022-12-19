@@ -387,7 +387,7 @@ export async function copyDirectory({ contentType, source, destination }) {
 
       for (const file of data.Contents) {
         // copy the file from source to destination
-        const copyRes = await s3
+        await s3
           .copyObject({
             Bucket: process.env.CF_S3_PUB_BUCKET_ID,
             CopySource: `${process.env.CF_S3_PUB_BUCKET_ID}/${file.Key}`,
@@ -398,7 +398,7 @@ export async function copyDirectory({ contentType, source, destination }) {
           .promise();
 
         // delete the file from the source
-        const delRes = await s3
+        await s3
           .deleteObject({
             Bucket: process.env.CF_S3_PUB_BUCKET_ID,
             Key: file.Key,
@@ -421,11 +421,6 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
         __dirname,
         `../../../app/server/app/content-etl/${directory}`,
       );
-
-      // add full file path to dirsToIgnore
-      const fullPathDirsToIgnore = dirsToIgnore.map((item) => {
-        return resolve(dirPath, item);
-      });
 
       // get all contents
       const items = readdirSync(dirPath);
