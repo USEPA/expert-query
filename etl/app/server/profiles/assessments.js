@@ -67,7 +67,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     vision303dpriority VARCHAR(1),
     watersize NUMERIC(18,4) NOT NULL,
     watersizeunits VARCHAR(15) NOT NULL,
-    watertype VARCHAR(40),
+    watertype VARCHAR(40)
   )`;
 
 const insertColumns = new pgp.helpers.ColumnSet([

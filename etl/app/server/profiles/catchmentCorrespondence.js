@@ -22,7 +22,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     organizationtype VARCHAR(30) NOT NULL,
     region VARCHAR(2),
     reportingcycle NUMERIC(4) NOT NULL,
-    state VARCHAR(4000),
+    state VARCHAR(4000)
   )`;
 
 const insertColumns = new pgp.helpers.ColumnSet([

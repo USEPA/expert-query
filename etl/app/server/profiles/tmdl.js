@@ -14,10 +14,10 @@ export const tableName = 'tmdl';
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
     id SERIAL PRIMARY KEY,
-    actionagency VARCHAR2(10 BYTE) NOT NULL,
-    actionid VARCHAR2(45 BYTE) NOT NULL,
-    actionname VARCHAR2(255 BYTE) NOT NULL,
-    addressedparameter VARCHAR2(240 BYTE) NOT NULL,
+    actionagency VARCHAR(10) NOT NULL,
+    actionid VARCHAR(45) NOT NULL,
+    actionname VARCHAR(255) NOT NULL,
+    addressedparameter VARCHAR(240) NOT NULL,
     assessmentunitid VARCHAR(50) NOT NULL,
     assessmentunitname VARCHAR(255) NOT NULL,
     completiondate TIMESTAMP WITH TIME ZONE,
