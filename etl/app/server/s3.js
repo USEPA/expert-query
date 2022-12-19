@@ -1,6 +1,13 @@
 import AWS from 'aws-sdk';
 import axios from 'axios';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { setTimeout } from 'timers/promises';
@@ -301,6 +308,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
   }
 }
 
+// Creates a stream for streaming data to s3
 export function createS3Stream({ contentType, filePath, stream }) {
   // setup public s3 bucket
   const config = new AWS.Config({
@@ -321,4 +329,146 @@ export function createS3Stream({ contentType, filePath, stream }) {
       Body: stream,
     })
     .promise();
+}
+
+// Copies files between directories on s3
+export async function copyDirectory({ contentType, source, destination }) {
+  try {
+    if (environment.isLocal) {
+      const sourcePath = resolve(
+        __dirname,
+        `../../../app/server/app/content-etl/${source}`,
+      );
+      const destPath = resolve(
+        __dirname,
+        `../../../app/server/app/content-etl/${destination}`,
+      );
+
+      // exit early if the source path doesn't exist
+      if (!existsSync(sourcePath)) return;
+
+      renameSync(sourcePath, destPath);
+    } else {
+      // setup public s3 bucket
+      const config = new AWS.Config({
+        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
+        region: process.env.CF_S3_PUB_REGION,
+      });
+      AWS.config.update(config);
+
+      const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+
+      // get list of files in the source directory
+      const data = await s3
+        .listObjects({
+          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+          Prefix: source,
+        })
+        .promise();
+
+      for (const file of data.Contents) {
+        // copy the file from source to destination
+        const copyRes = await s3
+          .copyObject({
+            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+            CopySource: `${process.env.CF_S3_PUB_BUCKET_ID}/${file.Key}`,
+            Key: file.Key.replace(source, destination),
+            ACL: 'public-read',
+            ContentType: contentType,
+          })
+          .promise();
+
+        // delete the file from the source
+        const delRes = await s3
+          .deleteObject({
+            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+            Key: file.Key,
+          })
+          .promise();
+      }
+    }
+  } catch (err) {
+    log.warn(
+      `Error copying directory from "${source}" to "${destination}": ${err}`,
+    );
+  }
+}
+
+// Delete directory on S3
+export async function deleteDirectory({ directory, dirsToIgnore }) {
+  try {
+    if (environment.isLocal) {
+      const dirPath = resolve(
+        __dirname,
+        `../../../app/server/app/content-etl/${directory}`,
+      );
+
+      // add full file path to dirsToIgnore
+      const fullPathDirsToIgnore = dirsToIgnore.map((item) => {
+        return resolve(dirPath, item);
+      });
+
+      // get all contents
+      const items = readdirSync(dirPath);
+
+      if (items.length === 0) return;
+
+      items.forEach((item) => {
+        if (dirsToIgnore.includes(item)) return;
+
+        const fullPath = resolve(dirPath, item);
+
+        // exit early if the source path doesn't exist
+        if (!existsSync(fullPath)) return;
+
+        // remove the directory
+        rmSync(fullPath, { recursive: true });
+      });
+    } else {
+      // setup public s3 bucket
+      const config = new AWS.Config({
+        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
+        region: process.env.CF_S3_PUB_REGION,
+      });
+      AWS.config.update(config);
+
+      const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+
+      // prepend directory to dirsToIgnore
+      const fullPathDirsToIgnore = dirsToIgnore.map((item) => {
+        return `${directory}${item}`;
+      });
+
+      // get a list of files in the directory
+      const data = await s3
+        .listObjects({
+          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+          Prefix: directory,
+        })
+        .promise();
+
+      data.Contents.forEach(async (file) => {
+        // skip file if in dirsToIgnore
+        if (
+          fullPathDirsToIgnore.includes(
+            file.Key.substring(0, file.Key.lastIndexOf('/')),
+          )
+        ) {
+          return;
+        }
+
+        // delete file from S3
+        await s3
+          .deleteObject({
+            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+            Key: file.Key,
+          })
+          .promise();
+      });
+    }
+  } catch (err) {
+    log.warn(`Error deleting directory from "${directory}": ${err}`);
+  }
 }

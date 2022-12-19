@@ -31,7 +31,7 @@ export function createPipeline(tableName) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const subFolderPath = resolve(
       __dirname,
-      `../../../../app/server/app/content-etl/national-downloads`,
+      `../../../../app/server/app/content-etl/national-downloads/new`,
     );
 
     // create the sub folder if it doesn't already exist
@@ -53,25 +53,25 @@ export function createPipeline(tableName) {
   } else {
     writeStreamJson = createS3Stream({
       contentType: 'application/gzip',
-      filePath: `national-downloads/${tableName}.json.gz`,
+      filePath: `national-downloads/new/${tableName}.json.gz`,
       stream: outputJson,
     });
 
     writeStreamCsv = createS3Stream({
       contentType: 'application/gzip',
-      filePath: `national-downloads/${tableName}.csv.gz`,
+      filePath: `national-downloads/new/${tableName}.csv.gz`,
       stream: outputCsv,
     });
 
     writeStreamTsv = createS3Stream({
       contentType: 'application/gzip',
-      filePath: `national-downloads/${tableName}.tsv.gz`,
+      filePath: `national-downloads/new/${tableName}.tsv.gz`,
       stream: outputTsv,
     });
 
     writeStreamXlsx = createS3Stream({
       contentType: 'application/gzip',
-      filePath: `national-downloads/${tableName}.xlsx.gz`,
+      filePath: `national-downloads/new/${tableName}.xlsx.gz`,
       stream: outputXlsx,
     });
   }
