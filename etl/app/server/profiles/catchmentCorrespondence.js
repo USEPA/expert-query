@@ -16,7 +16,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     id SERIAL PRIMARY KEY,
     assessmentunitid VARCHAR(50) NOT NULL,
     assessmentunitname VARCHAR(255) NOT NULL,
-    catchmentnhdplusid NUMERIC(38) NOT NULL,
+    catchmentnhdplusid NUMERIC(38),
     organizationid VARCHAR(30) NOT NULL,
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
