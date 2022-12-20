@@ -18,6 +18,7 @@ import CopyBox from 'components/copyBox';
 import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
+import { Modal } from 'components/modal';
 import RadioButtons from 'components/radioButtons';
 import SourceSelect from 'components/sourceSelect';
 import Summary from 'components/summary';
@@ -28,9 +29,12 @@ import {
   fields as allFields,
   getData,
   options as listOptions,
+  postData,
   profiles,
   serverUrl,
 } from 'config';
+// types
+import type { ModalRef } from 'components/modal';
 
 /*
 ## Types
@@ -77,9 +81,9 @@ type SingleOptionState = {
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
-type URLQueryParam = [string, Primitive];
+type UrlQueryParam = [string, Primitive];
 
-type URLQueryState = {
+type UrlQueryState = {
   [field: string]: Primitive | Primitive[];
 };
 
@@ -116,7 +120,7 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   return values;
 }
 
-function buildPostData(query: URLQueryState) {
+function buildPostData(query: UrlQueryState) {
   const postData: PostData = {
     filters: {},
     options: {},
@@ -136,8 +140,8 @@ function buildPostData(query: URLQueryState) {
 }
 
 // Converts a JSON object into a parameter string
-function buildQueryString(query: URLQueryState, includeProfile = true) {
-  const paramsList: URLQueryParam[] = [];
+function buildQueryString(query: UrlQueryState, includeProfile = true) {
+  const paramsList: UrlQueryParam[] = [];
   Object.entries(query).forEach(([field, value]) => {
     if (!includeProfile && field === 'dataProfile') return;
 
@@ -525,7 +529,7 @@ async function matchOptions(
 
 // Parse parameters provided in the URL hash into a JSON object
 function parseInitialParams() {
-  const initialParams: URLQueryState = {};
+  const initialParams: UrlQueryState = {};
   const initialParamsList = window.location.hash.replace('#', '').split('&');
   initialParamsList.forEach((param) => {
     const parsedParam = param.split('=');
@@ -652,14 +656,14 @@ export function Home() {
   }, [getAbortSignal, staticOptions]);
 
   // Track non-empty values relevant to the current profile
-  const [queryParams, setQueryParams] = useState<URLQueryState>({});
+  const [queryParams, setQueryParams] = useState<UrlQueryState>({});
 
   // Update URL when inputs change
   useEffect(() => {
     if (!inputsLoaded) return;
 
     // Get selected parameters, including multiselectable fields
-    const newQueryParams: URLQueryState = {};
+    const newQueryParams: UrlQueryState = {};
     Object.entries(inputState).forEach(
       ([field, value]: [string, InputState[keyof InputState]]) => {
         if (value == null || (Array.isArray(value) && !value.length)) return;
@@ -694,6 +698,13 @@ export function Home() {
   const pathParts = window.location.pathname.split('/');
   const pageName = pathParts.length > 1 ? pathParts[1] : '';
 
+  const eqDataUrl =
+    window.location.hostname === 'localhost'
+      ? `${window.location.origin}${window.location.pathname}`
+      : content.data.services?.eqDataApi;
+
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -705,12 +716,25 @@ export function Home() {
   }
 
   if (content.status === 'success') {
-    const eqDataUrl =
-      content.data.services.eqDataApi ||
-      `${window.location.protocol}//${window.location.hostname}:9090${window.location.pathname}`;
-
     return (
       <>
+        {confirmationVisible && (
+          <DownloadModal
+            filename={
+              profile && inputState.format
+                ? `${profile}.${inputState.format.value}`
+                : null
+            }
+            isVisible={confirmationVisible}
+            onClose={() => setConfirmationVisible(false)}
+            queryData={buildPostData(queryParams)}
+            queryUrl={
+              eqDataUrl && profile
+                ? `${eqDataUrl}/data/${profiles[profile].resource}`
+                : null
+            }
+          />
+        )}
         <button
           title="Glossary"
           className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
@@ -785,7 +809,7 @@ export function Home() {
                     <div className="display-flex flex-column flex-1 margin-y-auto">
                       <button
                         className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
-                        onClick={() => null}
+                        onClick={() => setConfirmationVisible(true)}
                         type="button"
                       >
                         <Download className="height-205 margin-right-1 usa-icon width-205" />
@@ -954,5 +978,112 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
         </div>
       ))}
     </div>
+  );
+}
+
+type DownloadModalProps = {
+  filename: string | null;
+  isVisible: boolean;
+  onClose?: () => void;
+  queryData: PostData;
+  queryUrl: string | null;
+};
+
+function DownloadModal({
+  filename,
+  isVisible = false,
+  onClose,
+  queryData,
+  queryUrl,
+}: DownloadModalProps) {
+  const [count, setCount] = useState<string | null>(null);
+  const [countStatus, setCountStatus] = useState<Status>('idle');
+
+  const modalRef = useRef<ModalRef>(null);
+
+  // Handle changes in modal visibility
+  useEffect(() => {
+    if (isVisible) {
+      if (!queryUrl) return;
+
+      const countUrl = `${queryUrl}/count`;
+      setCountStatus('pending');
+      postData(countUrl, queryData)
+        .then((res) => {
+          setCountStatus('success');
+          setCount(res.count);
+        })
+        .catch((err) => {
+          console.error(err);
+          setCountStatus('failure');
+        })
+        .finally(() => modalRef.current?.toggleModal(undefined, true));
+    } else {
+      setCount(null);
+      setCountStatus('idle');
+    }
+  }, [isVisible, queryData, queryUrl]);
+
+  // Retrieve the requested data in the specified format
+  const executeQuery = useCallback(() => {
+    if (!queryUrl) return;
+    if (!filename) return;
+
+    postData(queryUrl, queryData, 'blob')
+      .then((res) => {
+        const fileUrl = window.URL.createObjectURL(res);
+        const trigger = document.createElement('a');
+        trigger.style.display = 'none';
+        trigger.href = fileUrl;
+        trigger.download = filename;
+        trigger.click();
+        window.URL.revokeObjectURL(fileUrl);
+      })
+      .catch((err) => console.error(err));
+  }, [queryUrl, queryData, filename]);
+
+  return (
+    <Modal ref={modalRef} id="confirm-modal" onClose={onClose}>
+      <h2 className="usa-modal__heading">Download Status</h2>
+      {countStatus === 'pending' && (
+        <div className="usa-prose">
+          <p>Validating query, please wait...</p>
+        </div>
+      )}
+      {countStatus === 'failure' && (
+        <Alert type="error">
+          The specified query could not be executed at this time.
+        </Alert>
+      )}
+      {countStatus === 'success' && (
+        <>
+          <div className="usa-prose">
+            <p>
+              Your query will return <strong>{count}</strong> rows.
+            </p>
+            <p>Click continue to download the data.</p>
+          </div>
+          <div className="usa-modal__footer">
+            <ul className="usa-button-group">
+              <li className="usa-button-group__item">
+                <button type="button" className="usa-button" data-close-modal>
+                  Cancel
+                </button>
+              </li>
+              <li className="usa-button-group__item">
+                <button
+                  type="button"
+                  className="usa-button"
+                  data-close-modal
+                  onClick={executeQuery}
+                >
+                  Continue
+                </button>
+              </li>
+            </ul>
+          </div>
+        </>
+      )}
+    </Modal>
   );
 }

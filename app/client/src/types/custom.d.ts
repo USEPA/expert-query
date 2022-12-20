@@ -65,3 +65,5 @@ type Option = {
 };
 
 type Primitive = string | number | boolean;
+
+type Status = 'idle' | 'pending' | 'failure' | 'success';
