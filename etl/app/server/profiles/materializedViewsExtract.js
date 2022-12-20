@@ -82,7 +82,7 @@ export function createPipeline(tableName) {
     useStyles: true,
   });
 
-  const worksheet = workbook.addWorksheet(tableName);
+  const worksheet = workbook.addWorksheet('data');
 
   return {
     csv: {

@@ -116,8 +116,7 @@ async function executeQuery(profile, req, res) {
           useStyles: true,
         });
 
-        workbook.addWorksheet(profile.tableName);
-        const worksheet = workbook.getWorksheet(profile.tableName);
+        const worksheet = workbook.addWorksheet("data");
 
         StreamingService.streamResponse(res, stream, format, {
           workbook,
