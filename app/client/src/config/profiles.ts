@@ -28,7 +28,7 @@ export default {
     fields: [
       'assessmentUnitId',
       'assessmentUnitName',
-      'assessmentUnitStatus',
+      'assessmentUnitState',
       'locationDescription',
       'locationText',
       'organizationId',

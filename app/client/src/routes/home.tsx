@@ -725,7 +725,6 @@ export function Home() {
                 ? `${profile}.${inputState.format.value}`
                 : null
             }
-            isVisible={confirmationVisible}
             onClose={() => setConfirmationVisible(false)}
             queryData={buildPostData(queryParams)}
             queryUrl={
@@ -983,46 +982,38 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
 
 type DownloadModalProps = {
   filename: string | null;
-  isVisible: boolean;
-  onClose?: () => void;
+  onClose: () => void;
   queryData: PostData;
   queryUrl: string | null;
 };
 
 function DownloadModal({
   filename,
-  isVisible = false,
   onClose,
   queryData,
   queryUrl,
 }: DownloadModalProps) {
-  const [count, setCount] = useState<string | null>(null);
+  const [count, setCount] = useState<number | null>(null);
   const [countStatus, setCountStatus] = useState<Status>('idle');
 
   const modalRef = useRef<ModalRef>(null);
 
-  // Handle changes in modal visibility
+  // Get the row count for the current query
   useEffect(() => {
-    if (isVisible) {
-      if (!queryUrl) return;
+    if (!queryUrl) return;
 
-      const countUrl = `${queryUrl}/count`;
-      setCountStatus('pending');
-      postData(countUrl, queryData)
-        .then((res) => {
-          setCountStatus('success');
-          setCount(res.count);
-        })
-        .catch((err) => {
-          console.error(err);
-          setCountStatus('failure');
-        })
-        .finally(() => modalRef.current?.toggleModal(undefined, true));
-    } else {
-      setCount(null);
-      setCountStatus('idle');
-    }
-  }, [isVisible, queryData, queryUrl]);
+    const countUrl = `${queryUrl}/count`;
+    setCountStatus('pending');
+    postData(countUrl, queryData)
+      .then((res) => {
+        setCountStatus('success');
+        setCount(parseInt(res.count));
+      })
+      .catch((err) => {
+        console.error(err);
+        setCountStatus('failure');
+      });
+  }, [queryData, queryUrl]);
 
   // Retrieve the requested data in the specified format
   const executeQuery = useCallback(() => {
@@ -1039,11 +1030,12 @@ function DownloadModal({
         trigger.click();
         window.URL.revokeObjectURL(fileUrl);
       })
-      .catch((err) => console.error(err));
-  }, [queryUrl, queryData, filename]);
+      .catch((err) => console.error(err))
+      .finally(() => onClose());
+  }, [filename, onClose, queryUrl, queryData]);
 
   return (
-    <Modal ref={modalRef} id="confirm-modal" onClose={onClose}>
+    <Modal ref={modalRef} id="confirm-modal" isInitiallyOpen onClose={onClose}>
       <h2 className="usa-modal__heading">Download Status</h2>
       {countStatus === 'pending' && (
         <div className="usa-prose">
@@ -1064,18 +1056,18 @@ function DownloadModal({
             <p>Click continue to download the data.</p>
           </div>
           <div className="usa-modal__footer">
-            <ul className="usa-button-group">
+            <ul className="flex-justify-center usa-button-group">
               <li className="usa-button-group__item">
-                <button type="button" className="usa-button" data-close-modal>
+                <button type="button" className="usa-button" onClick={onClose}>
                   Cancel
                 </button>
               </li>
               <li className="usa-button-group__item">
                 <button
-                  type="button"
                   className="usa-button"
-                  data-close-modal
+                  disabled={count === 0}
                   onClick={executeQuery}
+                  type="button"
                 >
                   Continue
                 </button>
