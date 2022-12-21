@@ -3,6 +3,7 @@ import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
 import * as profiles from './profiles/index.js';
+import { copyDirectory, deleteDirectory } from './s3.js';
 
 const { Client, Pool } = pg;
 
@@ -210,10 +211,10 @@ async function loadProfile(
   const client = await getClient(pool);
   try {
     await profileEtl(client, schemaName);
-    console.info(`ETL success for table ${profile.tableName}`);
+    log.info(`ETL success for table ${profile.tableName}`);
   } catch (err) {
     if (retryCount < s3Config.config.retryLimit) {
-      console.info(`Retrying ETL for table ${profile.tableName}: ${err}`);
+      log.info(`Retrying ETL for table ${profile.tableName}: ${err}`);
       await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
       return await loadProfile(
         profile,
@@ -223,7 +224,7 @@ async function loadProfile(
         retryCount + 1,
       );
     } else {
-      console.warn(`ETL failed for table ${profile.tableName}: ${err}`);
+      log.warn(`ETL failed for table ${profile.tableName}: ${err}`);
       throw err;
     }
   } finally {
@@ -274,11 +275,46 @@ export async function runJob(s3Config) {
   try {
     await runLoad(pool, s3Config);
     await trimSchema(pool, s3Config);
+    await trimNationalDownloads(pool);
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
   } finally {
     await endConnPool(pool);
   }
+}
+
+async function getActiveSchema(pool) {
+  const schemas = await pool
+    .query(
+      'SELECT schema_name FROM logging.etl_schemas WHERE active = true ORDER BY creation_date DESC',
+    )
+    .catch((err) => {
+      log.warn(`Could not query schemas: ${err}`);
+    });
+
+  if (!schemas?.rowCount) return null;
+
+  return schemas.rows[0].schema_name;
+}
+
+async function archiveNationalDownloads(pool, schemaName) {
+  const subFolder = schemaName.replace('schema_', '');
+
+  log.info(`Start copying "latest" to "${subFolder}"`);
+  await copyDirectory({
+    contentType: 'application/gzip',
+    source: 'national-downloads/latest',
+    destination: `national-downloads/${subFolder}`,
+  });
+  log.info(`Finished copying "latest" to "${subFolder}"`);
+
+  log.info('Start copying "new" to "latest"');
+  await copyDirectory({
+    contentType: 'application/gzip',
+    source: 'national-downloads/new',
+    destination: `national-downloads/latest`,
+  });
+  log.info('Finished copying "new" to "latest"');
 }
 
 export async function runLoad(pool, s3Config) {
@@ -288,6 +324,8 @@ export async function runLoad(pool, s3Config) {
 
   const now = new Date();
   const schemaName = `schema_${now.valueOf()}`;
+
+  const lastSchemaName = await getActiveSchema(pool);
 
   try {
     const schemaId = await createNewSchema(pool, schemaName);
@@ -299,6 +337,8 @@ export async function runLoad(pool, s3Config) {
     await Promise.all(loadTasks);
 
     await transferSchema(pool, schemaName, schemaId);
+
+    await archiveNationalDownloads(pool, lastSchemaName);
 
     log.info('Tables updated');
     await logEtlLoadEnd(pool, logId);
@@ -381,9 +421,38 @@ export async function trimSchema(pool, s3Config) {
   }
 }
 
+// Drop old national-downloads folders
+export async function trimNationalDownloads(pool) {
+  // get list of currently stored schemas
+  const schemas = await pool
+    .query('SELECT schema_name FROM logging.etl_schemas')
+    .catch((err) => {
+      log.warn(`Could not query schemas: ${err}`);
+    });
+  if (!schemas?.rowCount) return;
+
+  // build a list of directories (schemas) to leave on S3
+  const dirsToIgnore = schemas.rows.map((schema) => {
+    return schema.schema_name.replace('schema_', '');
+  });
+  dirsToIgnore.push('latest');
+
+  deleteDirectory({
+    directory: 'national-downloads',
+    dirsToIgnore,
+  });
+}
+
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  { createQuery, extract, maxChunksOverride, tableName, transform },
+  {
+    createQuery,
+    createPipeline,
+    extract,
+    maxChunksOverride,
+    tableName,
+    transform,
+  },
   s3Config,
 ) {
   return async function (client, schemaName) {
@@ -404,15 +473,22 @@ function getProfileEtl(
       log.info(`Setting ${tableName} to unlogged`);
       await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
       let res = await extract(s3Config);
+      const pipeline = createPipeline();
       let chunksProcessed = 0;
       const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
       while (res.data !== null && (!maxChunks || chunksProcessed < maxChunks)) {
-        const query = transform(res.data);
+        const query = await transform(
+          res.data,
+          pipeline,
+          chunksProcessed === 0,
+        );
         await client.query(query);
         log.info(`Next record offset for table ${tableName}: ${res.next}`);
         res = await extract(s3Config, res.next);
         chunksProcessed += 1;
       }
+      await finishNationalUploads(pipeline);
+      log.info(`National uploads for table ${tableName} uploaded`);
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
@@ -423,4 +499,21 @@ function getProfileEtl(
 
     log.info(`Table ${tableName} load success`);
   };
+}
+
+async function finishNationalUploads(pipeline) {
+  // close zip streams
+  pipeline.json.zipStream.write(']');
+  pipeline.json.zipStream.end();
+  pipeline.csv.zipStream.end();
+  pipeline.tsv.zipStream.end();
+  pipeline.xlsx.workbook.commit();
+
+  // await file streams
+  await Promise.all([
+    pipeline.json.fileStream,
+    pipeline.csv.fileStream,
+    pipeline.tsv.fileStream,
+    pipeline.xlsx.fileStream,
+  ]);
 }
