@@ -996,8 +996,6 @@ function DownloadModal({
   const [count, setCount] = useState<number | null>(null);
   const [countStatus, setCountStatus] = useState<Status>('idle');
 
-  const modalRef = useRef<ModalRef>(null);
-
   // Get the row count for the current query
   useEffect(() => {
     if (!queryUrl) return;
@@ -1006,8 +1004,8 @@ function DownloadModal({
     setCountStatus('pending');
     postData(countUrl, queryData)
       .then((res) => {
-        setCountStatus('success');
         setCount(parseInt(res.count));
+        setCountStatus('success');
       })
       .catch((err) => {
         console.error(err);
@@ -1015,11 +1013,14 @@ function DownloadModal({
       });
   }, [queryData, queryUrl]);
 
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+
   // Retrieve the requested data in the specified format
   const executeQuery = useCallback(() => {
     if (!queryUrl) return;
     if (!filename) return;
 
+    setDownloadStatus('pending');
     postData(queryUrl, queryData, 'blob')
       .then((res) => {
         const fileUrl = window.URL.createObjectURL(res);
@@ -1029,10 +1030,16 @@ function DownloadModal({
         trigger.download = filename;
         trigger.click();
         window.URL.revokeObjectURL(fileUrl);
+        setDownloadStatus('success');
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        setDownloadStatus('failure');
+      })
       .finally(() => onClose());
   }, [filename, onClose, queryUrl, queryData]);
+
+  const modalRef = useRef<ModalRef>(null);
 
   return (
     <Modal ref={modalRef} id="confirm-modal" isInitiallyOpen onClose={onClose}>
@@ -1069,7 +1076,7 @@ function DownloadModal({
                   onClick={executeQuery}
                   type="button"
                 >
-                  Continue
+                  {downloadStatus === 'pending' ? 'Working...' : 'Continue'}
                 </button>
               </li>
             </ul>
