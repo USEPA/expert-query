@@ -709,6 +709,18 @@ export function Home() {
     setConfirmationVisible(false);
   }, []);
 
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+
+  useEffect(() => {
+    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
+
+    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
+
+    return function cleanup() {
+      clearTimeout(messageTimeout);
+    };
+  }, [downloadStatus]);
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -729,6 +741,7 @@ export function Home() {
                 ? `${profile}.${inputState.format.value}`
                 : null
             }
+            downloadStatus={downloadStatus}
             onClose={handleDownloadModalClose}
             queryData={buildPostData(queryParams)}
             queryUrl={
@@ -736,6 +749,7 @@ export function Home() {
                 ? `${eqDataUrl}/data/${profiles[profile].resource}`
                 : null
             }
+            setDownloadStatus={setDownloadStatus}
           />
         )}
         <button
@@ -795,8 +809,17 @@ export function Home() {
                     staticOptions={staticOptions}
                     state={inputState}
                   />
+                  <div className="display-flex margin-top-1 width-full">
+                    <button
+                      className="margin-x-auto usa-button usa-button--outline"
+                      onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                      type="button"
+                    >
+                      Clear Search
+                    </button>
+                  </div>
                   <h3>Download the Data</h3>
-                  <div className="display-flex flex-wrap">
+                  <div>
                     <RadioButtons
                       legend={
                         <>
@@ -809,23 +832,23 @@ export function Home() {
                       selected={format}
                       styles={['margin-bottom-2']}
                     />
-                    <div className="display-flex flex-column flex-1 margin-y-auto">
-                      <button
-                        className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
-                        onClick={() => setConfirmationVisible(true)}
-                        type="button"
-                      >
-                        <Download className="height-205 margin-right-1 usa-icon width-205" />
-                        Download
-                      </button>
-                      <button
-                        className="margin-x-auto usa-button usa-button--outline"
-                        onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                        type="button"
-                      >
-                        Clear Search
-                      </button>
-                    </div>
+                    <button
+                      className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
+                      onClick={() => setConfirmationVisible(true)}
+                      type="button"
+                    >
+                      <Download className="height-205 margin-right-1 usa-icon width-205" />
+                      Download
+                    </button>
+                    {downloadStatus === 'success' && (
+                      <Alert type="success">Query executed successfully.</Alert>
+                    )}
+                    {downloadStatus === 'failure' && (
+                      <Alert type="error">
+                        An error occurred while executing the current query,
+                        please try again later.
+                      </Alert>
+                    )}
                   </div>
                   <h4>
                     {/* TODO - Remove the glossary linkage before production deployment */}
@@ -985,17 +1008,21 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
 }
 
 type DownloadModalProps = {
+  downloadStatus: Status;
   filename: string | null;
   onClose: () => void;
   queryData: PostData;
   queryUrl: string | null;
+  setDownloadStatus: (status: Status) => void;
 };
 
 function DownloadModal({
+  downloadStatus,
   filename,
   onClose,
   queryData,
   queryUrl,
+  setDownloadStatus,
 }: DownloadModalProps) {
   const [count, setCount] = useState<number | null>(null);
   const [countStatus, setCountStatus] = useState<Status>('idle');
@@ -1016,8 +1043,6 @@ function DownloadModal({
         setCountStatus('failure');
       });
   }, [queryData, queryUrl]);
-
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
 
   // Retrieve the requested data in the specified format
   const executeQuery = useCallback(() => {
@@ -1041,7 +1066,7 @@ function DownloadModal({
         setDownloadStatus('failure');
       })
       .finally(() => onClose());
-  }, [filename, onClose, queryUrl, queryData]);
+  }, [queryUrl, filename, setDownloadStatus, queryData, onClose]);
 
   const modalRef = useRef<ModalRef>(null);
 
