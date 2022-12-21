@@ -53,6 +53,8 @@ app.on('ready', async () => {
     log.error(err);
   }
 
+  etlJob();
+
   log.info('Scheduling load to run every Sunday at 1AM');
 
   // Schedule ETL to run every Sunday at 1AM
