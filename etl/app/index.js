@@ -53,13 +53,13 @@ app.on('ready', async () => {
     log.error(err);
   }
 
-  log.info('Scheduling load to run daily at 3AM');
+  log.info('Scheduling load to run every Sunday at 1AM');
 
-  // Schedule ETL to run daily at 3AM
+  // Schedule ETL to run every Sunday at 1AM
   cron.schedule(
-    '0 3 * * *',
+    '0 1 * * Sunday',
     () => {
-      log.info('Running cron task every day at 3AM');
+      log.info('Running cron task every Sunday at 1AM');
 
       etlJob();
     },
