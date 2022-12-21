@@ -705,6 +705,10 @@ export function Home() {
 
   const [confirmationVisible, setConfirmationVisible] = useState(false);
 
+  const handleDownloadModalClose = useCallback(() => {
+    setConfirmationVisible(false);
+  }, []);
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -725,7 +729,7 @@ export function Home() {
                 ? `${profile}.${inputState.format.value}`
                 : null
             }
-            onClose={() => setConfirmationVisible(false)}
+            onClose={handleDownloadModalClose}
             queryData={buildPostData(queryParams)}
             queryUrl={
               eqDataUrl && profile

@@ -11,9 +11,9 @@ import ReactDOM from 'react-dom';
 import { ReactComponent as Close } from 'uswds/img/usa-icons/close.svg';
 
 function useModal(isInitiallyOpen?: boolean) {
-  const [isOpen, setIsOpen] = useState(isInitiallyOpen || false);
+  const [isOpen, setIsOpen] = useState(isInitiallyOpen ?? false);
 
-  const allowToggle = (e: React.MouseEvent): boolean => {
+  const allowToggle = useCallback((e: React.MouseEvent): boolean => {
     const clickedElement = e.target as Element;
 
     if (e && clickedElement) {
@@ -28,22 +28,25 @@ function useModal(isInitiallyOpen?: boolean) {
     }
 
     return true;
-  };
+  }, []);
 
-  const toggleModal = (e?: React.MouseEvent, open?: boolean): boolean => {
-    if (e && !allowToggle(e)) {
-      e.stopPropagation();
-      return false;
-    }
+  const toggleModal = useCallback(
+    (e?: React.MouseEvent, open?: boolean): boolean => {
+      if (e && !allowToggle(e)) {
+        e.stopPropagation();
+        return false;
+      }
 
-    if (open === true) setIsOpen(true);
-    else if (open === false) setIsOpen(false);
-    else {
-      setIsOpen((state) => !state);
-    }
+      if (open === true) setIsOpen(true);
+      else if (open === false) setIsOpen(false);
+      else {
+        setIsOpen((state) => !state);
+      }
 
-    return true;
-  };
+      return true;
+    },
+    [allowToggle],
+  );
 
   return { isOpen, toggleModal };
 }
@@ -228,14 +231,17 @@ const ModalForwardRef: React.ForwardRefRenderFunction<ModalRef, ModalProps> = (
   const tempPaddingRef = useRef<string>();
   const modalEl = useRef<HTMLDivElement>(null);
 
-  const modalRootSelector = modalRoot || '.usa-modal-wrapper';
+  const modalRootSelector = modalRoot ?? '.usa-modal-wrapper';
 
   const NON_MODALS = `body > *:not(${modalRootSelector}):not([aria-hidden])`;
   const NON_MODALS_HIDDEN = `[data-modal-hidden]`;
 
-  const closeModal = (e?: React.MouseEvent) => {
-    if (toggleModal(e, false)) onClose?.();
-  };
+  const closeModal = useCallback(
+    (e?: React.MouseEvent) => {
+      if (toggleModal(e, false)) onClose?.();
+    },
+    [onClose, toggleModal],
+  );
 
   useImperativeHandle(
     ref,
@@ -249,7 +255,7 @@ const ModalForwardRef: React.ForwardRefRenderFunction<ModalRef, ModalProps> = (
 
   const handleOpenEffect = useCallback(() => {
     const { body } = document;
-    body.style.paddingRight = tempPaddingRef.current || '';
+    body.style.paddingRight = tempPaddingRef.current ?? '';
     body.classList.add('usa-js-modal--active');
 
     document.querySelectorAll(NON_MODALS).forEach((el) => {
@@ -279,7 +285,7 @@ const ModalForwardRef: React.ForwardRefRenderFunction<ModalRef, ModalProps> = (
     const INITIAL_PADDING =
       window
         .getComputedStyle(document.body)
-        .getPropertyValue('padding-right') || '0px';
+        .getPropertyValue('padding-right') ?? '0px';
 
     const TEMPORARY_PADDING = `${
       parseInt(INITIAL_PADDING.replace(/px/, ''), 10) +
@@ -298,12 +304,12 @@ const ModalForwardRef: React.ForwardRefRenderFunction<ModalRef, ModalProps> = (
   }, [handleCloseEffect]);
 
   useEffect(() => {
-    if (mounted) {
-      if (isOpen === true) {
-        handleOpenEffect();
-      } else if (isOpen === false) {
-        handleCloseEffect();
-      }
+    if (!mounted) return;
+
+    if (isOpen === true) {
+      handleOpenEffect();
+    } else if (isOpen === false) {
+      handleCloseEffect();
     }
   }, [handleCloseEffect, handleOpenEffect, isOpen, mounted]);
 
@@ -318,7 +324,7 @@ const ModalForwardRef: React.ForwardRefRenderFunction<ModalRef, ModalProps> = (
       | HTMLElement
       | SVGElement;
 
-    return focusEl ? focusEl : modalEl.current || false;
+    return focusEl ? focusEl : modalEl.current ?? false;
   };
 
   const focusTrapOptions = {
@@ -360,7 +366,7 @@ const ModalForwardRef: React.ForwardRefRenderFunction<ModalRef, ModalProps> = (
 
   if (renderToPortal) {
     const modalRoot = document.getElementById('modal-root');
-    const target = modalRoot || document.body;
+    const target = modalRoot ?? document.body;
     return ReactDOM.createPortal(modal, target);
   } else {
     return modal;
