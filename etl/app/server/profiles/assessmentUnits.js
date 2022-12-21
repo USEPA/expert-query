@@ -76,8 +76,8 @@ export function createPipeline() {
 
 export async function transform(data, pipeline, first) {
   const rows = [];
-  data.forEach((datum, idx) => {
-    const row = {
+  data.forEach((datum) => {
+    rows.push({
       assessmentunitid: datum.assessmentunitid,
       assessmentunitname: datum.assessmentunitname,
       assessmentunitstate: datum.assessmentunitstate,
@@ -96,8 +96,7 @@ export async function transform(data, pipeline, first) {
       watersize: datum.watersize,
       watersizeunits: datum.watersizeunits,
       watertype: datum.watertype,
-    };
-    rows.push(row);
+    });
   });
 
   await transformToZip(rows, pipeline, first);

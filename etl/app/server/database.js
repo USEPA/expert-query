@@ -438,7 +438,7 @@ export async function trimNationalDownloads(pool) {
   dirsToIgnore.push('latest');
 
   deleteDirectory({
-    directory: 'national-downloads/',
+    directory: 'national-downloads',
     dirsToIgnore,
   });
 }

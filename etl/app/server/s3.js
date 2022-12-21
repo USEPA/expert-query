@@ -19,6 +19,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
 
+// Setups the config for the s3 bucket (default config is public S3 bucket)
+function setAwsConfig({
+  accessKeyId = process.env.CF_S3_PUB_ACCESS_KEY,
+  secretAccessKey = process.env.CF_S3_PUB_SECRET_KEY,
+  region = process.env.CF_S3_PUB_REGION,
+}) {
+  const config = new AWS.Config({
+    accessKeyId,
+    secretAccessKey,
+    region,
+  });
+  AWS.config.update(config);
+}
+
 // Loads etl config from private S3 bucket
 export async function loadConfig() {
   // NOTE: static content files found in `etl/app/content-private/` directory
@@ -32,12 +46,11 @@ export async function loadConfig() {
     // setup private s3 bucket
     let s3;
     if (!environment.isLocal) {
-      const config = new AWS.Config({
+      setAwsConfig({
         accessKeyId: process.env.CF_S3_PRIV_ACCESS_KEY,
         secretAccessKey: process.env.CF_S3_PRIV_SECRET_KEY,
         region: process.env.CF_S3_PRIV_REGION,
       });
-      AWS.config.update(config);
 
       s3 = new AWS.S3({ apiVersion: '2006-03-01' });
     }
@@ -96,12 +109,7 @@ export async function uploadFilePublic(
       writeFileSync(`${subFolderPath}/${filePath}`, fileToUpload);
     } else {
       // setup public s3 bucket
-      const config = new AWS.Config({
-        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
-        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
-        region: process.env.CF_S3_PUB_REGION,
-      });
-      AWS.config.update(config);
+      setAwsConfig();
 
       const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
@@ -329,12 +337,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
 // Creates a stream for streaming data to s3
 export function createS3Stream({ contentType, filePath, stream }) {
   // setup public s3 bucket
-  const config = new AWS.Config({
-    accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
-    secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
-    region: process.env.CF_S3_PUB_REGION,
-  });
-  AWS.config.update(config);
+  setAwsConfig();
 
   const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
@@ -368,12 +371,7 @@ export async function copyDirectory({ contentType, source, destination }) {
       renameSync(sourcePath, destPath);
     } else {
       // setup public s3 bucket
-      const config = new AWS.Config({
-        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
-        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
-        region: process.env.CF_S3_PUB_REGION,
-      });
-      AWS.config.update(config);
+      setAwsConfig();
 
       const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
@@ -440,18 +438,13 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
       });
     } else {
       // setup public s3 bucket
-      const config = new AWS.Config({
-        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
-        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
-        region: process.env.CF_S3_PUB_REGION,
-      });
-      AWS.config.update(config);
+      setAwsConfig();
 
       const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
       // prepend directory to dirsToIgnore
       const fullPathDirsToIgnore = dirsToIgnore.map((item) => {
-        return `${directory}${item}`;
+        return `${directory}/${item}`;
       });
 
       // get a list of files in the directory
