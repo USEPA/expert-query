@@ -105,7 +105,7 @@ export default {
     label: 'Assessments',
     resource: 'assessments',
   },
-  assessmentUnitsMonitoring: {
+  assessmentUnitsMonitoringLocations: {
     description: 'Description of assessment units with monitoring locations',
     fields: [
       'assessmentUnitId',

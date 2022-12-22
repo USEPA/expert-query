@@ -14,6 +14,7 @@ declare module '*.svg' {
 
 // Columns that share values with those in the `domainValues` object
 type AliasedField =
+  | 'assessmentUnitState'
   | 'associatedActionAgency'
   | 'associatedActionStatus'
   | 'parameter'
@@ -36,19 +37,16 @@ type ConcreteField =
   | 'assessmentUnitStatus'
   | 'associatedActionType'
   | 'delistedReason'
-  | 'loadAllocationUnits'
   | 'locationTypeCode'
   | 'organizationId'
   | 'parameterGroup'
   | 'pollutant'
   | 'sourceName'
-  | 'sourceScale'
   | 'sourceType'
   | 'state'
   | 'stateIrCategory'
   | 'useClassName'
   | 'useName'
-  | 'waterSizeUnits'
   | 'waterType';
 
 type ConcreteOptions = {

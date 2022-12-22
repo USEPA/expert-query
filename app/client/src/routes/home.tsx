@@ -11,6 +11,7 @@ import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
+import { Accordion, AccordionItem } from 'components/accordion';
 import Alert from 'components/alert';
 import Checkbox from 'components/checkbox';
 import Checkboxes from 'components/checkboxes';
@@ -111,6 +112,7 @@ const controlFields = ['dataProfile', 'format'];
 
 // Adds aliases for fields that share the same set of possible values
 function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
+  values.assessmentUnitState = values.assessmentUnitStatus;
   values.associatedActionAgency = values.actionAgency;
   values.associatedActionStatus = values.assessmentUnitStatus;
   values.parameter = values.pollutant;
@@ -802,24 +804,25 @@ export function Home() {
                 value={dataProfile}
               />
               {profile && (
-                <>
-                  <h3 className="margin-bottom-0">Filters</h3>
-                  <FilterFields
-                    handlers={inputHandlers}
-                    staticOptions={staticOptions}
-                    state={inputState}
-                  />
-                  <div className="display-flex margin-top-1 width-full">
-                    <button
-                      className="margin-x-auto usa-button usa-button--outline"
-                      onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                      type="button"
-                    >
-                      Clear Search
-                    </button>
-                  </div>
-                  <h3>Download the Data</h3>
-                  <div>
+                <Accordion styles={['margin-top-2']}>
+                  <AccordionItem heading="Filters">
+                    <FilterFields
+                      handlers={inputHandlers}
+                      staticOptions={staticOptions}
+                      state={inputState}
+                    />
+                    <div className="display-flex margin-top-1 width-full">
+                      <button
+                        className="margin-x-auto usa-button usa-button--outline"
+                        onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                        type="button"
+                      >
+                        Clear Search
+                      </button>
+                    </div>
+                  </AccordionItem>
+
+                  <AccordionItem heading="Download the Data">
                     <RadioButtons
                       legend={
                         <>
@@ -849,33 +852,36 @@ export function Home() {
                         please try again later.
                       </Alert>
                     )}
-                  </div>
-                  <h4>
-                    {/* TODO - Remove the glossary linkage before production deployment */}
-                    <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-                  </h4>
-                  <CopyBox
-                    text={`${window.location.origin}${
-                      window.location.pathname
-                    }/#${buildQueryString(queryParams)}`}
-                  />
-                  <h4>{profiles[profile].label} API Query</h4>
-                  <CopyBox
-                    lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
-                    maxLength={2048}
-                    text={`${eqDataUrl}/data/${
-                      profiles[profile].resource
-                    }?${buildQueryString(queryParams, false)}`}
-                  />
-                  <h4>cURL</h4>
-                  <CopyBox
-                    text={`curl -X POST --json "${JSON.stringify(
-                      buildPostData(queryParams),
-                    ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
-                      profiles[profile].resource
-                    }`}
-                  />
-                </>
+                  </AccordionItem>
+
+                  <AccordionItem heading="Queries">
+                    <h4>
+                      {/* TODO - Remove the glossary linkage before production deployment */}
+                      <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+                    </h4>
+                    <CopyBox
+                      text={`${window.location.origin}${
+                        window.location.pathname
+                      }/#${buildQueryString(queryParams)}`}
+                    />
+                    <h4>{profiles[profile].label} API Query</h4>
+                    <CopyBox
+                      lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+                      maxLength={2048}
+                      text={`${eqDataUrl}/data/${
+                        profiles[profile].resource
+                      }?${buildQueryString(queryParams, false)}`}
+                    />
+                    <h4>cURL</h4>
+                    <CopyBox
+                      text={`curl -X POST --json "${JSON.stringify(
+                        buildPostData(queryParams),
+                      ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
+                        profiles[profile].resource
+                      }`}
+                    />
+                  </AccordionItem>
+                </Accordion>
               )}
             </>
           )}

@@ -14,9 +14,6 @@
   "delistedReason": {
     "domainName": "DelistingReasonCode"
   },
-  "loadAllocationUnits": {
-    "domainName": "LoadAllocationUnitCode"
-  },
   "locationTypeCode": {
     "domainName": "LocationTypeCode"
   },
@@ -42,9 +39,6 @@
   "sourceName": {
     "domainName": "SourceName"
   },
-  "sourceScale": {
-    "domainName": "SizeSourceScaleText"
-  },
   "sourceType": {
     "domainName": "PollutantSourceType"
   },
@@ -57,9 +51,6 @@
   },
   "useName": {
     "domainName": "UseName"
-  },
-  "waterSizeUnits": {
-    "domainName": "WaterTypeUnitsCode"
   },
   "waterType": {
     "domainName": "WaterTypeUnitsCode",

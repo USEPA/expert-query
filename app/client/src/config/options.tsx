@@ -62,6 +62,8 @@ export const format = [
   },
 ] as const;
 
+export const includeInMeasure = yesNo;
+
 export const inIndianCountry = yesNo;
 
 export const organizationType = [
