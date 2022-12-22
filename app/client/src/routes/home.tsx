@@ -699,9 +699,8 @@ export function Home() {
   const pageName = pathParts.length > 1 ? pathParts[1] : '';
 
   const eqDataUrl =
-    window.location.hostname === 'localhost'
-      ? `${window.location.origin}${window.location.pathname}`
-      : content.data.services?.eqDataApi;
+    content.data.services?.eqDataApi ||
+    `${window.location.origin}${window.location.pathname}`;
 
   const [confirmationVisible, setConfirmationVisible] = useState(false);
 
