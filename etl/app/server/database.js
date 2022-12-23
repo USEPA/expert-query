@@ -100,10 +100,10 @@ export async function checkLogTables() {
     );
 
     // Check if row has already been added to etl_status table
-    const db = await client
+    const result = await client
       .query('SELECT * FROM logging.etl_status')
       .catch((err) => log.warn(`Could not query databases: ${err}`));
-    if (!db.rowCount) {
+    if (!result.rowCount) {
       await client.query(
         `INSERT INTO logging.etl_status
           (database, glossary, domain_values)
@@ -117,6 +117,78 @@ export async function checkLogTables() {
     );
     await client.query('COMMIT');
     log.info('Logging tables exist');
+  } catch (err) {
+    log.warn('Failed to confirm that logging tables exist');
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.end();
+  }
+}
+
+export async function checkForServerCrash() {
+  const client = await connectClient(eqConfig);
+
+  try {
+    // check the etl_status table
+    const result = await client
+      .query('SELECT * FROM logging.etl_status')
+      .catch((err) => log.warn(`Could not query databases: ${err}`));
+
+    if (!result.rowCount) {
+      await client.query(
+        `INSERT INTO logging.etl_status
+          (database, glossary, domain_values)
+          VALUES ('idle', 'idle', 'idle')`,
+      );
+    } else {
+      // set statuses to failed if they were running when the server crashed
+      if (result.rows[0].glossary === 'running') {
+        await updateEtlStatus(client, 'glossary', 'failed');
+      }
+      if (result.rows[0].domain_values === 'running') {
+        await updateEtlStatus(client, 'domain_values', 'failed');
+      }
+      if (result.rows[0].database === 'running') {
+        await updateEtlStatus(client, 'database', 'failed');
+
+        // get last schema id
+        const schema = await client
+          .query(
+            `SELECT id, active FROM logging.etl_schemas ORDER BY creation_date DESC LIMIT 1`,
+          )
+          .catch((err) => {
+            log.warn(`Could not query schemas: ${err}`);
+          });
+
+        // log error to etl_log table if the last schema did not complete
+        if (schema?.rowCount && !schema.rows[0].active) {
+          const id = schema.rows[0].id;
+
+          // check if the log for this schema already has an error logged
+          const log = await client
+            .query(
+              `SELECT end_time, load_error FROM logging.etl_log WHERE id = $1`,
+              [id],
+            )
+            .catch((err) => {
+              log.warn(`Could not query schemas: ${err}`);
+            });
+
+          if (
+            log?.rowCount &&
+            !log.rows[0].end_time &&
+            !log.rows[0].load_error
+          ) {
+            logEtlLoadError(
+              client,
+              id,
+              'Server crashed. Check cloud.gov logs for more info.',
+            );
+          }
+        }
+      }
+    }
   } catch (err) {
     log.warn('Failed to confirm that logging tables exist');
     await client.query('ROLLBACK');
@@ -258,7 +330,7 @@ async function loadProfile(
 async function logEtlLoadError(pool, etlLogId, loadError) {
   try {
     await pool.query(
-      'UPDATE logging.etl_log SET load_error = $1 WHERE id = $2',
+      'UPDATE logging.etl_log SET end_time = current_timestamp, load_error = $1 WHERE id = $2',
       [loadError, etlLogId],
     );
     log.info('ETL process error logged');
