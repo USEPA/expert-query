@@ -1,4 +1,8 @@
-import { extract as innerExtract } from './materializedViewsExtract.js';
+import {
+  createPipeline as innerCreatePipeline,
+  extract as innerExtract,
+  transformToZip,
+} from './materializedViewsExtract.js';
 import pgPromise from 'pg-promise';
 
 const pgp = pgPromise({ capSQL: true });
@@ -16,7 +20,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     id SERIAL PRIMARY KEY,
     assessmentunitid VARCHAR(50) NOT NULL,
     assessmentunitname VARCHAR(255) NOT NULL,
-    catchmentnhdplusid NUMERIC(38) NOT NULL,
+    catchmentnhdplusid NUMERIC(38),
     organizationid VARCHAR(30) NOT NULL,
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
@@ -48,7 +52,11 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   );
 }
 
-export function transform(data) {
+export function createPipeline() {
+  return innerCreatePipeline(tableName);
+}
+
+export async function transform(data, pipeline, first) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({
@@ -63,5 +71,8 @@ export function transform(data) {
       state: datum.state,
     });
   });
+
+  await transformToZip(rows, pipeline, first);
+
   return pgp.helpers.insert(rows, insertColumns, tableName);
 }
