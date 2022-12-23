@@ -51,7 +51,7 @@ const eqConfig = {
   max: 10,
 };
 
-function startConnPool() {
+export function startConnPool() {
   const pool = new Pool(eqConfig);
   log.info('EqPool connection pool started');
   return pool;
@@ -73,9 +73,9 @@ export async function checkLogTables() {
       `CREATE TABLE IF NOT EXISTS logging.etl_log
         (
           id SERIAL PRIMARY KEY,
-          end_time timestamp,
-          load_error varchar,
-          start_time timestamp NOT NULL
+          end_time TIMESTAMP,
+          load_error VARCHAR,
+          start_time TIMESTAMP NOT NULL
         )`,
     );
     await client.query(
@@ -84,8 +84,21 @@ export async function checkLogTables() {
           id SERIAL PRIMARY KEY,
           active BOOLEAN NOT NULL,
           creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-          schema_name varchar(20) NOT NULL
+          schema_name VARCHAR(20) NOT NULL
         )`,
+    );
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS logging.etl_status
+        (
+          database VARCHAR(20),
+          glossary VARCHAR(20),
+          domain_values VARCHAR(20)
+        )`,
+    );
+    await client.query(
+      `INSERT INTO logging.etl_status
+        (database, glossary, domain_values)
+        VALUES ('idle', 'idle', 'idle')`,
     );
     await client.query(`GRANT USAGE ON SCHEMA logging TO ${eqUser}`);
     await client.query(
@@ -268,14 +281,29 @@ async function logEtlLoadStart(pool) {
   }
 }
 
+export async function updateEtlStatus(pool, columnName, value) {
+  try {
+    const result = await pool.query(
+      `UPDATE logging.etl_status SET ${columnName} = $1`,
+      [value],
+    );
+    log.info(`ETL ${columnName} status updated to ${value}`);
+  } catch (err) {
+    log.warn(`Failed to update ETL status: ${err}`);
+  }
+}
+
 // Load new data into a fresh schema, then discard old schemas
 export async function runJob(s3Config) {
   const pool = startConnPool();
+  updateEtlStatus(pool, 'database', 'running');
   try {
     await runLoad(pool, s3Config);
     await trimSchema(pool, s3Config);
+    await updateEtlStatus(pool, 'database', 'success');
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
+    await updateEtlStatus(pool, 'database', 'failed');
   } finally {
     await endConnPool(pool);
   }
