@@ -88,6 +88,8 @@ export async function checkLogTables() {
           schema_name VARCHAR(20) NOT NULL
         )`,
     );
+
+    // create etl_status table
     await client.query(
       `CREATE TABLE IF NOT EXISTS logging.etl_status
         (
@@ -96,11 +98,19 @@ export async function checkLogTables() {
           domain_values VARCHAR(20)
         )`,
     );
-    await client.query(
-      `INSERT INTO logging.etl_status
-        (database, glossary, domain_values)
-        VALUES ('idle', 'idle', 'idle')`,
-    );
+
+    // Check if row has already been added to etl_status table
+    const db = await client
+      .query('SELECT * FROM logging.etl_status')
+      .catch((err) => log.warn(`Could not query databases: ${err}`));
+    if (!db.rowCount) {
+      await client.query(
+        `INSERT INTO logging.etl_status
+          (database, glossary, domain_values)
+          VALUES ('idle', 'idle', 'idle')`,
+      );
+    }
+
     await client.query(`GRANT USAGE ON SCHEMA logging TO ${eqUser}`);
     await client.query(
       `GRANT SELECT ON ALL TABLES IN SCHEMA logging TO ${eqUser}`,
