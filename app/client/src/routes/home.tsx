@@ -18,7 +18,7 @@ import CopyBox from 'components/copyBox';
 import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
-import { Modal } from 'components/modal';
+import Modal from 'components/modal';
 import RadioButtons from 'components/radioButtons';
 import SourceSelect from 'components/sourceSelect';
 import Summary from 'components/summary';
@@ -33,8 +33,6 @@ import {
   profiles,
   serverUrl,
 } from 'config';
-// types
-import type { ModalRef } from 'components/modal';
 
 /*
 ## Types
@@ -721,6 +719,10 @@ export function Home() {
     };
   }, [downloadStatus]);
 
+  const queryData = useMemo(() => {
+    return buildPostData(queryParams);
+  }, [queryParams]);
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -743,7 +745,7 @@ export function Home() {
             }
             downloadStatus={downloadStatus}
             onClose={handleDownloadModalClose}
-            queryData={buildPostData(queryParams)}
+            queryData={queryData}
             queryUrl={
               eqDataUrl && profile
                 ? `${eqDataUrl}/data/${profiles[profile].resource}`
@@ -870,7 +872,7 @@ export function Home() {
                   <h4>cURL</h4>
                   <CopyBox
                     text={`curl -X POST --json "${JSON.stringify(
-                      buildPostData(queryParams),
+                      queryData,
                     ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
                       profiles[profile].resource
                     }`}
@@ -1068,10 +1070,8 @@ function DownloadModal({
       .finally(() => onClose());
   }, [queryUrl, filename, setDownloadStatus, queryData, onClose]);
 
-  const modalRef = useRef<ModalRef>(null);
-
   return (
-    <Modal ref={modalRef} id="confirm-modal" isInitiallyOpen onClose={onClose}>
+    <Modal onClose={onClose}>
       <h2 className="usa-modal__heading">Download Status</h2>
       {countStatus === 'pending' && (
         <div className="usa-prose">
