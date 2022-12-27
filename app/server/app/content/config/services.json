@@ -1,5 +1,5 @@
 {
-  "eqDataApi": "https://api.epa.gov/expert-query/attains",
+  "eqDataApi": "",
   "googleAnalyticsMapping": [
     {
       "urlLookup": "eqDataApi",

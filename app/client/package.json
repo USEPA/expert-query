@@ -34,6 +34,7 @@
     "web-vitals": "3.0.3"
   },
   "dependencies": {
+    "@reach/dialog": "0.18.0",
     "@reach/portal": "0.18.0",
     "@reach/tooltip": "0.18.0",
     "bootstrap": "5.2.2",

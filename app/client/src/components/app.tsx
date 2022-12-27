@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import 'uswds/css/uswds.css';
-import 'uswds/js/uswds.js';
 import 'bootstrap/dist/css/bootstrap-grid.min.css';
 // components
 import { Home } from 'routes/home';
