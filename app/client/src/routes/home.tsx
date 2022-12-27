@@ -18,6 +18,7 @@ import CopyBox from 'components/copyBox';
 import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
 import InfoTooltip from 'components/infoTooltip';
 import { Loading } from 'components/loading';
+import DownloadModal from 'components/downloadModal';
 import RadioButtons from 'components/radioButtons';
 import SourceSelect from 'components/sourceSelect';
 import Summary from 'components/summary';
@@ -77,20 +78,10 @@ type SingleOptionState = {
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
-type URLQueryParam = [string, Primitive];
+type UrlQueryParam = [string, Primitive];
 
-type URLQueryState = {
+type UrlQueryState = {
   [field: string]: Primitive | Primitive[];
-};
-
-type PostData = {
-  filters: {
-    [field: string]: Primitive | Primitive[];
-  };
-  options: {
-    f?: string;
-    format?: string;
-  };
 };
 
 /*
@@ -116,7 +107,7 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   return values;
 }
 
-function buildPostData(query: URLQueryState) {
+function buildPostData(query: UrlQueryState) {
   const postData: PostData = {
     filters: {},
     options: {},
@@ -136,8 +127,8 @@ function buildPostData(query: URLQueryState) {
 }
 
 // Converts a JSON object into a parameter string
-function buildQueryString(query: URLQueryState, includeProfile = true) {
-  const paramsList: URLQueryParam[] = [];
+function buildQueryString(query: UrlQueryState, includeProfile = true) {
+  const paramsList: UrlQueryParam[] = [];
   Object.entries(query).forEach(([field, value]) => {
     if (!includeProfile && field === 'dataProfile') return;
 
@@ -525,7 +516,7 @@ async function matchOptions(
 
 // Parse parameters provided in the URL hash into a JSON object
 function parseInitialParams() {
-  const initialParams: URLQueryState = {};
+  const initialParams: UrlQueryState = {};
   const initialParamsList = window.location.hash.replace('#', '').split('&');
   initialParamsList.forEach((param) => {
     const parsedParam = param.split('=');
@@ -652,14 +643,14 @@ export function Home() {
   }, [getAbortSignal, staticOptions]);
 
   // Track non-empty values relevant to the current profile
-  const [queryParams, setQueryParams] = useState<URLQueryState>({});
+  const [queryParams, setQueryParams] = useState<UrlQueryState>({});
 
   // Update URL when inputs change
   useEffect(() => {
     if (!inputsLoaded) return;
 
     // Get selected parameters, including multiselectable fields
-    const newQueryParams: URLQueryState = {};
+    const newQueryParams: UrlQueryState = {};
     Object.entries(inputState).forEach(
       ([field, value]: [string, InputState[keyof InputState]]) => {
         if (value == null || (Array.isArray(value) && !value.length)) return;
@@ -694,6 +685,32 @@ export function Home() {
   const pathParts = window.location.pathname.split('/');
   const pageName = pathParts.length > 1 ? pathParts[1] : '';
 
+  const eqDataUrl =
+    content.data.services?.eqDataApi ||
+    `${window.location.origin}${window.location.pathname}`;
+
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+
+  const handleDownloadModalClose = useCallback(() => {
+    setConfirmationVisible(false);
+  }, []);
+
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+
+  useEffect(() => {
+    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
+
+    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
+
+    return function cleanup() {
+      clearTimeout(messageTimeout);
+    };
+  }, [downloadStatus]);
+
+  const queryData = useMemo(() => {
+    return buildPostData(queryParams);
+  }, [queryParams]);
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -705,12 +722,26 @@ export function Home() {
   }
 
   if (content.status === 'success') {
-    const eqDataUrl =
-      content.data.services.eqDataApi ||
-      `${window.location.protocol}//${window.location.hostname}:9090${window.location.pathname}`;
-
     return (
       <>
+        {confirmationVisible && (
+          <DownloadModal
+            filename={
+              profile && inputState.format
+                ? `${profile}.${inputState.format.value}`
+                : null
+            }
+            downloadStatus={downloadStatus}
+            onClose={handleDownloadModalClose}
+            queryData={queryData}
+            queryUrl={
+              eqDataUrl && profile
+                ? `${eqDataUrl}/data/${profiles[profile].resource}`
+                : null
+            }
+            setDownloadStatus={setDownloadStatus}
+          />
+        )}
         <button
           title="Glossary"
           className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
@@ -768,8 +799,17 @@ export function Home() {
                     staticOptions={staticOptions}
                     state={inputState}
                   />
+                  <div className="display-flex margin-top-1 width-full">
+                    <button
+                      className="margin-x-auto usa-button usa-button--outline"
+                      onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                      type="button"
+                    >
+                      Clear Search
+                    </button>
+                  </div>
                   <h3>Download the Data</h3>
-                  <div className="display-flex flex-wrap">
+                  <div>
                     <RadioButtons
                       legend={
                         <>
@@ -782,23 +822,23 @@ export function Home() {
                       selected={format}
                       styles={['margin-bottom-2']}
                     />
-                    <div className="display-flex flex-column flex-1 margin-y-auto">
-                      <button
-                        className="align-items-center display-flex flex-justify-center margin-bottom-1 margin-x-auto usa-button"
-                        onClick={() => null}
-                        type="button"
-                      >
-                        <Download className="height-205 margin-right-1 usa-icon width-205" />
-                        Download
-                      </button>
-                      <button
-                        className="margin-x-auto usa-button usa-button--outline"
-                        onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                        type="button"
-                      >
-                        Clear Search
-                      </button>
-                    </div>
+                    <button
+                      className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
+                      onClick={() => setConfirmationVisible(true)}
+                      type="button"
+                    >
+                      <Download className="height-205 margin-right-1 usa-icon width-205" />
+                      Download
+                    </button>
+                    {downloadStatus === 'success' && (
+                      <Alert type="success">Query executed successfully.</Alert>
+                    )}
+                    {downloadStatus === 'failure' && (
+                      <Alert type="error">
+                        An error occurred while executing the current query,
+                        please try again later.
+                      </Alert>
+                    )}
                   </div>
                   <h4>
                     {/* TODO - Remove the glossary linkage before production deployment */}
@@ -820,7 +860,7 @@ export function Home() {
                   <h4>cURL</h4>
                   <CopyBox
                     text={`curl -X POST --json "${JSON.stringify(
-                      buildPostData(queryParams),
+                      queryData,
                     ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
                       profiles[profile].resource
                     }`}

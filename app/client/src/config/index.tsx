@@ -20,14 +20,22 @@ export const serverUrl = window.location.origin;
 export const cloudSpace =
   NODE_ENV === 'development' ? 'dev' : REACT_APP_CLOUD_SPACE || '';
 
-async function fetchData(url: string, options: RequestInit) {
+async function fetchData(
+  url: string,
+  options: RequestInit,
+  responseType: 'json' | 'blob' = 'json',
+) {
   try {
     const response = await fetch(url, options);
     if (!response.ok) throw new Error(response.statusText);
     const contentType = response.headers.get('content-type');
-    return contentType?.includes('application/json')
-      ? await response.json()
-      : Promise.reject(new Error('Invalid content type received'));
+    if (responseType === 'json') {
+      return contentType?.includes('application/json')
+        ? await response.json()
+        : Promise.reject(new Error('Invalid content type received'));
+    } else {
+      return await response.blob();
+    }
   } catch (error) {
     return await Promise.reject(error);
   }
@@ -49,11 +57,19 @@ export function getData<T>(url: string, signal?: AbortSignal): Promise<T> {
  * Posts JSON data and returns a promise containing JSON fetched from a provided
  * web service URL or handles any other OK response returned from the server
  */
-export function postData(url: string, data: object) {
-  return fetchData(url, {
-    method: 'POST',
-    credentials: 'include' as const,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+export function postData(
+  url: string,
+  data: object,
+  responseType?: 'json' | 'blob',
+) {
+  return fetchData(
+    url,
+    {
+      method: 'POST',
+      credentials: 'include' as const,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+    responseType,
+  );
 }
