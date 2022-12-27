@@ -1,12 +1,13 @@
-import { Dialog } from '@reach/dialog';
 import { uniqueId } from 'lodash';
+import { Dialog } from '@reach/dialog';
 import { useCallback, useEffect, useState } from 'react';
 import { ReactComponent as Close } from 'uswds/img/usa-icons/close.svg';
-import '@reach/dialog/styles.css';
 // components
 import Alert from 'components/alert';
 // utilities
 import { postData } from 'config';
+// styles
+import '@reach/dialog/styles.css';
 
 type Props = {
   downloadStatus: Status;
