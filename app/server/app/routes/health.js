@@ -77,7 +77,7 @@ module.exports = function (app) {
       }
 
       // verify a query can be ran against each table in the active db
-      for (const [profileName, profile] of Object.entries(mapping)) {
+      for (const profile of Object.values(mapping)) {
         query = knex
           .withSchema(req.activeSchema)
           .from(profile.tableName)
@@ -179,7 +179,7 @@ module.exports = function (app) {
       }
 
       // initialize timeSinceLastUpdate to the minimum time node allows
-      let timeSinceLastUpdate = new Date(-8640000000000000);
+      let timeSinceLastUpdate = minDateTime;
 
       // verify file update date is within the last 24 hours
       if (isLocal) {

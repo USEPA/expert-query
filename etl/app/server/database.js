@@ -366,10 +366,9 @@ async function logEtlLoadStart(pool) {
 
 export async function updateEtlStatus(pool, columnName, value) {
   try {
-    const result = await pool.query(
-      `UPDATE logging.etl_status SET ${columnName} = $1`,
-      [value],
-    );
+    await pool.query(`UPDATE logging.etl_status SET ${columnName} = $1`, [
+      value,
+    ]);
     log.info(`ETL ${columnName} status updated to ${value}`);
   } catch (err) {
     log.warn(`Failed to update ETL status: ${err}`);
