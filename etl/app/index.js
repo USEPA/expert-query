@@ -54,13 +54,13 @@ app.on('ready', async () => {
     log.error(err);
   }
 
-  log.info('Scheduling glossary ETL to run every day at 1AM');
+  log.info('Scheduling glossary ETL to run every day, except Sunday, at 1AM');
 
-  // Schedule glossary ETL to run every day at 1AM
+  // Schedule glossary ETL to run every day, except Sunday, at 1AM
   cron.schedule(
-    '0 1 * * *',
+    '0 1 * * 1-6',
     async () => {
-      log.info('Running glossary cron task every day at 1AM');
+      log.info('Running glossary cron task every day, except Sunday, at 1AM');
 
       // load config from private s3 bucket
       const s3Config = await s3.loadConfig();
