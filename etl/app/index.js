@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import express from 'express';
 
+import * as s3 from './server/s3.js';
 import etlJob from './server/etlJob.js';
 import * as database from './server/database.js';
 import { logger as log } from './server/utilities/logger.js';
@@ -52,6 +53,31 @@ app.on('ready', async () => {
   } catch (err) {
     log.error(err);
   }
+
+  log.info('Scheduling glossary ETL to run every day at 1AM');
+
+  // Schedule glossary ETL to run every day at 1AM
+  cron.schedule(
+    '0 1 * * *',
+    async () => {
+      log.info('Running glossary cron task every day at 1AM');
+
+      // load config from private s3 bucket
+      const s3Config = await s3.loadConfig();
+
+      if (!s3Config) {
+        log.warn(
+          'Failed to get config from private S3 bucket, aborting etl process',
+        );
+        return;
+      }
+
+      s3.syncGlossary(s3Config);
+    },
+    {
+      scheduled: true,
+    },
+  );
 
   log.info('Scheduling load to run every Sunday at 1AM');
 
