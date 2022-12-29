@@ -2,7 +2,7 @@ const AWS = require("aws-sdk");
 const express = require("express");
 const { getActiveSchema } = require("../middleware");
 const { readdirSync, statSync } = require("node:fs");
-const { path, resolve } = require("node:path");
+const { resolve } = require("node:path");
 const { knex, mapping } = require("../utilities/database");
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)

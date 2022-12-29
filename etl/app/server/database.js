@@ -135,6 +135,8 @@ export async function checkForServerCrash() {
       .query('SELECT * FROM logging.etl_status')
       .catch((err) => log.warn(`Could not query databases: ${err}`));
 
+    await client.query('BEGIN');
+
     if (!result.rowCount) {
       await client.query(
         `INSERT INTO logging.etl_status
@@ -189,6 +191,8 @@ export async function checkForServerCrash() {
         }
       }
     }
+
+    await client.query('COMMIT');
   } catch (err) {
     log.warn('Failed to confirm that logging tables exist');
     await client.query('ROLLBACK');
@@ -530,7 +534,7 @@ export async function trimSchema(pool, s3Config) {
   }
 }
 
-// Get the ETL task for a particular profile
+// Drop old national-downloads folders
 export async function trimNationalDownloads(pool) {
   // get list of currently stored schemas
   const schemas = await pool
