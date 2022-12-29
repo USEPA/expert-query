@@ -7,6 +7,8 @@ log.info('Starting Task: etl_database');
 // load config from private s3 bucket
 const s3Config = await s3.loadConfig();
 
+await database.checkForServerCrash();
+
 // Create and load new schema
 await database.runJob(s3Config);
 

@@ -52,7 +52,7 @@ const eqConfig = {
   max: 10,
 };
 
-function startConnPool() {
+export function startConnPool() {
   const pool = new Pool(eqConfig);
   log.info('EqPool connection pool started');
   return pool;
@@ -74,9 +74,9 @@ export async function checkLogTables() {
       `CREATE TABLE IF NOT EXISTS logging.etl_log
         (
           id SERIAL PRIMARY KEY,
-          end_time timestamp,
-          load_error varchar,
-          start_time timestamp NOT NULL
+          end_time TIMESTAMP,
+          load_error VARCHAR,
+          start_time TIMESTAMP NOT NULL
         )`,
     );
     await client.query(
@@ -85,15 +85,114 @@ export async function checkLogTables() {
           id SERIAL PRIMARY KEY,
           active BOOLEAN NOT NULL,
           creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-          schema_name varchar(20) NOT NULL
+          schema_name VARCHAR(20) NOT NULL
         )`,
     );
+
+    // create etl_status table
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS logging.etl_status
+        (
+          database VARCHAR(20),
+          glossary VARCHAR(20),
+          domain_values VARCHAR(20)
+        )`,
+    );
+
+    // Check if row has already been added to etl_status table
+    const result = await client
+      .query('SELECT * FROM logging.etl_status')
+      .catch((err) => log.warn(`Could not query databases: ${err}`));
+    if (!result.rowCount) {
+      await client.query(
+        `INSERT INTO logging.etl_status
+          (database, glossary, domain_values)
+          VALUES ('idle', 'idle', 'idle')`,
+      );
+    }
+
     await client.query(`GRANT USAGE ON SCHEMA logging TO ${eqUser}`);
     await client.query(
       `GRANT SELECT ON ALL TABLES IN SCHEMA logging TO ${eqUser}`,
     );
     await client.query('COMMIT');
     log.info('Logging tables exist');
+  } catch (err) {
+    log.warn('Failed to confirm that logging tables exist');
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.end();
+  }
+}
+
+export async function checkForServerCrash() {
+  const client = await connectClient(eqConfig);
+
+  try {
+    // check the etl_status table
+    const result = await client
+      .query('SELECT * FROM logging.etl_status')
+      .catch((err) => log.warn(`Could not query databases: ${err}`));
+
+    await client.query('BEGIN');
+
+    if (!result.rowCount) {
+      await client.query(
+        `INSERT INTO logging.etl_status
+          (database, glossary, domain_values)
+          VALUES ('idle', 'idle', 'idle')`,
+      );
+    } else {
+      // set statuses to failed if they were running when the server crashed
+      if (result.rows[0].glossary === 'running') {
+        await updateEtlStatus(client, 'glossary', 'failed');
+      }
+      if (result.rows[0].domain_values === 'running') {
+        await updateEtlStatus(client, 'domain_values', 'failed');
+      }
+      if (result.rows[0].database === 'running') {
+        await updateEtlStatus(client, 'database', 'failed');
+
+        // get last schema id
+        const schema = await client
+          .query(
+            `SELECT id, active FROM logging.etl_schemas ORDER BY creation_date DESC LIMIT 1`,
+          )
+          .catch((err) => {
+            log.warn(`Could not query schemas: ${err}`);
+          });
+
+        // log error to etl_log table if the last schema did not complete
+        if (schema?.rowCount && !schema.rows[0].active) {
+          const id = schema.rows[0].id;
+
+          // check if the log for this schema already has an error logged
+          const log = await client
+            .query(
+              `SELECT end_time, load_error FROM logging.etl_log WHERE id = $1`,
+              [id],
+            )
+            .catch((err) => {
+              log.warn(`Could not query schemas: ${err}`);
+            });
+
+          if (
+            log?.rowCount &&
+            !log.rows[0].end_time &&
+            !log.rows[0].load_error
+          ) {
+            logEtlLoadError(
+              client,
+              id,
+              'Server crashed. Check cloud.gov logs for more info.',
+            );
+          }
+        }
+      }
+    }
+
+    await client.query('COMMIT');
   } catch (err) {
     log.warn('Failed to confirm that logging tables exist');
     await client.query('ROLLBACK');
@@ -235,7 +334,7 @@ async function loadProfile(
 async function logEtlLoadError(pool, etlLogId, loadError) {
   try {
     await pool.query(
-      'UPDATE logging.etl_log SET load_error = $1 WHERE id = $2',
+      'UPDATE logging.etl_log SET end_time = current_timestamp, load_error = $1 WHERE id = $2',
       [loadError, etlLogId],
     );
     log.info('ETL process error logged');
@@ -269,15 +368,29 @@ async function logEtlLoadStart(pool) {
   }
 }
 
+export async function updateEtlStatus(pool, columnName, value) {
+  try {
+    await pool.query(`UPDATE logging.etl_status SET ${columnName} = $1`, [
+      value,
+    ]);
+    log.info(`ETL ${columnName} status updated to ${value}`);
+  } catch (err) {
+    log.warn(`Failed to update ETL status: ${err}`);
+  }
+}
+
 // Load new data into a fresh schema, then discard old schemas
 export async function runJob(s3Config) {
   const pool = startConnPool();
+  updateEtlStatus(pool, 'database', 'running');
   try {
     await runLoad(pool, s3Config);
     await trimSchema(pool, s3Config);
     await trimNationalDownloads(pool);
+    await updateEtlStatus(pool, 'database', 'success');
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
+    await updateEtlStatus(pool, 'database', 'failed');
   } finally {
     await endConnPool(pool);
   }

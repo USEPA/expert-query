@@ -14,6 +14,7 @@ import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
 import { fileURLToPath } from 'url';
+import { endConnPool, startConnPool, updateEtlStatus } from './database.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -207,12 +208,16 @@ function fetchSingleDomain(name, mapping) {
         );
       } catch (err) {
         log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
+        throw err;
       }
     }
   };
 }
 
 export async function syncDomainValues(s3Config) {
+  const pool = startConnPool();
+  await updateEtlStatus(pool, 'domain_values', 'running');
+
   try {
     const fetchPromises = [];
     fetchPromises.push(fetchStateValues(s3Config));
@@ -233,8 +238,13 @@ export async function syncDomainValues(s3Config) {
       JSON.stringify(filenames),
       'content-etl/domainValues',
     );
+
+    await updateEtlStatus(pool, 'domain_values', 'success');
   } catch (err) {
     console.error(`Sync Domain Values failed! ${err}`);
+    await updateEtlStatus(pool, 'domain_values', 'failed');
+  } finally {
+    endConnPool(pool);
   }
 }
 
@@ -290,6 +300,9 @@ async function fetchStateValues(s3Config, retryCount = 0) {
 }
 
 export async function syncGlossary(s3Config, retryCount = 0) {
+  const pool = startConnPool();
+  await updateEtlStatus(pool, 'glossary', 'running');
+
   try {
     // query the glossary service
     const res = await axios.get(s3Config.services.glossaryURL, {
@@ -325,12 +338,17 @@ export async function syncGlossary(s3Config, retryCount = 0) {
 
     // upload the glossary.json file
     await uploadFilePublic('glossary.json', JSON.stringify(terms));
+
+    await updateEtlStatus(pool, 'glossary', 'success');
   } catch (errOuter) {
     try {
       return await retryRequest('Glossary', retryCount, s3Config, syncGlossary);
     } catch (err) {
       log.warn(`Sync Glossary failed! ${err}`);
+      await updateEtlStatus(pool, 'glossary', 'failed');
     }
+  } finally {
+    endConnPool(pool);
   }
 }
 
