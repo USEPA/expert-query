@@ -76,3 +76,9 @@ export const organizationType = [
     value: 'Tribe',
   },
 ] as const;
+
+export const pollutantIndicator = yesNo;
+
+export const useSupport = yesNo;
+
+export const vision303dPriority = yesNo;

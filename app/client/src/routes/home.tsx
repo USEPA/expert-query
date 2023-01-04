@@ -339,15 +339,15 @@ function getMultiOptionFields(fields: typeof allFields) {
   const multiFields = fields.map((field) => {
     return field.type === 'multiselect' ? field.key : null;
   });
-  const filtered = multiFields.reduce<
-    Array<Exclude<typeof multiFields[number], null>>
-  >((a, b) => {
-    if (b !== null) {
-      a.push(b);
-    }
-    return a;
-  }, []);
-  return filtered;
+  return multiFields.reduce<Array<NonNullable<typeof multiFields[number]>>>(
+    (a, b) => {
+      if (b !== null) {
+        a.push(b);
+      }
+      return a;
+    },
+    [],
+  );
 }
 
 // Retrieves all possible options for a given field
@@ -366,17 +366,17 @@ function getOptions(
 
 function getSingleOptionFields(fields: typeof allFields) {
   const singleFields = fields.map((field) => {
-    return field.type === 'radio' || field.type === 'select' ? field.key : null;
+    return field.type !== 'multiselect' ? field.key : null;
   });
-  const filtered = singleFields.reduce<
-    Array<Exclude<typeof singleFields[number], null>>
-  >((a, b) => {
-    if (b !== null) {
-      a.push(b);
-    }
-    return a;
-  }, []);
-  return filtered;
+  return singleFields.reduce<Array<NonNullable<typeof singleFields[number]>>>(
+    (a, b) => {
+      if (b !== null) {
+        a.push(b);
+      }
+      return a;
+    },
+    [],
+  );
 }
 
 function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
@@ -906,78 +906,82 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
         field.key,
         contextValue,
       );
-      if (field.type === 'multiselect') {
-        if (
-          !contextField &&
-          Array.isArray(defaultOptions) &&
-          defaultOptions.length <= 5
-        ) {
+      switch (field.type) {
+        case 'multiselect':
+          if (
+            !contextField &&
+            Array.isArray(defaultOptions) &&
+            defaultOptions.length <= 5
+          ) {
+            return [
+              <Checkboxes
+                key={field.key}
+                legend={<b>{field.label}</b>}
+                onChange={handlers[field.key]}
+                options={defaultOptions}
+                selected={state[field.key] ?? []}
+                styles={['margin-top-3']}
+              />,
+              field.key,
+            ];
+          }
           return [
-            <Checkboxes
+            <label
+              className="usa-label"
               key={field.key}
-              legend={<b>{field.label}</b>}
-              onChange={handlers[field.key]}
-              options={defaultOptions}
-              selected={state[field.key] ?? []}
-              styles={['margin-top-3']}
-            />,
+              htmlFor={`input-${field.key}`}
+            >
+              <b>{field.label}</b>
+              <SourceSelect
+                label={
+                  contextField &&
+                  allFields.find((f) => f.key === contextField)?.label
+                }
+                sources={
+                  contextField &&
+                  getOptions(profile, contextField, staticOptions)
+                }
+                onChange={contextField && handlers[contextField]}
+                selected={contextField && state[contextField]}
+              >
+                <AsyncSelect
+                  aria-label={`${field.label} input`}
+                  className="width-full"
+                  inputId={`input-${field.key}`}
+                  isMulti
+                  // re-renders default options when `contextValue` changes
+                  key={JSON.stringify(contextValue)}
+                  onChange={handlers[field.key]}
+                  defaultOptions={defaultOptions}
+                  loadOptions={filterOptions(
+                    profile,
+                    field.key,
+                    staticOptions,
+                    contextField,
+                    contextValue,
+                  )}
+                  placeholder={`Select ${getArticle(
+                    field.label.split(' ')[0],
+                  )} ${field.label}...`}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      border: '1px solid #adadad',
+                      borderRadius: contextField ? '0 4px 4px 0' : '4px',
+                    }),
+                    loadingIndicator: () => ({
+                      display: 'none',
+                    }),
+                  }}
+                  value={state[field.key]}
+                />
+              </SourceSelect>
+            </label>,
             field.key,
           ];
-        }
-        return [
-          <label
-            className="usa-label"
-            key={field.key}
-            htmlFor={`input-${field.key}`}
-          >
-            <b>{field.label}</b>
-            <SourceSelect
-              label={
-                contextField &&
-                allFields.find((f) => f.key === contextField)?.label
-              }
-              sources={
-                contextField && getOptions(profile, contextField, staticOptions)
-              }
-              onChange={contextField && handlers[contextField]}
-              selected={contextField && state[contextField]}
-            >
-              <AsyncSelect
-                aria-label={`${field.label} input`}
-                className="width-full"
-                inputId={`input-${field.key}`}
-                isMulti
-                // re-renders default options when `contextValue` changes
-                key={JSON.stringify(contextValue)}
-                onChange={handlers[field.key]}
-                defaultOptions={defaultOptions}
-                loadOptions={filterOptions(
-                  profile,
-                  field.key,
-                  staticOptions,
-                  contextField,
-                  contextValue,
-                )}
-                placeholder={`Select ${getArticle(field.label.split(' ')[0])} ${
-                  field.label
-                }...`}
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    border: '1px solid #adadad',
-                    borderRadius: contextField ? '0 4px 4px 0' : '4px',
-                  }),
-                  loadingIndicator: () => ({
-                    display: 'none',
-                  }),
-                }}
-                value={state[field.key]}
-              />
-            </SourceSelect>
-          </label>,
-          field.key,
-        ];
-      } else return [<></>, field.key];
+        default:
+          return [<></>, field.key];
+      }
     });
 
   // Store each row as a tuple with its row key
