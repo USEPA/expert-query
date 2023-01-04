@@ -1,6 +1,6 @@
 ---
 name: Change Request
-about: How's My Waterway Default GitHub Issue Template
+about: Expert Query Default GitHub Issue Template
 title: ''
 labels: ''
 assignees: ''
