@@ -1,4 +1,8 @@
-import { extract as innerExtract } from './materializedViewsExtract.js';
+import {
+  createPipeline as innerCreatePipeline,
+  extract as innerExtract,
+  transformToZip,
+} from './materializedViewsExtract.js';
 import pgPromise from 'pg-promise';
 
 const pgp = pgPromise({ capSQL: true });
@@ -16,7 +20,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     id SERIAL PRIMARY KEY,
     alternatelistingidentifier VARCHAR(50),
     assessmentbasis VARCHAR(30),
-    assessmentdate TIMESTAMP WITH TIME ZONE,
+    assessmentdate VARCHAR(255),
     assessmentmethods VARCHAR(150),
     assessmenttypes VARCHAR(30),
     assessmentunitid VARCHAR(50) NOT NULL,
@@ -37,8 +41,8 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     delistedreason VARCHAR(100),
     epaircategory VARCHAR(5),
     locationdescription VARCHAR(2000) NOT NULL,
-    monitoringenddate TIMESTAMP WITH TIME ZONE,
-    monitoringstartdate TIMESTAMP WITH TIME ZONE,
+    monitoringenddate VARCHAR(255),
+    monitoringstartdate VARCHAR(255),
     organizationid VARCHAR(30) NOT NULL,
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
@@ -52,8 +56,8 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     pollutantindicator VARCHAR(1),
     region VARCHAR(2),
     reportingcycle NUMERIC(4) NOT NULL,
-    seasonenddate TIMESTAMP WITH TIME ZONE,
-    seasonstartdate TIMESTAMP WITH TIME ZONE,
+    seasonenddate VARCHAR(255),
+    seasonstartdate VARCHAR(255),
     sizesource VARCHAR(100),
     sourcescale VARCHAR(30),
     state VARCHAR(4000),
@@ -133,13 +137,17 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   return await innerExtract('profile_assessments', s3Config, next, retryCount);
 }
 
-export function transform(data) {
+export function createPipeline() {
+  return innerCreatePipeline(tableName);
+}
+
+export async function transform(data, pipeline, first) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({
       alternatelistingidentifier: datum.alternatelistingidentifier,
       assessmentbasis: datum.assessmentbasis,
-      assessmentdate: datum.assessmentdate,
+      assessmentdate: datum.assessmentdate?.toString(),
       assessmentmethods: datum.assessmentmethods,
       assessmenttypes: datum.assessmenttypes,
       assessmentunitid: datum.assessmentunitid,
@@ -160,8 +168,8 @@ export function transform(data) {
       delistedreason: datum.delistedreason,
       epaircategory: datum.epaircategory,
       locationdescription: datum.locationdescription,
-      monitoringenddate: datum.monitoringenddate,
-      monitoringstartdate: datum.monitoringstartdate,
+      monitoringenddate: datum.monitoringenddate?.toString(),
+      monitoringstartdate: datum.monitoringstartdate?.toString(),
       organizationid: datum.organizationid,
       organizationname: datum.organizationname,
       organizationtype: datum.organizationtype,
@@ -175,8 +183,8 @@ export function transform(data) {
       pollutantindicator: datum.pollutantindicator,
       region: datum.region,
       reportingcycle: datum.reportingcycle,
-      seasonenddate: datum.seasonenddate,
-      seasonstartdate: datum.seasonstartdate,
+      seasonenddate: datum.seasonenddate?.toString(),
+      seasonstartdate: datum.seasonstartdate?.toString(),
       sizesource: datum.sizesource,
       sourcescale: datum.sourcescale,
       state: datum.state,
@@ -193,5 +201,8 @@ export function transform(data) {
       watertype: datum.watertype,
     });
   });
+
+  await transformToZip(rows, pipeline, first);
+
   return pgp.helpers.insert(rows, insertColumns, tableName);
 }

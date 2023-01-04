@@ -62,6 +62,16 @@ type Option = {
   value: Primitive;
 };
 
+type PostData = {
+  filters: {
+    [field: string]: Primitive | Primitive[];
+  };
+  options: {
+    f?: string;
+    format?: string;
+  };
+};
+
 type Primitive = string | number | boolean;
 
 type Status = 'idle' | 'pending' | 'failure' | 'success';
