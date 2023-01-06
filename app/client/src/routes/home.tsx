@@ -33,6 +33,8 @@ import {
   profiles,
   serverUrl,
 } from 'config';
+// types
+import type { ChangeEvent } from 'react';
 
 /*
 ## Types
@@ -49,9 +51,11 @@ type InputFieldAction = {
   };
 }[keyof InputState];
 
-type InputHandlers = MultiOptionHandlers & SingleOptionHandlers;
+type InputHandlers = MultiOptionHandlers &
+  SingleOptionHandlers &
+  SingleValueHandlers;
 
-type InputState = MultiOptionState & SingleOptionState;
+type InputState = MultiOptionState & SingleOptionState & SingleValueState;
 
 type InputValue = Primitive | Primitive[] | null;
 
@@ -75,6 +79,19 @@ type SingleOptionHandlers = {
 
 type SingleOptionState = {
   [key in SingleOptionField]: Option | null;
+};
+
+const dateFields = getDateFields(allFields);
+const yearFields = getYearFields(allFields);
+const singleValueFields = [...dateFields, ...yearFields];
+type SingleValueField = typeof singleValueFields[number];
+
+type SingleValueHandlers = {
+  [key in SingleValueField]: (ev: ChangeEvent<HTMLInputElement>) => void;
+};
+
+type SingleValueState = {
+  [key in SingleValueField]: string;
 };
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
@@ -279,10 +296,20 @@ function getArticle(noun: string) {
   return 'a';
 }
 
+function getDateFields(fields: typeof allFields) {
+  return removeNulls(
+    fields.map((field) => (field.type === 'date' ? field.key : null)),
+  );
+}
+
 // Returns the empty state for inputs (default values populated in `getUrlInputs`)
 function getDefaultInputState(): InputState {
-  return [...singleOptionFields, ...multiOptionFields].reduce((a, b) => {
-    return { ...a, [b]: null };
+  return [
+    ...singleOptionFields,
+    ...multiOptionFields,
+    ...singleValueFields,
+  ].reduce((a, b) => {
+    return { ...a, [b]: isSingleValueField(b) ? '' : null };
   }, {}) as InputState;
 }
 
@@ -336,17 +363,10 @@ function getLocalStorageItem(item: string) {
 }
 
 function getMultiOptionFields(fields: typeof allFields) {
-  const multiFields = fields.map((field) => {
-    return field.type === 'multiselect' ? field.key : null;
-  });
-  return multiFields.reduce<Array<NonNullable<typeof multiFields[number]>>>(
-    (a, b) => {
-      if (b !== null) {
-        a.push(b);
-      }
-      return a;
-    },
-    [],
+  return removeNulls(
+    fields.map((field) => {
+      return field.type === 'multiselect' ? field.key : null;
+    }),
   );
 }
 
@@ -365,18 +385,28 @@ function getOptions(
 }
 
 function getSingleOptionFields(fields: typeof allFields) {
-  const singleFields = fields.map((field) => {
-    return field.type !== 'multiselect' ? field.key : null;
-  });
-  return singleFields.reduce<Array<NonNullable<typeof singleFields[number]>>>(
-    (a, b) => {
-      if (b !== null) {
-        a.push(b);
-      }
-      return a;
-    },
-    [],
+  return removeNulls(
+    fields.map((field) => {
+      return field.type === 'select' || field.type === 'radio'
+        ? field.key
+        : null;
+    }),
   );
+}
+
+function getYearFields(fields: typeof allFields) {
+  return removeNulls(
+    fields.map((field) => (field.type === 'year' ? field.key : null)),
+  );
+}
+
+function removeNulls<T>(fields: Array<T | null>) {
+  return fields.reduce<Array<T>>((a, b) => {
+    if (isNotEmpty(b)) {
+      a.push(b);
+    }
+    return a;
+  }, []);
 }
 
 function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
@@ -395,7 +425,7 @@ async function getUrlInputs(
   // Get the data profile first, so it can be
   // used to check values against the database
   const profileArg = Array.isArray(params.dataProfile)
-    ? params.dataProfile[0]
+    ? params.dataProfile.pop()
     : params.dataProfile;
   const profile = Object.keys(profiles).find((p) => {
     return p === profileArg;
@@ -422,13 +452,31 @@ async function getUrlInputs(
         profile,
       );
     }),
+    // Date inputs
+    ...dateFields.map((key) => {
+      newState[key] = matchDate(params[key] ?? null);
+      return Promise.resolve();
+    }),
+    // Year inputs
+    ...yearFields.map((key) => {
+      newState[key] = matchYear(params[key] ?? null);
+      return Promise.resolve();
+    }),
   ]);
 
   return newState;
 }
 
-function isNotEmpty<T>(v: T | null | undefined): v is T {
-  return v !== undefined && v !== null;
+function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
+  if (v === null || v === undefined) return false;
+  if (Array.isArray(v) && v.length === 0) return false;
+  else if (
+    Object.keys(v).length === 0 &&
+    Object.getPrototypeOf(v) === Object.prototype
+  ) {
+    return false;
+  }
+  return true;
 }
 
 // Type narrowing
@@ -438,16 +486,23 @@ function isOption(maybeOption: Option | Primitive): maybeOption is Option {
 
 // Type narrowing
 function isMultiOptionField(
-  field: MultiOptionField | SingleOptionField,
+  field: MultiOptionField | SingleOptionField | SingleValueField,
 ): field is MultiOptionField {
   return (multiOptionFields as string[]).includes(field);
 }
 
 // Type narrowing
 function isSingleOptionField(
-  field: MultiOptionField | SingleOptionField,
+  field: MultiOptionField | SingleOptionField | SingleValueField,
 ): field is SingleOptionField {
   return (singleOptionFields as string[]).includes(field);
+}
+
+// Type narrowing
+function isSingleValueField(
+  field: MultiOptionField | SingleOptionField | SingleValueField,
+): field is SingleValueField {
+  return (singleValueFields as string[]).includes(field);
 }
 
 // Wrapper function to add type assertion
@@ -588,6 +643,38 @@ function useAbortSignal() {
   return getSignal;
 }
 
+function matchDate(values: InputValue) {
+  const value = Array.isArray(values) ? values.pop() : values;
+  if (!value) return '';
+  const dateString = value.toString();
+  const parsedDateString = dateString.split('-');
+  if (parsedDateString.length !== 3) return '';
+
+  const [month, day, year] = parsedDateString;
+  if (
+    validateIntString(month, 2) &&
+    validateIntString(day, 2) &&
+    validateIntString(year, 4)
+  )
+    return `${year}-${month}-${day}`;
+  return '';
+}
+
+function matchYear(values: InputValue) {
+  const value = Array.isArray(values) ? values.pop() : values;
+  if (!value) return '';
+  const yearString = value.toString();
+  if (validateIntString(yearString, 4)) return yearString;
+  return '';
+}
+
+function validateIntString(intString: string, length: number) {
+  if (intString.includes('.')) return false;
+  if (intString.length !== length) return false;
+  if (!Number.isFinite(parseInt(intString))) return false;
+  return true;
+}
+
 /*
 ## Components
 */
@@ -620,6 +707,13 @@ export function Home() {
       } else if (isSingleOptionField(field.key)) {
         newHandlers[field.key] = (ev: Option | null) =>
           inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
+      } else if (isSingleValueField(field.key)) {
+        newHandlers[field.key] = (ev: ChangeEvent<HTMLInputElement>) => {
+          inputDispatch({
+            type: field.key,
+            payload: ev.target.value,
+          } as InputFieldAction);
+        };
       }
     });
     return newHandlers as InputHandlers;
@@ -896,93 +990,141 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
   const fields: readonly string[] = profiles[profile].fields;
 
   // Store each field's element in a tuple with its key
-  const fieldsJsx: Array<[JSX.Element, string]> = allFields
-    .filter((field) => fields.includes(field.key))
-    .map((field) => {
-      const contextField = 'context' in field ? field.context : null;
-      const contextValue = contextField ? state[contextField]?.value : null;
-      const defaultOptions = getInitialOptions(
-        staticOptions,
-        field.key,
-        contextValue,
-      );
-      switch (field.type) {
-        case 'multiselect':
-          if (
-            !contextField &&
-            Array.isArray(defaultOptions) &&
-            defaultOptions.length <= 5
-          ) {
+  const fieldsJsx: Array<[JSX.Element, string]> = removeNulls(
+    allFields
+      .filter((field) => fields.includes(field.key))
+      .map((field) => {
+        switch (field.type) {
+          case 'multiselect':
+            const contextField = 'context' in field ? field.context : null;
+            const contextValue = contextField
+              ? state[contextField]?.value
+              : null;
+            const defaultOptions = getInitialOptions(
+              staticOptions,
+              field.key,
+              contextValue,
+            );
+            if (
+              !contextField &&
+              Array.isArray(defaultOptions) &&
+              defaultOptions.length <= 5
+            ) {
+              return [
+                <Checkboxes
+                  key={field.key}
+                  legend={<b>{field.label}</b>}
+                  onChange={handlers[field.key]}
+                  options={defaultOptions}
+                  selected={state[field.key] ?? []}
+                  styles={['margin-top-3']}
+                />,
+                field.key,
+              ];
+            }
             return [
-              <Checkboxes
+              <label
+                className="usa-label"
                 key={field.key}
-                legend={<b>{field.label}</b>}
-                onChange={handlers[field.key]}
-                options={defaultOptions}
-                selected={state[field.key] ?? []}
-                styles={['margin-top-3']}
-              />,
+                htmlFor={`input-${field.key}`}
+              >
+                <b>{field.label}</b>
+                <SourceSelect
+                  label={
+                    contextField &&
+                    allFields.find((f) => f.key === contextField)?.label
+                  }
+                  sources={
+                    contextField &&
+                    getOptions(profile, contextField, staticOptions)
+                  }
+                  onChange={contextField && handlers[contextField]}
+                  selected={contextField && state[contextField]}
+                >
+                  <AsyncSelect
+                    aria-label={`${field.label} input`}
+                    className="width-full"
+                    inputId={`input-${field.key}`}
+                    isMulti
+                    // re-renders default options when `contextValue` changes
+                    key={JSON.stringify(contextValue)}
+                    onChange={handlers[field.key]}
+                    defaultOptions={defaultOptions}
+                    loadOptions={filterOptions(
+                      profile,
+                      field.key,
+                      staticOptions,
+                      contextField,
+                      contextValue,
+                    )}
+                    placeholder={`Select ${getArticle(
+                      field.label.split(' ')[0],
+                    )} ${field.label}...`}
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        border: '1px solid #adadad',
+                        borderRadius: contextField ? '0 4px 4px 0' : '4px',
+                      }),
+                      loadingIndicator: () => ({
+                        display: 'none',
+                      }),
+                    }}
+                    value={state[field.key]}
+                  />
+                </SourceSelect>
+              </label>,
               field.key,
             ];
-          }
-          return [
-            <label
-              className="usa-label"
-              key={field.key}
-              htmlFor={`input-${field.key}`}
-            >
-              <b>{field.label}</b>
-              <SourceSelect
-                label={
-                  contextField &&
-                  allFields.find((f) => f.key === contextField)?.label
-                }
-                sources={
-                  contextField &&
-                  getOptions(profile, contextField, staticOptions)
-                }
-                onChange={contextField && handlers[contextField]}
-                selected={contextField && state[contextField]}
+          case 'date':
+          case 'year':
+            if (field.boundary === 'high') return null;
+            const pairedField = allFields.find(
+              (otherField) =>
+                otherField.key !== field.key &&
+                'parent' in otherField &&
+                otherField.parent === field.parent,
+            );
+            if (!pairedField || !isSingleValueField(pairedField.key))
+              return null;
+
+            return [
+              <label
+                className="usa-label"
+                htmlFor={`input-${field.key}`}
+                key={field.parent}
               >
-                <AsyncSelect
-                  aria-label={`${field.label} input`}
-                  className="width-full"
-                  inputId={`input-${field.key}`}
-                  isMulti
-                  // re-renders default options when `contextValue` changes
-                  key={JSON.stringify(contextValue)}
+                <b>{field.label}</b>
+                <div className="margin-top-1 usa-hint">from:</div>
+                <input
+                  className="usa-input"
+                  id={`input-${field.key}`}
+                  min={field.type === 'year' ? 1900 : undefined}
+                  max={field.type === 'year' ? 2100 : undefined}
                   onChange={handlers[field.key]}
-                  defaultOptions={defaultOptions}
-                  loadOptions={filterOptions(
-                    profile,
-                    field.key,
-                    staticOptions,
-                    contextField,
-                    contextValue,
-                  )}
-                  placeholder={`Select ${getArticle(
-                    field.label.split(' ')[0],
-                  )} ${field.label}...`}
-                  styles={{
-                    control: (base) => ({
-                      ...base,
-                      border: '1px solid #adadad',
-                      borderRadius: contextField ? '0 4px 4px 0' : '4px',
-                    }),
-                    loadingIndicator: () => ({
-                      display: 'none',
-                    }),
-                  }}
+                  placeholder={field.type === 'year' ? 'yyyy' : undefined}
+                  type={field.type === 'date' ? 'date' : 'number'}
                   value={state[field.key]}
                 />
-              </SourceSelect>
-            </label>,
-            field.key,
-          ];
-        default:
-          return [<></>, field.key];
-      }
-    });
+                <div className="margin-top-1 usa-hint">to:</div>
+                <input
+                  className="usa-input"
+                  id={`input-${pairedField.key}`}
+                  min={pairedField.type === 'year' ? 1900 : undefined}
+                  max={pairedField.type === 'year' ? 2100 : undefined}
+                  onChange={handlers[pairedField.key]}
+                  placeholder={pairedField.type === 'year' ? 'yyyy' : undefined}
+                  type={pairedField.type === 'date' ? 'date' : 'number'}
+                  value={state[pairedField.key]}
+                />
+              </label>,
+              field.parent,
+            ];
+          default:
+            return null;
+        }
+      }),
+  );
 
   // Store each row as a tuple with its row key
   const rows: Array<[Array<[JSX.Element, string]>, string]> = [];
