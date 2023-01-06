@@ -285,6 +285,15 @@ function filterStaticOptionsByContext(
   } else return options;
 }
 
+// Convert `yyyy-mm-dd` date format to `mm-dd-yyyy`
+function fromIsoDateString(dateString: string) {
+  const date = new Date(dateString);
+  return `${(date.getUTCMonth() + 1).toString().padStart(2, '0')}-${date
+    .getUTCDate()
+    .toString()
+    .padStart(2, '0')}-${date.getUTCFullYear().toString().padStart(4, '0')}`;
+}
+
 // Utility function to choose between 'a' or 'an'
 function getArticle(noun: string) {
   if (!noun.length) return '';
@@ -468,7 +477,7 @@ async function getUrlInputs(
 }
 
 function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
-  if (v === null || v === undefined) return false;
+  if (v === null || v === undefined || v === '') return false;
   if (Array.isArray(v) && v.length === 0) return false;
   else if (
     Object.keys(v).length === 0 &&
@@ -643,6 +652,8 @@ function useAbortSignal() {
   return getSignal;
 }
 
+// Verify that a given string matches the format
+// `mm-dd-yyyy`, padding with zeroes if necessary
 function matchDate(values: InputValue) {
   const value = Array.isArray(values) ? values.pop() : values;
   if (!value) return '';
@@ -651,28 +662,32 @@ function matchDate(values: InputValue) {
   if (parsedDateString.length !== 3) return '';
 
   const [month, day, year] = parsedDateString;
-  if (
-    validateIntString(month, 2) &&
-    validateIntString(day, 2) &&
-    validateIntString(year, 4)
-  )
-    return `${year}-${month}-${day}`;
-  return '';
+
+  const matchedMonth = matchIntString(month, 2);
+  const matchedDay = matchIntString(day, 2);
+  const matchedYear = matchIntString(year, 4);
+
+  if (matchedMonth && matchedDay && matchedYear) {
+    return `${matchedYear}-${matchedMonth}-${matchedDay}`;
+  } else return '';
 }
 
+// Verify that a given string matches the format `yyyy`
 function matchYear(values: InputValue) {
   const value = Array.isArray(values) ? values.pop() : values;
   if (!value) return '';
   const yearString = value.toString();
-  if (validateIntString(yearString, 4)) return yearString;
-  return '';
+  return matchIntString(yearString, 4) ?? '';
 }
 
-function validateIntString(intString: string, length: number) {
-  if (intString.includes('.')) return false;
-  if (intString.length !== length) return false;
-  if (!Number.isFinite(parseInt(intString))) return false;
-  return true;
+// Verify that a given string consists of only digits.
+// If the string is less than the specified length,
+// it will be front-padded with zeroes.
+function matchIntString(intString: string, length: number) {
+  if (intString.includes('.')) return null;
+  if (intString.length > length) return null;
+  if (!Number.isFinite(parseInt(intString))) return null;
+  return intString.padStart(length, '0');
 }
 
 /*
@@ -749,16 +764,27 @@ export function Home() {
     const newQueryParams: UrlQueryState = {};
     Object.entries(inputState).forEach(
       ([field, value]: [string, InputState[keyof InputState]]) => {
-        if (value == null || (Array.isArray(value) && !value.length)) return;
+        if (
+          value == null ||
+          value === '' ||
+          (Array.isArray(value) && !value.length)
+        )
+          return;
 
         // Extract 'value' field from Option types
         const flattenedValue = getInputValue(value);
+        const formattedValue =
+          (dateFields as string[]).includes(field) &&
+          typeof flattenedValue === 'string'
+            ? fromIsoDateString(flattenedValue)
+            : flattenedValue;
         if (
-          controlFields.includes(field) ||
-          (profile &&
-            (profiles[profile].fields as readonly string[]).includes(field))
+          formattedValue &&
+          (controlFields.includes(field) ||
+            (profile &&
+              (profiles[profile].fields as readonly string[]).includes(field)))
         ) {
-          newQueryParams[field] = flattenedValue;
+          newQueryParams[field] = formattedValue;
         }
       },
     );
