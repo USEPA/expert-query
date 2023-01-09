@@ -9,19 +9,19 @@ describe("CopyBox", () => {
       ? `${location.protocol}//${location.hostname}:3000`
       : window.location.origin;
 
-  const bringUpCkeckbox = () => {
+  const bringUpCopybox = () => {
     cy.get(`[aria-label="Select a data profile"]`).click();
     cy.get(".css-4ljt47-MenuList").children().first().click();
   };
 
   it("Verify copy box is available", () => {
-    bringUpCkeckbox();
+    bringUpCopybox();
 
     cy.findAllByTestId("copy-box-container").should("exist");
   });
 
   it("Verify copy box backgroundColor", () => {
-    bringUpCkeckbox();
+    bringUpCopybox();
 
     cy.findAllByTestId("copy-box-container")
       .should("exist")
@@ -30,7 +30,7 @@ describe("CopyBox", () => {
   });
 
   it("Verify copy box Current Query text", () => {
-    bringUpCkeckbox();
+    bringUpCopybox();
 
     cy.findAllByTestId("copy-box-container")
       .should("exist")
@@ -43,7 +43,7 @@ describe("CopyBox", () => {
   });
 
   it("Verify copy box Action Units API Query text", () => {
-    bringUpCkeckbox();
+    bringUpCopybox();
 
     cy.findAllByTestId("copy-box-container")
       .should("exist")
@@ -56,7 +56,7 @@ describe("CopyBox", () => {
   });
 
   it("Verify copy box cURL command text", () => {
-    bringUpCkeckbox();
+    bringUpCopybox();
 
     cy.findAllByTestId("copy-box-container")
       .should("exist")
@@ -68,5 +68,17 @@ describe("CopyBox", () => {
           )} ${origin}/attains/data/actions`
         );
       });
+  });
+
+  it("Verify copy box copy item", () => {
+    bringUpCopybox();
+    cy.wait(1000)
+    cy.findAllByRole("button", { name: "Copy content" }).first().click();
+    cy.window().then(async (win) => {
+      const text = await win.navigator.clipboard.readText();
+      expect(text).to.equal(
+        `${origin}/attains/#dataProfile=actions&format=csv`
+      );
+    });
   });
 });
