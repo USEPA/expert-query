@@ -652,42 +652,19 @@ function useAbortSignal() {
   return getSignal;
 }
 
-// Verify that a given string matches the format
-// `mm-dd-yyyy`, padding with zeroes if necessary
-function matchDate(values: InputValue) {
+// Verify that a given string matches a parseable date format
+function matchDate(values: InputValue, yearOnly = false) {
   const value = Array.isArray(values) ? values.pop() : values;
   if (!value) return '';
-  const dateString = value.toString();
-  const parsedDateString = dateString.split('-');
-  if (parsedDateString.length !== 3) return '';
-
-  const [month, day, year] = parsedDateString;
-
-  const matchedMonth = matchIntString(month, 2);
-  const matchedDay = matchIntString(day, 2);
-  const matchedYear = matchIntString(year, 4);
-
-  if (matchedMonth && matchedDay && matchedYear) {
-    return `${matchedYear}-${matchedMonth}-${matchedDay}`;
-  } else return '';
+  const date = new Date(value.toString());
+  if (isNaN(date.getTime())) return '';
+  const dateString = date.toISOString();
+  const endIndex = yearOnly ? 4 : 10;
+  return dateString.substring(0, endIndex);
 }
 
-// Verify that a given string matches the format `yyyy`
 function matchYear(values: InputValue) {
-  const value = Array.isArray(values) ? values.pop() : values;
-  if (!value) return '';
-  const yearString = value.toString();
-  return matchIntString(yearString, 4) ?? '';
-}
-
-// Verify that a given string consists of only digits.
-// If the string is less than the specified length,
-// it will be front-padded with zeroes.
-function matchIntString(intString: string, length: number) {
-  if (intString.includes('.')) return null;
-  if (intString.length > length) return null;
-  if (!Number.isFinite(parseInt(intString))) return null;
-  return intString.padStart(length, '0');
+  return matchDate(values, true);
 }
 
 /*
@@ -923,7 +900,7 @@ export function Home() {
                     />
                     <div className="display-flex margin-top-1 width-full">
                       <button
-                        className="margin-x-auto usa-button usa-button--outline"
+                        className="margin-top-1 margin-x-auto usa-button usa-button--outline"
                         onClick={(_ev) => inputDispatch({ type: 'reset' })}
                         type="button"
                       >
@@ -1072,7 +1049,7 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
                     className="width-full"
                     inputId={`input-${field.key}`}
                     isMulti
-                    // re-renders default options when `contextValue` changes
+                    // Re-renders default options when `contextValue` changes
                     key={JSON.stringify(contextValue)}
                     onChange={handlers[field.key]}
                     defaultOptions={defaultOptions}
@@ -1104,13 +1081,16 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
             ];
           case 'date':
           case 'year':
+            // Prevents range fields from rendering twice
             if (field.boundary === 'high') return null;
+
             const pairedField = allFields.find(
               (otherField) =>
                 otherField.key !== field.key &&
-                'parent' in otherField &&
-                otherField.parent === field.parent,
+                'domain' in otherField &&
+                otherField.domain === field.domain,
             );
+            // All range inputs should have a high and a low boundary field
             if (!pairedField || !isSingleValueField(pairedField.key))
               return null;
 
@@ -1118,7 +1098,7 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
               <label
                 className="usa-label"
                 htmlFor={`input-${field.key}`}
-                key={field.parent}
+                key={field.domain}
               >
                 <b>{field.label}</b>
                 <div className="margin-top-1 usa-hint">from:</div>
@@ -1144,7 +1124,7 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
                   value={state[pairedField.key]}
                 />
               </label>,
-              field.parent,
+              field.domain,
             ];
           default:
             return null;

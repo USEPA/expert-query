@@ -7,6 +7,43 @@ const logger = require("../utilities/logger");
 const log = logger.logger;
 const StreamingService = require("../utilities/streamingService");
 
+const timestampColumns = ["completiondate"];
+
+function appendToWhereBetween(query, paramName, lowParamValue, highParamValue) {
+  const isTimestampColumn = timestampColumns.includes(paramName);
+
+  let lowValue = lowParamValue;
+  if (Array.isArray(lowValue)) lowValue = lowValue.pop();
+  if (lowValue && isTimestampColumn) lowValue = new Date(lowValue);
+  if (isNaN(lowValue)) lowValue = null;
+
+  let highValue = highParamValue;
+  if (Array.isArray(highValue)) highValue = highValue.pop();
+  if (highValue && isTimestampColumn) highValue = new Date(highValue);
+  if (isNaN(highValue)) highValue = null;
+
+  if (!lowValue && !highValue) return;
+
+  if (lowValue && highValue) {
+    query.whereBetween(paramName, [
+      isTimestampColumn ? lowValue.toISOString() : lowValue,
+      isTimestampColumn ? highValue.toISOString() : highValue,
+    ]);
+  } else if (lowParamValue) {
+    query.where(
+      paramName,
+      ">",
+      isTimestampColumn ? lowValue.toISOString() : lowValue
+    );
+  } else {
+    query.where(
+      paramName,
+      "<",
+      isTimestampColumn ? highValue.toISOString() : highValue
+    );
+  }
+}
+
 /**
  * Gets the query parameters from the request.
  * @param {express.Request} req
@@ -66,7 +103,16 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    appendToWhere(query, col.name, queryParams.filters[col.alias]);
+    if ("lowParam" in col || "highParam" in col) {
+      appendToWhereBetween(
+        query,
+        col.name,
+        queryParams.filters[col.lowParam],
+        queryParams.filters[col.highParam]
+      );
+    } else {
+      appendToWhere(query, col.name, queryParams.filters[col.alias]);
+    }
   });
 }
 
