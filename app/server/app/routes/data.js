@@ -7,40 +7,30 @@ const logger = require("../utilities/logger");
 const log = logger.logger;
 const StreamingService = require("../utilities/streamingService");
 
-const timestampColumns = ["completiondate"];
+class DuplicateParameterException extends Error {
+  constructor(parameter) {
+    super();
+    this.code = 400;
+    this.message = `Duplicate ${parameter} parameters not allowed`;
+  }
+}
 
-function appendToWhereBetween(query, paramName, lowParamValue, highParamValue) {
-  const isTimestampColumn = timestampColumns.includes(paramName);
+/**
+ * Append a range to the where clause of the provided query.
+ * @param {Object} query KnexJS query object
+ * @param {string} paramName column name
+ * @param {string} lowParamValue URL query low value
+ * @param {string} highParamValue URL query high value
+ */
+function appendToWhereRange(query, paramName, lowParamValue, highParamValue) {
+  if (!lowParamValue && !highParamValue) return;
 
-  let lowValue = lowParamValue;
-  if (Array.isArray(lowValue)) lowValue = lowValue.pop();
-  if (lowValue && isTimestampColumn) lowValue = new Date(lowValue);
-  if (isNaN(lowValue)) lowValue = null;
-
-  let highValue = highParamValue;
-  if (Array.isArray(highValue)) highValue = highValue.pop();
-  if (highValue && isTimestampColumn) highValue = new Date(highValue);
-  if (isNaN(highValue)) highValue = null;
-
-  if (!lowValue && !highValue) return;
-
-  if (lowValue && highValue) {
-    query.whereBetween(paramName, [
-      isTimestampColumn ? lowValue.toISOString() : lowValue,
-      isTimestampColumn ? highValue.toISOString() : highValue,
-    ]);
+  if (lowParamValue && highParamValue) {
+    query.whereBetween(paramName, [lowParamValue, highParamValue]);
   } else if (lowParamValue) {
-    query.where(
-      paramName,
-      ">",
-      isTimestampColumn ? lowValue.toISOString() : lowValue
-    );
+    query.where(paramName, ">=", lowParamValue);
   } else {
-    query.where(
-      paramName,
-      "<",
-      isTimestampColumn ? highValue.toISOString() : highValue
-    );
+    query.where(paramName, "<=", highParamValue);
   }
 }
 
@@ -104,16 +94,39 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   // build where clause of the query
   profile.columns.forEach((col) => {
     if ("lowParam" in col || "highParam" in col) {
-      appendToWhereBetween(
+      const lowParamValue = queryParams.filters[col.lowParam];
+      const highParamValue = queryParams.filters[col.highParam];
+      // only allow one instance of each parameter for rangeable columns
+      if (Array.isArray(lowParamValue)) {
+        throw new DuplicateParameterException(col.lowParam);
+      }
+      if (Array.isArray(highParamValue)) {
+        throw new DuplicateParameterException(col.highParam);
+      }
+
+      const isTimestampColumn = col.type === "timestamptz";
+
+      appendToWhereRange(
         query,
         col.name,
-        queryParams.filters[col.lowParam],
-        queryParams.filters[col.highParam]
+        isTimestampColumn ? dateToUtcTime(lowParamValue) : lowParamValue,
+        isTimestampColumn ? dateToUtcTime(highParamValue, true) : highParamValue
       );
     } else {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
     }
   });
+}
+
+function dateToUtcTime(value, endOfDay = false) {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (isNaN(date)) return null;
+
+  const dateString = date.toISOString().substring(0, 10);
+  if (endOfDay) return `${dateString}T24:00Z`;
+  return `${dateString}T00:00Z`;
 }
 
 /**
@@ -182,7 +195,7 @@ async function executeQuery(profile, req, res) {
     }
   } catch (error) {
     log.error(`Failed to get data from the "${profile.tableName}" table...`);
-    return res.status(500).send("Error !" + error);
+    return res.status(error.code ?? 500).send(`Error! ${error.message}`);
   }
 }
 
@@ -203,6 +216,7 @@ function executeQueryCountOnly(profile, req, res) {
     const queryParams = getQueryParams(req);
 
     parseCriteria(query, profile, queryParams, true);
+    console.log(query.toString());
 
     query
       .then((count) => res.status(200).send(count))
@@ -214,7 +228,7 @@ function executeQueryCountOnly(profile, req, res) {
       });
   } catch (error) {
     log.error(`Failed to get count from the "${profile.tableName}" table...`);
-    return res.status(500).send("Error !" + error);
+    return res.status(error.code ?? 500).send(`Error! ${error.message}`);
   }
 }
 

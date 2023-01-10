@@ -134,7 +134,7 @@ function buildPostData(query: UrlQueryState) {
   Object.entries(query).forEach(([field, value]) => {
     if (value === undefined) return;
     if (field === 'format') {
-      const singleValue = Array.isArray(value) ? value.pop() : value;
+      const singleValue = Array.isArray(value) ? value[0] : value;
       if (typeof singleValue !== 'string') return;
       postData.options.format = singleValue;
     } else if (field === 'dataProfile') return;
@@ -434,7 +434,7 @@ async function getUrlInputs(
   // Get the data profile first, so it can be
   // used to check values against the database
   const profileArg = Array.isArray(params.dataProfile)
-    ? params.dataProfile.pop()
+    ? params.dataProfile[0]
     : params.dataProfile;
   const profile = Object.keys(profiles).find((p) => {
     return p === profileArg;
@@ -654,7 +654,7 @@ function useAbortSignal() {
 
 // Verify that a given string matches a parseable date format
 function matchDate(values: InputValue, yearOnly = false) {
-  const value = Array.isArray(values) ? values.pop() : values;
+  const value = Array.isArray(values) ? values[0] : values;
   if (!value) return '';
   const date = new Date(value.toString());
   if (isNaN(date.getTime())) return '';

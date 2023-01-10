@@ -95,17 +95,17 @@ export default [
   },
   { key: 'confirmed', label: 'Confirmed', type: 'multiselect' },
   {
-    key: 'consentDegreeCycleLo',
-    label: 'Consent Degree Cycle',
+    key: 'consentDecreeCycleLo',
+    label: 'Consent Decree Cycle',
     type: 'year',
-    domain: 'consentDegreeCycle',
+    domain: 'consentDecreeCycle',
     boundary: 'low',
   },
   {
-    key: 'consentDegreeCycleHi',
-    label: 'Consent Degree Cycle',
+    key: 'consentDecreeCycleHi',
+    label: 'Consent Decree Cycle',
     type: 'year',
-    domain: 'consentDegreeCycle',
+    domain: 'consentDecreeCycle',
     boundary: 'high',
   },
   {
