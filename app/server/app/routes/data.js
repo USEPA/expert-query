@@ -35,6 +35,23 @@ function appendToWhereRange(query, paramName, lowParamValue, highParamValue) {
 }
 
 /**
+ * Create an ISO date string with no timezone offset from a given date string.
+ * @param {string} value the date string to be converted to ISO format
+ * @param {boolean} whether the returned time should represent midnight at the start or end of day
+ * @returns {string}
+ */
+function dateToUtcTime(value, endOfDay = false) {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (isNaN(date)) return null;
+
+  const dateString = date.toISOString().substring(0, 10);
+  if (endOfDay) return `${dateString}T24:00Z`;
+  return `${dateString}T00:00Z`;
+}
+
+/**
  * Gets the query parameters from the request.
  * @param {express.Request} req
  * @returns request query parameters
@@ -116,17 +133,6 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
     }
   });
-}
-
-function dateToUtcTime(value, endOfDay = false) {
-  if (!value) return null;
-
-  const date = new Date(value);
-  if (isNaN(date)) return null;
-
-  const dateString = date.toISOString().substring(0, 10);
-  if (endOfDay) return `${dateString}T24:00Z`;
-  return `${dateString}T00:00Z`;
 }
 
 /**
