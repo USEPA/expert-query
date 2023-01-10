@@ -18,19 +18,34 @@ class DuplicateParameterException extends Error {
 /**
  * Append a range to the where clause of the provided query.
  * @param {Object} query KnexJS query object
- * @param {string} paramName column name
+ * @param {Object} column column mapping object
  * @param {string} lowParamValue URL query low value
  * @param {string} highParamValue URL query high value
  */
-function appendToWhereRange(query, paramName, lowParamValue, highParamValue) {
-  if (!lowParamValue && !highParamValue) return;
+function appendRangeToWhere(query, column, lowParamValue, highParamValue) {
+  if (Array.isArray(lowParamValue)) {
+    throw new DuplicateParameterException(column.lowParam);
+  }
+  if (Array.isArray(highParamValue)) {
+    throw new DuplicateParameterException(column.highParam);
+  }
 
-  if (lowParamValue && highParamValue) {
-    query.whereBetween(paramName, [lowParamValue, highParamValue]);
-  } else if (lowParamValue) {
-    query.where(paramName, ">=", lowParamValue);
+  const isTimestampColumn = column.type === "timestamptz";
+  const lowValue = isTimestampColumn
+    ? dateToUtcTime(lowParamValue)
+    : lowParamValue;
+  const highValue = isTimestampColumn
+    ? dateToUtcTime(highParamValue, true)
+    : highParamValue;
+
+  if (!lowValue && !highValue) return;
+
+  if (lowValue && highValue) {
+    query.whereBetween(column.name, [lowValue, highValue]);
+  } else if (lowValue) {
+    query.where(column.name, ">=", lowValue);
   } else {
-    query.where(paramName, "<=", highParamValue);
+    query.where(column.name, "<=", highValue);
   }
 }
 
@@ -111,23 +126,11 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   // build where clause of the query
   profile.columns.forEach((col) => {
     if ("lowParam" in col || "highParam" in col) {
-      const lowParamValue = queryParams.filters[col.lowParam];
-      const highParamValue = queryParams.filters[col.highParam];
-      // only allow one instance of each parameter for rangeable columns
-      if (Array.isArray(lowParamValue)) {
-        throw new DuplicateParameterException(col.lowParam);
-      }
-      if (Array.isArray(highParamValue)) {
-        throw new DuplicateParameterException(col.highParam);
-      }
-
-      const isTimestampColumn = col.type === "timestamptz";
-
-      appendToWhereRange(
+      appendRangeToWhere(
         query,
-        col.name,
-        isTimestampColumn ? dateToUtcTime(lowParamValue) : lowParamValue,
-        isTimestampColumn ? dateToUtcTime(highParamValue, true) : highParamValue
+        col,
+        queryParams.filters[col.lowParam],
+        queryParams.filters[col.highParam]
       );
     } else {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);

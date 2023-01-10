@@ -44,6 +44,8 @@ type InputAction =
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' };
 
+type InputField = MultiOptionField | SingleOptionField | SingleValueField;
+
 type InputFieldAction = {
   [k in keyof InputState]: {
     type: k;
@@ -494,23 +496,17 @@ function isOption(maybeOption: Option | Primitive): maybeOption is Option {
 }
 
 // Type narrowing
-function isMultiOptionField(
-  field: MultiOptionField | SingleOptionField | SingleValueField,
-): field is MultiOptionField {
+function isMultiOptionField(field: InputField): field is MultiOptionField {
   return (multiOptionFields as string[]).includes(field);
 }
 
 // Type narrowing
-function isSingleOptionField(
-  field: MultiOptionField | SingleOptionField | SingleValueField,
-): field is SingleOptionField {
+function isSingleOptionField(field: InputField): field is SingleOptionField {
   return (singleOptionFields as string[]).includes(field);
 }
 
 // Type narrowing
-function isSingleValueField(
-  field: MultiOptionField | SingleOptionField | SingleValueField,
-): field is SingleValueField {
+function isSingleValueField(field: InputField): field is SingleValueField {
   return (singleValueFields as string[]).includes(field);
 }
 
