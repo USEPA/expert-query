@@ -35,7 +35,7 @@ function appendToWhereRange(query, paramName, lowParamValue, highParamValue) {
 }
 
 /**
- * Create an ISO date string with no timezone offset from a given date string.
+ * Creates an ISO date string with no timezone offset from a given date string.
  * @param {string} value the date string to be converted to ISO format
  * @param {boolean} whether the returned time should represent midnight at the start or end of day
  * @returns {string}
@@ -222,7 +222,6 @@ function executeQueryCountOnly(profile, req, res) {
     const queryParams = getQueryParams(req);
 
     parseCriteria(query, profile, queryParams, true);
-    console.log(query.toString());
 
     query
       .then((count) => res.status(200).send(count))

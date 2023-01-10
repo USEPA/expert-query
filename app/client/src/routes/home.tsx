@@ -755,11 +755,13 @@ export function Home() {
           typeof flattenedValue === 'string'
             ? fromIsoDateString(flattenedValue)
             : flattenedValue;
+
+        const profileFields = profile
+          ? (profiles[profile].fields as readonly string[])
+          : null;
         if (
           formattedValue &&
-          (controlFields.includes(field) ||
-            (profile &&
-              (profiles[profile].fields as readonly string[]).includes(field)))
+          (controlFields.includes(field) || profileFields?.includes(field))
         ) {
           newQueryParams[field] = formattedValue;
         }
