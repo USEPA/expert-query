@@ -70,9 +70,23 @@ describe("CopyBox", () => {
       });
   });
 
-  it("Verify copy box copy item", () => {
+  // electron browser management is not supported. at Debugger.webContents.debugger.sendCommand
+  // https://docs.cypress.io/guides/guides/cross-browser-testing#Running-Specific-Tests-by-Browser
+  it("Verify copy box copy item", { browser: "!electron" }, () => {
     bringUpCopybox();
-    cy.wait(1000)
+
+    cy.wrap(
+      Cypress.automation("remote:debugger:protocol", {
+        command: "Browser.grantPermissions",
+        params: {
+          permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"],
+          // make the permission tighter by allowing the current origin only
+          // like "http://localhost:3000"
+          origin: window.location.origin,
+        },
+      })
+    );
+    cy.wait(1000);
     cy.findAllByRole("button", { name: "Copy content" }).first().click();
     cy.window().then(async (win) => {
       const text = await win.navigator.clipboard.readText();
