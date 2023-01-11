@@ -67,8 +67,7 @@ type PostData = {
     [field: string]: Primitive | Primitive[];
   };
   options: {
-    f?: string;
-    format?: string;
+    [field: string]: string;
   };
 };
 

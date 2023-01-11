@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
@@ -37,14 +38,28 @@ import {
 import type { ChangeEvent } from 'react';
 
 /*
+## Constants
+*/
+const dynamicOptionLimit = 20;
+const staticOptionLimit = 100;
+
+const configFields = ['format'];
+const multiOptionFields = getMultiOptionFields(allFields);
+const singleOptionFields = getSingleOptionFields(allFields);
+const dateFields = getDateFields(allFields);
+const yearFields = getYearFields(allFields);
+
+const singleValueFields = [...dateFields, ...yearFields];
+
+const routeParams = ['dataProfile'];
+
+/*
 ## Types
 */
 type InputAction =
   | InputFieldAction
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' };
-
-type InputField = MultiOptionField | SingleOptionField | SingleValueField;
 
 type InputFieldAction = {
   [k in keyof InputState]: {
@@ -61,7 +76,6 @@ type InputState = MultiOptionState & SingleOptionState & SingleValueState;
 
 type InputValue = Primitive | Primitive[] | null;
 
-const multiOptionFields = getMultiOptionFields(allFields);
 type MultiOptionField = typeof multiOptionFields[number];
 
 type MultiOptionHandlers = {
@@ -72,7 +86,6 @@ type MultiOptionState = {
   [key in MultiOptionField]: ReadonlyArray<Option> | null;
 };
 
-const singleOptionFields = getSingleOptionFields(allFields);
 type SingleOptionField = typeof singleOptionFields[number];
 
 type SingleOptionHandlers = {
@@ -83,9 +96,6 @@ type SingleOptionState = {
   [key in SingleOptionField]: Option | null;
 };
 
-const dateFields = getDateFields(allFields);
-const yearFields = getYearFields(allFields);
-const singleValueFields = [...dateFields, ...yearFields];
 type SingleValueField = typeof singleValueFields[number];
 
 type SingleValueHandlers = {
@@ -103,14 +113,6 @@ type UrlQueryParam = [string, Primitive];
 type UrlQueryState = {
   [field: string]: Primitive | Primitive[];
 };
-
-/*
-## Constants
-*/
-const dynamicOptionLimit = 20;
-const staticOptionLimit = 100;
-
-const controlFields = ['dataProfile', 'format'];
 
 /*
 ## Utilities
@@ -135,12 +137,12 @@ function buildPostData(query: UrlQueryState) {
   };
   Object.entries(query).forEach(([field, value]) => {
     if (value === undefined) return;
-    if (field === 'format') {
+    if (routeParams.includes(field)) return;
+    if (configFields.includes(field)) {
       const singleValue = Array.isArray(value) ? value[0] : value;
       if (typeof singleValue !== 'string') return;
-      postData.options.format = singleValue;
-    } else if (field === 'dataProfile') return;
-    else {
+      postData.options[field] = singleValue;
+    } else {
       postData.filters[field] = value;
     }
   });
@@ -148,11 +150,9 @@ function buildPostData(query: UrlQueryState) {
 }
 
 // Converts a JSON object into a parameter string
-function buildQueryString(query: UrlQueryState, includeProfile = true) {
+function buildQueryString(query: UrlQueryState) {
   const paramsList: UrlQueryParam[] = [];
   Object.entries(query).forEach(([field, value]) => {
-    if (!includeProfile && field === 'dataProfile') return;
-
     // Duplicate the query parameter for an array of values
     if (Array.isArray(value)) value.forEach((v) => paramsList.push([field, v]));
     // Else push a single parameter
@@ -428,21 +428,23 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
 
 // Uses URL query parameters or default values for initial state
 async function getUrlInputs(
-  _signal: AbortSignal,
   staticOptions: StaticOptions,
+  profileArg: string | undefined,
+  _signal: AbortSignal,
 ): Promise<InputState> {
   const params = parseInitialParams();
 
+  const newState = getDefaultInputState();
+
   // Get the data profile first, so it can be
   // used to check values against the database
-  const profileArg = Array.isArray(params.dataProfile)
-    ? params.dataProfile[0]
-    : params.dataProfile;
   const profile = Object.keys(profiles).find((p) => {
     return p === profileArg;
   });
-
-  const newState = getDefaultInputState();
+  const profileOption = listOptions.dataProfile.find(
+    (option) => option.value === profile,
+  );
+  newState.dataProfile = profileOption ?? null;
 
   await Promise.all([
     // Multi-select inputs
@@ -456,6 +458,8 @@ async function getUrlInputs(
     }),
     // Single-select inputs
     ...singleOptionFields.map(async (key) => {
+      if (routeParams.includes(key)) return;
+
       newState[key] = await matchSingleOption(
         params[key] ?? null,
         key,
@@ -491,22 +495,22 @@ function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
 }
 
 // Type narrowing
+function isMultiOptionField(field: string): field is MultiOptionField {
+  return (multiOptionFields as string[]).includes(field);
+}
+
+// Type narrowing
 function isOption(maybeOption: Option | Primitive): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
 // Type narrowing
-function isMultiOptionField(field: InputField): field is MultiOptionField {
-  return (multiOptionFields as string[]).includes(field);
-}
-
-// Type narrowing
-function isSingleOptionField(field: InputField): field is SingleOptionField {
+function isSingleOptionField(field: string): field is SingleOptionField {
   return (singleOptionFields as string[]).includes(field);
 }
 
 // Type narrowing
-function isSingleValueField(field: InputField): field is SingleValueField {
+function isSingleValueField(field: string): field is SingleValueField {
   return (singleValueFields as string[]).includes(field);
 }
 
@@ -668,6 +672,7 @@ function matchYear(values: InputValue) {
 */
 export function Home() {
   const { content } = useContentState();
+
   const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
     null,
   );
@@ -679,6 +684,10 @@ export function Home() {
   }, [content]);
 
   const getAbortSignal = useAbortSignal();
+
+  const navigate = useNavigate();
+
+  const { profile: profileArg } = useParams();
 
   const [inputState, inputDispatch] = useReducer(
     createReducer(),
@@ -711,12 +720,16 @@ export function Home() {
   const profile = dataProfile
     ? (dataProfile.value as keyof typeof profiles)
     : null;
+  useEffect(() => {
+    const route = profile ? `/attains/${profile}` : '/attains';
+    if (profile !== profileArg) navigate(route, { replace: true });
+  }, [navigate, profile, profileArg]);
 
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
     if (!staticOptions) return;
-    getUrlInputs(getAbortSignal(), staticOptions)
+    getUrlInputs(staticOptions, profileArg, getAbortSignal())
       .then((initialInputs) => {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
@@ -724,7 +737,7 @@ export function Home() {
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setInputsLoaded(true));
-  }, [getAbortSignal, staticOptions]);
+  }, [getAbortSignal, profileArg, staticOptions]);
 
   // Track non-empty values relevant to the current profile
   const [queryParams, setQueryParams] = useState<UrlQueryState>({});
@@ -757,7 +770,7 @@ export function Home() {
           : null;
         if (
           formattedValue &&
-          (controlFields.includes(field) || profileFields?.includes(field))
+          (configFields.includes(field) || profileFields?.includes(field))
         ) {
           newQueryParams[field] = formattedValue;
         }
@@ -955,7 +968,7 @@ export function Home() {
                       maxLength={2048}
                       text={`${eqDataUrl}/data/${
                         profiles[profile].resource
-                      }?${buildQueryString(queryParams, false)}`}
+                      }?${buildQueryString(queryParams)}`}
                     />
                     <h4>cURL</h4>
                     <CopyBox
