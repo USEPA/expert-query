@@ -119,6 +119,7 @@ export function App() {
         <Route index element={<Navigate to="/attains" replace />} />
         <Route path="/attains" element={<Home />} />
         <Route path="/attains/:profile" element={<Home />} />
+        <Route path="/404" element={<ErrorPage />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </BrowserRouter>

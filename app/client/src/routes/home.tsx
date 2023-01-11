@@ -36,6 +36,7 @@ import {
 } from 'config';
 // types
 import type { ChangeEvent } from 'react';
+import type { NavigateFunction } from 'react-router-dom';
 
 /*
 ## Constants
@@ -430,6 +431,7 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
 async function getUrlInputs(
   staticOptions: StaticOptions,
   profileArg: string | undefined,
+  navigate: NavigateFunction,
   _signal: AbortSignal,
 ): Promise<InputState> {
   const params = parseInitialParams();
@@ -441,6 +443,8 @@ async function getUrlInputs(
   const profile = Object.keys(profiles).find((p) => {
     return p === profileArg;
   });
+  if (profileArg && !profile) navigate('/404');
+
   const profileOption = listOptions.dataProfile.find(
     (option) => option.value === profile,
   );
@@ -702,8 +706,15 @@ export function Home() {
         newHandlers[field.key] = (ev: ReadonlyArray<Option>) =>
           inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
       } else if (isSingleOptionField(field.key)) {
-        newHandlers[field.key] = (ev: Option | null) =>
-          inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
+        if (field.key === 'dataProfile') {
+          newHandlers[field.key] = (ev: Option | null) => {
+            const route = ev ? `/attains/${ev.value}` : '/attains';
+            navigate(route, { replace: true });
+          };
+        } else {
+          newHandlers[field.key] = (ev: Option | null) =>
+            inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
+        }
       } else if (isSingleValueField(field.key)) {
         newHandlers[field.key] = (ev: ChangeEvent<HTMLInputElement>) => {
           inputDispatch({
@@ -714,22 +725,18 @@ export function Home() {
       }
     });
     return newHandlers as InputHandlers;
-  }, [inputDispatch]);
+  }, [inputDispatch, navigate]);
 
   const { dataProfile, format } = inputState;
   const profile = dataProfile
     ? (dataProfile.value as keyof typeof profiles)
     : null;
-  useEffect(() => {
-    const route = profile ? `/attains/${profile}` : '/attains';
-    if (profile !== profileArg) navigate(route, { replace: true });
-  }, [navigate, profile, profileArg]);
 
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
     if (!staticOptions) return;
-    getUrlInputs(staticOptions, profileArg, getAbortSignal())
+    getUrlInputs(staticOptions, profileArg, navigate, getAbortSignal())
       .then((initialInputs) => {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
@@ -737,7 +744,7 @@ export function Home() {
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setInputsLoaded(true));
-  }, [getAbortSignal, profileArg, staticOptions]);
+  }, [getAbortSignal, navigate, profileArg, staticOptions]);
 
   // Track non-empty values relevant to the current profile
   const [queryParams, setQueryParams] = useState<UrlQueryState>({});
@@ -903,7 +910,7 @@ export function Home() {
               />
               {profile && (
                 <Accordion styles={['margin-top-2']}>
-                  <AccordionItem heading="Filters">
+                  <AccordionItem heading="Filters" initialExpand>
                     <FilterFields
                       handlers={inputHandlers}
                       staticOptions={staticOptions}
@@ -920,7 +927,7 @@ export function Home() {
                     </div>
                   </AccordionItem>
 
-                  <AccordionItem heading="Download the Data">
+                  <AccordionItem heading="Download the Data" initialExpand>
                     <RadioButtons
                       legend={
                         <>

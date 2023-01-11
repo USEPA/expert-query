@@ -1,7 +1,7 @@
 import { uniqueId } from 'lodash';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 // types
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 
 type AccordionProps = {
   border?: boolean;
@@ -32,26 +32,42 @@ export function Accordion({
 
 type AccordionItemProps = {
   children: ReactNode;
+  initialExpand?: boolean;
   heading: string;
 };
 
-export function AccordionItem({ children, heading }: AccordionItemProps) {
+export function AccordionItem({
+  children,
+  heading,
+  initialExpand = false,
+}: AccordionItemProps) {
   const [id] = useState(uniqueId('accordion-item-'));
+  const [expanded, setExpanded] = useState(initialExpand);
+
+  const expandCollapse = useCallback(
+    (_ev: MouseEvent) => {
+      setExpanded(!expanded);
+    },
+    [expanded],
+  );
+
   return (
     <div className="margin-top-2">
       <h4 className="usa-accordion__heading">
         <button
           type="button"
           className="usa-accordion__button"
-          aria-expanded="true"
-          aria-controls={id}
+          aria-expanded={expanded}
+          onClick={expandCollapse}
         >
           {heading}
         </button>
       </h4>
-      <div className="usa-accordion__content usa-prose" id={id}>
-        {children}
-      </div>
+      {expanded && (
+        <div className="usa-accordion__content usa-prose" id={id}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
