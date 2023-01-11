@@ -1,5 +1,5 @@
 import { uniqueId } from 'lodash';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 // types
 import type { ReactNode } from 'react';
 
@@ -17,25 +17,36 @@ export function Accordion({ children }: { children: ReactNode }) {
 type AccordionItemProps = {
   children: ReactNode;
   heading: string;
+  initialExpand?: boolean;
 };
 
-export function AccordionItem({ children, heading }: AccordionItemProps) {
+export function AccordionItem({
+  children,
+  heading,
+  initialExpand = false,
+}: AccordionItemProps) {
   const [id] = useState(uniqueId('accordion-item-'));
+  const [expanded, setExpanded] = useState(initialExpand);
+
+  const toggleExpanded = useCallback(() => setExpanded(!expanded), [expanded]);
+
   return (
     <div className="margin-top-2">
       <h4 className="usa-accordion__heading">
         <button
           type="button"
           className="usa-accordion__button"
-          aria-expanded="true"
-          aria-controls={id}
+          aria-expanded={expanded}
+          onClick={toggleExpanded}
         >
           {heading}
         </button>
       </h4>
-      <div className="usa-accordion__content usa-prose" id={id}>
-        {children}
-      </div>
+      {expanded && (
+        <div className="usa-accordion__content usa-prose" id={id}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }

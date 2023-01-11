@@ -890,7 +890,7 @@ export function Home() {
               />
               {profile && (
                 <Accordion>
-                  <AccordionItem heading="Filters">
+                  <AccordionItem heading="Filters" initialExpand>
                     <FilterFields
                       handlers={inputHandlers}
                       staticOptions={staticOptions}
@@ -907,7 +907,7 @@ export function Home() {
                     </div>
                   </AccordionItem>
 
-                  <AccordionItem heading="Download the Data">
+                  <AccordionItem heading="Download the Data" initialExpand>
                     <RadioButtons
                       legend={
                         <>
