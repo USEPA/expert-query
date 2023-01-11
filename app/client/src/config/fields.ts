@@ -169,7 +169,6 @@ export default [
     domain: 'cycleScheduledForTmdl',
     boundary: 'high',
   },
-  { key: 'dataProfile', label: 'Data Profile', type: 'select' },
   { key: 'delisted', label: 'Delisted', type: 'multiselect' },
   { key: 'delistedReason', label: 'Delisted Reason', type: 'multiselect' },
   { key: 'epaIrCategory', label: 'EPA IR Category', type: 'multiselect' },

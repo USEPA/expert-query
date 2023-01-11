@@ -36,7 +36,6 @@ import {
 } from 'config';
 // types
 import type { ChangeEvent } from 'react';
-import type { NavigateFunction } from 'react-router-dom';
 
 /*
 ## Constants
@@ -51,8 +50,6 @@ const dateFields = getDateFields(allFields);
 const yearFields = getYearFields(allFields);
 
 const singleValueFields = [...dateFields, ...yearFields];
-
-const routeParams = ['dataProfile'];
 
 /*
 ## Types
@@ -138,7 +135,6 @@ function buildPostData(query: UrlQueryState) {
   };
   Object.entries(query).forEach(([field, value]) => {
     if (value === undefined) return;
-    if (routeParams.includes(field)) return;
     if (configFields.includes(field)) {
       const singleValue = Array.isArray(value) ? value[0] : value;
       if (typeof singleValue !== 'string') return;
@@ -427,29 +423,17 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
     : null;
 }
 
-// Uses URL query parameters or default values for initial state
+// Uses URL route/query parameters or default values for initial state
 async function getUrlInputs(
   staticOptions: StaticOptions,
-  profileArg: string | undefined,
-  navigate: NavigateFunction,
+  profile: string | null,
   _signal: AbortSignal,
 ): Promise<InputState> {
   const params = parseInitialParams();
 
   const newState = getDefaultInputState();
 
-  // Get the data profile first, so it can be
-  // used to check values against the database
-  const profile = Object.keys(profiles).find((p) => {
-    return p === profileArg;
-  });
-  if (profileArg && !profile) navigate('/404');
-
-  const profileOption = listOptions.dataProfile.find(
-    (option) => option.value === profile,
-  );
-  newState.dataProfile = profileOption ?? null;
-
+  // Match query parameters
   await Promise.all([
     // Multi-select inputs
     ...multiOptionFields.map(async (key) => {
@@ -462,8 +446,6 @@ async function getUrlInputs(
     }),
     // Single-select inputs
     ...singleOptionFields.map(async (key) => {
-      if (routeParams.includes(key)) return;
-
       newState[key] = await matchSingleOption(
         params[key] ?? null,
         key,
@@ -486,6 +468,11 @@ async function getUrlInputs(
   return newState;
 }
 
+// Type narrowing
+function isMultiOptionField(field: string): field is MultiOptionField {
+  return (multiOptionFields as string[]).includes(field);
+}
+
 function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
   if (v === null || v === undefined || v === '') return false;
   if (Array.isArray(v) && v.length === 0) return false;
@@ -499,13 +486,15 @@ function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
 }
 
 // Type narrowing
-function isMultiOptionField(field: string): field is MultiOptionField {
-  return (multiOptionFields as string[]).includes(field);
+function isOption(maybeOption: Option | Primitive): maybeOption is Option {
+  return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
 // Type narrowing
-function isOption(maybeOption: Option | Primitive): maybeOption is Option {
-  return typeof maybeOption === 'object' && 'value' in maybeOption;
+function isProfile(
+  maybeProfile: string | keyof typeof profiles,
+): maybeProfile is keyof typeof profiles {
+  return maybeProfile in profiles;
 }
 
 // Type narrowing
@@ -516,6 +505,17 @@ function isSingleOptionField(field: string): field is SingleOptionField {
 // Type narrowing
 function isSingleValueField(field: string): field is SingleValueField {
   return (singleValueFields as string[]).includes(field);
+}
+
+// Verify that a given string matches a parseable date format
+function matchDate(values: InputValue, yearOnly = false) {
+  const value = Array.isArray(values) ? values[0] : values;
+  if (!value) return '';
+  const date = new Date(value.toString());
+  if (isNaN(date.getTime())) return '';
+  const dateString = date.toISOString();
+  const endIndex = yearOnly ? 4 : 10;
+  return dateString.substring(0, endIndex);
 }
 
 // Wrapper function to add type assertion
@@ -584,6 +584,10 @@ async function matchOptions(
   return multiple ? matchesArray : matchesArray.pop() ?? null;
 }
 
+function matchYear(values: InputValue) {
+  return matchDate(values, true);
+}
+
 // Parse parameters provided in the URL hash into a JSON object
 function parseInitialParams() {
   const initialParams: UrlQueryState = {};
@@ -633,6 +637,9 @@ function storageAvailable(
   }
 }
 
+/*
+## Hooks
+*/
 function useAbortSignal() {
   const abortController = useRef(new AbortController());
   const getAbortController = useCallback(() => {
@@ -656,19 +663,40 @@ function useAbortSignal() {
   return getSignal;
 }
 
-// Verify that a given string matches a parseable date format
-function matchDate(values: InputValue, yearOnly = false) {
-  const value = Array.isArray(values) ? values[0] : values;
-  if (!value) return '';
-  const date = new Date(value.toString());
-  if (isNaN(date.getTime())) return '';
-  const dateString = date.toISOString();
-  const endIndex = yearOnly ? 4 : 10;
-  return dateString.substring(0, endIndex);
-}
+function useProfile() {
+  const navigate = useNavigate();
 
-function matchYear(values: InputValue) {
-  return matchDate(values, true);
+  const { profile: profileArg } = useParams();
+
+  const [profileOption, setProfileOption] = useState<
+    typeof listOptions.dataProfile[number] | null
+  >(null);
+  const [profile, setProfile] = useState<keyof typeof profiles | null>(null);
+
+  useEffect(() => {
+    if (!profileArg) return;
+    if (!isProfile(profileArg)) {
+      navigate('/404');
+      return;
+    }
+
+    setProfile(profileArg);
+    setProfileOption(
+      listOptions.dataProfile.find((option) => option.value === profileArg) ??
+        null,
+    );
+  }, [navigate, profileArg]);
+
+  // TODO: Change path without refreshing page?
+  const handleProfileChange = useCallback(
+    (ev: Option | null) => {
+      const route = ev ? `/attains/${ev.value}` : '/attains';
+      navigate(route, { replace: true });
+    },
+    [navigate],
+  );
+
+  return { handleProfileChange, profile, profileOption };
 }
 
 /*
@@ -689,9 +717,7 @@ export function Home() {
 
   const getAbortSignal = useAbortSignal();
 
-  const navigate = useNavigate();
-
-  const { profile: profileArg } = useParams();
+  const { handleProfileChange, profile, profileOption } = useProfile();
 
   const [inputState, inputDispatch] = useReducer(
     createReducer(),
@@ -706,15 +732,8 @@ export function Home() {
         newHandlers[field.key] = (ev: ReadonlyArray<Option>) =>
           inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
       } else if (isSingleOptionField(field.key)) {
-        if (field.key === 'dataProfile') {
-          newHandlers[field.key] = (ev: Option | null) => {
-            const route = ev ? `/attains/${ev.value}` : '/attains';
-            navigate(route, { replace: true });
-          };
-        } else {
-          newHandlers[field.key] = (ev: Option | null) =>
-            inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
-        }
+        newHandlers[field.key] = (ev: Option | null) =>
+          inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
       } else if (isSingleValueField(field.key)) {
         newHandlers[field.key] = (ev: ChangeEvent<HTMLInputElement>) => {
           inputDispatch({
@@ -725,18 +744,13 @@ export function Home() {
       }
     });
     return newHandlers as InputHandlers;
-  }, [inputDispatch, navigate]);
-
-  const { dataProfile, format } = inputState;
-  const profile = dataProfile
-    ? (dataProfile.value as keyof typeof profiles)
-    : null;
+  }, [inputDispatch]);
 
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
     if (!staticOptions) return;
-    getUrlInputs(staticOptions, profileArg, navigate, getAbortSignal())
+    getUrlInputs(staticOptions, profile, getAbortSignal())
       .then((initialInputs) => {
         inputDispatch({ type: 'initialize', payload: initialInputs });
       })
@@ -744,7 +758,7 @@ export function Home() {
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setInputsLoaded(true));
-  }, [getAbortSignal, navigate, profileArg, staticOptions]);
+  }, [getAbortSignal, profile, staticOptions]);
 
   // Track non-empty values relevant to the current profile
   const [queryParams, setQueryParams] = useState<UrlQueryState>({});
@@ -772,12 +786,13 @@ export function Home() {
             ? fromIsoDateString(flattenedValue)
             : flattenedValue;
 
-        const profileFields = profile
+        const filterFields = profile
           ? (profiles[profile].fields as readonly string[])
           : null;
+
         if (
           formattedValue &&
-          (configFields.includes(field) || profileFields?.includes(field))
+          (configFields.includes(field) || filterFields?.includes(field))
         ) {
           newQueryParams[field] = formattedValue;
         }
@@ -903,16 +918,17 @@ export function Home() {
               <h3>Data Profile</h3>
               <Select
                 aria-label="Select a data profile"
-                onChange={inputHandlers.dataProfile}
+                onChange={handleProfileChange}
                 options={staticOptions.dataProfile}
                 placeholder="Select a data profile..."
-                value={dataProfile}
+                value={profileOption}
               />
               {profile && (
                 <Accordion>
                   <AccordionItem heading="Filters" initialExpand>
                     <FilterFields
                       handlers={inputHandlers}
+                      profile={profile}
                       staticOptions={staticOptions}
                       state={inputState}
                     />
@@ -937,7 +953,7 @@ export function Home() {
                       }
                       onChange={inputHandlers.format}
                       options={staticOptions.format}
-                      selected={format}
+                      selected={inputState.format}
                       styles={['margin-bottom-2']}
                     />
                     <button
@@ -980,7 +996,7 @@ export function Home() {
                     <h4>cURL</h4>
                     <CopyBox
                       text={`curl -X POST --json "${JSON.stringify(
-                        buildPostData(queryParams),
+                        queryData,
                       ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
                         profiles[profile].resource
                       }`}
@@ -1000,14 +1016,17 @@ export function Home() {
 
 type FilterFieldsProps = {
   handlers: InputHandlers;
+  profile: keyof typeof profiles;
   state: InputState;
   staticOptions: StaticOptions;
 };
 
-function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
-  const profile = (state.dataProfile?.value as keyof typeof profiles) ?? null;
-  if (!profile) return null;
-
+function FilterFields({
+  handlers,
+  profile,
+  state,
+  staticOptions,
+}: FilterFieldsProps) {
   const fields: readonly string[] = profiles[profile].fields;
 
   // Store each field's element in a tuple with its key
