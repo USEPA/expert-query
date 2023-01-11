@@ -32,7 +32,11 @@ export default function RadioButtons({
       )}
       {options.map((option) => {
         return (
-          <div key={option.value.toString()} className="usa-radio">
+          <div
+            key={option.value.toString()}
+            className="usa-radio"
+            style={{ background: 'inherit' }}
+          >
             <input
               className={`usa-radio__input ${tile && 'usa-radio__input--tile'}`}
               id={`${id}-${option.value}`}

@@ -451,7 +451,7 @@ export async function runLoad(pool, s3Config) {
 
     await transferSchema(pool, schemaName, schemaId);
 
-    await archiveNationalDownloads(pool, lastSchemaName);
+    if (lastSchemaName) await archiveNationalDownloads(pool, lastSchemaName);
 
     log.info('Tables updated');
     await logEtlLoadEnd(pool, logId);

@@ -11,6 +11,7 @@ import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
+import { Accordion, AccordionItem } from 'components/accordion';
 import Alert from 'components/alert';
 import Checkbox from 'components/checkbox';
 import Checkboxes from 'components/checkboxes';
@@ -32,6 +33,8 @@ import {
   profiles,
   serverUrl,
 } from 'config';
+// types
+import type { ChangeEvent } from 'react';
 
 /*
 ## Types
@@ -41,6 +44,8 @@ type InputAction =
   | { type: 'initialize'; payload: InputState }
   | { type: 'reset' };
 
+type InputField = MultiOptionField | SingleOptionField | SingleValueField;
+
 type InputFieldAction = {
   [k in keyof InputState]: {
     type: k;
@@ -48,9 +53,11 @@ type InputFieldAction = {
   };
 }[keyof InputState];
 
-type InputHandlers = MultiOptionHandlers & SingleOptionHandlers;
+type InputHandlers = MultiOptionHandlers &
+  SingleOptionHandlers &
+  SingleValueHandlers;
 
-type InputState = MultiOptionState & SingleOptionState;
+type InputState = MultiOptionState & SingleOptionState & SingleValueState;
 
 type InputValue = Primitive | Primitive[] | null;
 
@@ -76,6 +83,19 @@ type SingleOptionState = {
   [key in SingleOptionField]: Option | null;
 };
 
+const dateFields = getDateFields(allFields);
+const yearFields = getYearFields(allFields);
+const singleValueFields = [...dateFields, ...yearFields];
+type SingleValueField = typeof singleValueFields[number];
+
+type SingleValueHandlers = {
+  [key in SingleValueField]: (ev: ChangeEvent<HTMLInputElement>) => void;
+};
+
+type SingleValueState = {
+  [key in SingleValueField]: string;
+};
+
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
 type UrlQueryParam = [string, Primitive];
@@ -98,6 +118,7 @@ const controlFields = ['dataProfile', 'format'];
 
 // Adds aliases for fields that share the same set of possible values
 function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
+  values.assessmentUnitState = values.assessmentUnitStatus;
   values.associatedActionAgency = values.actionAgency;
   values.associatedActionStatus = values.assessmentUnitStatus;
   values.parameter = values.pollutant;
@@ -115,7 +136,7 @@ function buildPostData(query: UrlQueryState) {
   Object.entries(query).forEach(([field, value]) => {
     if (value === undefined) return;
     if (field === 'format') {
-      const singleValue = Array.isArray(value) ? value.pop() : value;
+      const singleValue = Array.isArray(value) ? value[0] : value;
       if (typeof singleValue !== 'string') return;
       postData.options.format = singleValue;
     } else if (field === 'dataProfile') return;
@@ -266,6 +287,15 @@ function filterStaticOptionsByContext(
   } else return options;
 }
 
+// Convert `yyyy-mm-dd` date format to `mm-dd-yyyy`
+function fromIsoDateString(dateString: string) {
+  const date = new Date(dateString);
+  return `${(date.getUTCMonth() + 1).toString().padStart(2, '0')}-${date
+    .getUTCDate()
+    .toString()
+    .padStart(2, '0')}-${date.getUTCFullYear().toString().padStart(4, '0')}`;
+}
+
 // Utility function to choose between 'a' or 'an'
 function getArticle(noun: string) {
   if (!noun.length) return '';
@@ -277,10 +307,20 @@ function getArticle(noun: string) {
   return 'a';
 }
 
+function getDateFields(fields: typeof allFields) {
+  return removeNulls(
+    fields.map((field) => (field.type === 'date' ? field.key : null)),
+  );
+}
+
 // Returns the empty state for inputs (default values populated in `getUrlInputs`)
 function getDefaultInputState(): InputState {
-  return [...singleOptionFields, ...multiOptionFields].reduce((a, b) => {
-    return { ...a, [b]: null };
+  return [
+    ...singleOptionFields,
+    ...multiOptionFields,
+    ...singleValueFields,
+  ].reduce((a, b) => {
+    return { ...a, [b]: isSingleValueField(b) ? '' : null };
   }, {}) as InputState;
 }
 
@@ -334,18 +374,11 @@ function getLocalStorageItem(item: string) {
 }
 
 function getMultiOptionFields(fields: typeof allFields) {
-  const multiFields = fields.map((field) => {
-    return field.type === 'multiselect' ? field.key : null;
-  });
-  const filtered = multiFields.reduce<
-    Array<Exclude<typeof multiFields[number], null>>
-  >((a, b) => {
-    if (b !== null) {
-      a.push(b);
-    }
-    return a;
-  }, []);
-  return filtered;
+  return removeNulls(
+    fields.map((field) => {
+      return field.type === 'multiselect' ? field.key : null;
+    }),
+  );
 }
 
 // Retrieves all possible options for a given field
@@ -363,18 +396,28 @@ function getOptions(
 }
 
 function getSingleOptionFields(fields: typeof allFields) {
-  const singleFields = fields.map((field) => {
-    return field.type === 'radio' || field.type === 'select' ? field.key : null;
-  });
-  const filtered = singleFields.reduce<
-    Array<Exclude<typeof singleFields[number], null>>
-  >((a, b) => {
-    if (b !== null) {
+  return removeNulls(
+    fields.map((field) => {
+      return field.type === 'select' || field.type === 'radio'
+        ? field.key
+        : null;
+    }),
+  );
+}
+
+function getYearFields(fields: typeof allFields) {
+  return removeNulls(
+    fields.map((field) => (field.type === 'year' ? field.key : null)),
+  );
+}
+
+function removeNulls<T>(fields: Array<T | null>) {
+  return fields.reduce<Array<T>>((a, b) => {
+    if (isNotEmpty(b)) {
       a.push(b);
     }
     return a;
   }, []);
-  return filtered;
 }
 
 function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
@@ -420,13 +463,31 @@ async function getUrlInputs(
         profile,
       );
     }),
+    // Date inputs
+    ...dateFields.map((key) => {
+      newState[key] = matchDate(params[key] ?? null);
+      return Promise.resolve();
+    }),
+    // Year inputs
+    ...yearFields.map((key) => {
+      newState[key] = matchYear(params[key] ?? null);
+      return Promise.resolve();
+    }),
   ]);
 
   return newState;
 }
 
-function isNotEmpty<T>(v: T | null | undefined): v is T {
-  return v !== undefined && v !== null;
+function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
+  if (v === null || v === undefined || v === '') return false;
+  if (Array.isArray(v) && v.length === 0) return false;
+  else if (
+    Object.keys(v).length === 0 &&
+    Object.getPrototypeOf(v) === Object.prototype
+  ) {
+    return false;
+  }
+  return true;
 }
 
 // Type narrowing
@@ -435,17 +496,18 @@ function isOption(maybeOption: Option | Primitive): maybeOption is Option {
 }
 
 // Type narrowing
-function isMultiOptionField(
-  field: MultiOptionField | SingleOptionField,
-): field is MultiOptionField {
+function isMultiOptionField(field: InputField): field is MultiOptionField {
   return (multiOptionFields as string[]).includes(field);
 }
 
 // Type narrowing
-function isSingleOptionField(
-  field: MultiOptionField | SingleOptionField,
-): field is SingleOptionField {
+function isSingleOptionField(field: InputField): field is SingleOptionField {
   return (singleOptionFields as string[]).includes(field);
+}
+
+// Type narrowing
+function isSingleValueField(field: InputField): field is SingleValueField {
+  return (singleValueFields as string[]).includes(field);
 }
 
 // Wrapper function to add type assertion
@@ -586,6 +648,21 @@ function useAbortSignal() {
   return getSignal;
 }
 
+// Verify that a given string matches a parseable date format
+function matchDate(values: InputValue, yearOnly = false) {
+  const value = Array.isArray(values) ? values[0] : values;
+  if (!value) return '';
+  const date = new Date(value.toString());
+  if (isNaN(date.getTime())) return '';
+  const dateString = date.toISOString();
+  const endIndex = yearOnly ? 4 : 10;
+  return dateString.substring(0, endIndex);
+}
+
+function matchYear(values: InputValue) {
+  return matchDate(values, true);
+}
+
 /*
 ## Components
 */
@@ -618,6 +695,13 @@ export function Home() {
       } else if (isSingleOptionField(field.key)) {
         newHandlers[field.key] = (ev: Option | null) =>
           inputDispatch({ type: field.key, payload: ev } as InputFieldAction);
+      } else if (isSingleValueField(field.key)) {
+        newHandlers[field.key] = (ev: ChangeEvent<HTMLInputElement>) => {
+          inputDispatch({
+            type: field.key,
+            payload: ev.target.value,
+          } as InputFieldAction);
+        };
       }
     });
     return newHandlers as InputHandlers;
@@ -653,16 +737,29 @@ export function Home() {
     const newQueryParams: UrlQueryState = {};
     Object.entries(inputState).forEach(
       ([field, value]: [string, InputState[keyof InputState]]) => {
-        if (value == null || (Array.isArray(value) && !value.length)) return;
+        if (
+          value == null ||
+          value === '' ||
+          (Array.isArray(value) && !value.length)
+        )
+          return;
 
         // Extract 'value' field from Option types
         const flattenedValue = getInputValue(value);
+        const formattedValue =
+          (dateFields as string[]).includes(field) &&
+          typeof flattenedValue === 'string'
+            ? fromIsoDateString(flattenedValue)
+            : flattenedValue;
+
+        const profileFields = profile
+          ? (profiles[profile].fields as readonly string[])
+          : null;
         if (
-          controlFields.includes(field) ||
-          (profile &&
-            (profiles[profile].fields as readonly string[]).includes(field))
+          formattedValue &&
+          (controlFields.includes(field) || profileFields?.includes(field))
         ) {
-          newQueryParams[field] = flattenedValue;
+          newQueryParams[field] = formattedValue;
         }
       },
     );
@@ -792,24 +889,25 @@ export function Home() {
                 value={dataProfile}
               />
               {profile && (
-                <>
-                  <h3 className="margin-bottom-0">Filters</h3>
-                  <FilterFields
-                    handlers={inputHandlers}
-                    staticOptions={staticOptions}
-                    state={inputState}
-                  />
-                  <div className="display-flex margin-top-1 width-full">
-                    <button
-                      className="margin-x-auto usa-button usa-button--outline"
-                      onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                      type="button"
-                    >
-                      Clear Search
-                    </button>
-                  </div>
-                  <h3>Download the Data</h3>
-                  <div>
+                <Accordion>
+                  <AccordionItem heading="Filters" initialExpand>
+                    <FilterFields
+                      handlers={inputHandlers}
+                      staticOptions={staticOptions}
+                      state={inputState}
+                    />
+                    <div className="display-flex margin-top-1 width-full">
+                      <button
+                        className="margin-top-1 margin-x-auto usa-button usa-button--outline"
+                        onClick={(_ev) => inputDispatch({ type: 'reset' })}
+                        type="button"
+                      >
+                        Clear Search
+                      </button>
+                    </div>
+                  </AccordionItem>
+
+                  <AccordionItem heading="Download the Data" initialExpand>
                     <RadioButtons
                       legend={
                         <>
@@ -839,33 +937,36 @@ export function Home() {
                         please try again later.
                       </Alert>
                     )}
-                  </div>
-                  <h4>
-                    {/* TODO - Remove the glossary linkage before production deployment */}
-                    <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-                  </h4>
-                  <CopyBox
-                    text={`${window.location.origin}${
-                      window.location.pathname
-                    }/#${buildQueryString(queryParams)}`}
-                  />
-                  <h4>{profiles[profile].label} API Query</h4>
-                  <CopyBox
-                    lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
-                    maxLength={2048}
-                    text={`${eqDataUrl}/data/${
-                      profiles[profile].resource
-                    }?${buildQueryString(queryParams, false)}`}
-                  />
-                  <h4>cURL</h4>
-                  <CopyBox
-                    text={`curl -X POST --json "${JSON.stringify(
-                      queryData,
-                    ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
-                      profiles[profile].resource
-                    }`}
-                  />
-                </>
+                  </AccordionItem>
+
+                  <AccordionItem heading="Queries">
+                    <h4>
+                      {/* TODO - Remove the glossary linkage before production deployment */}
+                      <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+                    </h4>
+                    <CopyBox
+                      text={`${window.location.origin}${
+                        window.location.pathname
+                      }/#${buildQueryString(queryParams)}`}
+                    />
+                    <h4>{profiles[profile].label} API Query</h4>
+                    <CopyBox
+                      lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+                      maxLength={2048}
+                      text={`${eqDataUrl}/data/${
+                        profiles[profile].resource
+                      }?${buildQueryString(queryParams, false)}`}
+                    />
+                    <h4>cURL</h4>
+                    <CopyBox
+                      text={`curl -X POST --json "${JSON.stringify(
+                        buildPostData(queryParams),
+                      ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
+                        profiles[profile].resource
+                      }`}
+                    />
+                  </AccordionItem>
+                </Accordion>
               )}
             </>
           )}
@@ -890,89 +991,149 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
   const fields: readonly string[] = profiles[profile].fields;
 
   // Store each field's element in a tuple with its key
-  const fieldsJsx: Array<[JSX.Element, string]> = allFields
-    .filter((field) => fields.includes(field.key))
-    .map((field) => {
-      const contextField = 'context' in field ? field.context : null;
-      const contextValue = contextField ? state[contextField]?.value : null;
-      const defaultOptions = getInitialOptions(
-        staticOptions,
-        field.key,
-        contextValue,
-      );
-      if (field.type === 'multiselect') {
-        if (
-          !contextField &&
-          Array.isArray(defaultOptions) &&
-          defaultOptions.length <= 5
-        ) {
-          return [
-            <Checkboxes
-              key={field.key}
-              legend={<b>{field.label}</b>}
-              onChange={handlers[field.key]}
-              options={defaultOptions}
-              selected={state[field.key] ?? []}
-              styles={['margin-top-3']}
-            />,
-            field.key,
-          ];
+  const fieldsJsx: Array<[JSX.Element, string]> = removeNulls(
+    allFields
+      .filter((field) => fields.includes(field.key))
+      .map((field) => {
+        switch (field.type) {
+          case 'multiselect':
+            const contextField = 'context' in field ? field.context : null;
+            const contextValue = contextField
+              ? state[contextField]?.value
+              : null;
+            const defaultOptions = getInitialOptions(
+              staticOptions,
+              field.key,
+              contextValue,
+            );
+            if (
+              !contextField &&
+              Array.isArray(defaultOptions) &&
+              defaultOptions.length <= 5
+            ) {
+              return [
+                <Checkboxes
+                  key={field.key}
+                  legend={<b>{field.label}</b>}
+                  onChange={handlers[field.key]}
+                  options={defaultOptions}
+                  selected={state[field.key] ?? []}
+                  styles={['margin-top-3']}
+                />,
+                field.key,
+              ];
+            }
+            return [
+              <label
+                className="usa-label"
+                key={field.key}
+                htmlFor={`input-${field.key}`}
+              >
+                <b>{field.label}</b>
+                <SourceSelect
+                  label={
+                    contextField &&
+                    allFields.find((f) => f.key === contextField)?.label
+                  }
+                  sources={
+                    contextField &&
+                    getOptions(profile, contextField, staticOptions)
+                  }
+                  onChange={contextField && handlers[contextField]}
+                  selected={contextField && state[contextField]}
+                >
+                  <AsyncSelect
+                    aria-label={`${field.label} input`}
+                    className="width-full"
+                    inputId={`input-${field.key}`}
+                    isMulti
+                    // Re-renders default options when `contextValue` changes
+                    key={JSON.stringify(contextValue)}
+                    onChange={handlers[field.key]}
+                    defaultOptions={defaultOptions}
+                    loadOptions={filterOptions(
+                      profile,
+                      field.key,
+                      staticOptions,
+                      contextField,
+                      contextValue,
+                    )}
+                    menuPortalTarget={document.body}
+                    placeholder={`Select ${getArticle(
+                      field.label.split(' ')[0],
+                    )} ${field.label}...`}
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        border: '1px solid #adadad',
+                        borderRadius: contextField ? '0 4px 4px 0' : '4px',
+                      }),
+                      loadingIndicator: () => ({
+                        display: 'none',
+                      }),
+                      menuPortal: (base) => ({
+                        ...base,
+                        zIndex: 9999,
+                      }),
+                    }}
+                    value={state[field.key]}
+                  />
+                </SourceSelect>
+              </label>,
+              field.key,
+            ];
+          case 'date':
+          case 'year':
+            // Prevents range fields from rendering twice
+            if (field.boundary === 'high') return null;
+
+            const pairedField = allFields.find(
+              (otherField) =>
+                otherField.key !== field.key &&
+                'domain' in otherField &&
+                otherField.domain === field.domain,
+            );
+            // All range inputs should have a high and a low boundary field
+            if (!pairedField || !isSingleValueField(pairedField.key))
+              return null;
+
+            return [
+              <label
+                className="usa-label"
+                htmlFor={`input-${field.key}`}
+                key={field.domain}
+              >
+                <b>{field.label}</b>
+                <div className="margin-top-1 usa-hint">from:</div>
+                <input
+                  className="usa-input"
+                  id={`input-${field.key}`}
+                  min={field.type === 'year' ? 1900 : undefined}
+                  max={field.type === 'year' ? 2100 : undefined}
+                  onChange={handlers[field.key]}
+                  placeholder={field.type === 'year' ? 'yyyy' : undefined}
+                  type={field.type === 'date' ? 'date' : 'number'}
+                  value={state[field.key]}
+                />
+                <div className="margin-top-1 usa-hint">to:</div>
+                <input
+                  className="usa-input"
+                  id={`input-${pairedField.key}`}
+                  min={pairedField.type === 'year' ? 1900 : undefined}
+                  max={pairedField.type === 'year' ? 2100 : undefined}
+                  onChange={handlers[pairedField.key]}
+                  placeholder={pairedField.type === 'year' ? 'yyyy' : undefined}
+                  type={pairedField.type === 'date' ? 'date' : 'number'}
+                  value={state[pairedField.key]}
+                />
+              </label>,
+              field.domain,
+            ];
+          default:
+            return null;
         }
-        return [
-          <label
-            className="usa-label"
-            key={field.key}
-            htmlFor={`input-${field.key}`}
-          >
-            <b>{field.label}</b>
-            <SourceSelect
-              label={
-                contextField &&
-                allFields.find((f) => f.key === contextField)?.label
-              }
-              sources={
-                contextField && getOptions(profile, contextField, staticOptions)
-              }
-              onChange={contextField && handlers[contextField]}
-              selected={contextField && state[contextField]}
-            >
-              <AsyncSelect
-                aria-label={`${field.label} input`}
-                className="width-full"
-                inputId={`input-${field.key}`}
-                isMulti
-                // re-renders default options when `contextValue` changes
-                key={JSON.stringify(contextValue)}
-                onChange={handlers[field.key]}
-                defaultOptions={defaultOptions}
-                loadOptions={filterOptions(
-                  profile,
-                  field.key,
-                  staticOptions,
-                  contextField,
-                  contextValue,
-                )}
-                placeholder={`Select ${getArticle(field.label.split(' ')[0])} ${
-                  field.label
-                }...`}
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    border: '1px solid #adadad',
-                    borderRadius: contextField ? '0 4px 4px 0' : '4px',
-                  }),
-                  loadingIndicator: () => ({
-                    display: 'none',
-                  }),
-                }}
-                value={state[field.key]}
-              />
-            </SourceSelect>
-          </label>,
-          field.key,
-        ];
-      } else return [<></>, field.key];
-    });
+      }),
+  );
 
   // Store each row as a tuple with its row key
   const rows: Array<[Array<[JSX.Element, string]>, string]> = [];

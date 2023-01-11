@@ -62,6 +62,8 @@ export const format = [
   },
 ] as const;
 
+export const includeInMeasure = yesNo;
+
 export const inIndianCountry = yesNo;
 
 export const organizationType = [
@@ -74,3 +76,9 @@ export const organizationType = [
     value: 'Tribe',
   },
 ] as const;
+
+export const pollutantIndicator = yesNo;
+
+export const useSupport = yesNo;
+
+export const vision303dPriority = yesNo;
