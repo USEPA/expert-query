@@ -1,29 +1,13 @@
 import { uniqueId } from 'lodash';
 import { useCallback, useState } from 'react';
 // types
-import type { MouseEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-type AccordionProps = {
-  border?: boolean;
-  children: ReactNode;
-  multiSelect?: boolean;
-  styles?: string[];
-};
-
-export function Accordion({
-  border = false,
-  children,
-  multiSelect = true,
-  styles = [],
-}: AccordionProps) {
-  const accordionStyles = [...styles];
-  if (multiSelect) accordionStyles.push('usa-accordion--multiselectable');
-  if (border) accordionStyles.push('usa-accordion--bordered');
-
+export function Accordion({ children }: { children: ReactNode }) {
   return (
     <div
-      className={`usa-accordion ${accordionStyles.join(' ')}`}
-      data-allow-multiple={multiSelect}
+      className="margin-top-2 usa-accordion usa-accordion--multiselectable"
+      data-allow-multiple={true}
     >
       {children}
     </div>
@@ -32,8 +16,8 @@ export function Accordion({
 
 type AccordionItemProps = {
   children: ReactNode;
-  initialExpand?: boolean;
   heading: string;
+  initialExpand?: boolean;
 };
 
 export function AccordionItem({
@@ -44,12 +28,7 @@ export function AccordionItem({
   const [id] = useState(uniqueId('accordion-item-'));
   const [expanded, setExpanded] = useState(initialExpand);
 
-  const expandCollapse = useCallback(
-    (_ev: MouseEvent) => {
-      setExpanded(!expanded);
-    },
-    [expanded],
-  );
+  const toggleExpanded = useCallback(() => setExpanded(!expanded), [expanded]);
 
   return (
     <div className="margin-top-2">
@@ -58,7 +37,7 @@ export function AccordionItem({
           type="button"
           className="usa-accordion__button"
           aria-expanded={expanded}
-          onClick={expandCollapse}
+          onClick={toggleExpanded}
         >
           {heading}
         </button>
