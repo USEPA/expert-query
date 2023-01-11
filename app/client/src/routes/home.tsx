@@ -1058,6 +1058,7 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
                       contextField,
                       contextValue,
                     )}
+                    menuPortalTarget={document.body}
                     placeholder={`Select ${getArticle(
                       field.label.split(' ')[0],
                     )} ${field.label}...`}
@@ -1069,6 +1070,10 @@ function FilterFields({ handlers, state, staticOptions }: FilterFieldsProps) {
                       }),
                       loadingIndicator: () => ({
                         display: 'none',
+                      }),
+                      menuPortal: (base) => ({
+                        ...base,
+                        zIndex: 9999,
                       }),
                     }}
                     value={state[field.key]}
