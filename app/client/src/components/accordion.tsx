@@ -3,27 +3,11 @@ import { useState } from 'react';
 // types
 import type { ReactNode } from 'react';
 
-type AccordionProps = {
-  border?: boolean;
-  children: ReactNode;
-  multiSelect?: boolean;
-  styles?: string[];
-};
-
-export function Accordion({
-  border = false,
-  children,
-  multiSelect = true,
-  styles = [],
-}: AccordionProps) {
-  const accordionStyles = [...styles];
-  if (multiSelect) accordionStyles.push('usa-accordion--multiselectable');
-  if (border) accordionStyles.push('usa-accordion--bordered');
-
+export function Accordion({ children }: { children: ReactNode }) {
   return (
     <div
-      className={`usa-accordion ${accordionStyles.join(' ')}`}
-      data-allow-multiple={multiSelect}
+      className="margin-top-2 usa-accordion usa-accordion--multiselectable"
+      data-allow-multiple={true}
     >
       {children}
     </div>

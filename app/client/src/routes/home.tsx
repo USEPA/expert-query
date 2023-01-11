@@ -889,7 +889,7 @@ export function Home() {
                 value={dataProfile}
               />
               {profile && (
-                <Accordion styles={['margin-top-2']}>
+                <Accordion>
                   <AccordionItem heading="Filters">
                     <FilterFields
                       handlers={inputHandlers}
