@@ -945,6 +945,7 @@ export function Home() {
                       <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
                     </h4>
                     <CopyBox
+                      testId="current-query-copy-box-container"
                       text={`${window.location.origin}${
                         window.location.pathname
                       }/#${buildQueryString(queryParams)}`}
@@ -953,12 +954,14 @@ export function Home() {
                     <CopyBox
                       lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
                       maxLength={2048}
+                      testId="api-query-copy-box-container"
                       text={`${eqDataUrl}/data/${
                         profiles[profile].resource
                       }?${buildQueryString(queryParams, false)}`}
                     />
                     <h4>cURL</h4>
                     <CopyBox
+                      testId="curl-copy-box-container"
                       text={`curl -X POST --json "${JSON.stringify(
                         buildPostData(queryParams),
                       ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${

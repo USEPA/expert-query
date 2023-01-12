@@ -5,6 +5,7 @@ import Alert from 'components/alert';
 type Props = {
   lengthExceededMessage?: string;
   maxLength?: number;
+  testId?: string;
   text: string;
 };
 
@@ -15,6 +16,7 @@ const successMessage = 'Copied to clipboard!';
 export default function CopyBox({
   lengthExceededMessage,
   maxLength,
+  testId,
   text,
 }: Props) {
   const [status, setStatus] = useState<'success' | 'failure' | 'idle'>('idle');
@@ -56,7 +58,7 @@ export default function CopyBox({
     );
   } else {
     return (
-      <div className="bg-base-lightest radius-md" data-testid="copy-box-container">
+      <div className="bg-base-lightest radius-md" data-testid={testId}>
         <p className="display-flex flex-justify margin-bottom-0 padding-2">
           <span
             className="font-mono-sm margin-right-1"

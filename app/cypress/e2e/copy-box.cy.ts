@@ -18,13 +18,25 @@ describe("CopyBox", () => {
   it("Verify copy box is available", () => {
     bringUpCopybox();
 
-    cy.findAllByTestId("copy-box-container").should("exist");
+    cy.findByTestId("current-query-copy-box-container").should("exist");
+    cy.findByTestId("api-query-copy-box-container").should("exist");
+    cy.findByTestId("curl-copy-box-container").should("exist");
   });
 
   it("Verify copy box backgroundColor", () => {
     bringUpCopybox();
 
-    cy.findAllByTestId("copy-box-container")
+    cy.findByTestId("current-query-copy-box-container")
+      .should("exist")
+      .should("have.css", "background-color")
+      .and("eq", "rgb(240, 240, 240)");
+
+    cy.findByTestId("api-query-copy-box-container")
+      .should("exist")
+      .should("have.css", "background-color")
+      .and("eq", "rgb(240, 240, 240)");
+
+    cy.findByTestId("curl-copy-box-container")
       .should("exist")
       .should("have.css", "background-color")
       .and("eq", "rgb(240, 240, 240)");
@@ -33,9 +45,8 @@ describe("CopyBox", () => {
   it("Verify copy box Current Query text", () => {
     bringUpCopybox();
 
-    cy.findAllByTestId("copy-box-container")
+    cy.findByTestId("current-query-copy-box-container")
       .should("exist")
-      .first()
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
           `${origin}/attains/#dataProfile=actions&format=csv`
@@ -46,9 +57,8 @@ describe("CopyBox", () => {
   it("Verify copy box Action Units API Query text", () => {
     bringUpCopybox();
 
-    cy.findAllByTestId("copy-box-container")
+    cy.findByTestId("api-query-copy-box-container")
       .should("exist")
-      .eq(1)
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
           `${origin}/attains/data/actions?format=csv`
@@ -59,9 +69,8 @@ describe("CopyBox", () => {
   it("Verify copy box cURL command text", () => {
     bringUpCopybox();
 
-    cy.findAllByTestId("copy-box-container")
+    cy.findByTestId("curl-copy-box-container")
       .should("exist")
-      .last()
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
           `curl -X POST --json ${JSON.stringify(
