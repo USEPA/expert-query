@@ -4,7 +4,7 @@ import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import 'uswds/css/uswds.css';
 import 'bootstrap/dist/css/bootstrap-grid.min.css';
 // components
-import { Home } from 'routes/home';
+import { Home, QueryBuilder } from 'routes/home';
 import ErrorPage from 'routes/404';
 import { MarkdownContent } from 'components/markdownContent';
 // contexts
@@ -117,8 +117,9 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route index element={<Navigate to="/attains" replace />} />
-        <Route path="/attains" element={<Home />} />
-        <Route path="/attains/:profile" element={<Home />} />
+        <Route path="/attains" element={<Home />}>
+          <Route path=":profile" element={<QueryBuilder />} />
+        </Route>
         <Route path="/404" element={<ErrorPage />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>

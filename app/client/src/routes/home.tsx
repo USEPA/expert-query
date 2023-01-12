@@ -6,7 +6,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Outlet,
+  useNavigate,
+  useOutletContext,
+  useParams,
+} from 'react-router-dom';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
@@ -35,7 +40,7 @@ import {
   serverUrl,
 } from 'config';
 // types
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 
 /*
 ## Constants
@@ -54,6 +59,16 @@ const singleValueFields = [...dateFields, ...yearFields];
 /*
 ## Types
 */
+type HomeContext = {
+  initializeInputs: (initialInputs: InputState) => void;
+  inputHandlers: InputHandlers;
+  inputState: InputState;
+  profile: keyof typeof profiles | null;
+  queryUrl: string;
+  resetInputs: () => void;
+  staticOptions: StaticOptions;
+};
+
 type InputAction =
   | InputFieldAction
   | { type: 'initialize'; payload: InputState }
@@ -147,7 +162,7 @@ function buildPostData(query: UrlQueryState) {
 }
 
 // Converts a JSON object into a parameter string
-function buildQueryString(query: UrlQueryState) {
+function buildUrlQueryString(query: UrlQueryState) {
   const paramsList: UrlQueryParam[] = [];
   Object.entries(query).forEach(([field, value]) => {
     // Duplicate the query parameter for an array of values
@@ -390,6 +405,11 @@ function getOptions(
   } else {
     return filterDynamicOptions(profile, field)();
   }
+}
+
+function getPageName() {
+  const pathParts = window.location.pathname.split('/');
+  return pathParts.length > 1 ? pathParts[1] : '';
 }
 
 function getSingleOptionFields(fields: typeof allFields) {
@@ -663,62 +683,49 @@ function useAbortSignal() {
   return getSignal;
 }
 
-function useProfile() {
-  const navigate = useNavigate();
+function useDownloadConfirmationVisibility() {
+  const [downloadConfirmationVisible, setDownloadConfirmationVisible] =
+    useState(false);
 
-  const { profile: profileArg } = useParams();
+  const closeDownloadConfirmation = useCallback(() => {
+    setDownloadConfirmationVisible(false);
+  }, []);
 
-  const [profileOption, setProfileOption] = useState<
-    typeof listOptions.dataProfile[number] | null
-  >(null);
-  const [profile, setProfile] = useState<keyof typeof profiles | null>(null);
+  const openDownloadConfirmation = useCallback(() => {
+    setDownloadConfirmationVisible(true);
+  }, []);
 
-  useEffect(() => {
-    if (!profileArg) return;
-    if (!isProfile(profileArg)) {
-      navigate('/404');
-      return;
-    }
-
-    setProfile(profileArg);
-    setProfileOption(
-      listOptions.dataProfile.find((option) => option.value === profileArg) ??
-        null,
-    );
-  }, [navigate, profileArg]);
-
-  // TODO: Change path without refreshing page?
-  const handleProfileChange = useCallback(
-    (ev: Option | null) => {
-      const route = ev ? `/attains/${ev.value}` : '/attains';
-      navigate(route, { replace: true });
-    },
-    [navigate],
-  );
-
-  return { handleProfileChange, profile, profileOption };
+  return {
+    closeDownloadConfirmation,
+    downloadConfirmationVisible,
+    openDownloadConfirmation,
+  };
 }
 
-/*
-## Components
-*/
-export function Home() {
-  const { content } = useContentState();
-
-  const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
-    null,
-  );
+function useDownloadStatus() {
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
 
   useEffect(() => {
-    if (content.status !== 'success') return;
-    const domainOptions = addDomainAliases(content.data.domainValues);
-    setStaticOptions({ ...domainOptions, ...listOptions });
-  }, [content]);
+    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
 
-  const getAbortSignal = useAbortSignal();
+    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
 
-  const { handleProfileChange, profile, profileOption } = useProfile();
+    return function cleanup() {
+      clearTimeout(messageTimeout);
+    };
+  }, [downloadStatus]);
 
+  return [downloadStatus, setDownloadStatus] as [
+    Status,
+    Dispatch<SetStateAction<Status>>,
+  ];
+}
+
+function useHomeContext() {
+  return useOutletContext<HomeContext>();
+}
+
+function useInputState() {
   const [inputState, inputDispatch] = useReducer(
     createReducer(),
     getDefaultInputState(),
@@ -746,29 +753,105 @@ export function Home() {
     return newHandlers as InputHandlers;
   }, [inputDispatch]);
 
+  const initializeInputs = useCallback((initialInputs: InputState) => {
+    inputDispatch({ type: 'initialize', payload: initialInputs });
+  }, []);
+
+  const resetInputs = useCallback(() => {
+    inputDispatch({ type: 'reset' });
+  }, []);
+
+  return { initializeInputs, inputState, inputHandlers, resetInputs };
+}
+
+function useIntroVisibility() {
+  const [introVisible, setIntroVisible] = useState(
+    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
+  );
+
+  const closeIntro = useCallback(() => setIntroVisible(false), []);
+
+  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
+
+  const toggleDontShowAgain = useCallback(
+    () => setDontShowAgain(!dontShowAgain),
+    [dontShowAgain],
+  );
+
+  useEffect(() => {
+    if (dontShowAgain === null) return;
+    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
+  }, [dontShowAgain]);
+
+  return { closeIntro, dontShowAgain, introVisible, toggleDontShowAgain };
+}
+
+function useProfile() {
+  const navigate = useNavigate();
+
+  const { profile: profileArg } = useParams();
+
+  const [profileOption, setProfileOption] = useState<
+    typeof listOptions.dataProfile[number] | null
+  >(null);
+  const [profile, setProfile] = useState<keyof typeof profiles | null>(null);
+
+  useEffect(() => {
+    if (!profileArg) return;
+    if (!isProfile(profileArg)) {
+      navigate('/404');
+      return;
+    }
+
+    setProfile(profileArg);
+    setProfileOption(
+      listOptions.dataProfile.find((option) => option.value === profileArg) ??
+        null,
+    );
+  }, [navigate, profileArg]);
+
+  const handleProfileChange = useCallback(
+    (ev: Option | null) => {
+      const route = ev
+        ? `/attains/${ev.value}${window.location.hash}`
+        : '/attains';
+      navigate(route, { replace: true });
+    },
+    [navigate],
+  );
+
+  return { handleProfileChange, profile, profileOption };
+}
+
+function useUrlQueryParams(
+  profile: keyof typeof profiles | null,
+  staticOptions: StaticOptions | null,
+  inputState: InputState,
+  initializeInputs: (state: InputState) => void,
+) {
+  const getAbortSignal = useAbortSignal();
+
   // Populate the input fields with URL parameters, if any
   const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
     if (!staticOptions) return;
     getUrlInputs(staticOptions, profile, getAbortSignal())
-      .then((initialInputs) => {
-        inputDispatch({ type: 'initialize', payload: initialInputs });
-      })
+      .then(initializeInputs)
       .catch((err) => {
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setInputsLoaded(true));
-  }, [getAbortSignal, profile, staticOptions]);
+  }, [getAbortSignal, initializeInputs, profile, staticOptions]);
 
   // Track non-empty values relevant to the current profile
-  const [queryParams, setQueryParams] = useState<UrlQueryState>({});
+  const [urlQueryParams, setUrlQueryParams] = useState<UrlQueryState>({});
 
   // Update URL when inputs change
   useEffect(() => {
     if (!inputsLoaded) return;
 
     // Get selected parameters, including multiselectable fields
-    const newQueryParams: UrlQueryState = {};
+    const newUrlQueryParams: UrlQueryState = {};
     Object.entries(inputState).forEach(
       ([field, value]: [string, InputState[keyof InputState]]) => {
         if (
@@ -786,62 +869,53 @@ export function Home() {
             ? fromIsoDateString(flattenedValue)
             : flattenedValue;
 
-        const filterFields = profile
-          ? (profiles[profile].fields as readonly string[])
-          : null;
-
-        if (
-          formattedValue &&
-          (configFields.includes(field) || filterFields?.includes(field))
-        ) {
-          newQueryParams[field] = formattedValue;
-        }
+        if (formattedValue) newUrlQueryParams[field] = formattedValue;
       },
     );
 
-    window.location.hash = buildQueryString(newQueryParams);
+    window.location.hash = buildUrlQueryString(newUrlQueryParams);
 
-    setQueryParams(newQueryParams);
+    setUrlQueryParams(newUrlQueryParams);
   }, [inputState, inputsLoaded, profile]);
 
-  const [introVisible, setIntroVisible] = useState(
-    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
+  return urlQueryParams;
+}
+
+function useStaticOptions(
+  content: ReturnType<typeof useContentState>['content'],
+) {
+  const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
+    null,
   );
-  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (dontShowAgain === null) return;
-    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
-  }, [dontShowAgain]);
+    if (content.status !== 'success') return;
+    const domainOptions = addDomainAliases(content.data.domainValues);
+    setStaticOptions({ ...domainOptions, ...listOptions });
+  }, [content]);
 
-  const pathParts = window.location.pathname.split('/');
-  const pageName = pathParts.length > 1 ? pathParts[1] : '';
+  return staticOptions;
+}
+
+/*
+## Components
+*/
+export function Home() {
+  const { content } = useContentState();
+
+  const staticOptions = useStaticOptions(content);
+
+  const { handleProfileChange, profile, profileOption } = useProfile();
+
+  const { initializeInputs, inputState, inputHandlers, resetInputs } =
+    useInputState();
+
+  const { closeIntro, dontShowAgain, introVisible, toggleDontShowAgain } =
+    useIntroVisibility();
 
   const eqDataUrl =
     content.data.services?.eqDataApi ||
     `${window.location.origin}${window.location.pathname}`;
-
-  const [confirmationVisible, setConfirmationVisible] = useState(false);
-
-  const handleDownloadModalClose = useCallback(() => {
-    setConfirmationVisible(false);
-  }, []);
-
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
-
-  useEffect(() => {
-    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
-
-    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
-
-    return function cleanup() {
-      clearTimeout(messageTimeout);
-    };
-  }, [downloadStatus]);
-
-  const queryData = useMemo(() => {
-    return buildPostData(queryParams);
-  }, [queryParams]);
 
   if (content.status === 'pending') return <Loading />;
 
@@ -856,24 +930,6 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        {confirmationVisible && (
-          <DownloadModal
-            filename={
-              profile && inputState.format
-                ? `${profile}.${inputState.format.value}`
-                : null
-            }
-            downloadStatus={downloadStatus}
-            onClose={handleDownloadModalClose}
-            queryData={queryData}
-            queryUrl={
-              eqDataUrl && profile
-                ? `${eqDataUrl}/data/${profiles[profile].resource}`
-                : null
-            }
-            setDownloadStatus={setDownloadStatus}
-          />
-        )}
         <button
           title="Glossary"
           className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
@@ -888,7 +944,7 @@ export function Home() {
           />
           <span className="font-ui-md text-bold text-primary">Glossary</span>
         </button>
-        <GlossaryPanel path={pageName} />
+        <GlossaryPanel path={getPageName()} />
         <div>
           {introVisible && (
             <Summary heading="How to Use This Application">
@@ -900,12 +956,12 @@ export function Home() {
                 <Checkbox
                   checked={dontShowAgain ?? false}
                   label="Don't show again on this computer"
-                  onChange={(_ev) => setDontShowAgain(!dontShowAgain)}
+                  onChange={toggleDontShowAgain}
                   styles={['margin-right-1 margin-y-auto']}
                 />
                 <button
                   className="margin-top-2 usa-button"
-                  onClick={() => setIntroVisible(false)}
+                  onClick={closeIntro}
                   type="button"
                 >
                   Close Intro
@@ -923,87 +979,18 @@ export function Home() {
                 placeholder="Select a data profile..."
                 value={profileOption}
               />
-              {profile && (
-                <Accordion>
-                  <AccordionItem heading="Filters" initialExpand>
-                    <FilterFields
-                      handlers={inputHandlers}
-                      profile={profile}
-                      staticOptions={staticOptions}
-                      state={inputState}
-                    />
-                    <div className="display-flex margin-top-1 width-full">
-                      <button
-                        className="margin-top-1 margin-x-auto usa-button usa-button--outline"
-                        onClick={(_ev) => inputDispatch({ type: 'reset' })}
-                        type="button"
-                      >
-                        Clear Search
-                      </button>
-                    </div>
-                  </AccordionItem>
 
-                  <AccordionItem heading="Download the Data" initialExpand>
-                    <RadioButtons
-                      legend={
-                        <>
-                          <b className="margin-right-05">File Format</b>
-                          <InfoTooltip text="Choose a file format for the result set" />
-                        </>
-                      }
-                      onChange={inputHandlers.format}
-                      options={staticOptions.format}
-                      selected={inputState.format}
-                      styles={['margin-bottom-2']}
-                    />
-                    <button
-                      className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
-                      onClick={() => setConfirmationVisible(true)}
-                      type="button"
-                    >
-                      <Download className="height-205 margin-right-1 usa-icon width-205" />
-                      Download
-                    </button>
-                    {downloadStatus === 'success' && (
-                      <Alert type="success">Query executed successfully.</Alert>
-                    )}
-                    {downloadStatus === 'failure' && (
-                      <Alert type="error">
-                        An error occurred while executing the current query,
-                        please try again later.
-                      </Alert>
-                    )}
-                  </AccordionItem>
-
-                  <AccordionItem heading="Queries">
-                    <h4>
-                      {/* TODO - Remove the glossary linkage before production deployment */}
-                      <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-                    </h4>
-                    <CopyBox
-                      text={`${window.location.origin}${
-                        window.location.pathname
-                      }/#${buildQueryString(queryParams)}`}
-                    />
-                    <h4>{profiles[profile].label} API Query</h4>
-                    <CopyBox
-                      lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
-                      maxLength={2048}
-                      text={`${eqDataUrl}/data/${
-                        profiles[profile].resource
-                      }?${buildQueryString(queryParams)}`}
-                    />
-                    <h4>cURL</h4>
-                    <CopyBox
-                      text={`curl -X POST --json "${JSON.stringify(
-                        queryData,
-                      ).replaceAll('"', '\\"')}" ${eqDataUrl}/data/${
-                        profiles[profile].resource
-                      }`}
-                    />
-                  </AccordionItem>
-                </Accordion>
-              )}
+              <Outlet
+                context={{
+                  initializeInputs,
+                  inputHandlers,
+                  inputState,
+                  profile,
+                  queryUrl: eqDataUrl,
+                  resetInputs,
+                  staticOptions,
+                }}
+              />
             </>
           )}
         </div>
@@ -1012,6 +999,139 @@ export function Home() {
   }
 
   return null;
+}
+
+export function QueryBuilder() {
+  const {
+    queryUrl,
+    initializeInputs,
+    inputHandlers,
+    inputState,
+    profile,
+    resetInputs,
+    staticOptions,
+  } = useHomeContext();
+
+  const urlQueryParams = useUrlQueryParams(
+    profile,
+    staticOptions,
+    inputState,
+    initializeInputs,
+  );
+
+  const {
+    closeDownloadConfirmation,
+    downloadConfirmationVisible,
+    openDownloadConfirmation,
+  } = useDownloadConfirmationVisibility();
+
+  const [downloadStatus, setDownloadStatus] = useDownloadStatus();
+
+  const queryData = useMemo(() => {
+    return buildPostData(urlQueryParams);
+  }, [urlQueryParams]);
+
+  return (
+    <>
+      {downloadConfirmationVisible && (
+        <DownloadModal
+          filename={
+            profile && inputState.format
+              ? `${profile}.${inputState.format.value}`
+              : null
+          }
+          downloadStatus={downloadStatus}
+          onClose={closeDownloadConfirmation}
+          queryData={queryData}
+          queryUrl={
+            profile ? `${queryUrl}/data/${profiles[profile].resource}` : null
+          }
+          setDownloadStatus={setDownloadStatus}
+        />
+      )}
+      {profile && (
+        <Accordion>
+          <AccordionItem heading="Filters" initialExpand>
+            <FilterFields
+              handlers={inputHandlers}
+              profile={profile}
+              staticOptions={staticOptions}
+              state={inputState}
+            />
+            <div className="display-flex margin-top-1 width-full">
+              <button
+                className="margin-top-1 margin-x-auto usa-button usa-button--outline"
+                onClick={resetInputs}
+                type="button"
+              >
+                Clear Search
+              </button>
+            </div>
+          </AccordionItem>
+
+          <AccordionItem heading="Download the Data" initialExpand>
+            <RadioButtons
+              legend={
+                <>
+                  <b className="margin-right-05">File Format</b>
+                  <InfoTooltip text="Choose a file format for the result set" />
+                </>
+              }
+              onChange={inputHandlers.format}
+              options={staticOptions.format}
+              selected={inputState.format}
+              styles={['margin-bottom-2']}
+            />
+            <button
+              className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
+              onClick={openDownloadConfirmation}
+              type="button"
+            >
+              <Download className="height-205 margin-right-1 usa-icon width-205" />
+              Download
+            </button>
+            {downloadStatus === 'success' && (
+              <Alert type="success">Query executed successfully.</Alert>
+            )}
+            {downloadStatus === 'failure' && (
+              <Alert type="error">
+                An error occurred while executing the current query, please try
+                again later.
+              </Alert>
+            )}
+          </AccordionItem>
+
+          <AccordionItem heading="Queries">
+            <h4>
+              {/* TODO - Remove the glossary linkage before production deployment */}
+              <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+            </h4>
+            <CopyBox
+              text={`${window.location.origin}${
+                window.location.pathname
+              }/#${buildUrlQueryString(urlQueryParams)}`}
+            />
+            <h4>{profiles[profile].label} API Query</h4>
+            <CopyBox
+              lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+              maxLength={2048}
+              text={`${queryUrl}/data/${
+                profiles[profile].resource
+              }?${buildUrlQueryString(urlQueryParams)}`}
+            />
+            <h4>cURL</h4>
+            <CopyBox
+              text={`curl -X POST --json "${JSON.stringify(
+                queryData,
+              ).replaceAll('"', '\\"')}" ${queryUrl}/data/${
+                profiles[profile].resource
+              }`}
+            />
+          </AccordionItem>
+        </Accordion>
+      )}
+    </>
+  );
 }
 
 type FilterFieldsProps = {
