@@ -103,7 +103,6 @@ export default function InfoTooltip({
         className={[
           ...styles,
           'usa-button',
-          'bg-white',
           'border-0',
           'margin-0',
           'padding-0',
@@ -111,6 +110,7 @@ export default function InfoTooltip({
           'hover:bg-white',
         ].join(' ')}
         ref={triggerRef}
+        style={{ background: 'inherit' }}
         type="button"
       >
         <Info

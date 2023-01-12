@@ -7,6 +7,65 @@ const logger = require("../utilities/logger");
 const log = logger.logger;
 const StreamingService = require("../utilities/streamingService");
 
+class DuplicateParameterException extends Error {
+  constructor(parameter) {
+    super();
+    this.code = 400;
+    this.message = `Duplicate ${parameter} parameters not allowed`;
+  }
+}
+
+/**
+ * Append a range to the where clause of the provided query.
+ * @param {Object} query KnexJS query object
+ * @param {Object} column column mapping object
+ * @param {string} lowParamValue URL query low value
+ * @param {string} highParamValue URL query high value
+ */
+function appendRangeToWhere(query, column, lowParamValue, highParamValue) {
+  if (Array.isArray(lowParamValue)) {
+    throw new DuplicateParameterException(column.lowParam);
+  }
+  if (Array.isArray(highParamValue)) {
+    throw new DuplicateParameterException(column.highParam);
+  }
+
+  const isTimestampColumn = column.type === "timestamptz";
+  const lowValue = isTimestampColumn
+    ? dateToUtcTime(lowParamValue)
+    : lowParamValue;
+  const highValue = isTimestampColumn
+    ? dateToUtcTime(highParamValue, true)
+    : highParamValue;
+
+  if (!lowValue && !highValue) return;
+
+  if (lowValue && highValue) {
+    query.whereBetween(column.name, [lowValue, highValue]);
+  } else if (lowValue) {
+    query.where(column.name, ">=", lowValue);
+  } else {
+    query.where(column.name, "<=", highValue);
+  }
+}
+
+/**
+ * Creates an ISO date string with no timezone offset from a given date string.
+ * @param {string} value the date string to be converted to ISO format
+ * @param {boolean} whether the returned time should represent midnight at the start or end of day
+ * @returns {string}
+ */
+function dateToUtcTime(value, endOfDay = false) {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (isNaN(date)) return null;
+
+  const dateString = date.toISOString().substring(0, 10);
+  if (endOfDay) return `${dateString}T24:00Z`;
+  return `${dateString}T00:00Z`;
+}
+
 /**
  * Gets the query parameters from the request.
  * @param {express.Request} req
@@ -66,7 +125,16 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    appendToWhere(query, col.name, queryParams.filters[col.alias]);
+    if ("lowParam" in col || "highParam" in col) {
+      appendRangeToWhere(
+        query,
+        col,
+        queryParams.filters[col.lowParam],
+        queryParams.filters[col.highParam]
+      );
+    } else {
+      appendToWhere(query, col.name, queryParams.filters[col.alias]);
+    }
   });
 }
 
@@ -136,7 +204,7 @@ async function executeQuery(profile, req, res) {
     }
   } catch (error) {
     log.error(`Failed to get data from the "${profile.tableName}" table...`);
-    return res.status(500).send("Error !" + error);
+    return res.status(error.code ?? 500).send(`Error! ${error.message}`);
   }
 }
 
@@ -168,7 +236,7 @@ function executeQueryCountOnly(profile, req, res) {
       });
   } catch (error) {
     log.error(`Failed to get count from the "${profile.tableName}" table...`);
-    return res.status(500).send("Error !" + error);
+    return res.status(error.code ?? 500).send(`Error! ${error.message}`);
   }
 }
 
