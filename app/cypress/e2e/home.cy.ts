@@ -1,7 +1,14 @@
 describe("Home Page", () => {
-  before(() => {
+  beforeEach(() => {
     cy.visit("/");
   });
+
+  const location = window.location;
+  const origin =
+    location.hostname === "localhost"
+      ? `${location.protocol}//${location.hostname}:3000`
+      : window.location.origin;
+
   const bringUpCopybox = () => {
     cy.get(`[aria-label="Select a data profile"]`).click();
     cy.get(".css-4ljt47-MenuList").children().first().click();
@@ -19,6 +26,21 @@ describe("Home Page", () => {
     cy.findByText("Close Intro").click();
     cy.visit("/");
     cy.findByText("How to Use This Application").should("not.exist");
+  });
+
+  it("Verify localStorage showIntro Value", () => {
+    cy.visit("/");
+    cy.findByText("How to Use This Application").should("exist");
+    cy.findByLabelText("Don't show again on this computer")
+      .click({ force: true })
+      .then(() => {
+        expect(localStorage.getItem("showIntro")).to.eq("false");
+      });
+    cy.findByLabelText("Don't show again on this computer")
+      .click({ force: true })
+      .then(() => {
+        expect(localStorage.getItem("showIntro")).to.eq("true");
+      });
   });
 
   it("Clear Search button is available when data profile is select", () => {
@@ -80,7 +102,7 @@ describe("Home Page", () => {
     cy.findByText("Clear Search").should("not.exist");
   });
 
-  it("Verify Download Status Pop-up", () => {
+  it("Verify Download Status Pop-up with stubing api", () => {
     bringUpCopybox();
 
     cy.intercept("POST", `${origin}/attains/data/actions/count`, {
@@ -104,5 +126,54 @@ describe("Home Page", () => {
     cy.findByText("Click continue to download the data.").should("exist");
     cy.findByText("Cancel").should("exist").click();
     cy.get(".usa-modal__main").should("not.exist");
+  });
+
+  it("Verify desiabled button when count is zero", () => {
+    cy.get(`[aria-label="Select a data profile"]`).type(
+      "assessments{downArrow}{enter}"
+    );
+    cy.intercept("POST", `${origin}/attains/data/assessments/count`, {
+      count: "0",
+    }).as("assessments-count");
+    cy.findByRole("button", { name: "Download" }).click();
+
+    cy.wait("@assessments-count");
+    cy.findByRole("button", { name: "Continue" }).should("be.disabled");
+    cy.findByRole("button", { name: "Cancel" }).click();
+  });
+
+  it("Verify download item's count real api", () => {
+    cy.get(`[aria-label="Select a data profile"]`).type(
+      "sources{downArrow}{enter}"
+    );
+    cy.findByLabelText("Yes").click({ force: true });
+    cy.findByLabelText("Tab-separated (TSV)").click({ force: true });
+    cy.findByRole("button", { name: "Download" }).click();
+    const url = `${origin}/attains/data/sources/count`;
+    const body = { filters: { confirmed: ["Y"] }, options: { format: "tsv" } };
+    cy.request("POST", url, body).then(async (res) => {
+      cy.findByText(res.body.count).should("exist");
+      cy.findByRole("button", { name: "Cancel" }).click();
+    });
+  });
+
+  it("Verify Glossary toggle button", () => {
+    cy.findByRole("button", { name: "Glossary" }).click();
+    cy.findByRole("button", { name: "Glossary" })
+      .should("have.attr", "aria-expanded")
+      .and("equal", "true");
+    cy.findByRole("button", { name: "Glossary" }).click();
+    cy.findByRole("button", { name: "Glossary" })
+      .should("have.attr", "aria-expanded")
+      .and("equal", "false");
+  });
+
+  it("Verify Glossary silder open", () => {
+    cy.findByRole("button", { name: "Glossary" }).click();
+    cy.get("#glossary")
+      .should("have.attr", "aria-hidden")
+      .and("equal", "false");
+    cy.get("body").click(0, 0);
+    cy.get("#glossary").should("have.attr", "aria-hidden").and("equal", "true");
   });
 });

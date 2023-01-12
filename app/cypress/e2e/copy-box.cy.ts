@@ -1,5 +1,5 @@
 describe("CopyBox", () => {
-  before(() => {
+  beforeEach(() => {
     cy.visit("/");
   });
 
@@ -12,6 +12,7 @@ describe("CopyBox", () => {
   const bringUpCopybox = () => {
     cy.get(`[aria-label="Select a data profile"]`).click();
     cy.get(".css-4ljt47-MenuList").children().first().click();
+    cy.findByRole("button", { name: "Queries" }).click();
   };
 
   it("Verify copy box is available", () => {
