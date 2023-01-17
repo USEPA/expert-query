@@ -176,9 +176,9 @@ function buildUrlQueryString(query: UrlQueryState) {
     // Else push a single parameter
     else paramsList.push([field, value]);
   });
-  return paramsList
-    .reduce((a, b) => a + `&${b[0]}=${b[1]}`, '')
-    .replace('&', ''); // trim the leading ampersand
+  return encodeURI(
+    paramsList.reduce((a, b) => a + `&${b[0]}=${b[1]}`, '').replace('&', ''),
+  ); // trim the leading ampersand
 }
 
 // Returns a boolean, specifying if a value is found in the
@@ -616,7 +616,7 @@ function matchYear(values: InputValue) {
 
 // Parse parameters provided in the URL hash into a JSON object
 function parseInitialParams(): [UrlQueryState, ParameterErrors] {
-  const initialParams: UrlQueryState = {};
+  const uniqueParams: { [field: string]: Primitive | Set<Primitive> } = {};
   const paramErrors: ParameterErrors = {
     duplicate: new Set(),
     invalid: new Set(),
@@ -627,8 +627,11 @@ function parseInitialParams(): [UrlQueryState, ParameterErrors] {
     const parsedParam = param.split('=');
     // Disregard invalid or empty parameters
     if (parsedParam.length !== 2 || parsedParam[1] === '') return;
-    const [field, newValue] = parsedParam;
-    if (field in initialParams) {
+
+    const [field, uriValue] = parsedParam;
+    const newValue = decodeURI(uriValue);
+
+    if (field in uniqueParams) {
       if (
         ([...singleValueFields, ...singleOptionFields] as string[]).includes(
           field,
@@ -638,19 +641,30 @@ function parseInitialParams(): [UrlQueryState, ParameterErrors] {
         return;
       }
       // Multiple values, add to an array
-      const value = initialParams[field];
-      if (Array.isArray(value)) value.push(newValue);
-      else initialParams[field] = [value, newValue];
+      const value = uniqueParams[field];
+      if (value instanceof Set) value.add(newValue);
+      else uniqueParams[field] = new Set([value, newValue]);
     } else {
       if (!allFields.find((f) => f.key === field)) {
         paramErrors.invalid.add(field);
         return;
       }
       // Single value
-      initialParams[field] = newValue;
+      uniqueParams[field] = newValue;
     }
   });
-  return [initialParams, paramErrors];
+
+  const params = Object.entries(uniqueParams).reduce<UrlQueryState>(
+    (current, [param, value]) => {
+      return {
+        ...current,
+        [param]: value instanceof Set ? Array.from(value) : value,
+      };
+    },
+    {},
+  );
+
+  return [params, paramErrors];
 }
 
 function setLocalStorageItem(item: string, value: string) {

@@ -151,6 +151,7 @@ async function executeQuery(profile, req, res) {
     const query = knex.withSchema(req.activeSchema).from(profile.tableName);
 
     const queryParams = getQueryParams(req);
+    console.log(queryParams);
 
     parseCriteria(query, profile, queryParams);
 
