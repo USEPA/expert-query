@@ -61,15 +61,13 @@ const singleValueFields = [...dateFields, ...yearFields];
 ## Types
 */
 type HomeContext = {
-  initializeInputs: (initialInputs: InputState) => void;
   inputHandlers: InputHandlers;
   inputState: InputState;
   profile: keyof typeof profiles;
+  queryParams: UrlQueryState;
   queryUrl: string;
   resetInputs: () => void;
-  setUrlQueryParamsLoaded: Dispatch<SetStateAction<boolean>>;
   staticOptions: StaticOptions;
-  urlQueryParamsLoaded: boolean;
 };
 
 type InputAction =
@@ -100,6 +98,11 @@ type MultiOptionHandlers = {
 
 type MultiOptionState = {
   [key in MultiOptionField]: ReadonlyArray<Option> | null;
+};
+
+type ParameterErrors = {
+  duplicate: Set<string>;
+  invalid: Set<string>;
 };
 
 type SingleOptionField = typeof singleOptionFields[number];
@@ -451,8 +454,8 @@ async function getUrlInputs(
   staticOptions: StaticOptions,
   profile: string | null,
   _signal: AbortSignal,
-): Promise<InputState> {
-  const params = parseInitialParams();
+): Promise<{ initial: InputState; errors: ParameterErrors }> {
+  const [params, errors] = parseInitialParams();
 
   const newState = getDefaultInputState();
 
@@ -488,7 +491,7 @@ async function getUrlInputs(
     }),
   ]);
 
-  return newState;
+  return { initial: newState, errors };
 }
 
 // Type narrowing
@@ -612,8 +615,13 @@ function matchYear(values: InputValue) {
 }
 
 // Parse parameters provided in the URL hash into a JSON object
-function parseInitialParams() {
+function parseInitialParams(): [UrlQueryState, ParameterErrors] {
   const initialParams: UrlQueryState = {};
+  const paramErrors: ParameterErrors = {
+    duplicate: new Set(),
+    invalid: new Set(),
+  };
+
   const initialParamsList = window.location.hash.replace('#', '').split('&');
   initialParamsList.forEach((param) => {
     const parsedParam = param.split('=');
@@ -621,16 +629,28 @@ function parseInitialParams() {
     if (parsedParam.length !== 2 || parsedParam[1] === '') return;
     const [field, newValue] = parsedParam;
     if (field in initialParams) {
+      if (
+        ([...singleValueFields, ...singleOptionFields] as string[]).includes(
+          field,
+        )
+      ) {
+        paramErrors.duplicate.add(field);
+        return;
+      }
       // Multiple values, add to an array
       const value = initialParams[field];
       if (Array.isArray(value)) value.push(newValue);
       else initialParams[field] = [value, newValue];
     } else {
+      if (!allFields.find((f) => f.key === field)) {
+        paramErrors.invalid.add(field);
+        return;
+      }
       // Single value
       initialParams[field] = newValue;
     }
   });
-  return initialParams;
+  return [initialParams, paramErrors];
 }
 
 function setLocalStorageItem(item: string, value: string) {
@@ -767,28 +787,6 @@ function useInputState() {
   return { initializeInputs, inputState, inputHandlers, resetInputs };
 }
 
-function useIntroVisibility() {
-  const [introVisible, setIntroVisible] = useState(
-    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
-  );
-
-  const closeIntro = useCallback(() => setIntroVisible(false), []);
-
-  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
-
-  const toggleDontShowAgain = useCallback(
-    () => setDontShowAgain(!dontShowAgain),
-    [dontShowAgain],
-  );
-
-  useEffect(() => {
-    if (dontShowAgain === null) return;
-    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
-  }, [dontShowAgain]);
-
-  return { closeIntro, dontShowAgain, introVisible, toggleDontShowAgain };
-}
-
 function useProfile() {
   const navigate = useNavigate();
 
@@ -831,42 +829,44 @@ function useUrlQueryParams({
   inputState,
   initializeInputs,
   staticOptions,
-  setUrlQueryParamsLoaded,
-  urlQueryParamsLoaded,
 }: {
-  profile: keyof typeof profiles;
+  profile: keyof typeof profiles | null;
   inputState: InputState;
   initializeInputs: (state: InputState) => void;
   staticOptions: StaticOptions | null;
-  setUrlQueryParamsLoaded: Dispatch<SetStateAction<boolean>>;
-  urlQueryParamsLoaded: boolean;
 }) {
   const getAbortSignal = useAbortSignal();
 
+  const [parameterErrors, setParameterErrors] =
+    useState<ParameterErrors | null>(null);
+  const [parametersLoaded, setParametersLoaded] = useState(false);
   // Populate the input fields with URL parameters, if any
   useEffect(() => {
-    if (urlQueryParamsLoaded || !staticOptions) return;
+    if (parametersLoaded || !profile || !staticOptions) return;
     getUrlInputs(staticOptions, profile, getAbortSignal())
-      .then(initializeInputs)
+      .then(({ initial, errors }) => {
+        initializeInputs(initial);
+        if (errors.invalid.size || errors.duplicate.size)
+          setParameterErrors(errors);
+      })
       .catch((err) => {
         console.error(`Error loading initial inputs: ${err}`);
       })
-      .finally(() => setUrlQueryParamsLoaded(true));
+      .finally(() => setParametersLoaded(true));
   }, [
     getAbortSignal,
     initializeInputs,
     profile,
-    setUrlQueryParamsLoaded,
     staticOptions,
-    urlQueryParamsLoaded,
+    parametersLoaded,
   ]);
 
   // Track non-empty values relevant to the current profile
-  const [urlQueryParams, setUrlQueryParams] = useState<UrlQueryState>({});
+  const [parameters, setParameters] = useState<UrlQueryState>({});
 
   // Update URL when inputs change
   useEffect(() => {
-    if (!urlQueryParamsLoaded) return;
+    if (!parametersLoaded) return;
 
     // Get selected parameters, including multiselectable fields
     const newUrlQueryParams: UrlQueryState = {};
@@ -896,10 +896,10 @@ function useUrlQueryParams({
 
     window.location.hash = buildUrlQueryString(newUrlQueryParams);
 
-    setUrlQueryParams(newUrlQueryParams);
-  }, [inputState, profile, urlQueryParamsLoaded]);
+    setParameters(newUrlQueryParams);
+  }, [inputState, parametersLoaded, profile]);
 
-  return urlQueryParams;
+  return { urlQueryParams: parameters, urlQueryParamErrors: parameterErrors };
 }
 
 function useStaticOptions(
@@ -931,10 +931,12 @@ export function Home() {
   const { initializeInputs, inputState, inputHandlers, resetInputs } =
     useInputState();
 
-  const { closeIntro, dontShowAgain, introVisible, toggleDontShowAgain } =
-    useIntroVisibility();
-
-  const [urlQueryParamsLoaded, setUrlQueryParamsLoaded] = useState(false);
+  const { urlQueryParams, urlQueryParamErrors } = useUrlQueryParams({
+    profile,
+    staticOptions,
+    inputState,
+    initializeInputs,
+  });
 
   const eqDataUrl =
     content.data.services?.eqDataApi || `${window.location.origin}/attains`;
@@ -968,29 +970,8 @@ export function Home() {
         </button>
         <GlossaryPanel path={getPageName()} />
         <div>
-          {introVisible && (
-            <Summary heading="How to Use This Application">
-              <p>
-                Select a data profile, then build a query by selecting options
-                from the input fields.
-              </p>
-              <div className="display-flex flex-justify flex-wrap">
-                <Checkbox
-                  checked={dontShowAgain ?? false}
-                  label="Don't show again on this computer"
-                  onChange={toggleDontShowAgain}
-                  styles={['margin-right-1 margin-y-auto']}
-                />
-                <button
-                  className="margin-top-2 usa-button"
-                  onClick={closeIntro}
-                  type="button"
-                >
-                  Close Intro
-                </button>
-              </div>
-            </Summary>
-          )}
+          <ParameterErrorAlert parameters={urlQueryParamErrors} />
+          <Intro />
           {staticOptions && (
             <>
               <h3>Data Profile</h3>
@@ -1005,15 +986,13 @@ export function Home() {
               {profile && (
                 <Outlet
                   context={{
-                    initializeInputs,
                     inputHandlers,
                     inputState,
                     profile,
+                    queryParams: urlQueryParams,
                     queryUrl: eqDataUrl,
                     resetInputs,
-                    setUrlQueryParamsLoaded,
                     staticOptions,
-                    urlQueryParamsLoaded,
                   }}
                 />
               )}
@@ -1029,25 +1008,14 @@ export function Home() {
 
 export function QueryBuilder() {
   const {
+    queryParams,
     queryUrl,
-    initializeInputs,
     inputHandlers,
     inputState,
     profile,
     resetInputs,
-    setUrlQueryParamsLoaded,
     staticOptions,
-    urlQueryParamsLoaded,
   } = useHomeContext();
-
-  const urlQueryParams = useUrlQueryParams({
-    profile,
-    staticOptions,
-    inputState,
-    initializeInputs,
-    setUrlQueryParamsLoaded,
-    urlQueryParamsLoaded,
-  });
 
   const {
     closeDownloadConfirmation,
@@ -1058,8 +1026,8 @@ export function QueryBuilder() {
   const [downloadStatus, setDownloadStatus] = useDownloadStatus();
 
   const queryData = useMemo(() => {
-    return buildPostData(urlQueryParams);
-  }, [urlQueryParams]);
+    return buildPostData(queryParams);
+  }, [queryParams]);
 
   return (
     <>
@@ -1139,7 +1107,7 @@ export function QueryBuilder() {
             <CopyBox
               text={`${window.location.origin}${
                 window.location.pathname
-              }/#${buildUrlQueryString(urlQueryParams)}`}
+              }/#${buildUrlQueryString(queryParams)}`}
             />
             <h4>{profiles[profile].label} API Query</h4>
             <CopyBox
@@ -1147,7 +1115,7 @@ export function QueryBuilder() {
               maxLength={2048}
               text={`${queryUrl}/data/${
                 profiles[profile].resource
-              }?${buildUrlQueryString(urlQueryParams)}`}
+              }?${buildUrlQueryString(queryParams)}`}
             />
             <h4>cURL</h4>
             <CopyBox
@@ -1342,5 +1310,104 @@ function FilterFields({
         </div>
       ))}
     </div>
+  );
+}
+
+function Intro() {
+  const [visible, setVisible] = useState(
+    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
+  );
+
+  const closeIntro = useCallback(() => setVisible(false), []);
+
+  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
+
+  const toggleDontShowAgain = useCallback(
+    () => setDontShowAgain(!dontShowAgain),
+    [dontShowAgain],
+  );
+
+  useEffect(() => {
+    if (dontShowAgain === null) return;
+    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
+  }, [dontShowAgain]);
+
+  if (!visible) return null;
+
+  return (
+    <Summary heading="How to Use This Application">
+      <p>
+        Select a data profile, then build a query by selecting options from the
+        input fields.
+      </p>
+      <div className="display-flex flex-justify flex-wrap">
+        <Checkbox
+          checked={dontShowAgain ?? false}
+          label="Don't show again on this computer"
+          onChange={toggleDontShowAgain}
+          styles={['margin-right-1 margin-y-auto']}
+        />
+        <button
+          className="margin-top-2 usa-button"
+          onClick={closeIntro}
+          type="button"
+        >
+          Close Intro
+        </button>
+      </div>
+    </Summary>
+  );
+}
+
+function ParameterErrorAlert({
+  parameters,
+}: {
+  parameters: ParameterErrors | null;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  const closeAlert = useCallback(() => {
+    setVisible(false);
+  }, []);
+
+  useEffect(() => {
+    if (parameters) setVisible(true);
+  }, [parameters]);
+
+  if (!parameters || !visible) return null;
+
+  return (
+    <Alert icon={false} type="error">
+      {parameters.invalid.size > 0 && (
+        <>
+          <p className="text-bold">
+            The following parameters could not be matched to a valid field:
+          </p>
+          <ul>
+            {Array.from(parameters.invalid).map((invalidParam) => (
+              <li key={invalidParam}>{invalidParam}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {parameters.duplicate.size > 0 && (
+        <>
+          <p className="text-bold">
+            Multiple parameters were provided for the following fields, when
+            only a single parameter is allowed:
+          </p>
+          <ul>
+            {Array.from(parameters.duplicate).map((duplicateParam) => (
+              <li key={duplicateParam}>{duplicateParam}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      <div className="display-flex flex-justify-end">
+        <button className="usa-button" onClick={closeAlert} type="button">
+          Close Alert
+        </button>
+      </div>
+    </Alert>
   );
 }
