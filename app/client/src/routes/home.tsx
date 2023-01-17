@@ -767,28 +767,6 @@ function useInputState() {
   return { initializeInputs, inputState, inputHandlers, resetInputs };
 }
 
-function useIntroVisibility() {
-  const [introVisible, setIntroVisible] = useState(
-    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
-  );
-
-  const closeIntro = useCallback(() => setIntroVisible(false), []);
-
-  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
-
-  const toggleDontShowAgain = useCallback(
-    () => setDontShowAgain(!dontShowAgain),
-    [dontShowAgain],
-  );
-
-  useEffect(() => {
-    if (dontShowAgain === null) return;
-    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
-  }, [dontShowAgain]);
-
-  return { closeIntro, dontShowAgain, introVisible, toggleDontShowAgain };
-}
-
 function useProfile() {
   const navigate = useNavigate();
 
@@ -931,9 +909,6 @@ export function Home() {
   const { initializeInputs, inputState, inputHandlers, resetInputs } =
     useInputState();
 
-  const { closeIntro, dontShowAgain, introVisible, toggleDontShowAgain } =
-    useIntroVisibility();
-
   const [urlQueryParamsLoaded, setUrlQueryParamsLoaded] = useState(false);
 
   const eqDataUrl =
@@ -968,29 +943,7 @@ export function Home() {
         </button>
         <GlossaryPanel path={getPageName()} />
         <div>
-          {introVisible && (
-            <Summary heading="How to Use This Application">
-              <p>
-                Select a data profile, then build a query by selecting options
-                from the input fields.
-              </p>
-              <div className="display-flex flex-justify flex-wrap">
-                <Checkbox
-                  checked={dontShowAgain ?? false}
-                  label="Don't show again on this computer"
-                  onChange={toggleDontShowAgain}
-                  styles={['margin-right-1 margin-y-auto']}
-                />
-                <button
-                  className="margin-top-2 usa-button"
-                  onClick={closeIntro}
-                  type="button"
-                >
-                  Close Intro
-                </button>
-              </div>
-            </Summary>
-          )}
+          <Intro />
           {staticOptions && (
             <>
               <h3>Data Profile</h3>
@@ -1342,5 +1295,51 @@ function FilterFields({
         </div>
       ))}
     </div>
+  );
+}
+
+function Intro() {
+  const [visible, setVisible] = useState(
+    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
+  );
+
+  const closeIntro = useCallback(() => setVisible(false), []);
+
+  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
+
+  const toggleDontShowAgain = useCallback(
+    () => setDontShowAgain(!dontShowAgain),
+    [dontShowAgain],
+  );
+
+  useEffect(() => {
+    if (dontShowAgain === null) return;
+    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
+  }, [dontShowAgain]);
+
+  if (!visible) return null;
+
+  return (
+    <Summary heading="How to Use This Application">
+      <p>
+        Select a data profile, then build a query by selecting options from the
+        input fields.
+      </p>
+      <div className="display-flex flex-justify flex-wrap">
+        <Checkbox
+          checked={dontShowAgain ?? false}
+          label="Don't show again on this computer"
+          onChange={toggleDontShowAgain}
+          styles={['margin-right-1 margin-y-auto']}
+        />
+        <button
+          className="margin-top-2 usa-button"
+          onClick={closeIntro}
+          type="button"
+        >
+          Close Intro
+        </button>
+      </div>
+    </Summary>
   );
 }
