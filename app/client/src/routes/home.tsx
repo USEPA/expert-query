@@ -63,10 +63,12 @@ type HomeContext = {
   initializeInputs: (initialInputs: InputState) => void;
   inputHandlers: InputHandlers;
   inputState: InputState;
-  profile: keyof typeof profiles | null;
+  profile: keyof typeof profiles;
   queryUrl: string;
   resetInputs: () => void;
+  setUrlQueryParamsLoaded: Dispatch<SetStateAction<boolean>>;
   staticOptions: StaticOptions;
+  urlQueryParamsLoaded: boolean;
 };
 
 type InputAction =
@@ -823,32 +825,47 @@ function useProfile() {
   return { handleProfileChange, profile, profileOption };
 }
 
-function useUrlQueryParams(
-  profile: keyof typeof profiles | null,
-  staticOptions: StaticOptions | null,
-  inputState: InputState,
-  initializeInputs: (state: InputState) => void,
-) {
+function useUrlQueryParams({
+  profile,
+  inputState,
+  initializeInputs,
+  staticOptions,
+  setUrlQueryParamsLoaded,
+  urlQueryParamsLoaded,
+}: {
+  profile: keyof typeof profiles;
+  inputState: InputState;
+  initializeInputs: (state: InputState) => void;
+  staticOptions: StaticOptions | null;
+  setUrlQueryParamsLoaded: Dispatch<SetStateAction<boolean>>;
+  urlQueryParamsLoaded: boolean;
+}) {
   const getAbortSignal = useAbortSignal();
 
   // Populate the input fields with URL parameters, if any
-  const [inputsLoaded, setInputsLoaded] = useState(false);
   useEffect(() => {
-    if (!staticOptions) return;
+    if (urlQueryParamsLoaded || !staticOptions) return;
     getUrlInputs(staticOptions, profile, getAbortSignal())
       .then(initializeInputs)
       .catch((err) => {
         console.error(`Error loading initial inputs: ${err}`);
       })
-      .finally(() => setInputsLoaded(true));
-  }, [getAbortSignal, initializeInputs, profile, staticOptions]);
+      .finally(() => setUrlQueryParamsLoaded(true));
+  }, [
+    getAbortSignal,
+    initializeInputs,
+    profile,
+    setUrlQueryParamsLoaded,
+    staticOptions,
+    urlQueryParamsLoaded,
+  ]);
 
   // Track non-empty values relevant to the current profile
   const [urlQueryParams, setUrlQueryParams] = useState<UrlQueryState>({});
 
   // Update URL when inputs change
   useEffect(() => {
-    if (!inputsLoaded) return;
+    if (!urlQueryParamsLoaded) return;
 
     // Get selected parameters, including multiselectable fields
     const newUrlQueryParams: UrlQueryState = {};
@@ -876,7 +893,7 @@ function useUrlQueryParams(
     window.location.hash = buildUrlQueryString(newUrlQueryParams);
 
     setUrlQueryParams(newUrlQueryParams);
-  }, [inputState, inputsLoaded, profile]);
+  }, [inputState, profile, urlQueryParamsLoaded]);
 
   return urlQueryParams;
 }
@@ -912,6 +929,8 @@ export function Home() {
 
   const { closeIntro, dontShowAgain, introVisible, toggleDontShowAgain } =
     useIntroVisibility();
+
+  const [urlQueryParamsLoaded, setUrlQueryParamsLoaded] = useState(false);
 
   const eqDataUrl =
     content.data.services?.eqDataApi ||
@@ -980,17 +999,21 @@ export function Home() {
                 value={profileOption}
               />
 
-              <Outlet
-                context={{
-                  initializeInputs,
-                  inputHandlers,
-                  inputState,
-                  profile,
-                  queryUrl: eqDataUrl,
-                  resetInputs,
-                  staticOptions,
-                }}
-              />
+              {profile && (
+                <Outlet
+                  context={{
+                    initializeInputs,
+                    inputHandlers,
+                    inputState,
+                    profile,
+                    queryUrl: eqDataUrl,
+                    resetInputs,
+                    setUrlQueryParamsLoaded,
+                    staticOptions,
+                    urlQueryParamsLoaded,
+                  }}
+                />
+              )}
             </>
           )}
         </div>
@@ -1009,15 +1032,19 @@ export function QueryBuilder() {
     inputState,
     profile,
     resetInputs,
+    setUrlQueryParamsLoaded,
     staticOptions,
+    urlQueryParamsLoaded,
   } = useHomeContext();
 
-  const urlQueryParams = useUrlQueryParams(
+  const urlQueryParams = useUrlQueryParams({
     profile,
     staticOptions,
     inputState,
     initializeInputs,
-  );
+    setUrlQueryParamsLoaded,
+    urlQueryParamsLoaded,
+  });
 
   const {
     closeDownloadConfirmation,
