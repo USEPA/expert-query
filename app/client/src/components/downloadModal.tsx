@@ -26,6 +26,8 @@ export default function DownloadModal({
   queryUrl,
   setDownloadStatus,
 }: Props) {
+  console.log(queryData);
+  console.log(queryUrl);
   const [count, setCount] = useState<number | null>(null);
   const [countStatus, setCountStatus] = useState<Status>('idle');
 

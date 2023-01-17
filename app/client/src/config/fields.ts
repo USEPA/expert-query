@@ -203,7 +203,7 @@ export default [
     key: 'locationText',
     label: 'Location Text',
     type: 'multiselect',
-    context: 'locationTypeCode',
+    source: 'locationTypeCode',
   },
   { key: 'locationTypeCode', label: 'Location Type Code', type: 'select' },
   {
@@ -249,7 +249,7 @@ export default [
     key: 'organizationId',
     label: 'Organization ID',
     type: 'multiselect',
-    context: 'organizationType',
+    source: 'organizationType',
   },
   {
     key: 'organizationName',

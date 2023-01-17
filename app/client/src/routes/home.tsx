@@ -49,6 +49,7 @@ const dynamicOptionLimit = 20;
 const staticOptionLimit = 100;
 
 const configFields = ['format'];
+const sourceFields = ['locationTypeCode', 'organizationType'];
 const multiOptionFields = getMultiOptionFields(allFields);
 const singleOptionFields = getSingleOptionFields(allFields);
 const dateFields = getDateFields(allFields);
@@ -878,6 +879,9 @@ function useUrlQueryParams({
         )
           return;
 
+        // Don't include source fields
+        if (sourceFields.includes(field)) return;
+
         // Extract 'value' field from Option types
         const flattenedValue = getInputValue(value);
         const formattedValue =
@@ -933,8 +937,7 @@ export function Home() {
   const [urlQueryParamsLoaded, setUrlQueryParamsLoaded] = useState(false);
 
   const eqDataUrl =
-    content.data.services?.eqDataApi ||
-    `${window.location.origin}${window.location.pathname}`;
+    content.data.services?.eqDataApi || `${window.location.origin}/attains`;
 
   if (content.status === 'pending') return <Loading />;
 
@@ -1183,17 +1186,15 @@ function FilterFields({
       .map((field) => {
         switch (field.type) {
           case 'multiselect':
-            const contextField = 'context' in field ? field.context : null;
-            const contextValue = contextField
-              ? state[contextField]?.value
-              : null;
+            const sourceField = 'source' in field ? field.source : null;
+            const sourceValue = sourceField ? state[sourceField]?.value : null;
             const defaultOptions = getInitialOptions(
               staticOptions,
               field.key,
-              contextValue,
+              sourceValue,
             );
             if (
-              !contextField &&
+              !sourceField &&
               Array.isArray(defaultOptions) &&
               defaultOptions.length <= 5
             ) {
@@ -1218,31 +1219,31 @@ function FilterFields({
                 <b>{field.label}</b>
                 <SourceSelect
                   label={
-                    contextField &&
-                    allFields.find((f) => f.key === contextField)?.label
+                    sourceField &&
+                    allFields.find((f) => f.key === sourceField)?.label
                   }
                   sources={
-                    contextField &&
-                    getOptions(profile, contextField, staticOptions)
+                    sourceField &&
+                    getOptions(profile, sourceField, staticOptions)
                   }
-                  onChange={contextField && handlers[contextField]}
-                  selected={contextField && state[contextField]}
+                  onChange={sourceField && handlers[sourceField]}
+                  selected={sourceField && state[sourceField]}
                 >
                   <AsyncSelect
                     aria-label={`${field.label} input`}
                     className="width-full"
                     inputId={`input-${field.key}`}
                     isMulti
-                    // Re-renders default options when `contextValue` changes
-                    key={JSON.stringify(contextValue)}
+                    // Re-renders default options when `sourceValue` changes
+                    key={JSON.stringify(sourceValue)}
                     onChange={handlers[field.key]}
                     defaultOptions={defaultOptions}
                     loadOptions={filterOptions(
                       profile,
                       field.key,
                       staticOptions,
-                      contextField,
-                      contextValue,
+                      sourceField,
+                      sourceValue,
                     )}
                     menuPortalTarget={document.body}
                     placeholder={`Select ${getArticle(
@@ -1252,7 +1253,7 @@ function FilterFields({
                       control: (base) => ({
                         ...base,
                         border: '1px solid #adadad',
-                        borderRadius: contextField ? '0 4px 4px 0' : '4px',
+                        borderRadius: sourceField ? '0 4px 4px 0' : '4px',
                       }),
                       loadingIndicator: () => ({
                         display: 'none',
