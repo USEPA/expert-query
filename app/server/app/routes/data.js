@@ -11,7 +11,15 @@ class DuplicateParameterException extends Error {
   constructor(parameter) {
     super();
     this.code = 400;
-    this.message = `Duplicate ${parameter} parameters not allowed`;
+    this.message = `Duplicate "${parameter}" parameters not allowed`;
+  }
+}
+
+class InvalidParameterException extends Error {
+  constructor(parameter) {
+    super();
+    this.code = 400;
+    this.message = `The parameter "${parameter}" is not valid for the specified profile`;
   }
 }
 
@@ -125,7 +133,7 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    if ("lowParam" in col || "highParam" in col) {
+    if (col.multiplicity === "range") {
       appendRangeToWhere(
         query,
         col,
@@ -150,8 +158,9 @@ async function executeQuery(profile, req, res) {
   try {
     const query = knex.withSchema(req.activeSchema).from(profile.tableName);
 
-    const queryParams = getQueryParams(req);
-    console.log(queryParams);
+    const queryParams = getQueryParams(req, profile);
+
+    validateQueryParams(queryParams, profile);
 
     parseCriteria(query, profile, queryParams);
 
@@ -211,6 +220,32 @@ async function executeQuery(profile, req, res) {
 
 /**
  * Runs a query against the provided profile name and returns the number of records.
+ * @param {Object} queryFilters URL query value for filters
+ * @param {Object} profile definition of the profile being queried
+ */
+function validateQueryParams(queryParams, profile) {
+  Object.entries(queryParams.options).forEach(([name, value]) => {
+    if (Array.isArray(value)) throw new DuplicateParameterException(name);
+  });
+  Object.entries(queryParams.filters).forEach(([name, value]) => {
+    const column = profile.columns.find((c) => {
+      if (c.lowParam === name || c.highParam === name || c.alias === name)
+        return c;
+    });
+    if (!column) throw new InvalidParameterException(name);
+    if (Array.isArray(value)) {
+      if (
+        column.lowParam === name ||
+        column.highParam === name ||
+        (column.alias === name && column.acceptsMultiple === false)
+      )
+        throw new DuplicateParameterException(name);
+    }
+  });
+}
+
+/**
+ * Runs a query against the provided profile name and returns the number of records.
  * @param {Object} profile definition of the profile being queried
  * @param {express.Request} req
  * @param {express.Response} res
@@ -223,7 +258,7 @@ function executeQueryCountOnly(profile, req, res) {
       .from(profile.tableName)
       .first();
 
-    const queryParams = getQueryParams(req);
+    const queryParams = getQueryParams(req, profile);
 
     parseCriteria(query, profile, queryParams, true);
 
