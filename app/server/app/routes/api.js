@@ -53,6 +53,7 @@ async function queryColumnValues(profile, column, params, schema) {
     .column(column.name)
     .whereILike(column.name, `%${parsedParams.text}%`)
     .distinctOn(column.name)
+    .orderBy(column.name, "asc")
     .select();
 
   if (parsedParams.limit) query.limit(parsedParams.limit);
