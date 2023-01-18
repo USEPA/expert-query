@@ -24,5 +24,45 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-import '@testing-library/cypress/add-commands';
+import "@testing-library/cypress/add-commands";
 
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      /**
+       *  Custom command to select DOM element by data-cy attribute.
+       * @example cy.dataCy('greeting')
+       */
+      selectProfile(profile: string): Chainable<Element>;
+      selectOption(id: string, option: string): Chainable<Element>;
+    }
+  }
+}
+
+/**
+ * This selects a profile from the Data Profile dropdown.
+ *
+ * @param profile - Profile to select
+ */
+
+Cypress.Commands.add("selectProfile", (profile: string) => {
+  cy.get("#select-data-profile").within(($el) => {
+    cy.wrap($el).click();
+    cy.findByText(profile).click();
+  });
+});
+
+/**
+ * This selects a option from the given id.
+ *
+ * @param id - id of input tag  to type
+ * @param option - option to select
+ */
+
+Cypress.Commands.add("selectOption", (id: string, option: string) => {
+  cy.get(`#${id}`).type(`${option}{enter}`, {
+    force: true,
+    delay: 500,
+    timeout: 150000,
+  });
+});

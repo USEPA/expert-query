@@ -882,6 +882,7 @@ export function Home() {
             <>
               <h3>Data Profile</h3>
               <Select
+                id="select-data-profile"
                 aria-label="Select a data profile"
                 onChange={inputHandlers.dataProfile}
                 options={staticOptions.dataProfile}

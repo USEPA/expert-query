@@ -1,17 +1,18 @@
 describe("Download file", () => {
-    before(() => {
-      cy.visit("/");
-    });
-
-     it("Download and Verify Alert message visible when download and hidden after 10 second", () => {
-    cy.get(`[aria-label="Select a data profile"]`).type(
-      "assessments{downArrow}{enter}"
-    );
+  before(() => {
+    cy.visit("/");
+  });
+let count = "0"
+  it("Download and Verify Alert message visible when download and hidden after 10 second", () => {
+    cy.selectProfile("Assessments")
     cy.get("#input-state").type("texas{downArrow}{enter}");
     cy.findByText("JavaScript Object Notation (JSON)").click();
     cy.findByRole("button", { name: "Download" }).click();
     cy.wait(2000);
     cy.findByText("Continue").should("exist");
+    cy.findByTestId('downloadfile-length').then(($el)=>{
+      count = $el.text()
+    })
     cy.findByText("Continue").click();
     cy.findByText("Query executed successfully.").should("exist");
     cy.wait(10000);
@@ -19,6 +20,7 @@ describe("Download file", () => {
   });
 
   it("Read and Validate assessement.json file", () => {
+    console.log("countcountcount",count)
     const path = "cypress/downloads/assessments.json";
     cy.readFile(path, { timeout: 25000 }).should("exist");
     cy.readFile(path).should("be.a", "array");
@@ -90,4 +92,4 @@ describe("Download file", () => {
       expect(firstElement.state).to.eq("TX");
     });
   });
-})
+});
