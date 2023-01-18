@@ -62,7 +62,7 @@ const singleValueFields = [...dateFields, ...yearFields];
 type HomeContext = {
   inputHandlers: InputHandlers;
   inputState: InputState;
-  profile: keyof typeof profiles;
+  profile: Profile;
   queryParams: UrlQueryState;
   queryUrl: string;
   resetInputs: () => void;
@@ -103,6 +103,8 @@ type ParameterErrors = {
   duplicate: Set<string>;
   invalid: Set<string>;
 };
+
+type Profile = keyof typeof profiles;
 
 type SingleOptionField = typeof singleOptionFields[number];
 
@@ -451,10 +453,10 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
 // Uses URL route/query parameters or default values for initial state
 async function getUrlInputs(
   staticOptions: StaticOptions,
-  profile: string | null,
+  profile: Profile,
   _signal: AbortSignal,
 ): Promise<{ initial: InputState; errors: ParameterErrors }> {
-  const [params, errors] = parseInitialParams();
+  const [params, errors] = parseInitialParams(profile);
 
   const newState = getDefaultInputState();
 
@@ -524,9 +526,7 @@ function isOption(maybeOption: Option | Primitive): maybeOption is Option {
 }
 
 // Type narrowing
-function isProfile(
-  maybeProfile: string | keyof typeof profiles,
-): maybeProfile is keyof typeof profiles {
+function isProfile(maybeProfile: string | Profile): maybeProfile is Profile {
   return maybeProfile in profiles;
 }
 
@@ -622,7 +622,9 @@ function matchYear(values: InputValue) {
 }
 
 // Parse parameters provided in the URL hash into a JSON object
-function parseInitialParams(): [UrlQueryState, ParameterErrors] {
+function parseInitialParams(
+  profile: Profile,
+): [UrlQueryState, ParameterErrors] {
   const uniqueParams: { [field: string]: Primitive | Set<Primitive> } = {};
   const paramErrors: ParameterErrors = {
     duplicate: new Set(),
@@ -652,7 +654,8 @@ function parseInitialParams(): [UrlQueryState, ParameterErrors] {
       if (value instanceof Set) value.add(newValue);
       else uniqueParams[field] = new Set([value, newValue]);
     } else {
-      if (!allFields.find((f) => f.key === field)) {
+      const profileFields = profiles[profile].fields as readonly string[];
+      if (![...configFields, ...profileFields].find((f) => f === field)) {
         paramErrors.invalid.add(field);
         return;
       }
@@ -816,7 +819,7 @@ function useProfile() {
   const [profileOption, setProfileOption] = useState<
     typeof listOptions.dataProfile[number] | null
   >(null);
-  const [profile, setProfile] = useState<keyof typeof profiles | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     if (!profileArg) return;
@@ -851,7 +854,7 @@ function useUrlQueryParams({
   initializeInputs,
   staticOptions,
 }: {
-  profile: keyof typeof profiles | null;
+  profile: Profile | null;
   inputState: InputState;
   initializeInputs: (state: InputState) => void;
   staticOptions: StaticOptions | null;
@@ -1153,7 +1156,7 @@ export function QueryBuilder() {
 
 type FilterFieldsProps = {
   handlers: InputHandlers;
-  profile: keyof typeof profiles;
+  profile: Profile;
   state: InputState;
   staticOptions: StaticOptions;
 };
@@ -1400,7 +1403,8 @@ function ParameterErrorAlert({
       {parameters.invalid.size > 0 && (
         <>
           <p className="text-bold">
-            The following parameters could not be matched to a valid field:
+            The following parameters could not be matched to a valid field under
+            the selected profile:
           </p>
           <ul>
             {Array.from(parameters.invalid).map((invalidParam) => (
