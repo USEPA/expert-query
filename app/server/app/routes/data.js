@@ -31,13 +31,6 @@ class InvalidParameterException extends Error {
  * @param {string} highParamValue URL query high value
  */
 function appendRangeToWhere(query, column, lowParamValue, highParamValue) {
-  if (Array.isArray(lowParamValue)) {
-    throw new DuplicateParameterException(column.lowParam);
-  }
-  if (Array.isArray(highParamValue)) {
-    throw new DuplicateParameterException(column.highParam);
-  }
-
   const isTimestampColumn = column.type === "timestamptz";
   const lowValue = isTimestampColumn
     ? dateToUtcTime(lowParamValue)
@@ -133,13 +126,10 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    if (col.multiplicity === "range") {
-      appendRangeToWhere(
-        query,
-        col,
-        queryParams.filters[col.lowParam],
-        queryParams.filters[col.highParam]
-      );
+    const lowArg = "lowParam" in col && queryParams.filters[col.lowParam];
+    const highArg = "highParam" in col && queryParams.filters[col.highParam];
+    if (lowArg || highArg) {
+      appendRangeToWhere(query, col, lowArg, highArg);
     } else {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
     }
