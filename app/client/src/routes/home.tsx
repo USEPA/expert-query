@@ -53,7 +53,6 @@ const multiOptionFields = getMultiOptionFields(allFields);
 const singleOptionFields = getSingleOptionFields(allFields);
 const dateFields = getDateFields(allFields);
 const yearFields = getYearFields(allFields);
-
 const singleValueFields = [...dateFields, ...yearFields];
 
 /*
@@ -641,14 +640,7 @@ function parseInitialParams(
     const newValue = decodeURI(uriValue);
 
     if (field in uniqueParams) {
-      if (
-        ([...singleValueFields, ...singleOptionFields] as string[]).includes(
-          field,
-        )
-      ) {
-        paramErrors.duplicate.add(field);
-        return;
-      }
+      if (!isMultiOptionField(field)) return paramErrors.duplicate.add(field);
       // Multiple values, add to an array
       const value = uniqueParams[field];
       if (value instanceof Set) value.add(newValue);
