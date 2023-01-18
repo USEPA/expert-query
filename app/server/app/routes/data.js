@@ -11,7 +11,7 @@ class DuplicateParameterException extends Error {
   constructor(parameter) {
     super();
     this.code = 400;
-    this.message = `Duplicate "${parameter}" parameters not allowed`;
+    this.message = `Duplicate '${parameter}' parameters not allowed`;
   }
 }
 
@@ -19,7 +19,7 @@ class InvalidParameterException extends Error {
   constructor(parameter) {
     super();
     this.code = 400;
-    this.message = `The parameter "${parameter}" is not valid for the specified profile`;
+    this.message = `The parameter '${parameter}' is not valid for the specified profile`;
   }
 }
 
@@ -214,12 +214,13 @@ async function executeQuery(profile, req, res) {
     }
   } catch (error) {
     log.error(`Failed to get data from the "${profile.tableName}" table...`);
-    return res.status(error.code ?? 500).send(`Error! ${error.message}`);
+    return res.status(error.code ?? 500).json(error);
   }
 }
 
 /**
- * Runs a query against the provided profile name and returns the number of records.
+ * Throws an error if multiple instances of a parameter were provided
+ * for an option or filter that accepts a single argument only
  * @param {Object} queryFilters URL query value for filters
  * @param {Object} profile definition of the profile being queried
  */
@@ -260,6 +261,8 @@ function executeQueryCountOnly(profile, req, res) {
 
     const queryParams = getQueryParams(req, profile);
 
+    validateQueryParams(queryParams, profile);
+
     parseCriteria(query, profile, queryParams, true);
 
     query
@@ -268,11 +271,11 @@ function executeQueryCountOnly(profile, req, res) {
         log.error(
           `Failed to get count from the "${profile.tableName}" table...`
         );
-        res.status(500).send("Error! " + error);
+        res.status(500).json(error);
       });
   } catch (error) {
     log.error(`Failed to get count from the "${profile.tableName}" table...`);
-    return res.status(error.code ?? 500).send(`Error! ${error.message}`);
+    return res.status(error.code ?? 500).json(error);
   }
 }
 
