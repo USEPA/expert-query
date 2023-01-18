@@ -148,7 +148,7 @@ async function executeQuery(profile, req, res) {
   try {
     const query = knex.withSchema(req.activeSchema).from(profile.tableName);
 
-    const queryParams = getQueryParams(req, profile);
+    const queryParams = getQueryParams(req);
 
     validateQueryParams(queryParams, profile);
 
@@ -249,7 +249,7 @@ function executeQueryCountOnly(profile, req, res) {
       .from(profile.tableName)
       .first();
 
-    const queryParams = getQueryParams(req, profile);
+    const queryParams = getQueryParams(req);
 
     validateQueryParams(queryParams, profile);
 
