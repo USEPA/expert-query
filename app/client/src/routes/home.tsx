@@ -49,7 +49,6 @@ const dynamicOptionLimit = 20;
 const staticOptionLimit = 100;
 
 const configFields = ['format'];
-const sourceFields = ['locationTypeCode', 'organizationType'];
 const multiOptionFields = getMultiOptionFields(allFields);
 const singleOptionFields = getSingleOptionFields(allFields);
 const dateFields = getDateFields(allFields);
@@ -494,11 +493,19 @@ async function getUrlInputs(
   return { initial: newState, errors };
 }
 
+// Utility
+function isEmpty<T>(
+  v: T | null | undefined | [] | {},
+): v is null | undefined | [] | {} {
+  return !isNotEmpty(v);
+}
+
 // Type narrowing
 function isMultiOptionField(field: string): field is MultiOptionField {
   return (multiOptionFields as string[]).includes(field);
 }
 
+// Type predicate, negation is used to narrow to type `T`
 function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
   if (v === null || v === undefined || v === '') return false;
   if (Array.isArray(v) && v.length === 0) return false;
@@ -880,21 +887,13 @@ function useUrlQueryParams({
 
   // Update URL when inputs change
   useEffect(() => {
-    if (!parametersLoaded) return;
+    if (!profile || !parametersLoaded) return;
 
     // Get selected parameters, including multiselectable fields
     const newUrlQueryParams: UrlQueryState = {};
     Object.entries(inputState).forEach(
       ([field, value]: [string, InputState[keyof InputState]]) => {
-        if (
-          value == null ||
-          value === '' ||
-          (Array.isArray(value) && !value.length)
-        )
-          return;
-
-        // Don't include source fields
-        if (sourceFields.includes(field)) return;
+        if (isEmpty(value)) return;
 
         // Extract 'value' field from Option types
         const flattenedValue = getInputValue(value);
@@ -904,7 +903,13 @@ function useUrlQueryParams({
             ? fromIsoDateString(flattenedValue)
             : flattenedValue;
 
-        if (formattedValue) newUrlQueryParams[field] = formattedValue;
+        const profileFields = profiles[profile].fields as readonly string[];
+
+        if (
+          formattedValue &&
+          (configFields.includes(field) || profileFields.includes(field))
+        )
+          newUrlQueryParams[field] = formattedValue;
       },
     );
 
