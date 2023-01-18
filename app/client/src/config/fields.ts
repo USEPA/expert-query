@@ -169,7 +169,6 @@ export default [
     domain: 'cycleScheduledForTmdl',
     boundary: 'high',
   },
-  { key: 'dataProfile', label: 'Data Profile', type: 'select' },
   { key: 'delisted', label: 'Delisted', type: 'multiselect' },
   { key: 'delistedReason', label: 'Delisted Reason', type: 'multiselect' },
   { key: 'epaIrCategory', label: 'EPA IR Category', type: 'multiselect' },
@@ -204,7 +203,7 @@ export default [
     key: 'locationText',
     label: 'Location Text',
     type: 'multiselect',
-    context: 'locationTypeCode',
+    source: 'locationTypeCode',
   },
   { key: 'locationTypeCode', label: 'Location Type Code', type: 'select' },
   {
@@ -250,7 +249,7 @@ export default [
     key: 'organizationId',
     label: 'Organization ID',
     type: 'multiselect',
-    context: 'organizationType',
+    source: 'organizationType',
   },
   {
     key: 'organizationName',
