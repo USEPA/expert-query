@@ -11,6 +11,20 @@ describe("CopyBox", () => {
       ? `${location.protocol}//${location.hostname}:3000`
       : window.location.origin;
 
+  const grantPermissions = () => {
+    cy.wrap(
+      Cypress.automation("remote:debugger:protocol", {
+        command: "Browser.grantPermissions",
+        params: {
+          permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"],
+          // make the permission tighter by allowing the current origin only
+          // like "http://localhost:3000"
+          origin: window.location.origin,
+        },
+      })
+    );
+  };
+
   it("Verify copy box is available", () => {
     cy.findByTestId("current-query-copy-box-container").should("exist");
     cy.findByTestId("api-query-copy-box-container").should("exist");
@@ -36,30 +50,40 @@ describe("CopyBox", () => {
 
   // electron browser management is not supported. at Debugger.webContents.debugger.sendCommand
   // https://docs.cypress.io/guides/guides/cross-browser-testing#Running-Specific-Tests-by-Browser
-  it("Verify copy box copy item", { browser: "!electron" }, () => {
-    cy.wrap(
-      Cypress.automation("remote:debugger:protocol", {
-        command: "Browser.grantPermissions",
-        params: {
-          permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"],
-          // make the permission tighter by allowing the current origin only
-          // like "http://localhost:3000"
-          origin: window.location.origin,
-        },
-      })
-    );
-    cy.wait(1000);
-    cy.findAllByRole("button", { name: "Copy content" }).first().click();
-    cy.window().then(async (win) => {
-      const text = await win.navigator.clipboard.readText();
-      expect(text).to.equal(
-        `${origin}/attains/#dataProfile=actions&format=csv`
+  it(
+    "Verify copy box  Current Query copyed item",
+    { browser: "!electron" },
+    () => {
+      grantPermissions();
+      cy.wait(1000);
+      cy.findAllByRole("button", { name: "Copy content" }).first().click();
+      cy.clipboardValue(`${origin}/attains/#dataProfile=actions&format=csv`);
+    }
+  );
+
+  it(
+    "Verify copy box Actions API Query copyed item",
+    { browser: "!electron" },
+    () => {
+      grantPermissions();
+      cy.wait(1000);
+      cy.findAllByRole("button", { name: "Copy content" }).eq(1).click();
+      cy.clipboardValue(`${origin}/attains/data/actions?format=csv`);
+    }
+  );
+
+  it(
+    "Verify copy box Actions cURL copyed item",
+    { browser: "!electron" },
+    () => {
+      grantPermissions();
+      cy.wait(1000);
+      cy.findAllByRole("button", { name: "Copy content" }).last().click();
+      cy.clipboardValue(
+        `curl -X POST --json ${JSON.stringify(
+          '{"filters":{},"options":{"format":"csv"}}'
+        )} ${origin}/attains/data/actions`
       );
-    });
-  });
-
-  //TODO :update all 3 copy boxes || Currently it is only testing the first copy box.
+    }
+  );
 });
-
-
-

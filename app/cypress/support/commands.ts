@@ -35,6 +35,7 @@ declare global {
        */
       selectProfile(profile: string): Chainable<Element>;
       selectOption(id: string, option: string): Chainable<Element>;
+      clipboardValue(value:string):Chainable<Element>
     }
   }
 }
@@ -66,3 +67,11 @@ Cypress.Commands.add("selectOption", (id: string, option: string) => {
     timeout: 150000,
   });
 });
+
+Cypress.Commands.add('clipboardValue', (value:string) => {
+  cy.window().then(win => {
+    win.navigator.clipboard.readText().then(text => {
+      expect(text).to.eq(value)
+    })
+  })
+})

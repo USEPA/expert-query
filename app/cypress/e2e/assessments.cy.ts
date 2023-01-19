@@ -1,4 +1,4 @@
-describe("CopyBox with profile Assessments", () => {
+describe("Data Profile Assessments", () => {
   beforeEach(() => {
     cy.visit("/");
     cy.selectProfile("Assessments");
