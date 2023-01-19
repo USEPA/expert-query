@@ -1,8 +1,4 @@
-import {
-  createPipeline as innerCreatePipeline,
-  extract as innerExtract,
-  transformToZip,
-} from './materializedViewsExtract.js';
+import { extract as innerExtract } from './materializedViewsExtract.js';
 import pgPromise from 'pg-promise';
 
 const pgp = pgPromise({ capSQL: true });
@@ -52,11 +48,7 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   );
 }
 
-export function createPipeline() {
-  return innerCreatePipeline(tableName);
-}
-
-export async function transform(data, pipeline, first) {
+export async function transform(data, first) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({
@@ -71,8 +63,5 @@ export async function transform(data, pipeline, first) {
       state: datum.state,
     });
   });
-
-  await transformToZip(rows, pipeline, first);
-
   return pgp.helpers.insert(rows, insertColumns, tableName);
 }

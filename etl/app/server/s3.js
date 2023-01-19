@@ -241,7 +241,7 @@ export async function syncDomainValues(s3Config) {
 
     await updateEtlStatus(pool, 'domain_values', 'success');
   } catch (err) {
-    console.error(`Sync Domain Values failed! ${err}`);
+    log.error(`Sync Domain Values failed! ${err}`);
     await updateEtlStatus(pool, 'domain_values', 'failed');
   } finally {
     endConnPool(pool);
@@ -495,4 +495,30 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
   } catch (err) {
     log.warn(`Error deleting directory from "${directory}": ${err}`);
   }
+}
+
+export async function archiveNationalDownloads(schemaName) {
+  if (schemaName) {
+    const subFolder = schemaName.replace('schema_', '');
+    log.info(`Start copying "latest" to "${subFolder}"`);
+    await copyDirectory({
+      contentType: 'application/gzip',
+      source: 'national-downloads/latest',
+      destination: `national-downloads/${subFolder}`,
+    });
+    log.info(`Finished copying "latest" to "${subFolder}"`);
+  } else {
+    deleteDirectory({
+      directory: 'national-downloads/latest',
+      dirsToIgnore: [],
+    });
+  }
+
+  log.info('Start copying "new" to "latest"');
+  await copyDirectory({
+    contentType: 'application/gzip',
+    source: 'national-downloads/new',
+    destination: `national-downloads/latest`,
+  });
+  log.info('Finished copying "new" to "latest"');
 }

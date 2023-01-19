@@ -1,13 +1,362 @@
+import Excel from 'exceljs';
+import { createWriteStream, mkdirSync } from 'fs';
+import path, { resolve } from 'path';
 import pg from 'pg';
+import QueryStream from 'pg-query-stream';
 import { setTimeout } from 'timers/promises';
+import { fileURLToPath } from 'url';
+import util from 'util';
+import zlib from 'zlib';
+// utils
 import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
+import StreamingService from './utilities/streamingService.js';
 import * as profiles from './profiles/index.js';
-import { copyDirectory, deleteDirectory } from './s3.js';
+import {
+  archiveNationalDownloads,
+  createS3Stream,
+  deleteDirectory,
+} from './s3.js';
 
 const { Client, Pool } = pg;
+const setImmediatePromise = util.promisify(setImmediate);
 
 const environment = getEnvironment();
+
+const mapping = {
+  actions: {
+    tableName: 'actions',
+    idColumn: 'id',
+    columns: [
+      { name: 'id', alias: 'id' },
+      { name: 'actionagency', alias: 'actionAgency' },
+      { name: 'actionid', alias: 'actionId' },
+      { name: 'actionname', alias: 'actionName' },
+      { name: 'actiontype', alias: 'actionType' },
+      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
+      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      {
+        name: 'completiondate',
+        alias: 'completionDate',
+        lowParam: 'completionDateLo',
+        highParam: 'completionDateHi',
+        type: 'timestamptz',
+      },
+      { name: 'includeinmeasure', alias: 'includeInMeasure' },
+      { name: 'inindiancountry', alias: 'inIndianCountry' },
+      { name: 'locationdescription', alias: 'locationDescription' },
+      { name: 'organizationid', alias: 'organizationId' },
+      { name: 'organizationname', alias: 'organizationName' },
+      { name: 'organizationtype', alias: 'organizationType' },
+      { name: 'parameter', alias: 'parameter' },
+      { name: 'region', alias: 'region' },
+      { name: 'state', alias: 'state' },
+      { name: 'watersize', alias: 'waterSize' },
+      { name: 'watersizeunits', alias: 'waterSizeUnits' },
+      { name: 'watertype', alias: 'waterType' },
+    ],
+  },
+  assessments: {
+    tableName: 'assessments',
+    idColumn: 'id',
+    columns: [
+      { name: 'id', alias: 'id' },
+      {
+        name: 'alternatelistingidentifier',
+        alias: 'alternateListingIdentifier',
+      },
+      { name: 'assessmentbasis', alias: 'assessmentBasis' },
+      {
+        name: 'assessmentdate',
+        alias: 'assessmentDate',
+        lowParam: 'assessmentDateLo',
+        highParam: 'assessmentDateHi',
+        type: 'timestamptz',
+      },
+      { name: 'assessmentmethods', alias: 'assessmentMethods' },
+      { name: 'assessmenttypes', alias: 'assessmentTypes' },
+      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
+      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
+      { name: 'associatedactionagency', alias: 'associatedActionAgency' },
+      { name: 'associatedactionid', alias: 'associatedActionId' },
+      { name: 'associatedactionname', alias: 'associatedActionName' },
+      { name: 'associatedactionstatus', alias: 'associatedActionStatus' },
+      { name: 'associatedactiontype', alias: 'associatedActionType' },
+      {
+        name: 'consentdecreecycle',
+        alias: 'consentDecreeCycle',
+        lowParam: 'consentDecreeCycleLo',
+        highParam: 'consentDecreeCycleHi',
+      },
+      { name: 'cwa303dpriorityranking', alias: 'cwa303dPriorityRanking' },
+      {
+        name: 'cycleexpectedtoattain',
+        alias: 'cycleExpectedToAttain',
+        lowParam: 'cycleExpectedToAttainLo',
+        highParam: 'cycleExpectedToAttainHi',
+      },
+      {
+        name: 'cyclefirstlisted',
+        alias: 'cycleFirstListed',
+        lowParam: 'cycleFirstListedLo',
+        highParam: 'cycleFirstListedHi',
+      },
+      {
+        name: 'cyclelastassessed',
+        alias: 'cycleLastAssessed',
+        lowParam: 'cycleLastAssessedLo',
+        highParam: 'cycleLastAssessedHi',
+      },
+      {
+        name: 'cyclescheduledfortmdl',
+        alias: 'cycleScheduledForTmdl',
+        lowParam: 'cycleScheduledForTmdlLo',
+        highParam: 'cycleScheduledForTmdlHi',
+      },
+      { name: 'delisted', alias: 'delisted' },
+      { name: 'delistedreason', alias: 'delistedReason' },
+      { name: 'epaircategory', alias: 'epaIrCategory' },
+      { name: 'locationdescription', alias: 'locationDescription' },
+      {
+        name: 'monitoringenddate',
+        alias: 'monitoringEndDate',
+        lowParam: 'monitoringEndDateLo',
+        highParam: 'monitoringEndDateHi',
+        type: 'timestamptz',
+      },
+      {
+        name: 'monitoringstartdate',
+        alias: 'monitoringStartDate',
+        lowParam: 'monitoringStartDateLo',
+        highParam: 'monitoringStartDateHi',
+        type: 'timestamptz',
+      },
+      { name: 'organizationid', alias: 'organizationId' },
+      { name: 'organizationname', alias: 'organizationName' },
+      { name: 'organizationtype', alias: 'organizationType' },
+      { name: 'overallstatus', alias: 'overallStatus' },
+      { name: 'parameterattainment', alias: 'parameterAttainment' },
+      { name: 'parametergroup', alias: 'parameterGroup' },
+      { name: 'parameterircategory', alias: 'parameterIrCategory' },
+      { name: 'parametername', alias: 'parameterName' },
+      { name: 'parameterstateircategory', alias: 'parameterStateIrCategory' },
+      { name: 'parameterstatus', alias: 'parameterStatus' },
+      { name: 'pollutantindicator', alias: 'pollutantIndicator' },
+      { name: 'region', alias: 'region' },
+      {
+        name: 'reportingcycle',
+        alias: 'reportingCycle',
+        lowParam: 'reportingCycleLo',
+        highParam: 'reportingCycleHi',
+      },
+      {
+        name: 'seasonenddate',
+        alias: 'seasonEndDate',
+        lowParam: 'seasonEndDateLo',
+        highParam: 'seasonEndDateHi',
+        type: 'timestamptz',
+      },
+      {
+        name: 'seasonstartdate',
+        alias: 'seasonStartDate',
+        lowParam: 'seasonStartDateLo',
+        highParam: 'seasonStartDateHi',
+        type: 'timestamptz',
+      },
+      { name: 'sizesource', alias: 'sizeSource' },
+      { name: 'sourcescale', alias: 'sourceScale' },
+      { name: 'state', alias: 'state' },
+      { name: 'stateircategory', alias: 'stateIrCategory' },
+      { name: 'useclassname', alias: 'useClassName' },
+      { name: 'usegroup', alias: 'useGroup' },
+      { name: 'useircategory', alias: 'useIrCategory' },
+      { name: 'usename', alias: 'useName' },
+      { name: 'usestateircategory', alias: 'useStateIrCategory' },
+      { name: 'usesupport', alias: 'useSupport' },
+      { name: 'vision303dpriority', alias: 'vision303dPriority' },
+      { name: 'watersize', alias: 'waterSize' },
+      { name: 'watersizeunits', alias: 'waterSizeUnits' },
+      { name: 'watertype', alias: 'waterType' },
+    ],
+  },
+  assessmentUnits: {
+    tableName: 'assessment_units',
+    idColumn: 'id',
+    columns: [
+      { name: 'id', alias: 'id' },
+      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
+      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      { name: 'assessmentunitstate', alias: 'assessmentUnitState' },
+      { name: 'locationdescription', alias: 'locationDescription' },
+      { name: 'locationtext', alias: 'locationText' },
+      { name: 'locationtypecode', alias: 'locationTypeCode' },
+      { name: 'organizationid', alias: 'organizationId' },
+      { name: 'organizationname', alias: 'organizationName' },
+      { name: 'organizationtype', alias: 'organizationType' },
+      { name: 'region', alias: 'region' },
+      {
+        name: 'reportingcycle',
+        alias: 'reportingCycle',
+        lowParam: 'reportingCycleLo',
+        highParam: 'reportingCycleHi',
+      },
+      { name: 'sizesource', alias: 'sizeSource' },
+      { name: 'sourcescale', alias: 'sourceScale' },
+      { name: 'state', alias: 'state' },
+      { name: 'useclassname', alias: 'useClassName' },
+      { name: 'watersize', alias: 'waterSize' },
+      { name: 'watersizeunits', alias: 'waterSizeUnits' },
+      { name: 'watertype', alias: 'waterType' },
+    ],
+  },
+  assessmentUnitsMonitoringLocations: {
+    tableName: 'assessment_units_monitoring_locations',
+    idColumn: 'id',
+    columns: [
+      { name: 'id', alias: 'id' },
+      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
+      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
+      { name: 'locationdescription', alias: 'locationDescription' },
+      {
+        name: 'monitoringlocationdatalink',
+        alias: 'monitoringLocationDataLink',
+      },
+      { name: 'monitoringlocationid', alias: 'monitoringLocationId' },
+      { name: 'monitoringlocationorgid', alias: 'monitoringLocationOrgId' },
+      { name: 'organizationid', alias: 'organizationId' },
+      { name: 'organizationname', alias: 'organizationName' },
+      { name: 'organizationtype', alias: 'organizationType' },
+      { name: 'region', alias: 'region' },
+      {
+        name: 'reportingcycle',
+        alias: 'reportingCycle',
+        lowParam: 'reportingCycleLo',
+        highParam: 'reportingCycleHi',
+      },
+      { name: 'sizesource', alias: 'sizeSource' },
+      { name: 'sourcescale', alias: 'sourceScale' },
+      { name: 'state', alias: 'state' },
+      { name: 'useclassname', alias: 'useClassName' },
+      { name: 'watersize', alias: 'waterSize' },
+      { name: 'watersizeunits', alias: 'waterSizeUnits' },
+      { name: 'watertype', alias: 'waterType' },
+    ],
+  },
+  catchmentCorrespondence: {
+    tableName: 'catchment_correspondence',
+    idColumn: 'id',
+    columns: [
+      { name: 'id', alias: 'id' },
+      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
+      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      { name: 'catchmentnhdplusid', alias: 'catchmentNhdPlusId' },
+      { name: 'organizationid', alias: 'organizationId' },
+      { name: 'organizationname', alias: 'organizationName' },
+      { name: 'organizationtype', alias: 'organizationType' },
+      { name: 'region', alias: 'region' },
+      {
+        name: 'reportingcycle',
+        alias: 'reportingCycle',
+        lowParam: 'reportingCycleLo',
+        highParam: 'reportingCycleHi',
+      },
+      { name: 'state', alias: 'state' },
+    ],
+  },
+  sources: {
+    tableName: 'sources',
+    idColumn: 'id',
+    columns: [
+      { name: 'id', alias: 'id' },
+      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
+      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      { name: 'causename', alias: 'causeName' },
+      { name: 'confirmed', alias: 'confirmed' },
+      { name: 'epaircategory', alias: 'epaIrCategory' },
+      { name: 'locationdescription', alias: 'locationDescription' },
+      { name: 'organizationid', alias: 'organizationId' },
+      { name: 'organizationname', alias: 'organizationName' },
+      { name: 'organizationtype', alias: 'organizationType' },
+      { name: 'overallstatus', alias: 'overallStatus' },
+      { name: 'parametergroup', alias: 'parameterGroup' },
+      { name: 'region', alias: 'region' },
+      {
+        name: 'reportingcycle',
+        alias: 'reportingCycle',
+        lowParam: 'reportingCycleLo',
+        highParam: 'reportingCycleHi',
+      },
+      { name: 'sourcename', alias: 'sourceName' },
+      { name: 'state', alias: 'state' },
+      { name: 'stateircategory', alias: 'stateIrCategory' },
+      { name: 'watersize', alias: 'waterSize' },
+      { name: 'watersizeunits', alias: 'waterSizeUnits' },
+      { name: 'watertype', alias: 'waterType' },
+    ],
+  },
+  tmdl: {
+    tableName: 'tmdl',
+    idColumn: 'id',
+    columns: [
+      { name: 'id', alias: 'id' },
+      { name: 'actionagency', alias: 'actionAgency' },
+      { name: 'actionid', alias: 'actionId' },
+      { name: 'actionname', alias: 'actionName' },
+      { name: 'addressedparameter', alias: 'addressedParameter' },
+      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
+      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      {
+        name: 'completiondate',
+        alias: 'completionDate',
+        lowParam: 'completionDateLo',
+        highParam: 'completionDateHi',
+        type: 'timestamptz',
+      },
+      { name: 'explicitmarginofsafety', alias: 'explicitMarginOfSafety' },
+      {
+        name: 'fiscalyearestablished',
+        alias: 'fiscalYearEstablished',
+        lowParam: 'fiscalYearEstablishedLo',
+        highParam: 'fiscalYearEstablishedHi',
+      },
+      { name: 'implicitmarginofsafety', alias: 'implicitMarginOfSafety' },
+      { name: 'includeinmeasure', alias: 'includeInMeasure' },
+      { name: 'inindiancountry', alias: 'inIndianCountry' },
+      { name: 'loadallocation', alias: 'loadAllocation' },
+      { name: 'loadallocationunits', alias: 'loadAllocationUnits' },
+      { name: 'locationdescription', alias: 'locationDescription' },
+      { name: 'npdesidentifier', alias: 'npdesIdentifier' },
+      { name: 'organizationid', alias: 'organizationId' },
+      { name: 'organizationname', alias: 'organizationName' },
+      { name: 'organizationtype', alias: 'organizationType' },
+      { name: 'otheridentifier', alias: 'otherIdentifier' },
+      { name: 'pollutant', alias: 'pollutant' },
+      { name: 'region', alias: 'region' },
+      {
+        name: 'reportingcycle',
+        alias: 'reportingCycle',
+        lowParam: 'reportingCycleLo',
+        highParam: 'reportingCycleHi',
+      },
+      { name: 'sourcetype', alias: 'sourceType' },
+      { name: 'state', alias: 'state' },
+      {
+        name: 'tmdldate',
+        alias: 'tmdlDate',
+        lowParam: 'tmdlDateLo',
+        highParam: 'tmdlDateHi',
+        type: 'timestamptz',
+      },
+      { name: 'tmdlendpoint', alias: 'tmdlEndPoint' },
+      { name: 'wasteloadallocation', alias: 'wasteLoadAllocation' },
+      { name: 'watersize', alias: 'waterSize' },
+      { name: 'watersizeunits', alias: 'waterSizeUnits' },
+      { name: 'watertype', alias: 'waterType' },
+    ],
+  },
+};
 
 let database_host = '';
 let database_user = '';
@@ -396,7 +745,7 @@ export async function runJob(s3Config) {
   }
 }
 
-async function getActiveSchema(pool) {
+export async function getActiveSchema(pool) {
   const schemas = await pool
     .query(
       'SELECT schema_name FROM logging.etl_schemas WHERE active = true ORDER BY creation_date DESC',
@@ -408,26 +757,6 @@ async function getActiveSchema(pool) {
   if (!schemas?.rowCount) return null;
 
   return schemas.rows[0].schema_name;
-}
-
-async function archiveNationalDownloads(pool, schemaName) {
-  const subFolder = schemaName.replace('schema_', '');
-
-  log.info(`Start copying "latest" to "${subFolder}"`);
-  await copyDirectory({
-    contentType: 'application/gzip',
-    source: 'national-downloads/latest',
-    destination: `national-downloads/${subFolder}`,
-  });
-  log.info(`Finished copying "latest" to "${subFolder}"`);
-
-  log.info('Start copying "new" to "latest"');
-  await copyDirectory({
-    contentType: 'application/gzip',
-    source: 'national-downloads/new',
-    destination: `national-downloads/latest`,
-  });
-  log.info('Finished copying "new" to "latest"');
 }
 
 export async function runLoad(pool, s3Config) {
@@ -451,7 +780,9 @@ export async function runLoad(pool, s3Config) {
 
     await transferSchema(pool, schemaName, schemaId);
 
-    if (lastSchemaName) await archiveNationalDownloads(pool, lastSchemaName);
+    await streamNationalDownloads(pool, schemaName);
+
+    await archiveNationalDownloads(lastSchemaName);
 
     log.info('Tables updated');
     await logEtlLoadEnd(pool, logId);
@@ -558,14 +889,7 @@ export async function trimNationalDownloads(pool) {
 
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  {
-    createQuery,
-    createPipeline,
-    extract,
-    maxChunksOverride,
-    tableName,
-    transform,
-  },
+  { createQuery, extract, maxChunksOverride, tableName, transform },
   s3Config,
 ) {
   return async function (client, schemaName) {
@@ -586,22 +910,15 @@ function getProfileEtl(
       log.info(`Setting ${tableName} to unlogged`);
       await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
       let res = await extract(s3Config);
-      const pipeline = createPipeline();
       let chunksProcessed = 0;
       const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
       while (res.data !== null && (!maxChunks || chunksProcessed < maxChunks)) {
-        const query = await transform(
-          res.data,
-          pipeline,
-          chunksProcessed === 0,
-        );
+        const query = await transform(res.data, chunksProcessed === 0);
         await client.query(query);
         log.info(`Next record offset for table ${tableName}: ${res.next}`);
         res = await extract(s3Config, res.next);
         chunksProcessed += 1;
       }
-      await finishNationalUploads(pipeline);
-      log.info(`National uploads for table ${tableName} uploaded`);
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
@@ -629,4 +946,193 @@ async function finishNationalUploads(pipeline) {
     pipeline.tsv.fileStream,
     pipeline.xlsx.fileStream,
   ]);
+}
+
+async function streamNationalDownloadSingleProfile(
+  pool,
+  activeSchema,
+  profile,
+) {
+  // output types csv, tab-separated, Excel, or JSON
+  try {
+    const tableName = profile.tableName;
+
+    const selectText = profile.columns
+      .map((col) =>
+        col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
+      )
+      .join(', ');
+
+    // build the db query stream
+    const query = new QueryStream(
+      `SELECT ${selectText} FROM ${activeSchema}.${tableName}`,
+      null,
+      {
+        batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
+        highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
+      },
+    );
+    const client = await pool.connect();
+    const stream = client.query(query);
+
+    // create zip streams
+    const outputJson = zlib.createGzip();
+    const outputCsv = zlib.createGzip();
+    const outputTsv = zlib.createGzip();
+    const outputXlsx = zlib.createGzip();
+
+    const isLocal = environment.isLocal;
+
+    // create output streams
+    let writeStreamJson, writeStreamCsv, writeStreamTsv, writeStreamXlsx;
+    if (isLocal) {
+      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      const subFolderPath = resolve(
+        __dirname,
+        `../../../app/server/app/content-etl/national-downloads/new`,
+      );
+
+      // create the sub folder if it doesn't already exist
+      mkdirSync(subFolderPath, { recursive: true });
+
+      writeStreamJson = createWriteStream(
+        `${subFolderPath}/${tableName}.json.gz`,
+      );
+      writeStreamCsv = createWriteStream(
+        `${subFolderPath}/${tableName}.csv.gz`,
+      );
+      writeStreamTsv = createWriteStream(
+        `${subFolderPath}/${tableName}.tsv.gz`,
+      );
+      writeStreamXlsx = createWriteStream(
+        `${subFolderPath}/${tableName}.xlsx.gz`,
+      );
+
+      outputJson.pipe(writeStreamJson);
+      outputCsv.pipe(writeStreamCsv);
+      outputTsv.pipe(writeStreamTsv);
+      outputXlsx.pipe(writeStreamXlsx);
+    } else {
+      writeStreamJson = createS3Stream({
+        contentType: 'application/gzip',
+        filePath: `national-downloads/new/${tableName}.json.gz`,
+        stream: outputJson,
+      });
+
+      writeStreamCsv = createS3Stream({
+        contentType: 'application/gzip',
+        filePath: `national-downloads/new/${tableName}.csv.gz`,
+        stream: outputCsv,
+      });
+
+      writeStreamTsv = createS3Stream({
+        contentType: 'application/gzip',
+        filePath: `national-downloads/new/${tableName}.tsv.gz`,
+        stream: outputTsv,
+      });
+
+      writeStreamXlsx = createS3Stream({
+        contentType: 'application/gzip',
+        filePath: `national-downloads/new/${tableName}.xlsx.gz`,
+        stream: outputXlsx,
+      });
+    }
+
+    // create workbook
+    const workbook = new Excel.stream.xlsx.WorkbookWriter({
+      stream: outputXlsx,
+      useStyles: true,
+    });
+
+    const worksheet = workbook.addWorksheet('data');
+
+    // start streaming/transforming the data into the S3 bucket
+    StreamingService.streamResponse(outputCsv, stream, 'csv');
+    StreamingService.streamResponse(outputTsv, stream, 'tsv');
+    StreamingService.streamResponse(outputJson, stream, 'json');
+    StreamingService.streamResponse(outputXlsx, stream, 'xlsx', {
+      workbook,
+      worksheet,
+    });
+
+    // get the promises for verifying the streaming operation is complete
+    const csvPromise = !isLocal
+      ? writeStreamCsv
+      : new Promise((resolve, reject) => {
+          outputCsv.on('end', () => {
+            log.info(
+              `Finished building national download for ${tableName}.csv.gz`,
+            );
+            resolve();
+          });
+          outputCsv.on('error', reject);
+        });
+    const tsvPromise = !isLocal
+      ? writeStreamTsv
+      : new Promise((resolve, reject) => {
+          outputTsv.on('end', () => {
+            log.info(
+              `Finished building national download for ${tableName}.tsv.gz`,
+            );
+            resolve();
+          });
+          outputTsv.on('error', reject);
+        });
+    const jsonPromise = !isLocal
+      ? writeStreamJson
+      : new Promise((resolve, reject) => {
+          outputJson.on('end', () => {
+            log.info(
+              `Finished building national download for ${tableName}.json.gz`,
+            );
+            resolve();
+          });
+          outputJson.on('error', reject);
+        });
+    const xlsxPromise = !isLocal
+      ? writeStreamXlsx
+      : new Promise((resolve, reject) => {
+          outputXlsx.on('end', () => {
+            log.info(
+              `Finished building national download for ${tableName}.xlsx.gz`,
+            );
+            resolve();
+          });
+          outputXlsx.on('error', reject);
+        });
+
+    // return a promise for all of the streams and the db connection client,
+    // so we can close the connection later
+    return {
+      promise: Promise.all([csvPromise, tsvPromise, jsonPromise, xlsxPromise]),
+      client,
+    };
+  } catch (error) {
+    log.error(
+      `Failed to build national download from the "${profile.tableName}" table...`,
+      error,
+    );
+  }
+}
+
+export async function streamNationalDownloads(pool, activeSchema) {
+  const tables = Object.values(mapping);
+
+  // fire off the streams and keep track of the db connection clients
+  const promises = [];
+  const clients = [];
+  for (const table of tables) {
+    const { promise, client } = await streamNationalDownloadSingleProfile(
+      pool,
+      activeSchema,
+      table,
+    );
+    promises.push(promise);
+    clients.push(client);
+  }
+
+  // close all of the db connections
+  clients.forEach((client) => client.release());
+
+  return Promise.all(promises);
 }
