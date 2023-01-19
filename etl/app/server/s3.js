@@ -508,7 +508,10 @@ export async function archiveNationalDownloads(schemaName) {
     });
     log.info(`Finished copying "latest" to "${subFolder}"`);
   } else {
-    deleteDirectory('national-downloads/latest', []);
+    deleteDirectory({
+      directory: 'national-downloads/latest',
+      dirsToIgnore: [],
+    });
   }
 
   log.info('Start copying "new" to "latest"');
