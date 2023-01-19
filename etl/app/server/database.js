@@ -1117,7 +1117,7 @@ async function streamNationalDownloadSingleProfile(
 
 export async function streamNationalDownloads(pool, activeSchema) {
   // Increases the listeners to handle streaming all of the data
-  process.setMaxListeners(50);
+  process.setMaxListeners(0);
 
   const tables = Object.values(mapping);
 
