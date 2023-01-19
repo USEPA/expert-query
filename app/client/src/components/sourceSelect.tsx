@@ -161,7 +161,7 @@ export default function SourceSelect({
           setSourcesVisible(false);
         }
       }}
-      className="display-flex margin-top-1 position-relative"
+      className="display-flex position-relative"
     >
       {allSources && (
         <button

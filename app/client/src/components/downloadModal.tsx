@@ -9,23 +9,23 @@ import { postData } from 'config';
 // styles
 import '@reach/dialog/styles.css';
 
-type Props = {
+type Props<D extends PostData> = {
   downloadStatus: Status;
   filename: string | null;
   onClose: () => void;
-  queryData: PostData;
+  queryData: D;
   queryUrl: string | null;
   setDownloadStatus: (status: Status) => void;
 };
 
-export default function DownloadModal({
+export default function DownloadModal<D extends PostData>({
   downloadStatus,
   filename,
   onClose,
   queryData,
   queryUrl,
   setDownloadStatus,
-}: Props) {
+}: Props<D>) {
   const [count, setCount] = useState<number | null>(null);
   const [countStatus, setCountStatus] = useState<Status>('idle');
 

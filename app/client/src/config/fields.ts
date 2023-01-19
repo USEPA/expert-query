@@ -1,4 +1,4 @@
-export default [
+export const filterFields = [
   { key: 'actionAgency', label: 'Action Agency', type: 'multiselect' },
   { key: 'actionId', label: 'Action ID', type: 'multiselect' },
   { key: 'actionName', label: 'Action Name', type: 'multiselect' },
@@ -191,7 +191,6 @@ export default [
     domain: 'fiscalYearEstablished',
     boundary: 'high',
   },
-  { key: 'format', label: 'File Format', type: 'radio', default: 'csv' },
   {
     key: 'implicitMarginOfSafety',
     label: 'Implicit Margin of Safety',
@@ -203,7 +202,7 @@ export default [
     key: 'locationText',
     label: 'Location Text',
     type: 'multiselect',
-    source: 'locationTypeCode',
+    source: 'locationText_locationTypeCode',
   },
   { key: 'locationTypeCode', label: 'Location Type Code', type: 'select' },
   {
@@ -249,7 +248,7 @@ export default [
     key: 'organizationId',
     label: 'Organization ID',
     type: 'multiselect',
-    source: 'organizationType',
+    source: 'organizationId_organizationType',
   },
   {
     key: 'organizationName',
@@ -285,6 +284,12 @@ export default [
     type: 'multiselect',
   },
   { key: 'region', label: 'Region', type: 'multiselect' },
+  {
+    key: 'reportingCycle',
+    label: 'Reporting Cycle',
+    type: 'select',
+    default: { value: 'MAX', label: 'Latest' },
+  },
   {
     key: 'reportingCycleLo',
     label: 'Reporting Cycle',
@@ -362,4 +367,19 @@ export default [
     type: 'multiselect',
   },
   { key: 'waterType', label: 'Water Type', type: 'multiselect' },
+] as const;
+
+export const sourceFields = [
+  {
+    id: 'locationText_locationTypeCode',
+    key: 'locationTypeCode',
+    label: 'Location Type Code',
+    type: 'select',
+  },
+  {
+    id: 'organizationId_organizationType',
+    key: 'organizationType',
+    label: 'Organization Type',
+    type: 'select',
+  },
 ] as const;
