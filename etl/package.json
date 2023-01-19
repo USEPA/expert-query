@@ -27,6 +27,7 @@
     "etl_database": "node -r dotenv/config --inspect app/tasks/etlDatabase.js dotenv_config_path=./.env.local",
     "etl_domain_values": "node -r dotenv/config --inspect app/tasks/etlDomainValues.js dotenv_config_path=./.env.local",
     "etl_glossary": "node -r dotenv/config --inspect app/tasks/etlGlossary.js dotenv_config_path=./.env.local",
+    "etl_national_downloads": "node -r dotenv/config --inspect app/tasks/etlNationalDownloads.js dotenv_config_path=./.env.local",
     "start": "npm run start_local_cmd",
     "start_local_cmd": "cross-env nodemon -r dotenv/config --ignore 'app/tests' --inspect app/index.js dotenv_config_path=.env.local",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -46,7 +47,8 @@
     "node-cron": "3.0.2",
     "papaparse": "5.3.2",
     "pg": "8.8.0",
-    "pg-promise": "10.14.0"
+    "pg-promise": "10.14.0",
+    "pg-query-stream": "4.2.4"
   },
   "devDependencies": {
     "browser-sync": "2.27.10",
