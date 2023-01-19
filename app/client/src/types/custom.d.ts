@@ -73,4 +73,6 @@ type PostData = {
 
 type Primitive = string | number | boolean;
 
+type SortDirection = 'asc' | 'desc';
+
 type Status = 'idle' | 'pending' | 'failure' | 'success';

@@ -194,8 +194,8 @@ const mapping = {
       {
         name: "reportingcycle",
         alias: "reportingCycle",
-        lowParam: "reportingCycleLo",
-        highParam: "reportingCycleHi",
+        default: "latest",
+        type: "numeric",
       },
       {
         name: "seasonenddate",
@@ -245,8 +245,8 @@ const mapping = {
       {
         name: "reportingcycle",
         alias: "reportingCycle",
-        lowParam: "reportingCycleLo",
-        highParam: "reportingCycleHi",
+        default: "latest",
+        type: "numeric",
       },
       { name: "sizesource", alias: "sizeSource" },
       { name: "sourcescale", alias: "sourceScale" },
@@ -279,8 +279,8 @@ const mapping = {
       {
         name: "reportingcycle",
         alias: "reportingCycle",
-        lowParam: "reportingCycleLo",
-        highParam: "reportingCycleHi",
+        default: "latest",
+        type: "numeric",
       },
       { name: "sizesource", alias: "sizeSource" },
       { name: "sourcescale", alias: "sourceScale" },
@@ -306,8 +306,8 @@ const mapping = {
       {
         name: "reportingcycle",
         alias: "reportingCycle",
-        lowParam: "reportingCycleLo",
-        highParam: "reportingCycleHi",
+        default: "latest",
+        type: "numeric",
       },
       { name: "state", alias: "state" },
     ],
@@ -332,8 +332,8 @@ const mapping = {
       {
         name: "reportingcycle",
         alias: "reportingCycle",
-        lowParam: "reportingCycleLo",
-        highParam: "reportingCycleHi",
+        default: "latest",
+        type: "numeric",
       },
       { name: "sourcename", alias: "sourceName" },
       { name: "state", alias: "state" },
@@ -384,8 +384,8 @@ const mapping = {
       {
         name: "reportingcycle",
         alias: "reportingCycle",
-        lowParam: "reportingCycleLo",
-        highParam: "reportingCycleHi",
+        default: "latest",
+        type: "numeric",
       },
       { name: "sourcetype", alias: "sourceType" },
       { name: "state", alias: "state" },

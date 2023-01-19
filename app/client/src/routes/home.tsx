@@ -287,45 +287,68 @@ function createSourceReducer() {
 }
 
 // Filters options that require fetching values from the database
-function filterDynamicOptions(
-  profile: string,
-  fieldName: string,
-  contextField?: string | null,
-  contextValue?: Primitive | null,
-  limit?: number | null,
-) {
+function filterDynamicOptions({
+  defaultOption,
+  direction = 'asc',
+  fieldName,
+  limit,
+  profile,
+  sourceField,
+  sourceValue,
+}: {
+  defaultOption?: Option | null;
+  direction?: SortDirection;
+  fieldName: string;
+  limit?: number | null;
+  profile: string;
+  sourceField?: string | null;
+  sourceValue?: Primitive | null;
+}) {
   return async function (inputValue?: string): Promise<Array<Option>> {
-    let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}`;
+    let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}&direction=${direction}`;
     if (isNotEmpty(limit)) url += `&limit=${limit}`;
-    if (isNotEmpty(contextField) && isNotEmpty(contextValue)) {
-      url += `&${contextField}=${contextValue}`;
+    if (isNotEmpty(sourceField) && isNotEmpty(sourceValue)) {
+      url += `&${sourceField}=${sourceValue}`;
     }
     const values = await getData<Primitive[]>(url);
-    return values.map((value) => ({ label: value, value }));
+    const options = values.map((value) => ({ label: value, value }));
+    return defaultOption ? [defaultOption, ...options] : options;
   };
 }
 
 // Filters options by search input, returning a maximum number of options
-function filterOptions(
-  profile: string,
-  field: string,
-  staticOptions: StaticOptions,
-  contextField?: string | null,
-  contextValue?: Primitive | null,
-) {
+function filterOptions({
+  defaultOption,
+  field,
+  profile,
+  sortDirection,
+  sourceField,
+  sourceValue,
+  staticOptions,
+}: {
+  defaultOption?: Option | null;
+  field: string;
+  profile: string;
+  sortDirection?: SortDirection;
+  sourceField?: string | null;
+  sourceValue?: Primitive | null;
+  staticOptions: StaticOptions;
+}) {
   if (staticOptions.hasOwnProperty(field)) {
     return filterStaticOptions(
       staticOptions[field as keyof StaticOptions] ?? [],
-      contextValue,
+      sourceValue,
     );
   } else {
-    return filterDynamicOptions(
+    return filterDynamicOptions({
+      defaultOption,
+      direction: sortDirection,
       profile,
-      field,
-      contextField,
-      contextValue,
-      dynamicOptionLimit,
-    );
+      fieldName: field,
+      sourceField,
+      sourceValue,
+      limit: dynamicOptionLimit,
+    });
   }
 }
 
@@ -471,7 +494,7 @@ function getOptions(
   if (options !== null) {
     return Promise.resolve(options);
   } else {
-    return filterDynamicOptions(profile, field)();
+    return filterDynamicOptions({ profile, fieldName: field })();
   }
 }
 
@@ -732,6 +755,24 @@ function parseInitialParams(
   return [params, paramErrors];
 }
 
+function removeHash() {
+  const location = window.location;
+  console.log(location.pathname);
+  if ('pushState' in window.history)
+    window.history.replaceState(null, '', location.pathname);
+  else {
+    // Prevent scrolling by storing the page's current scroll offset
+    const scrollTop = document.body.scrollTop;
+    const scrollLeft = document.body.scrollLeft;
+
+    location.hash = '';
+
+    // Restore the scroll offset, should be flicker free
+    document.body.scrollTop = scrollTop;
+    document.body.scrollLeft = scrollLeft;
+  }
+}
+
 function setLocalStorageItem(item: string, value: string) {
   storageAvailable() && localStorage.setItem(item, value);
 }
@@ -987,7 +1028,9 @@ function useQueryParams({
       },
     );
 
-    window.location.hash = buildUrlQueryString(newFilterQueryParams);
+    if (Object.keys(newFilterQueryParams).length) {
+      window.location.hash = buildUrlQueryString(newFilterQueryParams);
+    } else removeHash();
 
     setParameters({ filters: newFilterQueryParams, options: { format } });
   }, [filterState, format, parametersLoaded, profile]);
@@ -1071,6 +1114,7 @@ export function Home() {
     filterState,
     initializeFilters,
   });
+  console.log(queryParams);
 
   const eqDataUrl =
     content.data.services?.eqDataApi || `${window.location.origin}/attains`;
@@ -1243,7 +1287,7 @@ export function QueryBuilder() {
             <CopyBox
               text={`${window.location.origin}${
                 window.location.pathname
-              }/#${buildUrlQueryString(queryParams.filters)}`}
+              }#${buildUrlQueryString(queryParams.filters)}`}
             />
             <h4>{profiles[profile].label} API Query</h4>
             <CopyBox
@@ -1304,6 +1348,7 @@ function FilterFields({
 
         switch (fieldConfig.type) {
           case 'multiselect':
+          case 'select':
             const defaultOptions = getInitialOptions(
               staticOptions,
               fieldConfig.key,
@@ -1312,6 +1357,7 @@ function FilterFields({
 
             if (
               !sourceFieldConfig &&
+              fieldConfig.type === 'multiselect' &&
               Array.isArray(defaultOptions) &&
               defaultOptions.length <= 5
             ) {
@@ -1328,12 +1374,18 @@ function FilterFields({
               ];
             }
             const selectProps = {
+              defaultOption:
+                'default' in fieldConfig ? fieldConfig.default : null,
               defaultOptions,
               filterHandler: filterHandlers[fieldConfig.key],
               filterKey: fieldConfig.key,
               filterLabel: fieldConfig.label,
               filterValue: filterState[fieldConfig.key],
               profile,
+              sortDirection:
+                'direction' in fieldConfig
+                  ? (fieldConfig.direction as SortDirection)
+                  : 'asc',
               sourceKey: sourceFieldConfig?.key ?? null,
               sourceValue: sourceFieldConfig
                 ? sourceState[sourceFieldConfig.id]
@@ -1530,19 +1582,10 @@ type SourceSelectFilterProps<
 
 function SourceSelectFilter<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
->({
-  defaultOptions,
-  filterHandler,
-  filterKey,
-  filterLabel,
-  filterValue,
-  profile,
-  sourceHandler,
-  sourceKey,
-  sourceLabel,
-  sourceValue,
-  staticOptions,
-}: SourceSelectFilterProps<F>) {
+>(props: SourceSelectFilterProps<F>) {
+  const { sourceLabel, sourceHandler, ...selectProps } = props;
+  const { profile, sourceKey, sourceValue, staticOptions } = selectProps;
+
   return (
     <SourceSelect
       label={sourceLabel}
@@ -1550,17 +1593,7 @@ function SourceSelectFilter<
       onChange={sourceHandler}
       selected={sourceValue}
     >
-      <SelectFilter
-        defaultOptions={defaultOptions}
-        filterHandler={filterHandler}
-        filterKey={filterKey}
-        filterLabel={filterLabel}
-        filterValue={filterValue}
-        profile={profile}
-        sourceKey={sourceKey}
-        sourceValue={sourceValue}
-        staticOptions={staticOptions}
-      />
+      <SelectFilter {...selectProps} />
     </SourceSelect>
   );
 }
@@ -1568,12 +1601,14 @@ function SourceSelectFilter<
 type SelectFilterProps<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 > = {
+  defaultOption?: Option | null;
   defaultOptions: boolean | readonly Option[];
   filterHandler: FilterFieldInputHandlers[F];
   filterKey: F;
   filterLabel: string;
   filterValue: FilterFieldState[F];
   profile: Profile;
+  sortDirection?: SortDirection;
   sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
   sourceValue: SourceFieldState[SourceField] | null;
   staticOptions: StaticOptions;
@@ -1582,12 +1617,14 @@ type SelectFilterProps<
 function SelectFilter<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 >({
+  defaultOption,
   defaultOptions,
   filterHandler,
   filterKey,
   filterLabel,
   filterValue,
   profile,
+  sortDirection,
   sourceKey,
   sourceValue,
   staticOptions,
@@ -1602,13 +1639,15 @@ function SelectFilter<
       key={JSON.stringify(sourceValue?.value)}
       onChange={filterHandler as any}
       defaultOptions={defaultOptions}
-      loadOptions={filterOptions(
+      loadOptions={filterOptions({
+        defaultOption,
         profile,
-        filterKey,
+        field: filterKey,
+        sortDirection,
         staticOptions,
-        sourceKey,
-        sourceValue?.value,
-      )}
+        sourceField: sourceKey,
+        sourceValue: sourceValue?.value,
+      })}
       menuPortalTarget={document.body}
       placeholder={`Select ${getArticle(
         filterLabel.split(' ')[0],

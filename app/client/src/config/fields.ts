@@ -288,21 +288,8 @@ export const filterFields = [
     key: 'reportingCycle',
     label: 'Reporting Cycle',
     type: 'select',
-    default: { value: 'MAX', label: 'Latest' },
-  },
-  {
-    key: 'reportingCycleLo',
-    label: 'Reporting Cycle',
-    type: 'year',
-    domain: 'reportingCycle',
-    boundary: 'low',
-  },
-  {
-    key: 'reportingCycleHi',
-    label: 'Reporting Cycle',
-    type: 'year',
-    domain: 'reportingCycle',
-    boundary: 'high',
+    default: { value: '', label: 'Latest' },
+    direction: 'desc',
   },
   {
     key: 'seasonEndDateLo',

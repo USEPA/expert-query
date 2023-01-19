@@ -37,6 +37,7 @@ function parseResponse(res) {
 async function queryColumnValues(profile, column, params, schema) {
   const parsedParams = {
     text: "",
+    direction: null,
     filters: {},
     limit: null,
   };
@@ -44,6 +45,7 @@ async function queryColumnValues(profile, column, params, schema) {
   Object.entries(params).forEach(([name, value]) => {
     if (name === "text") parsedParams.text = value;
     else if (name === "limit") parsedParams.limit = value;
+    else if (name === "direction") parsedParams.direction = value;
     else parsedParams.filters[name] = value;
   });
 
@@ -51,10 +53,12 @@ async function queryColumnValues(profile, column, params, schema) {
     .withSchema(schema)
     .from(profile.tableName)
     .column(column.name)
-    .whereILike(column.name, `%${parsedParams.text}%`)
     .distinctOn(column.name)
-    .orderBy(column.name, "asc")
+    .orderBy(column.name, parsedParams.direction ?? "asc")
     .select();
+
+  if (column.type !== "numeric" && column.type !== "timestamptz")
+    query.whereILike(column.name, `%${parsedParams.text}%`);
 
   if (parsedParams.limit) query.limit(parsedParams.limit);
 
