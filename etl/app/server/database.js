@@ -780,6 +780,8 @@ export async function runLoad(pool, s3Config) {
 
     await transferSchema(pool, schemaName, schemaId);
 
+    await streamNationalDownloads(pool, schemaName);
+
     await archiveNationalDownloads(lastSchemaName);
 
     log.info('Tables updated');
@@ -887,14 +889,7 @@ export async function trimNationalDownloads(pool) {
 
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  {
-    createQuery,
-    createPipeline,
-    extract,
-    maxChunksOverride,
-    tableName,
-    transform,
-  },
+  { createQuery, extract, maxChunksOverride, tableName, transform },
   s3Config,
 ) {
   return async function (client, schemaName) {
@@ -915,22 +910,15 @@ function getProfileEtl(
       log.info(`Setting ${tableName} to unlogged`);
       await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
       let res = await extract(s3Config);
-      const pipeline = createPipeline();
       let chunksProcessed = 0;
       const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
       while (res.data !== null && (!maxChunks || chunksProcessed < maxChunks)) {
-        const query = await transform(
-          res.data,
-          pipeline,
-          chunksProcessed === 0,
-        );
+        const query = await transform(res.data, chunksProcessed === 0);
         await client.query(query);
         log.info(`Next record offset for table ${tableName}: ${res.next}`);
         res = await extract(s3Config, res.next);
         chunksProcessed += 1;
       }
-      await finishNationalUploads(pipeline);
-      log.info(`National uploads for table ${tableName} uploaded`);
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
