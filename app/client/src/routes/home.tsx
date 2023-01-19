@@ -757,7 +757,6 @@ function parseInitialParams(
 
 function removeHash() {
   const location = window.location;
-  console.log(location.pathname);
   if ('pushState' in window.history)
     window.history.replaceState(null, '', location.pathname);
   else {
@@ -1114,7 +1113,6 @@ export function Home() {
     filterState,
     initializeFilters,
   });
-  console.log(queryParams);
 
   const eqDataUrl =
     content.data.services?.eqDataApi || `${window.location.origin}/attains`;
