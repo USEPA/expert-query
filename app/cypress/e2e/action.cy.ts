@@ -16,7 +16,7 @@ describe("Data Profile Action", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=actions&format=csv`
+          `${origin}/attains/actions/#format=csv`
         );
       });
   });
@@ -31,7 +31,7 @@ describe("Data Profile Action", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=actions&format=csv&actionAgency=S&actionId=10081&actionId=56325`
+          `${origin}/attains/actions/#format=csv&actionAgency=S&actionId=10081&actionId=56325`
         );
       });
   });
@@ -48,7 +48,7 @@ describe("Data Profile Action", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=actions&format=tsv&actionAgency=E&region=06&region=09`
+          `${origin}/attains/actions/#format=tsv&actionAgency=E&region=06&region=09`
         );
       });
   });
@@ -68,7 +68,7 @@ describe("Data Profile Action", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=actions&format=xlsx&actionAgency=T&assessmentUnitId=AS-10S&assessmentUnitId=AS-05S&waterType=WASH&waterType=HARBOR`
+          `${origin}/attains/actions/#format=xlsx&actionAgency=T&assessmentUnitId=AS-10S&assessmentUnitId=AS-05S&waterType=WASH&waterType=HARBOR`
         );
       });
   });
@@ -107,7 +107,7 @@ describe("Data Profile Action", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=actions&format=xlsx&actionAgency=T&actionAgency=E&actionId=10081&actionId=10817&actionName=ALDER CREEK- RUBY RIVER WATERSHED TMDL  &actionName= NELSON CREEK (HEADWATERS TO THE MOUTH - BIG DRY CREEK ARM OF FORT PECK RES) - REDWATER RIVER TPA&assessmentUnitId=AS-03O&assessmentUnitId=AS-04S&assessmentUnitName=Aasu-Streams&assessmentUnitName=Acre Swamp&organizationId=21MSWQ&waterType=GULF`
+          `${origin}/attains/actions/#format=xlsx&actionAgency=T&actionAgency=E&actionId=10081&actionId=10817&actionName=ALDER CREEK- RUBY RIVER WATERSHED TMDL  &actionName= NELSON CREEK (HEADWATERS TO THE MOUTH - BIG DRY CREEK ARM OF FORT PECK RES) - REDWATER RIVER TPA&assessmentUnitId=AS-03O&assessmentUnitId=AS-04S&assessmentUnitName=Aasu-Streams&assessmentUnitName=Acre Swamp&organizationId=21MSWQ&waterType=GULF`
         );
       });
   });

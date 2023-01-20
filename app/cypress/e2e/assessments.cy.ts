@@ -16,7 +16,7 @@ describe("Data Profile Assessments", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessments&format=csv`
+          `${origin}/attains/assessments/#format=csv`
         );
       });
   });
@@ -30,7 +30,7 @@ describe("Data Profile Assessments", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessments&format=csv&alternateListingIdentifier=6226&associatedActionAgency=S`
+          `${origin}/attains/assessments/#format=csv&alternateListingIdentifier=6226&associatedActionAgency=S`
         );
       });
   });
@@ -52,7 +52,7 @@ describe("Data Profile Assessments", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessments&format=csv&associatedActionName=Indian Fork&associatedActionStatus=A&cwa303dPriorityRanking=Low&assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023`
+          `${origin}/attains/assessments/#format=csv&associatedActionName=Indian Fork&associatedActionStatus=A&cwa303dPriorityRanking=Low&assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023`
         );
       });
   });
@@ -74,7 +74,7 @@ describe("Data Profile Assessments", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessments&format=xlsx&state=IN&stateIrCategory=3x&useStateIrCategory=LEPTOPHOS&cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022`
+          `${origin}/attains/assessments/#format=xlsx&state=IN&stateIrCategory=3x&useStateIrCategory=LEPTOPHOS&cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022`
         );
       });
   });
@@ -248,7 +248,7 @@ describe("Data Profile Assessments", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessments&format=tsv&alternateListingIdentifier=72992&assessmentBasis=Monitored Data&assessmentMethods=Fish surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A29R_PAS01A14&assessmentUnitName=Camp&assessmentUnitStatus=H&associatedActionAgency=E&associatedActionId=1024&associatedActionName=Chartiers Creek&associatedActionStatus=A&associatedActionType=Public Meeting Held&cwa303dPriorityRanking=Medium&delisted=Y&delistedReason=NOT_SPECIFIED&epaIrCategory=4A&organizationId=21PA&organizationName=Iowa&overallStatus=Not Assessed&parameterAttainment=ALGAE&parameterGroup=OTHER CAUSE&parameterName=RADIUM&parameterStateIrCategory=CFC-113&parameterStatus=Meeting Criteria&pollutantIndicator=N&region=08&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=OTHER&useName=Scenic Value&useStateIrCategory=PHTHLATE&useSupport=N&vision303dPriority=Y&waterType=WASH&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&reportingCycleLo=2005&reportingCycleHi=2022`
+          `${origin}/attains/assessments/#format=tsv&alternateListingIdentifier=72992&assessmentBasis=Monitored Data&assessmentMethods=Fish surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A29R_PAS01A14&assessmentUnitName=Camp&assessmentUnitStatus=H&associatedActionAgency=E&associatedActionId=1024&associatedActionName=Chartiers Creek&associatedActionStatus=A&associatedActionType=Public Meeting Held&cwa303dPriorityRanking=Medium&delisted=Y&delistedReason=NOT_SPECIFIED&epaIrCategory=4A&organizationId=21PA&organizationName=Iowa&overallStatus=Not Assessed&parameterAttainment=ALGAE&parameterGroup=OTHER CAUSE&parameterName=RADIUM&parameterStateIrCategory=CFC-113&parameterStatus=Meeting Criteria&pollutantIndicator=N&region=08&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=OTHER&useName=Scenic Value&useStateIrCategory=PHTHLATE&useSupport=N&vision303dPriority=Y&waterType=WASH&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&reportingCycleLo=2005&reportingCycleHi=2022`
         );
       });
   });

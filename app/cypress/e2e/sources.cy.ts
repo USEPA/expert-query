@@ -16,7 +16,7 @@ describe("Data Profile Sources", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=sources&format=csv`
+          `${origin}/attains/sources/#format=csv`
         );
       });
   });
@@ -32,7 +32,7 @@ describe("Data Profile Sources", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=sources&format=csv&assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`
+          `${origin}/attains/sources/#format=csv&assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`
         );
       });
   });
@@ -73,7 +73,7 @@ describe("Data Profile Sources", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=sources&format=xlsx&assessmentUnitName=Agency Creek&confirmed=N&organizationId=TAOSPBLO&organizationName=District of Columbia&overallStatus=Fully Supporting&parameterGroup=PESTICIDES&sourceName=GROUNDWATER LOADINGS&waterType=WETLANDS, TIDAL&reportingCycleLo=2003&reportingCycleHi=2015`
+          `${origin}/attains/sources/#format=xlsx&assessmentUnitName=Agency Creek&confirmed=N&organizationId=TAOSPBLO&organizationName=District of Columbia&overallStatus=Fully Supporting&parameterGroup=PESTICIDES&sourceName=GROUNDWATER LOADINGS&waterType=WETLANDS, TIDAL&reportingCycleLo=2003&reportingCycleHi=2015`
         );
       });
   });
@@ -117,7 +117,7 @@ describe("Data Profile Sources", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=sources&format=json&assessmentUnitId=MT40Q001_011&assessmentUnitName=Abbie Creek&confirmed=N&organizationName=Wisconsin&overallStatus=Not Supporting&parameterGroup=NUTRIENTS&sourceName=MANURE LAGOONS&state=HI&waterType=WASH&reportingCycleLo=1994&reportingCycleHi=2016`
+          `${origin}/attains/sources/#format=json&assessmentUnitId=MT40Q001_011&assessmentUnitName=Abbie Creek&confirmed=N&organizationName=Wisconsin&overallStatus=Not Supporting&parameterGroup=NUTRIENTS&sourceName=MANURE LAGOONS&state=HI&waterType=WASH&reportingCycleLo=1994&reportingCycleHi=2016`
         );
       });
   });
@@ -176,7 +176,7 @@ describe("Data Profile Sources", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=sources&format=tsv&assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitName=American Fork&causeName=AMMONIA&confirmed=Y&epaIrCategory=4A&organizationId=21PA&organizationName=South Dakota&overallStatus=Fully Supporting&parameterGroup=TRASH&region=06&sourceName=PIPELINE BREAKS&state=FL&stateIrCategory=5b-t&waterType=INLAND BEACH&reportingCycleLo=2016&reportingCycleHi=2019`
+          `${origin}/attains/sources/#format=tsv&assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitName=American Fork&causeName=AMMONIA&confirmed=Y&epaIrCategory=4A&organizationId=21PA&organizationName=South Dakota&overallStatus=Fully Supporting&parameterGroup=TRASH&region=06&sourceName=PIPELINE BREAKS&state=FL&stateIrCategory=5b-t&waterType=INLAND BEACH&reportingCycleLo=2016&reportingCycleHi=2019`
         );
       });
   });

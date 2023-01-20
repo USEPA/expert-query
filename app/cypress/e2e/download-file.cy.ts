@@ -20,7 +20,6 @@ let count = "0"
   });
 
   it("Read and Validate assessement.json file", () => {
-    console.log("countcountcount",count)
     const path = "cypress/downloads/assessments.json";
     cy.readFile(path, { timeout: 25000 }).should("exist");
     cy.readFile(path).should("be.a", "array");

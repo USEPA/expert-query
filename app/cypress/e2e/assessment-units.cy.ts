@@ -16,7 +16,7 @@ describe("Data Profile Assessment Units", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnits&format=csv`
+          `${origin}/attains/assessmentUnits/#format=csv`
         );
       });
   });
@@ -31,7 +31,7 @@ describe("Data Profile Assessment Units", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnits&format=csv&assessmentUnitState=R&state=FL&state=NE`
+          `${origin}/attains/assessmentUnits/#format=csv&assessmentUnitState=R&state=FL&state=NE`
         );
       });
   });
@@ -49,7 +49,7 @@ describe("Data Profile Assessment Units", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnits&format=tsv&assessmentUnitId=AA_SC_Steele_01b&assessmentUnitState=H&locationText=Blackwater`
+          `${origin}/attains/assessmentUnits/#format=tsv&assessmentUnitId=AA_SC_Steele_01b&assessmentUnitState=H&locationText=Blackwater`
         );
       });
   });
@@ -70,7 +70,7 @@ describe("Data Profile Assessment Units", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnits&format=xlsx&assessmentUnitState=H&assessmentUnitState=A&organizationName=Montana&useClassName=PL&waterType=WASH`
+          `${origin}/attains/assessmentUnits/#format=xlsx&assessmentUnitState=H&assessmentUnitState=A&organizationName=Montana&useClassName=PL&waterType=WASH`
         );
       });
   });
@@ -115,7 +115,7 @@ describe("Data Profile Assessment Units", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnits&format=xlsx&assessmentUnitId=AL-Gulf-of-Mexico-1&assessmentUnitName=Ada Lake&assessmentUnitState=A&assessmentUnitState=R&assessmentUnitState=H&locationText=Alabama&organizationId=21PA&organizationName=Tennessee&region=08&state=OH&useClassName=L2&waterType=BAYOU`
+          `${origin}/attains/assessmentUnits/#format=xlsx&assessmentUnitId=AL-Gulf-of-Mexico-1&assessmentUnitName=Ada Lake&assessmentUnitState=A&assessmentUnitState=R&assessmentUnitState=H&locationText=Alabama&organizationId=21PA&organizationName=Tennessee&region=08&state=OH&useClassName=L2&waterType=BAYOU`
         );
       });
   });

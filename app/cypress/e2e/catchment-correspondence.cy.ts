@@ -16,7 +16,7 @@ describe("Data Profile Catchment Correspondence", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=catchmentCorrespondence&format=csv`
+          `${origin}/attains/catchmentCorrespondence/#format=csv`
         );
       });
   });
@@ -32,7 +32,7 @@ describe("Data Profile Catchment Correspondence", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=catchmentCorrespondence&format=csv&assessmentUnitId=AS-04O&organizationId=21HI`
+          `${origin}/attains/catchmentCorrespondence/#format=csv&assessmentUnitId=AS-04O&organizationId=21HI`
         );
       });
   });
@@ -51,7 +51,7 @@ describe("Data Profile Catchment Correspondence", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=catchmentCorrespondence&format=tsv&assessmentUnitName=ABBOTT LAKES&organizationName=California`
+          `${origin}/attains/catchmentCorrespondence/#format=tsv&assessmentUnitName=ABBOTT LAKES&organizationName=California`
         );
       });
   });
@@ -74,7 +74,7 @@ describe("Data Profile Catchment Correspondence", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=catchmentCorrespondence&format=xlsx&assessmentUnitId=AS-04O&organizationName=Montana&reportingCycleLo=1993&reportingCycleHi=2010`
+          `${origin}/attains/catchmentCorrespondence/#format=xlsx&assessmentUnitId=AS-04O&organizationName=Montana&reportingCycleLo=1993&reportingCycleHi=2010`
         );
       });
   });
@@ -109,7 +109,7 @@ describe("Data Profile Catchment Correspondence", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=catchmentCorrespondence&format=tsv&assessmentUnitId=AS-01O&assessmentUnitName=Aasu-Ocean&organizationId=21PA&organizationName=California&region=06&state=TX&reportingCycleLo=2015&reportingCycleHi=2023`
+          `${origin}/attains/catchmentCorrespondence/#format=tsv&assessmentUnitId=AS-01O&assessmentUnitName=Aasu-Ocean&organizationId=21PA&organizationName=California&region=06&state=TX&reportingCycleLo=2015&reportingCycleHi=2023`
         );
       });
   });

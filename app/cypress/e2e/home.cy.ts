@@ -51,7 +51,7 @@ describe("Home Page", () => {
 
   it("Data profile Sources query link", () => {
     cy.selectProfile("Sources");
-    cy.url().should("include", "/attains#dataProfile=sources&format=csv");
+    cy.url().should("include", "/attains/sources#format=csv");
   });
 
   it("All data profile option are select one by one and check Clear Search button is available ", () => {
@@ -82,19 +82,19 @@ describe("Home Page", () => {
   it("Verify url by selecting different format", () => {
     cy.selectProfile("Actions");
     cy.findByText("Comma-separated (CSV)").click();
-    cy.url().should("include", "attains#dataProfile=actions&format=csv");
+    cy.url().should("include", "attains/actions#format=csv");
     cy.findByText("Tab-separated (TSV)").click();
-    cy.url().should("include", "attains#dataProfile=actions&format=tsv");
+    cy.url().should("include", "attains/actions#format=tsv");
     cy.findByText("Microsoft Excel (XLSX)").click();
-    cy.url().should("include", "attains#dataProfile=actions&format=xlsx");
+    cy.url().should("include", "attains/actions#format=xlsx");
     cy.findByText("JavaScript Object Notation (JSON)").click();
-    cy.url().should("include", "attains#dataProfile=actions&format=json");
+    cy.url().should("include", "attains/actions#format=json");
   });
 
   it("Verify Clear Search button after clear", () => {
     cy.selectProfile("Actions");
     cy.findByText("Clear Search").click();
-    cy.findByText("Clear Search").should("not.exist");
+    cy.findByText("Clear Search").should("exist");
   });
 
   it("Verify Download Status Pop-up with stubing api", () => {
@@ -105,13 +105,7 @@ describe("Home Page", () => {
 
     cy.findByRole("button", { name: "Download" }).click();
     cy.wait(2000);
-    cy.get(".usa-modal__main")
-      .children("div")
-      .first()
-      .children("p")
-      .first()
-      .children("strong")
-      .contains("510");
+    cy.findByTestId('downloadfile-length').contains("510");
 
     // closing button X
     cy.get(`[aria-label="Close this window"]`).should("exist");

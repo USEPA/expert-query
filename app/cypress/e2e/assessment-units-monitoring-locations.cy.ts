@@ -16,7 +16,7 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnitsMonitoringLocations&format=csv`
+          `${origin}/attains/assessmentUnitsMonitoringLocations/#format=csv`
         );
       });
   });
@@ -32,7 +32,7 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnitsMonitoringLocations&format=csv&assessmentUnitId=DELAWARENATION-1300&assessmentUnitStatus=R`
+          `${origin}/attains/assessmentUnitsMonitoringLocations/#format=csv&assessmentUnitId=DELAWARENATION-1300&assessmentUnitStatus=R`
         );
       });
   });
@@ -55,7 +55,7 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnitsMonitoringLocations&format=json&organizationName=Wyoming&state=OK&reportingCycleLo=2015&reportingCycleHi=2023`
+          `${origin}/attains/assessmentUnitsMonitoringLocations/#format=json&organizationName=Wyoming&state=OK&reportingCycleLo=2015&reportingCycleHi=2023`
         );
       });
   });
@@ -80,7 +80,7 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnitsMonitoringLocations&format=xlsx&assessmentUnitName=Ashley Lake&assessmentUnitStatus=A&monitoringLocationOrgId=21AWIC&organizationName=Wyoming`
+          `${origin}/attains/assessmentUnitsMonitoringLocations/#format=xlsx&assessmentUnitName=Ashley Lake&assessmentUnitStatus=A&monitoringLocationOrgId=21AWIC&organizationName=Wyoming`
         );
       });
   });
@@ -130,7 +130,7 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
       .should("exist")
       .should(($elem) => {
         expect($elem.find("span").first().text().trim()).equal(
-          `${origin}/attains/#dataProfile=assessmentUnitsMonitoringLocations&format=tsv&assessmentUnitId=DN_AM_Watershed-2&assessmentUnitName=Alder Gulch&assessmentUnitStatus=H&monitoringLocationId=A15&monitoringLocationOrgId=MDEQ_MPDES_WQX&organizationId=21PA&organizationName=Montana&region=08&state=CO&useClassName=PL&waterType=SOUND&reportingCycleLo=2015&reportingCycleHi=2023`
+          `${origin}/attains/assessmentUnitsMonitoringLocations/#format=tsv&assessmentUnitId=DN_AM_Watershed-2&assessmentUnitName=Alder Gulch&assessmentUnitStatus=H&monitoringLocationId=A15&monitoringLocationOrgId=MDEQ_MPDES_WQX&organizationId=21PA&organizationName=Montana&region=08&state=CO&useClassName=PL&waterType=SOUND&reportingCycleLo=2015&reportingCycleHi=2023`
         );
       });
   });
