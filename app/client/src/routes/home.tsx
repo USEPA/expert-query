@@ -545,6 +545,7 @@ async function getUrlInputs(
   // Match query parameters
   await Promise.all([
     ...Object.keys(params).map(async (key) => {
+      if (!isFilterField(key)) return;
       if (isMultiOptionField(key)) {
         newState[key] = await matchMultipleOptions(
           params[key] ?? null,
@@ -580,6 +581,11 @@ function isEmpty<T>(
   v: T | null | undefined | [] | {},
 ): v is null | undefined | [] | {} {
   return !isNotEmpty(v);
+}
+
+// Type narrowing
+function isFilterField(field: string): field is FilterField {
+  return (filterFields as string[]).includes(field);
 }
 
 // Type narrowing
@@ -1581,8 +1587,8 @@ type SourceSelectFilterProps<
 function SourceSelectFilter<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 >(props: SourceSelectFilterProps<F>) {
-  const { sourceLabel, sourceHandler, ...selectProps } = props;
-  const { profile, sourceKey, sourceValue, staticOptions } = selectProps;
+  const { sourceLabel, sourceHandler, ...selectFilterProps } = props;
+  const { profile, sourceKey, sourceValue, staticOptions } = selectFilterProps;
 
   return (
     <SourceSelect
@@ -1591,7 +1597,7 @@ function SourceSelectFilter<
       onChange={sourceHandler}
       selected={sourceValue}
     >
-      <SelectFilter {...selectProps} />
+      <SelectFilter {...selectFilterProps} />
     </SourceSelect>
   );
 }
@@ -1635,6 +1641,7 @@ function SelectFilter<
       isMulti={isMultiOptionField(filterKey)}
       // Re-renders default options when `sourceValue` changes
       key={JSON.stringify(sourceValue?.value)}
+      // Workaround for TypeScript not narrowing generic type
       onChange={filterHandler as any}
       defaultOptions={defaultOptions}
       loadOptions={filterOptions({

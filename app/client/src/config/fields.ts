@@ -204,7 +204,6 @@ export const filterFields = [
     type: 'multiselect',
     source: 'locationText_locationTypeCode',
   },
-  { key: 'locationTypeCode', label: 'Location Type Code', type: 'select' },
   {
     key: 'monitoringEndDateLo',
     label: 'Monitoring End Date',
@@ -255,7 +254,6 @@ export const filterFields = [
     label: 'Organization Name',
     type: 'multiselect',
   },
-  { key: 'organizationType', label: 'Organization Type', type: 'select' },
   { key: 'otherIdentifier', label: 'Other Identifier', type: 'multiselect' },
   { key: 'overallStatus', label: 'Overall Status', type: 'multiselect' },
   { key: 'parameter', label: 'Parameter', type: 'multiselect' },
