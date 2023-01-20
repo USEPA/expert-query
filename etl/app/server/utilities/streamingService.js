@@ -98,7 +98,7 @@ export default class StreamingService {
   /**
    * Builds a pipe for streaming data in from the database and out to the client
    * in the specified format.
-   * @param {express.Response} outStream output response stream
+   * @param {WriteStream} outStream output response stream
    * @param {Transform} inStream readable stream from database query
    * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
    * @param {Object} excelDoc Excel workbook and worksheet objects

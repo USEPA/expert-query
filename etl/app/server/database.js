@@ -931,60 +931,29 @@ function getProfileEtl(
   };
 }
 
-async function finishNationalUploads(pipeline) {
-  // close zip streams
-  pipeline.json.zipStream.write(']');
-  pipeline.json.zipStream.end();
-  pipeline.csv.zipStream.end();
-  pipeline.tsv.zipStream.end();
-  pipeline.xlsx.workbook.commit();
-
-  // await file streams
-  await Promise.all([
-    pipeline.json.fileStream,
-    pipeline.csv.fileStream,
-    pipeline.tsv.fileStream,
-    pipeline.xlsx.fileStream,
-  ]);
-}
-
-async function streamNationalDownloadSingleProfile(
+function streamNationalDownloadSingleProfile(
   pool,
   activeSchema,
   profile,
+  format,
+  inStream,
 ) {
   // output types csv, tab-separated, Excel, or JSON
   try {
     const tableName = profile.tableName;
 
-    const selectText = profile.columns
-      .map((col) =>
-        col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
-      )
-      .join(', ');
+    const stream = inStream.stream;
+    const client = inStream.client;
 
-    // build the db query stream
-    const query = new QueryStream(
-      `SELECT ${selectText} FROM ${activeSchema}.${tableName}`,
-      null,
-      {
-        batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
-        highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
-      },
-    );
-    const client = await pool.connect();
-    const stream = client.query(query);
+    const extension = `.${format}.gz`;
 
     // create zip streams
-    const outputJson = zlib.createGzip();
-    const outputCsv = zlib.createGzip();
-    const outputTsv = zlib.createGzip();
-    const outputXlsx = zlib.createGzip();
+    const gzipStream = zlib.createGzip();
 
     const isLocal = environment.isLocal;
 
-    // create output streams
-    let writeStreamJson, writeStreamCsv, writeStreamTsv, writeStreamXlsx;
+    // create output stream
+    let writeStream;
     if (isLocal) {
       const __dirname = path.dirname(fileURLToPath(import.meta.url));
       const subFolderPath = resolve(
@@ -995,116 +964,55 @@ async function streamNationalDownloadSingleProfile(
       // create the sub folder if it doesn't already exist
       mkdirSync(subFolderPath, { recursive: true });
 
-      writeStreamJson = createWriteStream(
-        `${subFolderPath}/${tableName}.json.gz`,
-      );
-      writeStreamCsv = createWriteStream(
-        `${subFolderPath}/${tableName}.csv.gz`,
-      );
-      writeStreamTsv = createWriteStream(
-        `${subFolderPath}/${tableName}.tsv.gz`,
-      );
-      writeStreamXlsx = createWriteStream(
-        `${subFolderPath}/${tableName}.xlsx.gz`,
+      writeStream = createWriteStream(
+        `${subFolderPath}/${tableName}${extension}`,
       );
 
-      outputJson.pipe(writeStreamJson);
-      outputCsv.pipe(writeStreamCsv);
-      outputTsv.pipe(writeStreamTsv);
-      outputXlsx.pipe(writeStreamXlsx);
+      gzipStream.pipe(writeStream);
     } else {
-      writeStreamJson = createS3Stream({
+      writeStream = createS3Stream({
         contentType: 'application/gzip',
-        filePath: `national-downloads/new/${tableName}.json.gz`,
-        stream: outputJson,
-      });
-
-      writeStreamCsv = createS3Stream({
-        contentType: 'application/gzip',
-        filePath: `national-downloads/new/${tableName}.csv.gz`,
-        stream: outputCsv,
-      });
-
-      writeStreamTsv = createS3Stream({
-        contentType: 'application/gzip',
-        filePath: `national-downloads/new/${tableName}.tsv.gz`,
-        stream: outputTsv,
-      });
-
-      writeStreamXlsx = createS3Stream({
-        contentType: 'application/gzip',
-        filePath: `national-downloads/new/${tableName}.xlsx.gz`,
-        stream: outputXlsx,
+        filePath: `national-downloads/new/${tableName}${extension}`,
+        stream: gzipStream,
       });
     }
 
-    // create workbook
-    const workbook = new Excel.stream.xlsx.WorkbookWriter({
-      stream: outputXlsx,
-      useStyles: true,
-    });
-
-    const worksheet = workbook.addWorksheet('data');
-
     // start streaming/transforming the data into the S3 bucket
-    StreamingService.streamResponse(outputCsv, stream, 'csv');
-    StreamingService.streamResponse(outputTsv, stream, 'tsv');
-    StreamingService.streamResponse(outputJson, stream, 'json');
-    StreamingService.streamResponse(outputXlsx, stream, 'xlsx', {
-      workbook,
-      worksheet,
-    });
+    if (format === 'xlsx') {
+      // create workbook
+      const workbook = new Excel.stream.xlsx.WorkbookWriter({
+        stream: gzipStream,
+        useStyles: true,
+      });
+
+      const worksheet = workbook.addWorksheet('data');
+
+      StreamingService.streamResponse(gzipStream, stream, 'xlsx', {
+        workbook,
+        worksheet,
+      });
+    } else {
+      StreamingService.streamResponse(gzipStream, stream, format);
+    }
 
     // get the promises for verifying the streaming operation is complete
-    const csvPromise = !isLocal
-      ? writeStreamCsv
-      : new Promise((resolve, reject) => {
-          outputCsv.on('end', () => {
-            log.info(
-              `Finished building national download for ${tableName}.csv.gz`,
-            );
-            resolve();
-          });
-          outputCsv.on('error', reject);
+    let promise = writeStream;
+    if (isLocal) {
+      promise = new Promise((resolve, reject) => {
+        writeStream.on('finish', () => {
+          log.info(
+            `Finished building national download for ${tableName}${extension}`,
+          );
+          resolve();
         });
-    const tsvPromise = !isLocal
-      ? writeStreamTsv
-      : new Promise((resolve, reject) => {
-          outputTsv.on('end', () => {
-            log.info(
-              `Finished building national download for ${tableName}.tsv.gz`,
-            );
-            resolve();
-          });
-          outputTsv.on('error', reject);
-        });
-    const jsonPromise = !isLocal
-      ? writeStreamJson
-      : new Promise((resolve, reject) => {
-          outputJson.on('end', () => {
-            log.info(
-              `Finished building national download for ${tableName}.json.gz`,
-            );
-            resolve();
-          });
-          outputJson.on('error', reject);
-        });
-    const xlsxPromise = !isLocal
-      ? writeStreamXlsx
-      : new Promise((resolve, reject) => {
-          outputXlsx.on('end', () => {
-            log.info(
-              `Finished building national download for ${tableName}.xlsx.gz`,
-            );
-            resolve();
-          });
-          outputXlsx.on('error', reject);
-        });
+        writeStream.on('error', reject);
+      });
+    }
 
     // return a promise for all of the streams and the db connection client,
     // so we can close the connection later
     return {
-      promise: Promise.all([csvPromise, tsvPromise, jsonPromise, xlsxPromise]),
+      promise,
       client,
     };
   } catch (error) {
@@ -1116,26 +1024,96 @@ async function streamNationalDownloadSingleProfile(
 }
 
 export async function streamNationalDownloads(pool, activeSchema) {
-  // Increases the listeners to handle streaming all of the data
-  process.setMaxListeners(0);
-
   const tables = Object.values(mapping);
 
+  const formats = ['csv'];
+
+  const shouldShareStreams =
+    !process.env.STREAM_SHARED || process.env.STREAM_SHARED === 'true';
+
   // fire off the streams and keep track of the db connection clients
-  const promises = [];
-  const clients = [];
+  let promises = [];
+  let clients = [];
   for (const table of tables) {
-    const { promise, client } = await streamNationalDownloadSingleProfile(
-      pool,
-      activeSchema,
-      table,
-    );
-    promises.push(promise);
-    clients.push(client);
+    let inStream;
+
+    // go ahead and build the input stream if we are sharing the streams
+    if (shouldShareStreams) {
+      inStream = shouldShareStreams
+        ? await buildInputStream(activeSchema, pool, table)
+        : null;
+    }
+
+    // clear out promises and clients for next loop iteration
+    if (!shouldShareStreams && process.env.STREAM_SERIALLY === 'true') {
+      promises = [];
+      clients = [];
+    }
+
+    // fire off streams for each format
+    for (const format of formats) {
+      if (!inStream) {
+        inStream = await buildInputStream(activeSchema, pool, table);
+      }
+
+      const { promise, client } = streamNationalDownloadSingleProfile(
+        pool,
+        activeSchema,
+        table,
+        format,
+        inStream,
+      );
+
+      promises.push(promise);
+      clients.push(client);
+
+      // for concurrent streams, close connections as promises resolve
+      if (process.env.STREAM_SERIALLY !== 'true') {
+        promise.then(() => {
+          log.info(`Closing connection to ${table.tableName}`);
+          try {
+            client.release();
+          } catch (ex) {}
+        });
+      }
+    }
+
+    // for serial streaming, close streams after await completes
+    if (process.env.STREAM_SERIALLY === 'true') {
+      await Promise.all(promises);
+      try {
+        clients.forEach((client) => client.release());
+      } catch (ex) {}
+    }
   }
 
-  // close all of the db connections
-  clients.forEach((client) => client.release());
+  // for concurrent streaming, wait for all promises to complete prior to exiting
+  if (process.env.STREAM_SERIALLY !== 'true') await Promise.all(promises);
+}
 
-  return Promise.all(promises);
+async function buildInputStream(activeSchema, pool, profile) {
+  const tableName = profile.tableName;
+
+  const selectText = profile.columns
+    .map((col) =>
+      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
+    )
+    .join(', ');
+
+  // build the db query stream
+  const query = new QueryStream(
+    `SELECT ${selectText} FROM ${activeSchema}.${tableName}`,
+    null,
+    {
+      batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
+      highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
+    },
+  );
+  const client = await pool.connect();
+  const stream = client.query(query);
+
+  return {
+    client,
+    stream,
+  };
 }
