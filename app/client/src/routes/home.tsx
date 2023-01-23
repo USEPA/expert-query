@@ -146,8 +146,8 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
     associatedActionStatus: values.assessmentUnitStatus,
     parameter: values.pollutant,
     parameterName: values.pollutant,
-    parameterStateIrCategory: values.pollutant,
-    useStateIrCategory: values.pollutant,
+    parameterStateIrCategory: values.stateIrCategory,
+    useStateIrCategory: values.stateIrCategory,
   };
 }
 

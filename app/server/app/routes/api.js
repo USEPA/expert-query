@@ -44,6 +44,7 @@ async function queryColumnValues(profile, column, params, schema) {
   Object.entries(params).forEach(([name, value]) => {
     if (name === "text") parsedParams.text = value;
     else if (name === "limit") parsedParams.limit = value;
+    else if (name === "direction") parsedParams.direction = value;
     else parsedParams.filters[name] = value;
   });
 
@@ -51,10 +52,18 @@ async function queryColumnValues(profile, column, params, schema) {
     .withSchema(schema)
     .from(profile.tableName)
     .column(column.name)
-    .whereILike(column.name, `%${parsedParams.text}%`)
     .distinctOn(column.name)
-    .orderBy(column.name, "asc")
+    .orderBy(column.name, parsedParams.direction ?? "asc")
     .select();
+
+  if (column.type === "numeric" || column.type === "timestamptz") {
+    query.whereRaw("CAST(?? as TEXT) ILIKE ?", [
+      column.name,
+      `%${parsedParams.text}%`,
+    ]);
+  } else {
+    query.whereILike(column.name, `%{parsedParams.text}%`);
+  }
 
   if (parsedParams.limit) query.limit(parsedParams.limit);
 
@@ -208,6 +217,7 @@ module.exports = function (app) {
         res.status(200).json(values.map((value) => value[column.name]))
       )
       .catch((error) => {
+        console.log(error);
         log.error(
           `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table...`
         );
