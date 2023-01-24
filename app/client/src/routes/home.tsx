@@ -45,6 +45,7 @@ import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 /*
 ## Constants
 */
+
 const dynamicOptionLimit = 20;
 const staticOptionLimit = 100;
 
@@ -60,8 +61,646 @@ const yearFields = getYearFields(allFieldsConfig);
 const singleValueFields = [...dateFields, ...yearFields];
 
 /*
+## Main
+*/
+
+export function Home() {
+  const { content } = useContentState();
+
+  const staticOptions = useStaticOptions(content);
+
+  const { handleProfileChange, profile, profileOption } = useProfile();
+
+  const { format, formatHandler } = useFormat();
+
+  const { initializeFilters, filterState, filterHandlers, resetFilters } =
+    useFilterState();
+
+  const { sourceState, sourceHandlers } = useSourceState();
+
+  const { queryParams, queryParamErrors } = useQueryParams({
+    format: format.value,
+    profile,
+    staticOptions,
+    filterState,
+    initializeFilters,
+  });
+
+  const eqDataUrl =
+    content.data.services?.eqDataApi || `${window.location.origin}/attains`;
+
+  if (content.status === 'pending') return <Loading />;
+
+  if (content.status === 'failure') {
+    return (
+      <Alert type="error">
+        Expert Query is currently unavailable, please try again later.
+      </Alert>
+    );
+  }
+
+  if (content.status === 'success') {
+    return (
+      <>
+        <button
+          title="Glossary"
+          className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
+          style={{ cursor: 'pointer' }}
+          type="button"
+        >
+          <Book
+            aria-hidden="true"
+            className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
+            focusable="false"
+            role="img"
+          />
+          <span className="font-ui-md text-bold text-primary">Glossary</span>
+        </button>
+        <GlossaryPanel path={getPageName()} />
+        <div>
+          <ParameterErrorAlert parameters={queryParamErrors} />
+          <Intro />
+          {staticOptions && (
+            <>
+              <h3>Data Profile</h3>
+              <Select
+                aria-label="Select a data profile"
+                onChange={handleProfileChange}
+                options={staticOptions.dataProfile}
+                placeholder="Select a data profile..."
+                value={profileOption}
+              />
+
+              {profile && (
+                <Outlet
+                  context={{
+                    filterHandlers,
+                    filterState,
+                    format,
+                    formatHandler,
+                    profile,
+                    queryParams,
+                    queryUrl: eqDataUrl,
+                    resetFilters,
+                    sourceHandlers,
+                    sourceState,
+                    staticOptions,
+                  }}
+                />
+              )}
+            </>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  return null;
+}
+/*
+## Components
+*/
+
+export function QueryBuilder() {
+  const {
+    queryParams,
+    queryUrl,
+    filterHandlers,
+    filterState,
+    format,
+    formatHandler,
+    profile,
+    resetInputs,
+    sourceHandlers,
+    sourceState,
+    staticOptions,
+  } = useHomeContext();
+
+  const {
+    closeDownloadConfirmation,
+    downloadConfirmationVisible,
+    openDownloadConfirmation,
+  } = useDownloadConfirmationVisibility();
+
+  const [downloadStatus, setDownloadStatus] = useDownloadStatus();
+
+  return (
+    <>
+      {downloadConfirmationVisible && (
+        <DownloadModal
+          filename={profile && format ? `${profile}.${format.value}` : null}
+          downloadStatus={downloadStatus}
+          onClose={closeDownloadConfirmation}
+          queryData={queryParams}
+          queryUrl={
+            profile ? `${queryUrl}/data/${profiles[profile].resource}` : null
+          }
+          setDownloadStatus={setDownloadStatus}
+        />
+      )}
+      {profile && (
+        <Accordion>
+          <AccordionItem heading="Filters" initialExpand>
+            <FilterFields
+              filterHandlers={filterHandlers}
+              filterState={filterState}
+              profile={profile}
+              sourceHandlers={sourceHandlers}
+              sourceState={sourceState}
+              staticOptions={staticOptions}
+            />
+            <div className="display-flex margin-top-1 width-full">
+              <button
+                className="margin-top-1 margin-x-auto usa-button usa-button--outline"
+                onClick={resetInputs}
+                type="button"
+              >
+                Clear Search
+              </button>
+            </div>
+          </AccordionItem>
+
+          <AccordionItem heading="Download the Data" initialExpand>
+            <RadioButtons
+              legend={
+                <>
+                  <b className="margin-right-05">File Format</b>
+                  <InfoTooltip text="Choose a file format for the result set" />
+                </>
+              }
+              onChange={formatHandler}
+              options={staticOptions.format}
+              selected={format}
+              styles={['margin-bottom-2']}
+            />
+            <button
+              className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
+              onClick={openDownloadConfirmation}
+              type="button"
+            >
+              <Download className="height-205 margin-right-1 usa-icon width-205" />
+              Download
+            </button>
+            {downloadStatus === 'success' && (
+              <Alert type="success">Query executed successfully.</Alert>
+            )}
+            {downloadStatus === 'failure' && (
+              <Alert type="error">
+                An error occurred while executing the current query, please try
+                again later.
+              </Alert>
+            )}
+          </AccordionItem>
+
+          <AccordionItem heading="Queries">
+            <h4>
+              {/* TODO - Remove the glossary linkage before production deployment */}
+              <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
+            </h4>
+            <CopyBox
+              text={`${window.location.origin}${
+                window.location.pathname
+              }#${buildUrlQueryString(queryParams.filters)}`}
+            />
+            <h4>{profiles[profile].label} API Query</h4>
+            <CopyBox
+              lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+              maxLength={2048}
+              text={`${queryUrl}/data/${
+                profiles[profile].resource
+              }?${buildUrlQueryString(
+                queryParams.filters,
+                queryParams.options,
+              )}`}
+            />
+            <h4>cURL</h4>
+            <CopyBox
+              text={`curl -X POST --json "${JSON.stringify(
+                queryParams,
+              ).replaceAll('"', '\\"')}" ${queryUrl}/data/${
+                profiles[profile].resource
+              }`}
+            />
+          </AccordionItem>
+        </Accordion>
+      )}
+    </>
+  );
+}
+
+type FilterFieldsProps = {
+  filterHandlers: FilterFieldInputHandlers;
+  filterState: FilterFieldState;
+  profile: Profile;
+  sourceHandlers: SourceFieldInputHandlers;
+  sourceState: SourceFieldState;
+  staticOptions: StaticOptions;
+};
+
+function FilterFields({
+  filterHandlers,
+  filterState,
+  profile,
+  sourceHandlers,
+  sourceState,
+  staticOptions,
+}: FilterFieldsProps) {
+  const profileFields: readonly string[] = profiles[profile].fields;
+
+  // Store each field's element in a tuple with its key
+  const fieldsJsx: Array<[JSX.Element, string]> = removeNulls(
+    filterFieldsConfig
+      .filter((fieldConfig) => profileFields.includes(fieldConfig.key))
+      .map((fieldConfig) => {
+        const sourceFieldConfig =
+          'source' in fieldConfig
+            ? sourceFieldsConfig.find((f) => f.id === fieldConfig.source)
+            : null;
+        const sourceValue =
+          sourceFieldConfig && sourceState[sourceFieldConfig.id]?.value;
+
+        switch (fieldConfig.type) {
+          case 'multiselect':
+          case 'select':
+            const defaultOptions = getInitialOptions(
+              staticOptions,
+              fieldConfig.key,
+              sourceValue,
+            );
+
+            if (
+              !sourceFieldConfig &&
+              fieldConfig.type === 'multiselect' &&
+              Array.isArray(defaultOptions) &&
+              defaultOptions.length <= 5
+            ) {
+              return [
+                <Checkboxes
+                  key={fieldConfig.key}
+                  legend={<b>{fieldConfig.label}</b>}
+                  onChange={filterHandlers[fieldConfig.key]}
+                  options={defaultOptions}
+                  selected={filterState[fieldConfig.key] ?? []}
+                  styles={['margin-top-3']}
+                />,
+                fieldConfig.key,
+              ];
+            }
+            const selectProps = {
+              defaultOption:
+                'default' in fieldConfig ? fieldConfig.default : null,
+              defaultOptions,
+              filterHandler: filterHandlers[fieldConfig.key],
+              filterKey: fieldConfig.key,
+              filterLabel: fieldConfig.label,
+              filterValue: filterState[fieldConfig.key],
+              profile,
+              sortDirection:
+                'direction' in fieldConfig
+                  ? (fieldConfig.direction as SortDirection)
+                  : 'asc',
+              sourceKey: sourceFieldConfig?.key ?? null,
+              sourceValue: sourceFieldConfig
+                ? sourceState[sourceFieldConfig.id]
+                : null,
+              staticOptions,
+            };
+            return [
+              <label
+                className="usa-label"
+                key={fieldConfig.key}
+                htmlFor={`input-${fieldConfig.key}`}
+              >
+                <b>{fieldConfig.label}</b>
+                <div className="margin-top-1">
+                  {sourceFieldConfig ? (
+                    <SourceSelectFilter
+                      {...selectProps}
+                      sourceHandler={sourceHandlers[sourceFieldConfig.id]}
+                      sourceKey={sourceFieldConfig.key}
+                      sourceLabel={sourceFieldConfig.label}
+                    />
+                  ) : (
+                    <SelectFilter {...selectProps} />
+                  )}
+                </div>
+              </label>,
+              fieldConfig.key,
+            ];
+          case 'date':
+          case 'year':
+            // Prevents range fields from rendering twice
+            if (fieldConfig.boundary === 'high') return null;
+
+            const pairedField = filterFieldsConfig.find(
+              (otherField) =>
+                otherField.key !== fieldConfig.key &&
+                'domain' in otherField &&
+                otherField.domain === fieldConfig.domain,
+            );
+            // All range inputs should have a high and a low boundary field
+            if (!pairedField || !isSingleValueField(pairedField.key))
+              return null;
+
+            return [
+              <RangeFilter
+                domain={fieldConfig.domain}
+                highHandler={filterHandlers[pairedField.key]}
+                highKey={pairedField.key}
+                highValue={filterState[pairedField.key]}
+                label={fieldConfig.label}
+                lowHandler={filterHandlers[fieldConfig.key]}
+                lowKey={fieldConfig.key}
+                lowValue={filterState[fieldConfig.key]}
+                type={fieldConfig.type}
+              />,
+              fieldConfig.domain,
+            ];
+          default:
+            return null;
+        }
+      }),
+  );
+
+  // Store each row as a tuple with its row key
+  const rows: Array<[Array<[JSX.Element, string]>, string]> = [];
+  for (let i = 0; i < fieldsJsx.length; i += 3) {
+    const row = fieldsJsx.slice(i, i + 3);
+    const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
+    rows.push([row, rowKey]);
+  }
+
+  return (
+    <div>
+      {rows.map(([row, rowKey]) => (
+        <div className="grid-gap grid-row" key={rowKey}>
+          {row.map(([field, fieldKey]) => (
+            <div className="tablet:grid-col" key={fieldKey}>
+              {field}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Intro() {
+  const [visible, setVisible] = useState(
+    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
+  );
+
+  const closeIntro = useCallback(() => setVisible(false), []);
+
+  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
+
+  const toggleDontShowAgain = useCallback(
+    () => setDontShowAgain(!dontShowAgain),
+    [dontShowAgain],
+  );
+
+  useEffect(() => {
+    if (dontShowAgain === null) return;
+    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
+  }, [dontShowAgain]);
+
+  if (!visible) return null;
+
+  return (
+    <Summary heading="How to Use This Application">
+      <p>
+        Select a data profile, then build a query by selecting options from the
+        input fields.
+      </p>
+      <div className="display-flex flex-justify flex-wrap">
+        <Checkbox
+          checked={dontShowAgain ?? false}
+          label="Don't show again on this computer"
+          onChange={toggleDontShowAgain}
+          styles={['margin-right-1 margin-y-auto']}
+        />
+        <button
+          className="margin-top-2 usa-button"
+          onClick={closeIntro}
+          type="button"
+        >
+          Close Intro
+        </button>
+      </div>
+    </Summary>
+  );
+}
+
+function ParameterErrorAlert({
+  parameters,
+}: {
+  parameters: ParameterErrors | null;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  const closeAlert = useCallback(() => {
+    setVisible(false);
+  }, []);
+
+  useEffect(() => {
+    if (parameters) setVisible(true);
+  }, [parameters]);
+
+  if (!parameters || !visible) return null;
+
+  return (
+    <Alert icon={false} type="error">
+      {parameters.invalid.size > 0 && (
+        <>
+          <p className="text-bold">
+            The following parameters could not be matched to a valid field under
+            the selected profile:
+          </p>
+          <ul>
+            {Array.from(parameters.invalid).map((invalidParam) => (
+              <li key={invalidParam}>{invalidParam}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {parameters.duplicate.size > 0 && (
+        <>
+          <p className="text-bold">
+            Multiple parameters were provided for the following fields, when
+            only a single parameter is allowed:
+          </p>
+          <ul>
+            {Array.from(parameters.duplicate).map((duplicateParam) => (
+              <li key={duplicateParam}>{duplicateParam}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      <div className="display-flex flex-justify-end">
+        <button className="usa-button" onClick={closeAlert} type="button">
+          Close Alert
+        </button>
+      </div>
+    </Alert>
+  );
+}
+
+type SourceSelectFilterProps<
+  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
+> = SelectFilterProps<F> & {
+  sourceHandler: SourceFieldInputHandlers[SourceField];
+  sourceKey: typeof sourceFieldsConfig[number]['key'];
+  sourceLabel: string;
+};
+
+function SourceSelectFilter<
+  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
+>(props: SourceSelectFilterProps<F>) {
+  const { sourceLabel, sourceHandler, ...selectFilterProps } = props;
+  const { profile, sourceKey, sourceValue, staticOptions } = selectFilterProps;
+
+  return (
+    <SourceSelect
+      label={sourceLabel}
+      sources={getOptions(profile, sourceKey, staticOptions)}
+      onChange={sourceHandler}
+      selected={sourceValue}
+    >
+      <SelectFilter {...selectFilterProps} />
+    </SourceSelect>
+  );
+}
+
+type SelectFilterProps<
+  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
+> = {
+  defaultOption?: Option | null;
+  defaultOptions: boolean | readonly Option[];
+  filterHandler: FilterFieldInputHandlers[F];
+  filterKey: F;
+  filterLabel: string;
+  filterValue: FilterFieldState[F];
+  profile: Profile;
+  sortDirection?: SortDirection;
+  sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
+  sourceValue: SourceFieldState[SourceField] | null;
+  staticOptions: StaticOptions;
+};
+
+function SelectFilter<
+  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
+>({
+  defaultOption,
+  defaultOptions,
+  filterHandler,
+  filterKey,
+  filterLabel,
+  filterValue,
+  profile,
+  sortDirection,
+  sourceKey,
+  sourceValue,
+  staticOptions,
+}: SelectFilterProps<F>) {
+  return (
+    <AsyncSelect
+      aria-label={`${filterLabel} input`}
+      className="width-full"
+      inputId={`input-${filterKey}`}
+      isMulti={isMultiOptionField(filterKey)}
+      // Re-renders default options when `sourceValue` changes
+      key={JSON.stringify(sourceValue?.value)}
+      // Workaround for TypeScript not narrowing generic type
+      onChange={filterHandler as any}
+      defaultOptions={defaultOptions}
+      loadOptions={filterOptions({
+        defaultOption,
+        profile,
+        field: filterKey,
+        sortDirection,
+        staticOptions,
+        sourceField: sourceKey,
+        sourceValue: sourceValue?.value,
+      })}
+      menuPortalTarget={document.body}
+      placeholder={`Select ${getArticle(
+        filterLabel.split(' ')[0],
+      )} ${filterLabel}...`}
+      styles={{
+        control: (base) => ({
+          ...base,
+          border: '1px solid #adadad',
+          borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
+        }),
+        loadingIndicator: () => ({
+          display: 'none',
+        }),
+        menuPortal: (base) => ({
+          ...base,
+          zIndex: 9999,
+        }),
+      }}
+      value={filterValue}
+    />
+  );
+}
+
+type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
+  domain: string;
+  highHandler: SingleValueInputHandler;
+  highKey: F;
+  highValue: string;
+  label: string;
+  lowHandler: SingleValueInputHandler;
+  lowKey: F;
+  lowValue: string;
+  type: 'date' | 'year';
+};
+
+function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
+  domain,
+  highHandler,
+  highKey,
+  highValue,
+  label,
+  lowHandler,
+  lowKey,
+  lowValue,
+  type,
+}: RangeFilterProps<F>) {
+  return (
+    <label className="usa-label" htmlFor={`input-${lowKey}`} key={domain}>
+      <b>{label}</b>
+      <div className="margin-top-1 usa-hint">from:</div>
+      <input
+        className="usa-input"
+        id={`input-${lowKey}`}
+        min={type === 'year' ? 1900 : undefined}
+        max={type === 'year' ? 2100 : undefined}
+        onChange={lowHandler}
+        placeholder={type === 'year' ? 'yyyy' : undefined}
+        type={type === 'date' ? 'date' : 'number'}
+        value={lowValue}
+      />
+      <div className="margin-top-1 usa-hint">to:</div>
+      <input
+        className="usa-input"
+        id={`input-${highKey}`}
+        min={type === 'year' ? 1900 : undefined}
+        max={type === 'year' ? 2100 : undefined}
+        onChange={highHandler}
+        placeholder={type === 'year' ? 'yyyy' : undefined}
+        type={type === 'date' ? 'date' : 'number'}
+        value={highValue}
+      />
+    </label>
+  );
+}
+
+/*
 ## Types
 */
+
 type DateField = typeof dateFields[number];
 
 type Format = FormatOption['value'];
@@ -808,6 +1447,7 @@ function storageAvailable(
 /*
 ## Hooks
 */
+
 function useAbortSignal() {
   const abortController = useRef(new AbortController());
   const getAbortController = useCallback(() => {
@@ -1093,637 +1733,4 @@ function useStaticOptions(
   }, [content]);
 
   return staticOptions;
-}
-
-/*
-## Components
-*/
-export function Home() {
-  const { content } = useContentState();
-
-  const staticOptions = useStaticOptions(content);
-
-  const { handleProfileChange, profile, profileOption } = useProfile();
-
-  const { format, formatHandler } = useFormat();
-
-  const { initializeFilters, filterState, filterHandlers, resetFilters } =
-    useFilterState();
-
-  const { sourceState, sourceHandlers } = useSourceState();
-
-  const { queryParams, queryParamErrors } = useQueryParams({
-    format: format.value,
-    profile,
-    staticOptions,
-    filterState,
-    initializeFilters,
-  });
-
-  const eqDataUrl =
-    content.data.services?.eqDataApi || `${window.location.origin}/attains`;
-
-  if (content.status === 'pending') return <Loading />;
-
-  if (content.status === 'failure') {
-    return (
-      <Alert type="error">
-        Expert Query is currently unavailable, please try again later.
-      </Alert>
-    );
-  }
-
-  if (content.status === 'success') {
-    return (
-      <>
-        <button
-          title="Glossary"
-          className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
-          style={{ cursor: 'pointer' }}
-          type="button"
-        >
-          <Book
-            aria-hidden="true"
-            className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
-            focusable="false"
-            role="img"
-          />
-          <span className="font-ui-md text-bold text-primary">Glossary</span>
-        </button>
-        <GlossaryPanel path={getPageName()} />
-        <div>
-          <ParameterErrorAlert parameters={queryParamErrors} />
-          <Intro />
-          {staticOptions && (
-            <>
-              <h3>Data Profile</h3>
-              <Select
-                aria-label="Select a data profile"
-                onChange={handleProfileChange}
-                options={staticOptions.dataProfile}
-                placeholder="Select a data profile..."
-                value={profileOption}
-              />
-
-              {profile && (
-                <Outlet
-                  context={{
-                    filterHandlers,
-                    filterState,
-                    format,
-                    formatHandler,
-                    profile,
-                    queryParams,
-                    queryUrl: eqDataUrl,
-                    resetFilters,
-                    sourceHandlers,
-                    sourceState,
-                    staticOptions,
-                  }}
-                />
-              )}
-            </>
-          )}
-        </div>
-      </>
-    );
-  }
-
-  return null;
-}
-
-export function QueryBuilder() {
-  const {
-    queryParams,
-    queryUrl,
-    filterHandlers,
-    filterState,
-    format,
-    formatHandler,
-    profile,
-    resetInputs,
-    sourceHandlers,
-    sourceState,
-    staticOptions,
-  } = useHomeContext();
-
-  const {
-    closeDownloadConfirmation,
-    downloadConfirmationVisible,
-    openDownloadConfirmation,
-  } = useDownloadConfirmationVisibility();
-
-  const [downloadStatus, setDownloadStatus] = useDownloadStatus();
-
-  return (
-    <>
-      {downloadConfirmationVisible && (
-        <DownloadModal
-          filename={profile && format ? `${profile}.${format.value}` : null}
-          downloadStatus={downloadStatus}
-          onClose={closeDownloadConfirmation}
-          queryData={queryParams}
-          queryUrl={
-            profile ? `${queryUrl}/data/${profiles[profile].resource}` : null
-          }
-          setDownloadStatus={setDownloadStatus}
-        />
-      )}
-      {profile && (
-        <Accordion>
-          <AccordionItem heading="Filters" initialExpand>
-            <FilterFields
-              filterHandlers={filterHandlers}
-              filterState={filterState}
-              profile={profile}
-              sourceHandlers={sourceHandlers}
-              sourceState={sourceState}
-              staticOptions={staticOptions}
-            />
-            <div className="display-flex margin-top-1 width-full">
-              <button
-                className="margin-top-1 margin-x-auto usa-button usa-button--outline"
-                onClick={resetInputs}
-                type="button"
-              >
-                Clear Search
-              </button>
-            </div>
-          </AccordionItem>
-
-          <AccordionItem heading="Download the Data" initialExpand>
-            <RadioButtons
-              legend={
-                <>
-                  <b className="margin-right-05">File Format</b>
-                  <InfoTooltip text="Choose a file format for the result set" />
-                </>
-              }
-              onChange={formatHandler}
-              options={staticOptions.format}
-              selected={format}
-              styles={['margin-bottom-2']}
-            />
-            <button
-              className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
-              onClick={openDownloadConfirmation}
-              type="button"
-            >
-              <Download className="height-205 margin-right-1 usa-icon width-205" />
-              Download
-            </button>
-            {downloadStatus === 'success' && (
-              <Alert type="success">Query executed successfully.</Alert>
-            )}
-            {downloadStatus === 'failure' && (
-              <Alert type="error">
-                An error occurred while executing the current query, please try
-                again later.
-              </Alert>
-            )}
-          </AccordionItem>
-
-          <AccordionItem heading="Queries">
-            <h4>
-              {/* TODO - Remove the glossary linkage before production deployment */}
-              <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-            </h4>
-            <CopyBox
-              text={`${window.location.origin}${
-                window.location.pathname
-              }#${buildUrlQueryString(queryParams.filters)}`}
-            />
-            <h4>{profiles[profile].label} API Query</h4>
-            <CopyBox
-              lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
-              maxLength={2048}
-              text={`${queryUrl}/data/${
-                profiles[profile].resource
-              }?${buildUrlQueryString(
-                queryParams.filters,
-                queryParams.options,
-              )}`}
-            />
-            <h4>cURL</h4>
-            <CopyBox
-              text={`curl -X POST --json "${JSON.stringify(
-                queryParams,
-              ).replaceAll('"', '\\"')}" ${queryUrl}/data/${
-                profiles[profile].resource
-              }`}
-            />
-          </AccordionItem>
-        </Accordion>
-      )}
-    </>
-  );
-}
-
-type FilterFieldsProps = {
-  filterHandlers: FilterFieldInputHandlers;
-  filterState: FilterFieldState;
-  profile: Profile;
-  sourceHandlers: SourceFieldInputHandlers;
-  sourceState: SourceFieldState;
-  staticOptions: StaticOptions;
-};
-
-function FilterFields({
-  filterHandlers,
-  filterState,
-  profile,
-  sourceHandlers,
-  sourceState,
-  staticOptions,
-}: FilterFieldsProps) {
-  const profileFields: readonly string[] = profiles[profile].fields;
-
-  // Store each field's element in a tuple with its key
-  const fieldsJsx: Array<[JSX.Element, string]> = removeNulls(
-    filterFieldsConfig
-      .filter((fieldConfig) => profileFields.includes(fieldConfig.key))
-      .map((fieldConfig) => {
-        const sourceFieldConfig =
-          'source' in fieldConfig
-            ? sourceFieldsConfig.find((f) => f.id === fieldConfig.source)
-            : null;
-        const sourceValue =
-          sourceFieldConfig && sourceState[sourceFieldConfig.id]?.value;
-
-        switch (fieldConfig.type) {
-          case 'multiselect':
-          case 'select':
-            const defaultOptions = getInitialOptions(
-              staticOptions,
-              fieldConfig.key,
-              sourceValue,
-            );
-
-            if (
-              !sourceFieldConfig &&
-              fieldConfig.type === 'multiselect' &&
-              Array.isArray(defaultOptions) &&
-              defaultOptions.length <= 5
-            ) {
-              return [
-                <Checkboxes
-                  key={fieldConfig.key}
-                  legend={<b>{fieldConfig.label}</b>}
-                  onChange={filterHandlers[fieldConfig.key]}
-                  options={defaultOptions}
-                  selected={filterState[fieldConfig.key] ?? []}
-                  styles={['margin-top-3']}
-                />,
-                fieldConfig.key,
-              ];
-            }
-            const selectProps = {
-              defaultOption:
-                'default' in fieldConfig ? fieldConfig.default : null,
-              defaultOptions,
-              filterHandler: filterHandlers[fieldConfig.key],
-              filterKey: fieldConfig.key,
-              filterLabel: fieldConfig.label,
-              filterValue: filterState[fieldConfig.key],
-              profile,
-              sortDirection:
-                'direction' in fieldConfig
-                  ? (fieldConfig.direction as SortDirection)
-                  : 'asc',
-              sourceKey: sourceFieldConfig?.key ?? null,
-              sourceValue: sourceFieldConfig
-                ? sourceState[sourceFieldConfig.id]
-                : null,
-              staticOptions,
-            };
-            return [
-              <label
-                className="usa-label"
-                key={fieldConfig.key}
-                htmlFor={`input-${fieldConfig.key}`}
-              >
-                <b>{fieldConfig.label}</b>
-                <div className="margin-top-1">
-                  {sourceFieldConfig ? (
-                    <SourceSelectFilter
-                      {...selectProps}
-                      sourceHandler={sourceHandlers[sourceFieldConfig.id]}
-                      sourceKey={sourceFieldConfig.key}
-                      sourceLabel={sourceFieldConfig.label}
-                    />
-                  ) : (
-                    <SelectFilter {...selectProps} />
-                  )}
-                </div>
-              </label>,
-              fieldConfig.key,
-            ];
-          case 'date':
-          case 'year':
-            // Prevents range fields from rendering twice
-            if (fieldConfig.boundary === 'high') return null;
-
-            const pairedField = filterFieldsConfig.find(
-              (otherField) =>
-                otherField.key !== fieldConfig.key &&
-                'domain' in otherField &&
-                otherField.domain === fieldConfig.domain,
-            );
-            // All range inputs should have a high and a low boundary field
-            if (!pairedField || !isSingleValueField(pairedField.key))
-              return null;
-
-            return [
-              <RangeFilter
-                domain={fieldConfig.domain}
-                highHandler={filterHandlers[pairedField.key]}
-                highKey={pairedField.key}
-                highValue={filterState[pairedField.key]}
-                label={fieldConfig.label}
-                lowHandler={filterHandlers[fieldConfig.key]}
-                lowKey={fieldConfig.key}
-                lowValue={filterState[fieldConfig.key]}
-                type={fieldConfig.type}
-              />,
-              fieldConfig.domain,
-            ];
-          default:
-            return null;
-        }
-      }),
-  );
-
-  // Store each row as a tuple with its row key
-  const rows: Array<[Array<[JSX.Element, string]>, string]> = [];
-  for (let i = 0; i < fieldsJsx.length; i += 3) {
-    const row = fieldsJsx.slice(i, i + 3);
-    const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
-    rows.push([row, rowKey]);
-  }
-
-  return (
-    <div>
-      {rows.map(([row, rowKey]) => (
-        <div className="grid-gap grid-row" key={rowKey}>
-          {row.map(([field, fieldKey]) => (
-            <div className="tablet:grid-col" key={fieldKey}>
-              {field}
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Intro() {
-  const [visible, setVisible] = useState(
-    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
-  );
-
-  const closeIntro = useCallback(() => setVisible(false), []);
-
-  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
-
-  const toggleDontShowAgain = useCallback(
-    () => setDontShowAgain(!dontShowAgain),
-    [dontShowAgain],
-  );
-
-  useEffect(() => {
-    if (dontShowAgain === null) return;
-    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
-  }, [dontShowAgain]);
-
-  if (!visible) return null;
-
-  return (
-    <Summary heading="How to Use This Application">
-      <p>
-        Select a data profile, then build a query by selecting options from the
-        input fields.
-      </p>
-      <div className="display-flex flex-justify flex-wrap">
-        <Checkbox
-          checked={dontShowAgain ?? false}
-          label="Don't show again on this computer"
-          onChange={toggleDontShowAgain}
-          styles={['margin-right-1 margin-y-auto']}
-        />
-        <button
-          className="margin-top-2 usa-button"
-          onClick={closeIntro}
-          type="button"
-        >
-          Close Intro
-        </button>
-      </div>
-    </Summary>
-  );
-}
-
-function ParameterErrorAlert({
-  parameters,
-}: {
-  parameters: ParameterErrors | null;
-}) {
-  const [visible, setVisible] = useState(false);
-
-  const closeAlert = useCallback(() => {
-    setVisible(false);
-  }, []);
-
-  useEffect(() => {
-    if (parameters) setVisible(true);
-  }, [parameters]);
-
-  if (!parameters || !visible) return null;
-
-  return (
-    <Alert icon={false} type="error">
-      {parameters.invalid.size > 0 && (
-        <>
-          <p className="text-bold">
-            The following parameters could not be matched to a valid field under
-            the selected profile:
-          </p>
-          <ul>
-            {Array.from(parameters.invalid).map((invalidParam) => (
-              <li key={invalidParam}>{invalidParam}</li>
-            ))}
-          </ul>
-        </>
-      )}
-      {parameters.duplicate.size > 0 && (
-        <>
-          <p className="text-bold">
-            Multiple parameters were provided for the following fields, when
-            only a single parameter is allowed:
-          </p>
-          <ul>
-            {Array.from(parameters.duplicate).map((duplicateParam) => (
-              <li key={duplicateParam}>{duplicateParam}</li>
-            ))}
-          </ul>
-        </>
-      )}
-      <div className="display-flex flex-justify-end">
-        <button className="usa-button" onClick={closeAlert} type="button">
-          Close Alert
-        </button>
-      </div>
-    </Alert>
-  );
-}
-
-type SourceSelectFilterProps<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
-> = SelectFilterProps<F> & {
-  sourceHandler: SourceFieldInputHandlers[SourceField];
-  sourceKey: typeof sourceFieldsConfig[number]['key'];
-  sourceLabel: string;
-};
-
-function SourceSelectFilter<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
->(props: SourceSelectFilterProps<F>) {
-  const { sourceLabel, sourceHandler, ...selectFilterProps } = props;
-  const { profile, sourceKey, sourceValue, staticOptions } = selectFilterProps;
-
-  return (
-    <SourceSelect
-      label={sourceLabel}
-      sources={getOptions(profile, sourceKey, staticOptions)}
-      onChange={sourceHandler}
-      selected={sourceValue}
-    >
-      <SelectFilter {...selectFilterProps} />
-    </SourceSelect>
-  );
-}
-
-type SelectFilterProps<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
-> = {
-  defaultOption?: Option | null;
-  defaultOptions: boolean | readonly Option[];
-  filterHandler: FilterFieldInputHandlers[F];
-  filterKey: F;
-  filterLabel: string;
-  filterValue: FilterFieldState[F];
-  profile: Profile;
-  sortDirection?: SortDirection;
-  sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
-  sourceValue: SourceFieldState[SourceField] | null;
-  staticOptions: StaticOptions;
-};
-
-function SelectFilter<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
->({
-  defaultOption,
-  defaultOptions,
-  filterHandler,
-  filterKey,
-  filterLabel,
-  filterValue,
-  profile,
-  sortDirection,
-  sourceKey,
-  sourceValue,
-  staticOptions,
-}: SelectFilterProps<F>) {
-  return (
-    <AsyncSelect
-      aria-label={`${filterLabel} input`}
-      className="width-full"
-      inputId={`input-${filterKey}`}
-      isMulti={isMultiOptionField(filterKey)}
-      // Re-renders default options when `sourceValue` changes
-      key={JSON.stringify(sourceValue?.value)}
-      // Workaround for TypeScript not narrowing generic type
-      onChange={filterHandler as any}
-      defaultOptions={defaultOptions}
-      loadOptions={filterOptions({
-        defaultOption,
-        profile,
-        field: filterKey,
-        sortDirection,
-        staticOptions,
-        sourceField: sourceKey,
-        sourceValue: sourceValue?.value,
-      })}
-      menuPortalTarget={document.body}
-      placeholder={`Select ${getArticle(
-        filterLabel.split(' ')[0],
-      )} ${filterLabel}...`}
-      styles={{
-        control: (base) => ({
-          ...base,
-          border: '1px solid #adadad',
-          borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
-        }),
-        loadingIndicator: () => ({
-          display: 'none',
-        }),
-        menuPortal: (base) => ({
-          ...base,
-          zIndex: 9999,
-        }),
-      }}
-      value={filterValue}
-    />
-  );
-}
-
-type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
-  domain: string;
-  highHandler: SingleValueInputHandler;
-  highKey: F;
-  highValue: string;
-  label: string;
-  lowHandler: SingleValueInputHandler;
-  lowKey: F;
-  lowValue: string;
-  type: 'date' | 'year';
-};
-
-function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
-  domain,
-  highHandler,
-  highKey,
-  highValue,
-  label,
-  lowHandler,
-  lowKey,
-  lowValue,
-  type,
-}: RangeFilterProps<F>) {
-  return (
-    <label className="usa-label" htmlFor={`input-${lowKey}`} key={domain}>
-      <b>{label}</b>
-      <div className="margin-top-1 usa-hint">from:</div>
-      <input
-        className="usa-input"
-        id={`input-${lowKey}`}
-        min={type === 'year' ? 1900 : undefined}
-        max={type === 'year' ? 2100 : undefined}
-        onChange={lowHandler}
-        placeholder={type === 'year' ? 'yyyy' : undefined}
-        type={type === 'date' ? 'date' : 'number'}
-        value={lowValue}
-      />
-      <div className="margin-top-1 usa-hint">to:</div>
-      <input
-        className="usa-input"
-        id={`input-${highKey}`}
-        min={type === 'year' ? 1900 : undefined}
-        max={type === 'year' ? 2100 : undefined}
-        onChange={highHandler}
-        placeholder={type === 'year' ? 'yyyy' : undefined}
-        type={type === 'date' ? 'date' : 'number'}
-        value={highValue}
-      />
-    </label>
-  );
 }
