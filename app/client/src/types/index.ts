@@ -41,7 +41,7 @@ export type ConcreteField =
   | 'useName'
   | 'waterType';
 
-export type ConcreteOptions = {
+type ConcreteOptions = {
   [key in ConcreteField]: Array<Option>;
 };
 
@@ -54,17 +54,6 @@ export type Option = {
   value: Primitive;
 };
 
-export type PostData = {
-  filters: {
-    [field: string]: Primitive | Primitive[];
-  };
-  options: {
-    [field: string]: string;
-  };
-};
-
 export type Primitive = string | number | boolean;
-
-export type SortDirection = 'asc' | 'desc';
 
 export type Status = 'idle' | 'pending' | 'failure' | 'success';
