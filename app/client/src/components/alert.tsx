@@ -34,8 +34,8 @@ export default function Alert({
       break;
   }
 
-  if (slim) styles.push('usa-alert--slim');
-  if (!icon) styles.push('usa-alert--no-icon');
+  if (slim) alertStyles.push('usa-alert--slim');
+  if (!icon) alertStyles.push('usa-alert--no-icon');
 
   return (
     <div
@@ -44,7 +44,7 @@ export default function Alert({
     >
       <div className="usa-alert__body">
         {heading && <h4 className="usa-alert__heading">{heading}</h4>}
-        <p className="usa-alert__text">{children}</p>
+        <section className="usa-alert__text">{children}</section>
       </div>
     </div>
   );

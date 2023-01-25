@@ -23,7 +23,7 @@ type AliasedField =
   | 'useStateIrCategory';
 
 type AliasedOptions = {
-  [key in AliasedField]: Array<Option> | undefined;
+  [key in AliasedField]: Array<Option>;
 };
 
 interface ArrayConstructor {
@@ -53,7 +53,7 @@ type ConcreteOptions = {
   [key in ConcreteField]: Array<Option>;
 };
 
-type DomainOptions = ConcreteOptions & AliasedOptions;
+type DomainOptions = ConcreteOptions & Partial<AliasedOptions>;
 
 type Option = {
   context?: string;

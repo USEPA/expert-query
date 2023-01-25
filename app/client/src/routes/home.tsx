@@ -53,22 +53,19 @@ const multiOptionFields = getMultiOptionFields(allFields);
 const singleOptionFields = getSingleOptionFields(allFields);
 const dateFields = getDateFields(allFields);
 const yearFields = getYearFields(allFields);
-
 const singleValueFields = [...dateFields, ...yearFields];
 
 /*
 ## Types
 */
 type HomeContext = {
-  initializeInputs: (initialInputs: InputState) => void;
   inputHandlers: InputHandlers;
   inputState: InputState;
-  profile: keyof typeof profiles;
+  profile: Profile;
+  queryParams: UrlQueryState;
   queryUrl: string;
   resetInputs: () => void;
-  setUrlQueryParamsLoaded: Dispatch<SetStateAction<boolean>>;
   staticOptions: StaticOptions;
-  urlQueryParamsLoaded: boolean;
 };
 
 type InputAction =
@@ -100,6 +97,13 @@ type MultiOptionHandlers = {
 type MultiOptionState = {
   [key in MultiOptionField]: ReadonlyArray<Option> | null;
 };
+
+type ParameterErrors = {
+  duplicate: Set<string>;
+  invalid: Set<string>;
+};
+
+type Profile = keyof typeof profiles;
 
 type SingleOptionField = typeof singleOptionFields[number];
 
@@ -135,14 +139,16 @@ type UrlQueryState = {
 
 // Adds aliases for fields that share the same set of possible values
 function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
-  values.assessmentUnitState = values.assessmentUnitStatus;
-  values.associatedActionAgency = values.actionAgency;
-  values.associatedActionStatus = values.assessmentUnitStatus;
-  values.parameter = values.pollutant;
-  values.parameterName = values.pollutant;
-  values.parameterStateIrCategory = values.pollutant;
-  values.useStateIrCategory = values.pollutant;
-  return values;
+  return {
+    ...values,
+    assessmentUnitState: values.assessmentUnitStatus,
+    associatedActionAgency: values.actionAgency,
+    associatedActionStatus: values.assessmentUnitStatus,
+    parameter: values.pollutant,
+    parameterName: values.pollutant,
+    parameterStateIrCategory: values.stateIrCategory,
+    useStateIrCategory: values.stateIrCategory,
+  };
 }
 
 function buildPostData(query: UrlQueryState) {
@@ -172,9 +178,9 @@ function buildUrlQueryString(query: UrlQueryState) {
     // Else push a single parameter
     else paramsList.push([field, value]);
   });
-  return paramsList
-    .reduce((a, b) => a + `&${b[0]}=${b[1]}`, '')
-    .replace('&', ''); // trim the leading ampersand
+  return encodeURI(
+    paramsList.reduce((a, b) => a + `&${b[0]}=${b[1]}`, '').replace('&', ''),
+  ); // trim the leading ampersand
 }
 
 // Returns a boolean, specifying if a value is found in the
@@ -448,10 +454,10 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
 // Uses URL route/query parameters or default values for initial state
 async function getUrlInputs(
   staticOptions: StaticOptions,
-  profile: string | null,
+  profile: Profile,
   _signal: AbortSignal,
-): Promise<InputState> {
-  const params = parseInitialParams();
+): Promise<{ initial: InputState; errors: ParameterErrors }> {
+  const [params, errors] = parseInitialParams(profile);
 
   const newState = getDefaultInputState();
 
@@ -487,7 +493,7 @@ async function getUrlInputs(
     }),
   ]);
 
-  return newState;
+  return { initial: newState, errors };
 }
 
 // Utility
@@ -521,9 +527,7 @@ function isOption(maybeOption: Option | Primitive): maybeOption is Option {
 }
 
 // Type narrowing
-function isProfile(
-  maybeProfile: string | keyof typeof profiles,
-): maybeProfile is keyof typeof profiles {
+function isProfile(maybeProfile: string | Profile): maybeProfile is Profile {
   return maybeProfile in profiles;
 }
 
@@ -619,25 +623,52 @@ function matchYear(values: InputValue) {
 }
 
 // Parse parameters provided in the URL hash into a JSON object
-function parseInitialParams() {
-  const initialParams: UrlQueryState = {};
+function parseInitialParams(
+  profile: Profile,
+): [UrlQueryState, ParameterErrors] {
+  const uniqueParams: { [field: string]: Primitive | Set<Primitive> } = {};
+  const paramErrors: ParameterErrors = {
+    duplicate: new Set(),
+    invalid: new Set(),
+  };
+
   const initialParamsList = window.location.hash.replace('#', '').split('&');
   initialParamsList.forEach((param) => {
     const parsedParam = param.split('=');
     // Disregard invalid or empty parameters
     if (parsedParam.length !== 2 || parsedParam[1] === '') return;
-    const [field, newValue] = parsedParam;
-    if (field in initialParams) {
+
+    const [field, uriValue] = parsedParam;
+    const newValue = decodeURI(uriValue);
+
+    if (field in uniqueParams) {
+      if (!isMultiOptionField(field)) return paramErrors.duplicate.add(field);
       // Multiple values, add to an array
-      const value = initialParams[field];
-      if (Array.isArray(value)) value.push(newValue);
-      else initialParams[field] = [value, newValue];
+      const value = uniqueParams[field];
+      if (value instanceof Set) value.add(newValue);
+      else uniqueParams[field] = new Set([value, newValue]);
     } else {
+      const profileFields = profiles[profile].fields as readonly string[];
+      if (![...configFields, ...profileFields].find((f) => f === field)) {
+        paramErrors.invalid.add(field);
+        return;
+      }
       // Single value
-      initialParams[field] = newValue;
+      uniqueParams[field] = newValue;
     }
   });
-  return initialParams;
+
+  const params = Object.entries(uniqueParams).reduce<UrlQueryState>(
+    (current, [param, value]) => {
+      return {
+        ...current,
+        [param]: value instanceof Set ? Array.from(value) : value,
+      };
+    },
+    {},
+  );
+
+  return [params, paramErrors];
 }
 
 function setLocalStorageItem(item: string, value: string) {
@@ -782,7 +813,7 @@ function useProfile() {
   const [profileOption, setProfileOption] = useState<
     typeof listOptions.dataProfile[number] | null
   >(null);
-  const [profile, setProfile] = useState<keyof typeof profiles | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     if (!profileArg) return;
@@ -816,42 +847,44 @@ function useUrlQueryParams({
   inputState,
   initializeInputs,
   staticOptions,
-  setUrlQueryParamsLoaded,
-  urlQueryParamsLoaded,
 }: {
-  profile: keyof typeof profiles;
+  profile: Profile | null;
   inputState: InputState;
   initializeInputs: (state: InputState) => void;
   staticOptions: StaticOptions | null;
-  setUrlQueryParamsLoaded: Dispatch<SetStateAction<boolean>>;
-  urlQueryParamsLoaded: boolean;
 }) {
   const getAbortSignal = useAbortSignal();
 
+  const [parameterErrors, setParameterErrors] =
+    useState<ParameterErrors | null>(null);
+  const [parametersLoaded, setParametersLoaded] = useState(false);
   // Populate the input fields with URL parameters, if any
   useEffect(() => {
-    if (urlQueryParamsLoaded || !staticOptions) return;
+    if (parametersLoaded || !profile || !staticOptions) return;
     getUrlInputs(staticOptions, profile, getAbortSignal())
-      .then(initializeInputs)
+      .then(({ initial, errors }) => {
+        initializeInputs(initial);
+        if (errors.invalid.size || errors.duplicate.size)
+          setParameterErrors(errors);
+      })
       .catch((err) => {
         console.error(`Error loading initial inputs: ${err}`);
       })
-      .finally(() => setUrlQueryParamsLoaded(true));
+      .finally(() => setParametersLoaded(true));
   }, [
     getAbortSignal,
     initializeInputs,
     profile,
-    setUrlQueryParamsLoaded,
     staticOptions,
-    urlQueryParamsLoaded,
+    parametersLoaded,
   ]);
 
   // Track non-empty values relevant to the current profile
-  const [urlQueryParams, setUrlQueryParams] = useState<UrlQueryState>({});
+  const [parameters, setParameters] = useState<UrlQueryState>({});
 
   // Update URL when inputs change
   useEffect(() => {
-    if (!urlQueryParamsLoaded) return;
+    if (!profile || !parametersLoaded) return;
 
     // Get selected parameters, including multiselectable fields
     const newUrlQueryParams: UrlQueryState = {};
@@ -879,10 +912,10 @@ function useUrlQueryParams({
 
     window.location.hash = buildUrlQueryString(newUrlQueryParams);
 
-    setUrlQueryParams(newUrlQueryParams);
-  }, [inputState, profile, urlQueryParamsLoaded]);
+    setParameters(newUrlQueryParams);
+  }, [inputState, parametersLoaded, profile]);
 
-  return urlQueryParams;
+  return { urlQueryParams: parameters, urlQueryParamErrors: parameterErrors };
 }
 
 function useStaticOptions(
@@ -895,7 +928,23 @@ function useStaticOptions(
   useEffect(() => {
     if (content.status !== 'success') return;
     const domainOptions = addDomainAliases(content.data.domainValues);
-    setStaticOptions({ ...domainOptions, ...listOptions });
+    setStaticOptions(
+      // Alphabetize all option lists by label
+      Object.entries({ ...domainOptions, ...listOptions }).reduce(
+        (sorted, [name, options]) => {
+          return {
+            ...sorted,
+            [name]: (options as Option[]).sort((a, b) => {
+              if (typeof a.label === 'string') {
+                return a.label.localeCompare(b.label);
+              }
+              return 0;
+            }),
+          };
+        },
+        {},
+      ) as StaticOptions,
+    );
   }, [content]);
 
   return staticOptions;
@@ -914,7 +963,12 @@ export function Home() {
   const { initializeInputs, inputState, inputHandlers, resetInputs } =
     useInputState();
 
-  const [urlQueryParamsLoaded, setUrlQueryParamsLoaded] = useState(false);
+  const { urlQueryParams, urlQueryParamErrors } = useUrlQueryParams({
+    profile,
+    staticOptions,
+    inputState,
+    initializeInputs,
+  });
 
   const eqDataUrl =
     content.data.services?.eqDataApi || `${window.location.origin}/attains`;
@@ -948,6 +1002,7 @@ export function Home() {
         </button>
         <GlossaryPanel path={getPageName()} />
         <div>
+          <ParameterErrorAlert parameters={urlQueryParamErrors} />
           <Intro />
           {staticOptions && (
             <>
@@ -964,15 +1019,13 @@ export function Home() {
               {profile && (
                 <Outlet
                   context={{
-                    initializeInputs,
                     inputHandlers,
                     inputState,
                     profile,
+                    queryParams: urlQueryParams,
                     queryUrl: eqDataUrl,
                     resetInputs,
-                    setUrlQueryParamsLoaded,
                     staticOptions,
-                    urlQueryParamsLoaded,
                   }}
                 />
               )}
@@ -988,25 +1041,14 @@ export function Home() {
 
 export function QueryBuilder() {
   const {
+    queryParams,
     queryUrl,
-    initializeInputs,
     inputHandlers,
     inputState,
     profile,
     resetInputs,
-    setUrlQueryParamsLoaded,
     staticOptions,
-    urlQueryParamsLoaded,
   } = useHomeContext();
-
-  const urlQueryParams = useUrlQueryParams({
-    profile,
-    staticOptions,
-    inputState,
-    initializeInputs,
-    setUrlQueryParamsLoaded,
-    urlQueryParamsLoaded,
-  });
 
   const {
     closeDownloadConfirmation,
@@ -1017,8 +1059,8 @@ export function QueryBuilder() {
   const [downloadStatus, setDownloadStatus] = useDownloadStatus();
 
   const queryData = useMemo(() => {
-    return buildPostData(urlQueryParams);
-  }, [urlQueryParams]);
+    return buildPostData(queryParams);
+  }, [queryParams]);
 
   return (
     <>
@@ -1099,7 +1141,7 @@ export function QueryBuilder() {
             testId="current-query-copy-box-container"
               text={`${window.location.origin}${
                 window.location.pathname
-              }/#${buildUrlQueryString(urlQueryParams)}`}
+              }/#${buildUrlQueryString(queryParams)}`}
             />
             <h4>{profiles[profile].label} API Query</h4>
             <CopyBox
@@ -1108,7 +1150,7 @@ export function QueryBuilder() {
               maxLength={2048}
               text={`${queryUrl}/data/${
                 profiles[profile].resource
-              }?${buildUrlQueryString(urlQueryParams)}`}
+              }?${buildUrlQueryString(queryParams)}`}
             />
             <h4>cURL</h4>
             <CopyBox
@@ -1128,7 +1170,7 @@ export function QueryBuilder() {
 
 type FilterFieldsProps = {
   handlers: InputHandlers;
-  profile: keyof typeof profiles;
+  profile: Profile;
   state: InputState;
   staticOptions: StaticOptions;
 };
@@ -1350,5 +1392,59 @@ function Intro() {
         </button>
       </div>
     </Summary>
+  );
+}
+
+function ParameterErrorAlert({
+  parameters,
+}: {
+  parameters: ParameterErrors | null;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  const closeAlert = useCallback(() => {
+    setVisible(false);
+  }, []);
+
+  useEffect(() => {
+    if (parameters) setVisible(true);
+  }, [parameters]);
+
+  if (!parameters || !visible) return null;
+
+  return (
+    <Alert icon={false} type="error">
+      {parameters.invalid.size > 0 && (
+        <>
+          <p className="text-bold">
+            The following parameters could not be matched to a valid field under
+            the selected profile:
+          </p>
+          <ul>
+            {Array.from(parameters.invalid).map((invalidParam) => (
+              <li key={invalidParam}>{invalidParam}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {parameters.duplicate.size > 0 && (
+        <>
+          <p className="text-bold">
+            Multiple parameters were provided for the following fields, when
+            only a single parameter is allowed:
+          </p>
+          <ul>
+            {Array.from(parameters.duplicate).map((duplicateParam) => (
+              <li key={duplicateParam}>{duplicateParam}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      <div className="display-flex flex-justify-end">
+        <button className="usa-button" onClick={closeAlert} type="button">
+          Close Alert
+        </button>
+      </div>
+    </Alert>
   );
 }

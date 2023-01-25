@@ -11,7 +11,15 @@ class DuplicateParameterException extends Error {
   constructor(parameter) {
     super();
     this.code = 400;
-    this.message = `Duplicate ${parameter} parameters not allowed`;
+    this.message = `Duplicate '${parameter}' parameters not allowed`;
+  }
+}
+
+class InvalidParameterException extends Error {
+  constructor(parameter) {
+    super();
+    this.code = 400;
+    this.message = `The parameter '${parameter}' is not valid for the specified profile`;
   }
 }
 
@@ -23,13 +31,6 @@ class DuplicateParameterException extends Error {
  * @param {string} highParamValue URL query high value
  */
 function appendRangeToWhere(query, column, lowParamValue, highParamValue) {
-  if (Array.isArray(lowParamValue)) {
-    throw new DuplicateParameterException(column.lowParam);
-  }
-  if (Array.isArray(highParamValue)) {
-    throw new DuplicateParameterException(column.highParam);
-  }
-
   const isTimestampColumn = column.type === "timestamptz";
   const lowValue = isTimestampColumn
     ? dateToUtcTime(lowParamValue)
@@ -125,13 +126,10 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    if ("lowParam" in col || "highParam" in col) {
-      appendRangeToWhere(
-        query,
-        col,
-        queryParams.filters[col.lowParam],
-        queryParams.filters[col.highParam]
-      );
+    const lowArg = "lowParam" in col && queryParams.filters[col.lowParam];
+    const highArg = "highParam" in col && queryParams.filters[col.highParam];
+    if (lowArg || highArg) {
+      appendRangeToWhere(query, col, lowArg, highArg);
     } else {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
     }
@@ -151,6 +149,8 @@ async function executeQuery(profile, req, res) {
     const query = knex.withSchema(req.activeSchema).from(profile.tableName);
 
     const queryParams = getQueryParams(req);
+
+    validateQueryParams(queryParams, profile);
 
     parseCriteria(query, profile, queryParams);
 
@@ -204,8 +204,35 @@ async function executeQuery(profile, req, res) {
     }
   } catch (error) {
     log.error(`Failed to get data from the "${profile.tableName}" table...`);
-    return res.status(error.code ?? 500).send(`Error! ${error.message}`);
+    return res.status(error.code ?? 500).json(error);
   }
+}
+
+/**
+ * Throws an error if multiple instances of a parameter were provided
+ * for an option or filter that accepts a single argument only
+ * @param {Object} queryFilters URL query value for filters
+ * @param {Object} profile definition of the profile being queried
+ */
+function validateQueryParams(queryParams, profile) {
+  Object.entries(queryParams.options).forEach(([name, value]) => {
+    if (Array.isArray(value)) throw new DuplicateParameterException(name);
+  });
+  Object.entries(queryParams.filters).forEach(([name, value]) => {
+    const column = profile.columns.find((c) => {
+      if (c.lowParam === name || c.highParam === name || c.alias === name)
+        return c;
+    });
+    if (!column) throw new InvalidParameterException(name);
+    if (Array.isArray(value)) {
+      if (
+        column.lowParam === name ||
+        column.highParam === name ||
+        (column.alias === name && column.acceptsMultiple === false)
+      )
+        throw new DuplicateParameterException(name);
+    }
+  });
 }
 
 /**
@@ -224,6 +251,8 @@ function executeQueryCountOnly(profile, req, res) {
 
     const queryParams = getQueryParams(req);
 
+    validateQueryParams(queryParams, profile);
+
     parseCriteria(query, profile, queryParams, true);
 
     query
@@ -232,11 +261,11 @@ function executeQueryCountOnly(profile, req, res) {
         log.error(
           `Failed to get count from the "${profile.tableName}" table...`
         );
-        res.status(500).send("Error! " + error);
+        res.status(500).json(error);
       });
   } catch (error) {
     log.error(`Failed to get count from the "${profile.tableName}" table...`);
-    return res.status(error.code ?? 500).send(`Error! ${error.message}`);
+    return res.status(error.code ?? 500).json(error);
   }
 }
 

@@ -20,23 +20,6 @@ export default {
     label: 'Actions',
     resource: 'actions',
   },
-  assessmentUnits: {
-    description: 'Description of assessment units',
-    fields: [
-      'assessmentUnitId',
-      'assessmentUnitName',
-      'assessmentUnitState',
-      'locationText',
-      'organizationId',
-      'organizationName',
-      'region',
-      'state',
-      'useClassName',
-      'waterType',
-    ],
-    label: 'Assessment Units',
-    resource: 'assessmentUnits',
-  },
   assessments: {
     description: 'Description of assessments',
     fields: [
@@ -102,6 +85,23 @@ export default {
     ],
     label: 'Assessments',
     resource: 'assessments',
+  },
+  assessmentUnits: {
+    description: 'Description of assessment units',
+    fields: [
+      'assessmentUnitId',
+      'assessmentUnitName',
+      'assessmentUnitState',
+      'locationText',
+      'organizationId',
+      'organizationName',
+      'region',
+      'state',
+      'useClassName',
+      'waterType',
+    ],
+    label: 'Assessment Units',
+    resource: 'assessmentUnits',
   },
   assessmentUnitsMonitoringLocations: {
     description: 'Description of assessment units with monitoring locations',
