@@ -6,7 +6,7 @@ describe("Download file", () => {
   let count = "0";
   it("Download and Verify Alert message visible when download and hidden after 10 second", () => {
     cy.selectProfile("Assessments");
-    cy.get("#input-state").type("texas{downArrow}{enter}");
+    cy.selectOption("input-state", "texas");
     cy.findByText("JavaScript Object Notation (JSON)").click();
     cy.findByRole("button", { name: "Download" }).click();
     cy.wait(2000);
