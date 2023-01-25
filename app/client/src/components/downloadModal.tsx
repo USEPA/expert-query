@@ -97,7 +97,7 @@ export default function DownloadModal({
             <>
               <div className="usa-prose">
                 <p>
-                  Your query will return <strong>{count}</strong> rows.
+                  Your query will return <strong data-testid="downloadfile-length">{count}</strong> rows.
                 </p>
                 <p>Click continue to download the data.</p>
               </div>
