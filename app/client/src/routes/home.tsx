@@ -139,14 +139,16 @@ type UrlQueryState = {
 
 // Adds aliases for fields that share the same set of possible values
 function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
-  values.assessmentUnitState = values.assessmentUnitStatus;
-  values.associatedActionAgency = values.actionAgency;
-  values.associatedActionStatus = values.assessmentUnitStatus;
-  values.parameter = values.pollutant;
-  values.parameterName = values.pollutant;
-  values.parameterStateIrCategory = values.pollutant;
-  values.useStateIrCategory = values.pollutant;
-  return values;
+  return {
+    ...values,
+    assessmentUnitState: values.assessmentUnitStatus,
+    associatedActionAgency: values.actionAgency,
+    associatedActionStatus: values.assessmentUnitStatus,
+    parameter: values.pollutant,
+    parameterName: values.pollutant,
+    parameterStateIrCategory: values.stateIrCategory,
+    useStateIrCategory: values.stateIrCategory,
+  };
 }
 
 function buildPostData(query: UrlQueryState) {
@@ -926,7 +928,23 @@ function useStaticOptions(
   useEffect(() => {
     if (content.status !== 'success') return;
     const domainOptions = addDomainAliases(content.data.domainValues);
-    setStaticOptions({ ...domainOptions, ...listOptions });
+    setStaticOptions(
+      // Alphabetize all option lists by label
+      Object.entries({ ...domainOptions, ...listOptions }).reduce(
+        (sorted, [name, options]) => {
+          return {
+            ...sorted,
+            [name]: (options as Option[]).sort((a, b) => {
+              if (typeof a.label === 'string') {
+                return a.label.localeCompare(b.label);
+              }
+              return 0;
+            }),
+          };
+        },
+        {},
+      ) as StaticOptions,
+    );
   }, [content]);
 
   return staticOptions;
