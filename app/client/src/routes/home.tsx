@@ -171,7 +171,7 @@ export function QueryBuilder() {
     format,
     formatHandler,
     profile,
-    resetInputs,
+    resetFilters,
     sourceHandlers,
     sourceState,
     staticOptions,
@@ -213,7 +213,7 @@ export function QueryBuilder() {
             <div className="display-flex margin-top-1 width-full">
               <button
                 className="margin-top-1 margin-x-auto usa-button usa-button--outline"
-                onClick={resetInputs}
+                onClick={resetFilters}
                 type="button"
               >
                 Clear Search
@@ -759,7 +759,7 @@ type HomeContext = {
   profile: Profile;
   queryParams: QueryData;
   queryUrl: string;
-  resetInputs: () => void;
+  resetFilters: () => void;
   sourceHandlers: SourceFieldInputHandlers;
   sourceState: SourceFieldState;
   staticOptions: StaticOptions;
