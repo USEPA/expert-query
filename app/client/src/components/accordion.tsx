@@ -3,7 +3,11 @@ import { useCallback, useState } from 'react';
 // types
 import type { ReactNode } from 'react';
 
-export function Accordion({ children }: { children: ReactNode }) {
+/*
+## Components
+*/
+
+export default function Accordion({ children }: { children: ReactNode }) {
   return (
     <div
       className="margin-top-2 usa-accordion usa-accordion--multiselectable"
@@ -13,12 +17,6 @@ export function Accordion({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
-type AccordionItemProps = {
-  children: ReactNode;
-  heading: string;
-  initialExpand?: boolean;
-};
 
 export function AccordionItem({
   children,
@@ -51,4 +49,12 @@ export function AccordionItem({
   );
 }
 
-export default Accordion;
+/*
+## Types
+*/
+
+type AccordionItemProps = {
+  children: ReactNode;
+  heading: string;
+  initialExpand?: boolean;
+};

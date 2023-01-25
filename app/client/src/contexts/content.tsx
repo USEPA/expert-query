@@ -5,6 +5,7 @@ import {
   useContext,
   useReducer,
 } from 'react';
+import type { DomainOptions } from 'types';
 
 type Props = {
   children: ReactNode;

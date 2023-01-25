@@ -1,13 +1,8 @@
 import type { ReactNode } from 'react';
 
-type Props = {
-  children: ReactNode;
-  heading?: string | null;
-  icon?: boolean;
-  slim?: boolean;
-  styles?: string[];
-  type?: 'info' | 'warning' | 'error' | 'success';
-};
+/*
+## Components
+*/
 
 export default function Alert({
   children,
@@ -16,7 +11,7 @@ export default function Alert({
   slim = false,
   styles = [],
   type = 'info',
-}: Props) {
+}: AlertProps) {
   const alertStyles = [...styles];
 
   switch (type) {
@@ -49,3 +44,16 @@ export default function Alert({
     </div>
   );
 }
+
+/*
+## Types
+*/
+
+type AlertProps = {
+  children: ReactNode;
+  heading?: string | null;
+  icon?: boolean;
+  slim?: boolean;
+  styles?: string[];
+  type?: 'info' | 'warning' | 'error' | 'success';
+};

@@ -1,19 +1,15 @@
-declare module '*.svg' {
-  import * as React from 'react';
+import type { ReactNode } from 'react';
 
-  export const ReactComponent: React.FunctionComponent<
-    React.SVGProps<SVGSVGElement> & { title?: string }
-  >;
-
-  const src: string;
-  export default src;
+declare global {
+  // This extends the `Array.isArray` function so that
+  // readonly arrays are properly narrowed
+  interface ArrayConstructor {
+    isArray(arg: unknown): arg is unknown[] | readonly unknown[];
+  }
 }
 
-// This extends the `Array.isArray` function so that
-// readonly arrays are properly narrowed
-
 // Columns that share values with those in the `domainValues` object
-type AliasedField =
+export type AliasedField =
   | 'assessmentUnitState'
   | 'associatedActionAgency'
   | 'associatedActionStatus'
@@ -22,16 +18,12 @@ type AliasedField =
   | 'parameterStateIrCategory'
   | 'useStateIrCategory';
 
-type AliasedOptions = {
+export type AliasedOptions = {
   [key in AliasedField]: Array<Option>;
 };
 
-interface ArrayConstructor {
-  isArray(arg: unknown): arg is unknown[] | readonly unknown[];
-}
-
 // Fields provided in the `domainValues` of the Content context
-type ConcreteField =
+export type ConcreteField =
   | 'actionAgency'
   | 'assessmentTypes'
   | 'assessmentUnitStatus'
@@ -49,20 +41,20 @@ type ConcreteField =
   | 'useName'
   | 'waterType';
 
-type ConcreteOptions = {
+export type ConcreteOptions = {
   [key in ConcreteField]: Array<Option>;
 };
 
-type DomainOptions = ConcreteOptions & Partial<AliasedOptions>;
+export type DomainOptions = ConcreteOptions & Partial<AliasedOptions>;
 
-type Option = {
+export type Option = {
   context?: string;
   description?: ReactNode;
   label: ReactNode;
   value: Primitive;
 };
 
-type PostData = {
+export type PostData = {
   filters: {
     [field: string]: Primitive | Primitive[];
   };
@@ -71,8 +63,8 @@ type PostData = {
   };
 };
 
-type Primitive = string | number | boolean;
+export type Primitive = string | number | boolean;
 
-type SortDirection = 'asc' | 'desc';
+export type SortDirection = 'asc' | 'desc';
 
-type Status = 'idle' | 'pending' | 'failure' | 'success';
+export type Status = 'idle' | 'pending' | 'failure' | 'success';

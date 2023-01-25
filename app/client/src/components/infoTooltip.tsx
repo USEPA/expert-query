@@ -9,27 +9,48 @@ import type { ReactElement, Ref } from 'react';
 import '@reach/tooltip/styles.css';
 
 /*
-## Helpers
-*/
-const centered: Position = (triggerRect, tooltipRect) => {
-  if (!triggerRect || !tooltipRect) return {};
-  const triggerCenter = triggerRect.left + triggerRect.width / 2;
-  const left = triggerCenter - tooltipRect.width / 2;
-  const maxLeft = document.body.clientWidth - tooltipRect.width;
-  return {
-    left: Math.min(Math.max(2, left), maxLeft) + window.scrollX,
-    top: triggerRect.bottom + 8 + window.scrollY,
-  };
-};
-
-/*
 ## Components
- */
-type TooltipProps = {
-  children: ReactElement;
-  label: string;
-  triggerRef: Ref<HTMLElement>;
-};
+*/
+
+export default function InfoTooltip({
+  description,
+  styles = [],
+  text,
+}: InfoTooltipProps) {
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  return (
+    <Tooltip label={text} triggerRef={triggerRef}>
+      <button
+        onClick={(_ev) => triggerRef.current?.focus()}
+        className={[
+          ...styles,
+          'usa-button',
+          'border-0',
+          'margin-0',
+          'padding-0',
+          'width-auto',
+          'hover:bg-white',
+        ].join(' ')}
+        ref={triggerRef}
+        style={{ background: 'inherit' }}
+        type="button"
+      >
+        <Info
+          aria-hidden="true"
+          className={[
+            'usa-icon',
+            'text-primary',
+            'focus:text-primary-dark',
+            'hover:text-primary-dark',
+          ].join(' ')}
+          focusable="false"
+          role="img"
+        />
+        <span className="sr-only">{description ?? 'Information Tooltip'}</span>
+      </button>
+    </Tooltip>
+  );
+}
 
 function Tooltip({ children, label, triggerRef }: TooltipProps) {
   const [trigger, tooltip] = useTooltip({
@@ -84,48 +105,33 @@ function Tooltip({ children, label, triggerRef }: TooltipProps) {
   );
 }
 
+/*
+## Utils
+*/
+
+const centered: Position = (triggerRect, tooltipRect) => {
+  if (!triggerRect || !tooltipRect) return {};
+  const triggerCenter = triggerRect.left + triggerRect.width / 2;
+  const left = triggerCenter - tooltipRect.width / 2;
+  const maxLeft = document.body.clientWidth - tooltipRect.width;
+  return {
+    left: Math.min(Math.max(2, left), maxLeft) + window.scrollX,
+    top: triggerRect.bottom + 8 + window.scrollY,
+  };
+};
+
+/*
+## Types
+*/
+
 type InfoTooltipProps = {
   description?: string;
   styles?: string[];
   text: string;
 };
 
-export default function InfoTooltip({
-  description,
-  styles = [],
-  text,
-}: InfoTooltipProps) {
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  return (
-    <Tooltip label={text} triggerRef={triggerRef}>
-      <button
-        onClick={(_ev) => triggerRef.current?.focus()}
-        className={[
-          ...styles,
-          'usa-button',
-          'border-0',
-          'margin-0',
-          'padding-0',
-          'width-auto',
-          'hover:bg-white',
-        ].join(' ')}
-        ref={triggerRef}
-        style={{ background: 'inherit' }}
-        type="button"
-      >
-        <Info
-          aria-hidden="true"
-          className={[
-            'usa-icon',
-            'text-primary',
-            'focus:text-primary-dark',
-            'hover:text-primary-dark',
-          ].join(' ')}
-          focusable="false"
-          role="img"
-        />
-        <span className="sr-only">{description ?? 'Information Tooltip'}</span>
-      </button>
-    </Tooltip>
-  );
-}
+type TooltipProps = {
+  children: ReactElement;
+  label: string;
+  triggerRef: Ref<HTMLElement>;
+};

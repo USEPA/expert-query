@@ -4,19 +4,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { ReactComponent as Close } from 'uswds/img/usa-icons/close.svg';
 // components
 import Alert from 'components/alert';
-// utilities
+// utils
 import { postData } from 'config';
 // styles
 import '@reach/dialog/styles.css';
+// types
+import type { Primitive, Status } from 'types';
 
-type Props<D extends PostData> = {
-  downloadStatus: Status;
-  filename: string | null;
-  onClose: () => void;
-  queryData: D;
-  queryUrl: string | null;
-  setDownloadStatus: (status: Status) => void;
-};
+/*
+## Components
+*/
 
 export default function DownloadModal<D extends PostData>({
   downloadStatus,
@@ -25,7 +22,7 @@ export default function DownloadModal<D extends PostData>({
   queryData,
   queryUrl,
   setDownloadStatus,
-}: Props<D>) {
+}: DownloadModalProps<D>) {
   const [count, setCount] = useState<number | null>(null);
   const [countStatus, setCountStatus] = useState<Status>('idle');
 
@@ -97,7 +94,9 @@ export default function DownloadModal<D extends PostData>({
             <>
               <div className="usa-prose">
                 <p>
-                  Your query will return <strong data-testid="downloadfile-length">{count}</strong> rows.
+                  Your query will return{' '}
+                  <strong data-testid="downloadfile-length">{count}</strong>{' '}
+                  rows.
                 </p>
                 <p>Click continue to download the data.</p>
               </div>
@@ -144,3 +143,25 @@ export default function DownloadModal<D extends PostData>({
     </Dialog>
   );
 }
+
+/*
+## Types
+*/
+
+type DownloadModalProps<D extends PostData> = {
+  downloadStatus: Status;
+  filename: string | null;
+  onClose: () => void;
+  queryData: D;
+  queryUrl: string | null;
+  setDownloadStatus: (status: Status) => void;
+};
+
+type PostData = {
+  filters: {
+    [field: string]: Primitive | Primitive[];
+  };
+  options: {
+    [field: string]: string;
+  };
+};

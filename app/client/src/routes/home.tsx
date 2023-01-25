@@ -17,7 +17,7 @@ import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
-import { Accordion, AccordionItem } from 'components/accordion';
+import Accordion, { AccordionItem } from 'components/accordion';
 import Alert from 'components/alert';
 import Checkbox from 'components/checkbox';
 import Checkboxes from 'components/checkboxes';
@@ -41,24 +41,7 @@ import {
 } from 'config';
 // types
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
-
-/*
-## Constants
-*/
-
-const dynamicOptionLimit = 20;
-const staticOptionLimit = 100;
-
-const { filterFields: filterFieldsConfig, sourceFields: sourceFieldsConfig } =
-  fields;
-const allFieldsConfig = [...filterFieldsConfig, ...sourceFieldsConfig];
-const filterFields = filterFieldsConfig.map((f) => f.key);
-const sourceFields = sourceFieldsConfig.map((fieldConfig) => fieldConfig.id);
-const multiOptionFields = getMultiOptionFields(allFieldsConfig);
-const singleOptionFields = getSingleOptionFields(allFieldsConfig);
-const dateFields = getDateFields(allFieldsConfig);
-const yearFields = getYearFields(allFieldsConfig);
-const singleValueFields = [...dateFields, ...yearFields];
+import type { DomainOptions, Option, Primitive, Status } from 'types';
 
 /*
 ## Main
@@ -702,135 +685,298 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
 }
 
 /*
-## Types
+## Hooks
 */
 
-type DateField = typeof dateFields[number];
+function useAbortSignal() {
+  const abortController = useRef(new AbortController());
+  const getAbortController = useCallback(() => {
+    if (abortController.current.signal.aborted) {
+      abortController.current = new AbortController();
+    }
+    return abortController.current;
+  }, []);
 
-type Format = FormatOption['value'];
-type FormatOption = typeof listOptions.format[number];
+  useEffect(() => {
+    return function cleanup() {
+      abortController.current.abort();
+    };
+  }, [getAbortController]);
 
-type FilterFieldsAction =
-  | FilterFieldAction
-  | { type: 'initialize'; payload: FilterFieldState }
-  | { type: 'reset' };
+  const getSignal = useCallback(
+    () => getAbortController().signal,
+    [getAbortController],
+  );
 
-type FilterFieldAction = {
-  [F in keyof FilterFieldState]: {
-    type: F;
-    payload: FilterFieldState[F];
+  return getSignal;
+}
+
+function useDownloadConfirmationVisibility() {
+  const [downloadConfirmationVisible, setDownloadConfirmationVisible] =
+    useState(false);
+
+  const closeDownloadConfirmation = useCallback(() => {
+    setDownloadConfirmationVisible(false);
+  }, []);
+
+  const openDownloadConfirmation = useCallback(() => {
+    setDownloadConfirmationVisible(true);
+  }, []);
+
+  return {
+    closeDownloadConfirmation,
+    downloadConfirmationVisible,
+    openDownloadConfirmation,
   };
-}[keyof FilterFieldState];
+}
 
-type FilterFieldActionHandlers = {
-  [field in FilterField]: (
-    state: FilterFieldState,
-    action: FilterFieldAction,
-  ) => FilterFieldState;
-};
+function useDownloadStatus() {
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
 
-type FilterField = typeof filterFields[number];
+  useEffect(() => {
+    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
 
-type FilterFieldInputHandlers = {
-  [F in Extract<FilterField, MultiOptionField>]: MultiOptionInputHandler;
-} & {
-  [F in Extract<FilterField, SingleOptionField>]: SingleOptionInputHandler;
-} & {
-  [F in Extract<FilterField, SingleValueField>]: SingleValueInputHandler;
-};
+    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
 
-type FilterFieldState = {
-  [F in Extract<FilterField, MultiOptionField>]: MultiOptionState;
-} & {
-  [F in Extract<FilterField, SingleOptionField>]: SingleOptionState;
-} & {
-  [F in Extract<FilterField, SingleValueField>]: string;
-};
+    return function cleanup() {
+      clearTimeout(messageTimeout);
+    };
+  }, [downloadStatus]);
 
-type FilterQueryData = Partial<{
-  [F in FilterField]: Primitive | Primitive[];
-}>;
+  return [downloadStatus, setDownloadStatus] as [
+    Status,
+    Dispatch<SetStateAction<Status>>,
+  ];
+}
 
-type HomeContext = {
-  filterHandlers: FilterFieldInputHandlers;
+function useFormat() {
+  const [format, setFormat] = useState<FormatOption>({
+    label: 'Comma-separated (CSV)',
+    value: 'csv',
+  });
+  const handleFormatChange = useCallback(
+    (format: Option) => setFormat(format as FormatOption),
+    [],
+  );
+
+  return { format, formatHandler: handleFormatChange };
+}
+
+function useHomeContext() {
+  return useOutletContext<HomeContext>();
+}
+
+function useFilterState() {
+  const [filterState, filterDispatch] = useReducer(
+    createFilterReducer(),
+    getDefaultFilterState(),
+  );
+
+  // Memoize individual dispatch functions
+  const filterHandlers = useMemo(() => {
+    const newHandlers: Partial<FilterFieldInputHandlers> = {};
+    filterFields.forEach((field) => {
+      if (isMultiOptionField(field)) {
+        newHandlers[field] = (ev: MultiOptionState) =>
+          filterDispatch({ type: field, payload: ev } as FilterFieldAction);
+      } else if (isSingleOptionField(field)) {
+        newHandlers[field] = (ev: SingleOptionState) =>
+          filterDispatch({ type: field, payload: ev } as FilterFieldAction);
+      } else if (isSingleValueField(field)) {
+        newHandlers[field] = (ev: ChangeEvent<HTMLInputElement>) => {
+          filterDispatch({
+            type: field,
+            payload: ev.target.value,
+          } as FilterFieldAction);
+        };
+      }
+    });
+    return newHandlers as FilterFieldInputHandlers;
+  }, [filterDispatch]);
+
+  const initializeFilters = useCallback((initialFilters: FilterFieldState) => {
+    filterDispatch({ type: 'initialize', payload: initialFilters });
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    filterDispatch({ type: 'reset' });
+  }, []);
+
+  return { initializeFilters, filterState, filterHandlers, resetFilters };
+}
+
+function useProfile() {
+  const navigate = useNavigate();
+
+  const { profile: profileArg } = useParams();
+
+  const [profileOption, setProfileOption] = useState<
+    typeof listOptions.dataProfile[number] | null
+  >(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    if (!profileArg) return;
+    if (!isProfile(profileArg)) {
+      navigate('/404');
+      return;
+    }
+
+    setProfile(profileArg);
+    setProfileOption(
+      listOptions.dataProfile.find((option) => option.value === profileArg) ??
+        null,
+    );
+  }, [navigate, profileArg]);
+
+  const handleProfileChange = useCallback(
+    (ev: Option | null) => {
+      const route = ev
+        ? `/attains/${ev.value}${window.location.hash}`
+        : '/attains';
+      navigate(route, { replace: true });
+    },
+    [navigate],
+  );
+
+  return { handleProfileChange, profile, profileOption };
+}
+
+function useQueryParams({
+  profile,
+  filterState,
+  format,
+  initializeFilters,
+  staticOptions,
+}: {
+  profile: Profile | null;
   filterState: FilterFieldState;
-  format: FormatOption;
-  formatHandler: (format: Option) => void;
-  profile: Profile;
-  queryParams: QueryData;
-  queryUrl: string;
-  resetFilters: () => void;
-  sourceHandlers: SourceFieldInputHandlers;
-  sourceState: SourceFieldState;
-  staticOptions: StaticOptions;
-};
-
-type InputValue = Primitive | Primitive[] | null;
-
-type MultiOptionField = typeof multiOptionFields[number];
-
-type MultiOptionState = ReadonlyArray<Option> | null;
-
-type MultiOptionInputHandler = (ev: MultiOptionState) => void;
-
-type OptionQueryData = Partial<{
   format: Format;
-}>;
+  initializeFilters: (state: FilterFieldState) => void;
+  staticOptions: StaticOptions | null;
+}) {
+  const getAbortSignal = useAbortSignal();
 
-type ParameterErrors = {
-  duplicate: Set<string>;
-  invalid: Set<string>;
-};
+  const [parameterErrors, setParameterErrors] =
+    useState<ParameterErrors | null>(null);
+  const [parametersLoaded, setParametersLoaded] = useState(false);
+  // Populate the input fields with URL parameters, if any
+  useEffect(() => {
+    if (parametersLoaded || !profile || !staticOptions) return;
+    getUrlInputs(staticOptions, profile, getAbortSignal())
+      .then(({ filters, errors }) => {
+        initializeFilters(filters);
+        if (errors.invalid.size || errors.duplicate.size)
+          setParameterErrors(errors);
+      })
+      .catch((err) => {
+        console.error(`Error loading initial inputs: ${err}`);
+      })
+      .finally(() => setParametersLoaded(true));
+  }, [
+    getAbortSignal,
+    initializeFilters,
+    parametersLoaded,
+    profile,
+    staticOptions,
+  ]);
 
-type Profile = keyof typeof profiles;
+  // Track non-empty values relevant to the current profile
+  const [parameters, setParameters] = useState<QueryData>({
+    filters: {},
+    options: {},
+  });
 
-type QueryData = {
-  filters: FilterQueryData;
-  options: OptionQueryData;
-};
+  // Update URL when inputs change
+  useEffect(() => {
+    if (!profile || !parametersLoaded) return;
 
-type SingleOptionField = typeof singleOptionFields[number];
+    // Get selected parameters, including multiselectable fields
+    const newFilterQueryParams: FilterQueryData = {};
+    Object.entries(filterState).forEach(
+      ([field, value]: [string, FilterFieldState[keyof FilterFieldState]]) => {
+        if (isEmpty(value)) return;
 
-type SingleOptionInputHandler = (ev: SingleOptionState) => void;
+        // Extract 'value' field from Option types
+        const flattenedValue = getInputValue(value);
+        const formattedValue =
+          (dateFields as string[]).includes(field) &&
+          typeof flattenedValue === 'string'
+            ? fromIsoDateString(flattenedValue)
+            : flattenedValue;
 
-type SingleOptionState = Option | null;
+        const profileFields = profiles[profile].fields as readonly string[];
 
-type SingleValueField = typeof singleValueFields[number];
+        if (formattedValue && profileFields.includes(field)) {
+          newFilterQueryParams[field as FilterField] = formattedValue;
+        }
+      },
+    );
 
-type SingleValueInputHandler = (ev: ChangeEvent<HTMLInputElement>) => void;
+    if (Object.keys(newFilterQueryParams).length) {
+      window.location.hash = buildUrlQueryString(newFilterQueryParams);
+    } else removeHash();
 
-type SourceField = typeof sourceFields[number];
+    setParameters({ filters: newFilterQueryParams, options: { format } });
+  }, [filterState, format, parametersLoaded, profile]);
 
-type SourceFieldState = {
-  [F in SourceField]: SingleOptionState;
-};
+  return { queryParams: parameters, queryParamErrors: parameterErrors };
+}
 
-type SourceFieldAction = {
-  [F in SourceField]: {
-    type: F;
-    payload: SourceFieldState[F];
-  };
-}[keyof SourceFieldState];
+function useSourceState() {
+  const [sourceState, sourceDispatch] = useReducer(
+    createSourceReducer(),
+    getDefaultSourceState(),
+  );
 
-type SourceFieldActionHandlers = {
-  [F in SourceField]: (
-    state: SourceFieldState,
-    action: SourceFieldAction,
-  ) => SourceFieldState;
-};
+  // Memoize individual dispatch functions
+  const sourceHandlers = useMemo(() => {
+    return (sourceFields as SourceField[]).reduce((handlers, source) => {
+      return {
+        ...handlers,
+        [source]: (ev: Option | null) =>
+          sourceDispatch({ type: source, payload: ev } as SourceFieldAction),
+      };
+    }, {});
+  }, []) as SourceFieldInputHandlers;
 
-type SourceFieldInputHandlers = {
-  [F in SourceField]: SingleOptionInputHandler;
-};
+  return { sourceState, sourceHandlers };
+}
 
-type StaticOptions = typeof listOptions & Required<DomainOptions>;
+function useStaticOptions(
+  content: ReturnType<typeof useContentState>['content'],
+) {
+  const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
+    null,
+  );
 
-type UrlQueryParam = [string, Primitive];
+  useEffect(() => {
+    if (content.status !== 'success') return;
+    const domainOptions = addDomainAliases(content.data.domainValues);
+    setStaticOptions(
+      // Alphabetize all option lists by label
+      Object.entries({ ...domainOptions, ...listOptions }).reduce(
+        (sorted, [name, options]) => {
+          return {
+            ...sorted,
+            [name]: (options as Option[]).sort((a, b) => {
+              if (typeof a.label === 'string' && typeof b.label === 'string') {
+                return a.label.localeCompare(b.label);
+              }
+              return 0;
+            }),
+          };
+        },
+        {},
+      ) as StaticOptions,
+    );
+  }, [content]);
 
-type YearField = typeof yearFields[number];
+  return staticOptions;
+}
 
 /*
-## Utilities
+## Utils
 */
 
 // Adds aliases for fields that share the same set of possible values
@@ -1449,292 +1595,149 @@ function storageAvailable(
 }
 
 /*
-## Hooks
+## Constants
 */
 
-function useAbortSignal() {
-  const abortController = useRef(new AbortController());
-  const getAbortController = useCallback(() => {
-    if (abortController.current.signal.aborted) {
-      abortController.current = new AbortController();
-    }
-    return abortController.current;
-  }, []);
+const dynamicOptionLimit = 20;
+const staticOptionLimit = 100;
 
-  useEffect(() => {
-    return function cleanup() {
-      abortController.current.abort();
-    };
-  }, [getAbortController]);
+const { filterFields: filterFieldsConfig, sourceFields: sourceFieldsConfig } =
+  fields;
+const allFieldsConfig = [...filterFieldsConfig, ...sourceFieldsConfig];
+const filterFields = filterFieldsConfig.map((f) => f.key);
+const sourceFields = sourceFieldsConfig.map((fieldConfig) => fieldConfig.id);
+const multiOptionFields = getMultiOptionFields(allFieldsConfig);
+const singleOptionFields = getSingleOptionFields(allFieldsConfig);
+const dateFields = getDateFields(allFieldsConfig);
+const yearFields = getYearFields(allFieldsConfig);
+const singleValueFields = [...dateFields, ...yearFields];
 
-  const getSignal = useCallback(
-    () => getAbortController().signal,
-    [getAbortController],
-  );
+/*
+## Types
+*/
 
-  return getSignal;
-}
+type DateField = typeof dateFields[number];
 
-function useDownloadConfirmationVisibility() {
-  const [downloadConfirmationVisible, setDownloadConfirmationVisible] =
-    useState(false);
+type Format = FormatOption['value'];
+type FormatOption = typeof listOptions.format[number];
 
-  const closeDownloadConfirmation = useCallback(() => {
-    setDownloadConfirmationVisible(false);
-  }, []);
+type FilterFieldsAction =
+  | FilterFieldAction
+  | { type: 'initialize'; payload: FilterFieldState }
+  | { type: 'reset' };
 
-  const openDownloadConfirmation = useCallback(() => {
-    setDownloadConfirmationVisible(true);
-  }, []);
-
-  return {
-    closeDownloadConfirmation,
-    downloadConfirmationVisible,
-    openDownloadConfirmation,
+type FilterFieldAction = {
+  [F in keyof FilterFieldState]: {
+    type: F;
+    payload: FilterFieldState[F];
   };
-}
+}[keyof FilterFieldState];
 
-function useDownloadStatus() {
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+type FilterFieldActionHandlers = {
+  [field in FilterField]: (
+    state: FilterFieldState,
+    action: FilterFieldAction,
+  ) => FilterFieldState;
+};
 
-  useEffect(() => {
-    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
+type FilterField = typeof filterFields[number];
 
-    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
+type FilterFieldInputHandlers = {
+  [F in Extract<FilterField, MultiOptionField>]: MultiOptionInputHandler;
+} & {
+  [F in Extract<FilterField, SingleOptionField>]: SingleOptionInputHandler;
+} & {
+  [F in Extract<FilterField, SingleValueField>]: SingleValueInputHandler;
+};
 
-    return function cleanup() {
-      clearTimeout(messageTimeout);
-    };
-  }, [downloadStatus]);
+type FilterFieldState = {
+  [F in Extract<FilterField, MultiOptionField>]: MultiOptionState;
+} & {
+  [F in Extract<FilterField, SingleOptionField>]: SingleOptionState;
+} & {
+  [F in Extract<FilterField, SingleValueField>]: string;
+};
 
-  return [downloadStatus, setDownloadStatus] as [
-    Status,
-    Dispatch<SetStateAction<Status>>,
-  ];
-}
+type FilterQueryData = Partial<{
+  [F in FilterField]: Primitive | Primitive[];
+}>;
 
-function useFormat() {
-  const [format, setFormat] = useState<FormatOption>({
-    label: 'Comma-separated (CSV)',
-    value: 'csv',
-  });
-  const handleFormatChange = useCallback(
-    (format: Option) => setFormat(format as FormatOption),
-    [],
-  );
-
-  return { format, formatHandler: handleFormatChange };
-}
-
-function useHomeContext() {
-  return useOutletContext<HomeContext>();
-}
-
-function useFilterState() {
-  const [filterState, filterDispatch] = useReducer(
-    createFilterReducer(),
-    getDefaultFilterState(),
-  );
-
-  // Memoize individual dispatch functions
-  const filterHandlers = useMemo(() => {
-    const newHandlers: Partial<FilterFieldInputHandlers> = {};
-    filterFields.forEach((field) => {
-      if (isMultiOptionField(field)) {
-        newHandlers[field] = (ev: MultiOptionState) =>
-          filterDispatch({ type: field, payload: ev } as FilterFieldAction);
-      } else if (isSingleOptionField(field)) {
-        newHandlers[field] = (ev: SingleOptionState) =>
-          filterDispatch({ type: field, payload: ev } as FilterFieldAction);
-      } else if (isSingleValueField(field)) {
-        newHandlers[field] = (ev: ChangeEvent<HTMLInputElement>) => {
-          filterDispatch({
-            type: field,
-            payload: ev.target.value,
-          } as FilterFieldAction);
-        };
-      }
-    });
-    return newHandlers as FilterFieldInputHandlers;
-  }, [filterDispatch]);
-
-  const initializeFilters = useCallback((initialFilters: FilterFieldState) => {
-    filterDispatch({ type: 'initialize', payload: initialFilters });
-  }, []);
-
-  const resetFilters = useCallback(() => {
-    filterDispatch({ type: 'reset' });
-  }, []);
-
-  return { initializeFilters, filterState, filterHandlers, resetFilters };
-}
-
-function useProfile() {
-  const navigate = useNavigate();
-
-  const { profile: profileArg } = useParams();
-
-  const [profileOption, setProfileOption] = useState<
-    typeof listOptions.dataProfile[number] | null
-  >(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-
-  useEffect(() => {
-    if (!profileArg) return;
-    if (!isProfile(profileArg)) {
-      navigate('/404');
-      return;
-    }
-
-    setProfile(profileArg);
-    setProfileOption(
-      listOptions.dataProfile.find((option) => option.value === profileArg) ??
-        null,
-    );
-  }, [navigate, profileArg]);
-
-  const handleProfileChange = useCallback(
-    (ev: Option | null) => {
-      const route = ev
-        ? `/attains/${ev.value}${window.location.hash}`
-        : '/attains';
-      navigate(route, { replace: true });
-    },
-    [navigate],
-  );
-
-  return { handleProfileChange, profile, profileOption };
-}
-
-function useQueryParams({
-  profile,
-  filterState,
-  format,
-  initializeFilters,
-  staticOptions,
-}: {
-  profile: Profile | null;
+type HomeContext = {
+  filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
+  format: FormatOption;
+  formatHandler: (format: Option) => void;
+  profile: Profile;
+  queryParams: QueryData;
+  queryUrl: string;
+  resetFilters: () => void;
+  sourceHandlers: SourceFieldInputHandlers;
+  sourceState: SourceFieldState;
+  staticOptions: StaticOptions;
+};
+
+type InputValue = Primitive | Primitive[] | null;
+
+type MultiOptionField = typeof multiOptionFields[number];
+
+type MultiOptionState = ReadonlyArray<Option> | null;
+
+type MultiOptionInputHandler = (ev: MultiOptionState) => void;
+
+type OptionQueryData = Partial<{
   format: Format;
-  initializeFilters: (state: FilterFieldState) => void;
-  staticOptions: StaticOptions | null;
-}) {
-  const getAbortSignal = useAbortSignal();
+}>;
 
-  const [parameterErrors, setParameterErrors] =
-    useState<ParameterErrors | null>(null);
-  const [parametersLoaded, setParametersLoaded] = useState(false);
-  // Populate the input fields with URL parameters, if any
-  useEffect(() => {
-    if (parametersLoaded || !profile || !staticOptions) return;
-    getUrlInputs(staticOptions, profile, getAbortSignal())
-      .then(({ filters, errors }) => {
-        initializeFilters(filters);
-        if (errors.invalid.size || errors.duplicate.size)
-          setParameterErrors(errors);
-      })
-      .catch((err) => {
-        console.error(`Error loading initial inputs: ${err}`);
-      })
-      .finally(() => setParametersLoaded(true));
-  }, [
-    getAbortSignal,
-    initializeFilters,
-    parametersLoaded,
-    profile,
-    staticOptions,
-  ]);
+type ParameterErrors = {
+  duplicate: Set<string>;
+  invalid: Set<string>;
+};
 
-  // Track non-empty values relevant to the current profile
-  const [parameters, setParameters] = useState<QueryData>({
-    filters: {},
-    options: {},
-  });
+type Profile = keyof typeof profiles;
 
-  // Update URL when inputs change
-  useEffect(() => {
-    if (!profile || !parametersLoaded) return;
+type QueryData = {
+  filters: FilterQueryData;
+  options: OptionQueryData;
+};
 
-    // Get selected parameters, including multiselectable fields
-    const newFilterQueryParams: FilterQueryData = {};
-    Object.entries(filterState).forEach(
-      ([field, value]: [string, FilterFieldState[keyof FilterFieldState]]) => {
-        if (isEmpty(value)) return;
+type SingleOptionField = typeof singleOptionFields[number];
 
-        // Extract 'value' field from Option types
-        const flattenedValue = getInputValue(value);
-        const formattedValue =
-          (dateFields as string[]).includes(field) &&
-          typeof flattenedValue === 'string'
-            ? fromIsoDateString(flattenedValue)
-            : flattenedValue;
+type SingleOptionInputHandler = (ev: SingleOptionState) => void;
 
-        const profileFields = profiles[profile].fields as readonly string[];
+type SingleOptionState = Option | null;
 
-        if (formattedValue && profileFields.includes(field)) {
-          newFilterQueryParams[field as FilterField] = formattedValue;
-        }
-      },
-    );
+type SingleValueField = typeof singleValueFields[number];
 
-    if (Object.keys(newFilterQueryParams).length) {
-      window.location.hash = buildUrlQueryString(newFilterQueryParams);
-    } else removeHash();
+type SingleValueInputHandler = (ev: ChangeEvent<HTMLInputElement>) => void;
 
-    setParameters({ filters: newFilterQueryParams, options: { format } });
-  }, [filterState, format, parametersLoaded, profile]);
+type SortDirection = 'asc' | 'desc';
 
-  return { queryParams: parameters, queryParamErrors: parameterErrors };
-}
+type SourceField = typeof sourceFields[number];
 
-function useSourceState() {
-  const [sourceState, sourceDispatch] = useReducer(
-    createSourceReducer(),
-    getDefaultSourceState(),
-  );
+type SourceFieldState = {
+  [F in SourceField]: SingleOptionState;
+};
 
-  // Memoize individual dispatch functions
-  const sourceHandlers = useMemo(() => {
-    return (sourceFields as SourceField[]).reduce((handlers, source) => {
-      return {
-        ...handlers,
-        [source]: (ev: Option | null) =>
-          sourceDispatch({ type: source, payload: ev } as SourceFieldAction),
-      };
-    }, {});
-  }, []) as SourceFieldInputHandlers;
+type SourceFieldAction = {
+  [F in SourceField]: {
+    type: F;
+    payload: SourceFieldState[F];
+  };
+}[keyof SourceFieldState];
 
-  return { sourceState, sourceHandlers };
-}
+type SourceFieldActionHandlers = {
+  [F in SourceField]: (
+    state: SourceFieldState,
+    action: SourceFieldAction,
+  ) => SourceFieldState;
+};
 
-function useStaticOptions(
-  content: ReturnType<typeof useContentState>['content'],
-) {
-  const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
-    null,
-  );
+type SourceFieldInputHandlers = {
+  [F in SourceField]: SingleOptionInputHandler;
+};
 
-  useEffect(() => {
-    if (content.status !== 'success') return;
-    const domainOptions = addDomainAliases(content.data.domainValues);
-    setStaticOptions(
-      // Alphabetize all option lists by label
-      Object.entries({ ...domainOptions, ...listOptions }).reduce(
-        (sorted, [name, options]) => {
-          return {
-            ...sorted,
-            [name]: (options as Option[]).sort((a, b) => {
-              if (typeof a.label === 'string') {
-                return a.label.localeCompare(b.label);
-              }
-              return 0;
-            }),
-          };
-        },
-        {},
-      ) as StaticOptions,
-    );
-  }, [content]);
+type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
-  return staticOptions;
-}
+type UrlQueryParam = [string, Primitive];
+
+type YearField = typeof yearFields[number];

@@ -2,13 +2,15 @@ import { uniqueId } from 'lodash';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
-type Props = {
-  children: ReactNode;
-  heading?: string;
-  styles?: string[];
-};
+/*
+## Components
+*/
 
-export default function Summary({ children, heading, styles = [] }: Props) {
+export default function Summary({
+  children,
+  heading,
+  styles = [],
+}: SummaryProps) {
   const [id] = useState(uniqueId('summary-'));
   return (
     <div
@@ -25,3 +27,13 @@ export default function Summary({ children, heading, styles = [] }: Props) {
     </div>
   );
 }
+
+/*
+## Types
+*/
+
+type SummaryProps = {
+  children: ReactNode;
+  heading?: string;
+  styles?: string[];
+};
