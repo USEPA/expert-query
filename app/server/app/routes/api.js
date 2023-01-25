@@ -57,8 +57,16 @@ async function queryColumnValues(profile, column, params, schema) {
     .orderBy(column.name, parsedParams.direction ?? "asc")
     .select();
 
-  if (column.type !== "numeric" && column.type !== "timestamptz")
-    query.whereILike(column.name, `%${parsedParams.text}%`);
+  if (parsedParams.text) {
+    if (column.type === "numeric" || column.type === "timestamptz") {
+      query.whereRaw("CAST(?? as TEXT) ILIKE ?", [
+        column.name,
+        `%${parsedParams.text}%`,
+      ]);
+    } else {
+      query.whereILike(column.name, `%${parsedParams.text}%`);
+    }
+  }
 
   if (parsedParams.limit) query.limit(parsedParams.limit);
 

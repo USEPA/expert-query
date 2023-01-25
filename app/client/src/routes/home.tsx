@@ -124,6 +124,7 @@ export function Home() {
             <>
               <h3>Data Profile</h3>
               <Select
+                id="select-data-profile"
                 aria-label="Select a data profile"
                 onChange={handleProfileChange}
                 options={staticOptions.dataProfile}
@@ -258,12 +259,14 @@ export function QueryBuilder() {
               <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
             </h4>
             <CopyBox
+              testId="current-query-copy-box-container"
               text={`${window.location.origin}${
                 window.location.pathname
               }#${buildUrlQueryString(queryParams.filters)}`}
             />
             <h4>{profiles[profile].label} API Query</h4>
             <CopyBox
+              testId="api-query-copy-box-container"
               lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
               maxLength={2048}
               text={`${queryUrl}/data/${
@@ -275,6 +278,7 @@ export function QueryBuilder() {
             />
             <h4>cURL</h4>
             <CopyBox
+              testId="curl-copy-box-container"
               text={`curl -X POST --json "${JSON.stringify(
                 queryParams,
               ).replaceAll('"', '\\"')}" ${queryUrl}/data/${
