@@ -44,10 +44,10 @@ import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
 
 /*
-## Main
+## Components
 */
 
-export function Home() {
+export default function Home() {
   const { content } = useContentState();
 
   const staticOptions = useStaticOptions(content);
@@ -141,9 +141,6 @@ export function Home() {
 
   return null;
 }
-/*
-## Components
-*/
 
 export function QueryBuilder() {
   const {
