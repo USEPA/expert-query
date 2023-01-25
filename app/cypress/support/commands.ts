@@ -36,6 +36,7 @@ declare global {
       selectProfile(profile: string): Chainable<Element>;
       selectOption(id: string, option: string): Chainable<Element>;
       clipboardValue(value: string): Chainable<Element>;
+      selectCopyBox(id: string, value: string): Chainable<Element>;
     }
   }
 }
@@ -80,4 +81,19 @@ Cypress.Commands.add("clipboardValue", (value: string) => {
       expect(text).to.eq(value);
     });
   });
+});
+
+/**
+ * This selects CopyBox text from the given id.
+ *
+ * @param id - id of copy box tag
+ * @param value - string to examine
+ */
+
+Cypress.Commands.add("selectCopyBox", (id: string, value: string) => {
+  cy.findByTestId(id)
+    .should("exist")
+    .should(($elem) => {
+      expect($elem.find("span").first().text().trim()).equal(value);
+    });
 });
