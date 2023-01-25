@@ -56,13 +56,15 @@ async function queryColumnValues(profile, column, params, schema) {
     .orderBy(column.name, parsedParams.direction ?? "asc")
     .select();
 
-  if (column.type === "numeric" || column.type === "timestamptz") {
-    query.whereRaw("CAST(?? as TEXT) ILIKE ?", [
-      column.name,
-      `%${parsedParams.text}%`,
-    ]);
-  } else {
-    query.whereILike(column.name, `%{parsedParams.text}%`);
+  if (parsedParams.text) {
+    if (column.type === "numeric" || column.type === "timestamptz") {
+      query.whereRaw("CAST(?? as TEXT) ILIKE ?", [
+        column.name,
+        `%${parsedParams.text}%`,
+      ]);
+    } else {
+      query.whereILike(column.name, `%${parsedParams.text}%`);
+    }
   }
 
   if (parsedParams.limit) query.limit(parsedParams.limit);
@@ -217,7 +219,6 @@ module.exports = function (app) {
         res.status(200).json(values.map((value) => value[column.name]))
       )
       .catch((error) => {
-        console.log(error);
         log.error(
           `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table...`
         );
