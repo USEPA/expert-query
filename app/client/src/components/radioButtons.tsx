@@ -8,7 +8,9 @@ import type { Option } from 'types';
 ## Components
 */
 
-export default function RadioButtons({
+export default RadioButtons;
+
+export function RadioButtons({
   legend,
   onChange,
   options,

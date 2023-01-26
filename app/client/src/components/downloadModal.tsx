@@ -15,7 +15,9 @@ import type { Primitive, Status } from 'types';
 ## Components
 */
 
-export default function DownloadModal<D extends PostData>({
+export default DownloadModal;
+
+export function DownloadModal<D extends PostData>({
   downloadStatus,
   filename,
   onClose,

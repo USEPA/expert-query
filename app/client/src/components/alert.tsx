@@ -4,7 +4,9 @@ import type { ReactNode } from 'react';
 ## Components
 */
 
-export default function Alert({
+export default Alert;
+
+export function Alert({
   children,
   heading,
   icon = true,

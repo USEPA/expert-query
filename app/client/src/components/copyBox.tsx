@@ -8,7 +8,9 @@ import type { Status } from 'types';
 ## Components
 */
 
-export default function CopyBox({
+export default CopyBox;
+
+export function CopyBox({
   lengthExceededMessage,
   maxLength,
   testId,

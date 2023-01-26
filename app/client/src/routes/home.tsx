@@ -41,13 +41,17 @@ import {
 } from 'config';
 // types
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import type { GroupBase } from 'react-select';
+import type { AsyncProps } from 'react-select/async';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
 
 /*
 ## Components
 */
 
-export default function Home() {
+export default Home;
+
+export function Home() {
   const { content } = useContentState();
 
   const staticOptions = useStaticOptions(content);
@@ -272,15 +276,6 @@ export function QueryBuilder() {
   );
 }
 
-type FilterFieldsProps = {
-  filterHandlers: FilterFieldInputHandlers;
-  filterState: FilterFieldState;
-  profile: Profile;
-  sourceHandlers: SourceFieldInputHandlers;
-  sourceState: SourceFieldState;
-  staticOptions: StaticOptions;
-};
-
 function FilterFields({
   filterHandlers,
   filterState,
@@ -348,7 +343,10 @@ function FilterFields({
                 ? sourceState[sourceFieldConfig.id]
                 : null,
               staticOptions,
-            };
+            } as typeof fieldConfig.key extends MultiOptionField
+              ? MultiSelectFilterProps
+              : SingleSelectFilterProps;
+
             return [
               <label
                 className="usa-label"
@@ -529,118 +527,6 @@ function ParameterErrorAlert({
   );
 }
 
-type SourceSelectFilterProps<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
-> = SelectFilterProps<F> & {
-  sourceHandler: SourceFieldInputHandlers[SourceField];
-  sourceKey: typeof sourceFieldsConfig[number]['key'];
-  sourceLabel: string;
-};
-
-function SourceSelectFilter<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
->(props: SourceSelectFilterProps<F>) {
-  const { sourceLabel, sourceHandler, ...selectFilterProps } = props;
-  const { profile, sourceKey, sourceValue, staticOptions } = selectFilterProps;
-
-  return (
-    <SourceSelect
-      label={sourceLabel}
-      sources={getOptions(profile, sourceKey, staticOptions)}
-      onChange={sourceHandler}
-      selected={sourceValue}
-    >
-      <SelectFilter {...selectFilterProps} />
-    </SourceSelect>
-  );
-}
-
-type SelectFilterProps<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
-> = {
-  defaultOption?: Option | null;
-  defaultOptions: boolean | readonly Option[];
-  filterHandler: FilterFieldInputHandlers[F];
-  filterKey: F;
-  filterLabel: string;
-  filterValue: FilterFieldState[F];
-  profile: Profile;
-  sortDirection?: SortDirection;
-  sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
-  sourceValue: SourceFieldState[SourceField] | null;
-  staticOptions: StaticOptions;
-};
-
-function SelectFilter<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
->({
-  defaultOption,
-  defaultOptions,
-  filterHandler,
-  filterKey,
-  filterLabel,
-  filterValue,
-  profile,
-  sortDirection,
-  sourceKey,
-  sourceValue,
-  staticOptions,
-}: SelectFilterProps<F>) {
-  return (
-    <AsyncSelect
-      aria-label={`${filterLabel} input`}
-      className="width-full"
-      inputId={`input-${filterKey}`}
-      isMulti={isMultiOptionField(filterKey)}
-      // Re-renders default options when `sourceValue` changes
-      key={JSON.stringify(sourceValue?.value)}
-      // Workaround for TypeScript not narrowing generic type
-      onChange={filterHandler as any}
-      defaultOptions={defaultOptions}
-      loadOptions={filterOptions({
-        defaultOption,
-        profile,
-        field: filterKey,
-        sortDirection,
-        staticOptions,
-        sourceField: sourceKey,
-        sourceValue: sourceValue?.value,
-      })}
-      menuPortalTarget={document.body}
-      placeholder={`Select ${getArticle(
-        filterLabel.split(' ')[0],
-      )} ${filterLabel}...`}
-      styles={{
-        control: (base) => ({
-          ...base,
-          border: '1px solid #adadad',
-          borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
-        }),
-        loadingIndicator: () => ({
-          display: 'none',
-        }),
-        menuPortal: (base) => ({
-          ...base,
-          zIndex: 9999,
-        }),
-      }}
-      value={filterValue}
-    />
-  );
-}
-
-type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
-  domain: string;
-  highHandler: SingleValueInputHandler;
-  highKey: F;
-  highValue: string;
-  label: string;
-  lowHandler: SingleValueInputHandler;
-  lowKey: F;
-  lowValue: string;
-  type: 'date' | 'year';
-};
-
 function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
   domain,
   highHandler,
@@ -679,6 +565,83 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
       />
     </label>
   );
+}
+
+function SourceSelectFilter(
+  props: SourceSelectFilterProps<
+    MultiSelectFilterProps | SingleSelectFilterProps
+  >,
+) {
+  const { sourceLabel, sourceHandler, ...selectFilterProps } = props;
+  const { profile, sourceKey, sourceValue, staticOptions } = selectFilterProps;
+
+  return (
+    <SourceSelect
+      label={sourceLabel}
+      sources={getOptions(profile, sourceKey, staticOptions)}
+      onChange={sourceHandler}
+      selected={sourceValue}
+    >
+      <SelectFilter {...selectFilterProps} />
+    </SourceSelect>
+  );
+}
+
+function SelectFilter<
+  P extends SingleSelectFilterProps | MultiSelectFilterProps,
+>({
+  defaultOption,
+  defaultOptions,
+  filterHandler,
+  filterKey,
+  filterLabel,
+  filterValue,
+  profile,
+  sortDirection,
+  sourceKey,
+  sourceValue,
+  staticOptions,
+}: P) {
+  const asyncSelectProps = {
+    'aria-Label': `${filterLabel} input`,
+    className: 'width-full',
+    inputId: `input-${filterKey}`,
+    isMulti: isMultiOptionField(filterKey),
+    // Re-renders default options when `sourceValue` changes
+    key: JSON.stringify(sourceValue?.value),
+    onChange: filterHandler,
+    defaultOptions: defaultOptions,
+    loadOptions: filterOptions({
+      defaultOption,
+      profile,
+      field: filterKey,
+      sortDirection,
+      staticOptions,
+      sourceField: sourceKey,
+      sourceValue: sourceValue?.value,
+    }),
+    menuPortalTarget: document.body,
+    placeholder: `Select ${getArticle(
+      filterLabel.split(' ')[0],
+    )} ${filterLabel}...`,
+    styles: {
+      control: (base) => ({
+        ...base,
+        border: '1px solid #adadad',
+        borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
+      }),
+      loadingIndicator: () => ({
+        display: 'none',
+      }),
+      menuPortal: (base) => ({
+        ...base,
+        zIndex: 9999,
+      }),
+    },
+    value: filterValue,
+  } as AsyncProps<Option, boolean, GroupBase<Option>>;
+
+  return <AsyncSelect {...asyncSelectProps} />;
 }
 
 /*
@@ -983,10 +946,10 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
     assessmentUnitState: values.assessmentUnitStatus,
     associatedActionAgency: values.actionAgency,
     associatedActionStatus: values.assessmentUnitStatus,
-    parameter: values.pollutant,
-    parameterName: values.pollutant,
-    parameterStateIrCategory: values.pollutant,
-    useStateIrCategory: values.pollutant,
+    parameter: values.parameterName,
+    parameterStateIrCategory: values.stateIrCategory,
+    pollutant: values.parameterName,
+    useStateIrCategory: values.stateIrCategory,
   };
 }
 
@@ -1647,6 +1610,15 @@ type FilterFieldInputHandlers = {
   [F in Extract<FilterField, SingleValueField>]: SingleValueInputHandler;
 };
 
+type FilterFieldsProps = {
+  filterHandlers: FilterFieldInputHandlers;
+  filterState: FilterFieldState;
+  profile: Profile;
+  sourceHandlers: SourceFieldInputHandlers;
+  sourceState: SourceFieldState;
+  staticOptions: StaticOptions;
+};
+
 type FilterFieldState = {
   [F in Extract<FilterField, MultiOptionField>]: MultiOptionState;
 } & {
@@ -1681,6 +1653,10 @@ type MultiOptionState = ReadonlyArray<Option> | null;
 
 type MultiOptionInputHandler = (ev: MultiOptionState) => void;
 
+type MultiSelectFilterProps = SelectFilterProps<
+  Extract<FilterField, MultiOptionField>
+>;
+
 type OptionQueryData = Partial<{
   format: Format;
 }>;
@@ -1697,11 +1673,43 @@ type QueryData = {
   options: OptionQueryData;
 };
 
+type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
+  domain: string;
+  highHandler: SingleValueInputHandler;
+  highKey: F;
+  highValue: string;
+  label: string;
+  lowHandler: SingleValueInputHandler;
+  lowKey: F;
+  lowValue: string;
+  type: 'date' | 'year';
+};
+
+type SelectFilterProps<
+  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
+> = {
+  defaultOption?: Option | null;
+  defaultOptions: boolean | readonly Option[];
+  filterHandler: FilterFieldInputHandlers[F];
+  filterKey: F;
+  filterLabel: string;
+  filterValue: FilterFieldState[F];
+  profile: Profile;
+  sortDirection?: SortDirection;
+  sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
+  sourceValue: SourceFieldState[SourceField] | null;
+  staticOptions: StaticOptions;
+};
+
 type SingleOptionField = typeof singleOptionFields[number];
 
 type SingleOptionInputHandler = (ev: SingleOptionState) => void;
 
 type SingleOptionState = Option | null;
+
+type SingleSelectFilterProps = SelectFilterProps<
+  Extract<FilterField, SingleOptionField>
+>;
 
 type SingleValueField = typeof singleValueFields[number];
 
@@ -1731,6 +1739,14 @@ type SourceFieldActionHandlers = {
 
 type SourceFieldInputHandlers = {
   [F in SourceField]: SingleOptionInputHandler;
+};
+
+type SourceSelectFilterProps<
+  P extends SingleSelectFilterProps | MultiSelectFilterProps,
+> = P & {
+  sourceHandler: SourceFieldInputHandlers[SourceField];
+  sourceKey: typeof sourceFieldsConfig[number]['key'];
+  sourceLabel: string;
 };
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;

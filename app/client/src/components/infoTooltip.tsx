@@ -12,7 +12,9 @@ import '@reach/tooltip/styles.css';
 ## Components
 */
 
-export default function InfoTooltip({
+export default InfoTooltip;
+
+export function InfoTooltip({
   description,
   styles = [],
   text,

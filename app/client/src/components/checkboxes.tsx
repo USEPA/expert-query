@@ -8,7 +8,9 @@ import type { Option } from 'types';
 ## Components
 */
 
-export default function Checkboxes({
+export default Checkboxes;
+
+export function Checkboxes({
   legend,
   onChange,
   options,

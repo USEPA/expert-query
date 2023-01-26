@@ -14,8 +14,8 @@ export type AliasedField =
   | 'associatedActionAgency'
   | 'associatedActionStatus'
   | 'parameter'
-  | 'parameterName'
   | 'parameterStateIrCategory'
+  | 'pollutant'
   | 'useStateIrCategory';
 
 export type AliasedOptions = {
@@ -27,12 +27,12 @@ export type ConcreteField =
   | 'actionAgency'
   | 'assessmentTypes'
   | 'assessmentUnitStatus'
-  | 'associatedActionType'
   | 'delistedReason'
   | 'locationTypeCode'
   | 'organizationId'
   | 'parameterGroup'
-  | 'pollutant'
+  | 'parameterName'
+  | 'parameterStatus'
   | 'sourceName'
   | 'sourceType'
   | 'state'

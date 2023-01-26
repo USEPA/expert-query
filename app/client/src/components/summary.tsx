@@ -6,11 +6,9 @@ import type { ReactNode } from 'react';
 ## Components
 */
 
-export default function Summary({
-  children,
-  heading,
-  styles = [],
-}: SummaryProps) {
+export default Summary;
+
+export function Summary({ children, heading, styles = [] }: SummaryProps) {
   const [id] = useState(uniqueId('summary-'));
   return (
     <div

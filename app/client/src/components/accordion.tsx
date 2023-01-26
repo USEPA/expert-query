@@ -7,7 +7,9 @@ import type { ReactNode } from 'react';
 ## Components
 */
 
-export default function Accordion({ children }: { children: ReactNode }) {
+export default Accordion;
+
+export function Accordion({ children }: { children: ReactNode }) {
   return (
     <div
       className="margin-top-2 usa-accordion usa-accordion--multiselectable"
