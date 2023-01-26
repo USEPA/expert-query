@@ -390,6 +390,7 @@ function FilterFields({
                 highHandler={filterHandlers[pairedField.key]}
                 highKey={pairedField.key}
                 highValue={filterState[pairedField.key]}
+                key={fieldConfig.key}
                 label={fieldConfig.label}
                 lowHandler={filterHandlers[fieldConfig.key]}
                 lowKey={fieldConfig.key}
@@ -891,7 +892,7 @@ function useSourceState() {
 
   // Memoize individual dispatch functions
   const sourceHandlers = useMemo(() => {
-    return (sourceFields as SourceField[]).reduce((handlers, source) => {
+    return sourceFields.reduce((handlers, source) => {
       return {
         ...handlers,
         [source]: (ev: Option | null) =>
@@ -1025,10 +1026,7 @@ function createSourceReducer() {
 
   return function reducer(state: SourceFieldState, action: SourceFieldAction) {
     if (actionHandlers.hasOwnProperty(action.type)) {
-      return actionHandlers[action.type as SourceFieldAction['type']](
-        state,
-        action,
-      );
+      return actionHandlers[action.type](state, action);
     } else {
       return state;
     }
