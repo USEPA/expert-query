@@ -735,7 +735,6 @@ export async function runJob(s3Config) {
   try {
     await runLoad(pool, s3Config);
     await trimSchema(pool, s3Config);
-    await trimNationalDownloads(pool);
     await updateEtlStatus(pool, 'database', 'success');
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
@@ -779,10 +778,6 @@ export async function runLoad(pool, s3Config) {
     await Promise.all(loadTasks);
 
     await transferSchema(pool, schemaName, schemaId);
-
-    await streamNationalDownloads(pool, schemaName);
-
-    await archiveNationalDownloads(lastSchemaName);
 
     log.info('Tables updated');
     await logEtlLoadEnd(pool, logId);
