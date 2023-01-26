@@ -35,13 +35,15 @@ describe("Data Profile Catchment Correspondence", () => {
     //Organization ID
     cy.selectOption("input-organizationId", "21hi");
 
+    const queryValue = "format=csv&assessmentUnitId=AS-04O&organizationId=21HI";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#format=csv&assessmentUnitId=AS-04O&organizationId=21HI`
+      `${origin}/attains/catchmentCorrespondence/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/catchmentCorrespondence?format=csv&assessmentUnitId=AS-04O&organizationId=21HI`
+      `${origin}/attains/data/catchmentCorrespondence?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -61,13 +63,16 @@ describe("Data Profile Catchment Correspondence", () => {
     //File Format
     cy.findByText("Tab-separated (TSV)").click();
 
+    const queryValue =
+      "format=tsv&assessmentUnitName=ABBOTT%20LAKES&organizationName=California";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#format=tsv&assessmentUnitName=ABBOTT LAKES&organizationName=California`
+      `${origin}/attains/catchmentCorrespondence/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/catchmentCorrespondence?format=tsv&assessmentUnitName=ABBOTT LAKES&organizationName=California`
+      `${origin}/attains/data/catchmentCorrespondence?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -91,13 +96,16 @@ describe("Data Profile Catchment Correspondence", () => {
     //File Format
     cy.findByText("Microsoft Excel (XLSX)").click();
 
+    const queryValue =
+      "format=xlsx&assessmentUnitId=AS-04O&organizationName=Montana&reportingCycleLo=1993&reportingCycleHi=2010";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#format=xlsx&assessmentUnitId=AS-04O&organizationName=Montana&reportingCycleLo=1993&reportingCycleHi=2010`
+      `${origin}/attains/catchmentCorrespondence/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/catchmentCorrespondence?format=xlsx&assessmentUnitId=AS-04O&organizationName=Montana&reportingCycleLo=1993&reportingCycleHi=2010`
+      `${origin}/attains/data/catchmentCorrespondence?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -133,13 +141,16 @@ describe("Data Profile Catchment Correspondence", () => {
     //File Format
     cy.findByText("Tab-separated (TSV)").click();
 
+    const queryValue =
+      "format=tsv&assessmentUnitId=AS-01O&assessmentUnitName=Aasu-Ocean&organizationId=21PA&organizationName=California&region=06&state=TX&reportingCycleLo=2015&reportingCycleHi=2023";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#format=tsv&assessmentUnitId=AS-01O&assessmentUnitName=Aasu-Ocean&organizationId=21PA&organizationName=California&region=06&state=TX&reportingCycleLo=2015&reportingCycleHi=2023`
+      `${origin}/attains/catchmentCorrespondence/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/catchmentCorrespondence?format=tsv&assessmentUnitId=AS-01O&assessmentUnitName=Aasu-Ocean&organizationId=21PA&organizationName=California&region=06&state=TX&reportingCycleLo=2015&reportingCycleHi=2023`
+      `${origin}/attains/data/catchmentCorrespondence?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",

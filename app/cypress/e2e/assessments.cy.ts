@@ -35,13 +35,16 @@ describe("Data Profile Assessments", () => {
     //Associated Action Agency
     cy.findByRole("checkbox", { name: "State" }).click({ force: true });
 
+    const queryValue =
+      "format=csv&alternateListingIdentifier=6226&associatedActionAgency=S";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#format=csv&alternateListingIdentifier=6226&associatedActionAgency=S`
+      `${origin}/attains/assessments/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessments?format=csv&alternateListingIdentifier=6226&associatedActionAgency=S`
+      `${origin}/attains/data/assessments?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -67,13 +70,16 @@ describe("Data Profile Assessments", () => {
     //CWA 303d Priority Ranking
     cy.findByRole("checkbox", { name: "Low" }).click({ force: true });
 
+    const queryValue =
+      "format=csv&associatedActionName=Indian%20Fork&associatedActionStatus=A&cwa303dPriorityRanking=Low&assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#format=csv&associatedActionName=Indian Fork&associatedActionStatus=A&cwa303dPriorityRanking=Low&assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023`
+      `${origin}/attains/assessments/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessments?format=csv&associatedActionName=Indian Fork&associatedActionStatus=A&cwa303dPriorityRanking=Low&assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023`
+      `${origin}/attains/data/assessments?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -95,23 +101,26 @@ describe("Data Profile Assessments", () => {
     cy.selectOption("input-stateIrCategory", "3x");
 
     //Use IR Category
-    cy.selectOption("input-useStateIrCategory", "LEPTOPHOS");
+    cy.selectOption("input-useStateIrCategory", "2");
 
     //File Format
     cy.findByText("Microsoft Excel (XLSX)").click();
 
+    const queryValue =
+      "format=xlsx&state=IN&stateIrCategory=3x&useStateIrCategory=2&cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#format=xlsx&state=IN&stateIrCategory=3x&useStateIrCategory=LEPTOPHOS&cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022`
+      `${origin}/attains/assessments/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessments?format=xlsx&state=IN&stateIrCategory=3x&useStateIrCategory=LEPTOPHOS&cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022`
+      `${origin}/attains/data/assessments?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"state":["IN"],"stateIrCategory":["3x"],"useStateIrCategory":["LEPTOPHOS"],"cycleExpectedToAttainLo":"2008","cycleExpectedToAttainHi":"2022"},"options":{"format":"xlsx"}}'
+        '{"filters":{"state":["IN"],"stateIrCategory":["3x"],"useStateIrCategory":["2"],"cycleExpectedToAttainLo":"2008","cycleExpectedToAttainHi":"2022"},"options":{"format":"xlsx"}}'
       )} ${origin}/attains/data/assessments`
     );
   });
@@ -219,8 +228,8 @@ describe("Data Profile Assessments", () => {
     //Parameter Name
     cy.selectOption("input-parameterName", "radium");
 
-    //Parameter State IR Category
-    cy.selectOption("input-parameterStateIrCategory", "cfc-113");
+    // //Parameter State IR Category
+    // cy.selectOption("input-parameterStateIrCategory", "cfc-113");
 
     //Parameter Status
     cy.findByRole("checkbox", { name: "Meeting Criteria" }).click({
@@ -257,13 +266,13 @@ describe("Data Profile Assessments", () => {
     cy.selectOption("input-useClassName", "vii");
 
     //Use Group
-    cy.selectOption("input-useGroup", "other");
+    cy.selectOption("input-useGroup", "AGRICULTURAL");
 
     //Use Name
     cy.selectOption("input-useName", "scenic value");
 
     //Use State IR Category
-    cy.selectOption("input-useStateIrCategory", "phthlate");
+    cy.selectOption("input-useStateIrCategory", "1");
 
     //Use Support
     cy.findAllByRole("checkbox", { name: "No" }).each(($elem, index) => {
@@ -281,19 +290,22 @@ describe("Data Profile Assessments", () => {
     //File Format
     cy.findByText("Tab-separated (TSV)").click();
 
+    const queryValue =
+      "format=tsv&alternateListingIdentifier=72992&assessmentBasis=Monitored%20Data&assessmentMethods=Fish%20surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A29R_PAS01A14&assessmentUnitName=Camp&assessmentUnitStatus=H&associatedActionAgency=E&associatedActionId=1024&associatedActionName=Chartiers%20Creek&associatedActionStatus=A&associatedActionType=Public%20Meeting%20Held&cwa303dPriorityRanking=Medium&delisted=Y&delistedReason=NOT_SPECIFIED&epaIrCategory=4A&organizationId=21PA&organizationName=Iowa&overallStatus=Not%20Assessed&parameterAttainment=ALGAE&parameterGroup=METALS%20(OTHER%20THAN%20MERCURY)&parameterName=RADIUM&parameterStatus=Meeting%20Criteria&pollutantIndicator=N&region=08&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=AGRICULTURAL&useName=Scenic%20Value&useStateIrCategory=1&useSupport=N&vision303dPriority=Y&waterType=WASH&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&reportingCycleLo=2005&reportingCycleHi=2022";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#format=tsv&alternateListingIdentifier=72992&assessmentBasis=Monitored Data&assessmentMethods=Fish surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A29R_PAS01A14&assessmentUnitName=Camp&assessmentUnitStatus=H&associatedActionAgency=E&associatedActionId=1024&associatedActionName=Chartiers Creek&associatedActionStatus=A&associatedActionType=Public Meeting Held&cwa303dPriorityRanking=Medium&delisted=Y&delistedReason=NOT_SPECIFIED&epaIrCategory=4A&organizationId=21PA&organizationName=Iowa&overallStatus=Not Assessed&parameterAttainment=ALGAE&parameterGroup=OTHER CAUSE&parameterName=RADIUM&parameterStateIrCategory=CFC-113&parameterStatus=Meeting Criteria&pollutantIndicator=N&region=08&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=OTHER&useName=Scenic Value&useStateIrCategory=PHTHLATE&useSupport=N&vision303dPriority=Y&waterType=WASH&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&reportingCycleLo=2005&reportingCycleHi=2022`
+      `${origin}/attains/assessments/#${queryValue}`
     );
 
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessments?format=tsv&alternateListingIdentifier=72992&assessmentBasis=Monitored Data&assessmentMethods=Fish surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A29R_PAS01A14&assessmentUnitName=Camp&assessmentUnitStatus=H&associatedActionAgency=E&associatedActionId=1024&associatedActionName=Chartiers Creek&associatedActionStatus=A&associatedActionType=Public Meeting Held&cwa303dPriorityRanking=Medium&delisted=Y&delistedReason=NOT_SPECIFIED&epaIrCategory=4A&organizationId=21PA&organizationName=Iowa&overallStatus=Not Assessed&parameterAttainment=ALGAE&parameterGroup=OTHER CAUSE&parameterName=RADIUM&parameterStateIrCategory=CFC-113&parameterStatus=Meeting Criteria&pollutantIndicator=N&region=08&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=OTHER&useName=Scenic Value&useStateIrCategory=PHTHLATE&useSupport=N&vision303dPriority=Y&waterType=WASH&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&reportingCycleLo=2005&reportingCycleHi=2022`
+      `${origin}/attains/data/assessments?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A29R_PAS01A14"],"assessmentUnitName":["Camp"],"assessmentUnitStatus":["H"],"associatedActionAgency":["E"],"associatedActionId":["1024"],"associatedActionName":["Chartiers Creek"],"associatedActionStatus":["A"],"associatedActionType":["Public Meeting Held"],"cwa303dPriorityRanking":["Medium"],"delisted":["Y"],"delistedReason":["NOT_SPECIFIED"],"epaIrCategory":["4A"],"organizationId":["21PA"],"organizationName":["Iowa"],"overallStatus":["Not Assessed"],"parameterAttainment":["ALGAE"],"parameterGroup":["OTHER CAUSE"],"parameterName":["RADIUM"],"parameterStateIrCategory":["CFC-113"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["OTHER"],"useName":["Scenic Value"],"useStateIrCategory":["PHTHLATE"],"useSupport":["N"],"vision303dPriority":["Y"],"waterType":["WASH"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","reportingCycleLo":"2005","reportingCycleHi":"2022"},"options":{"format":"tsv"}}'
+        '{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A29R_PAS01A14"],"assessmentUnitName":["Camp"],"assessmentUnitStatus":["H"],"associatedActionAgency":["E"],"associatedActionId":["1024"],"associatedActionName":["Chartiers Creek"],"associatedActionStatus":["A"],"associatedActionType":["Public Meeting Held"],"cwa303dPriorityRanking":["Medium"],"delisted":["Y"],"delistedReason":["NOT_SPECIFIED"],"epaIrCategory":["4A"],"organizationId":["21PA"],"organizationName":["Iowa"],"overallStatus":["Not Assessed"],"parameterAttainment":["ALGAE"],"parameterGroup":["METALS (OTHER THAN MERCURY)"],"parameterName":["RADIUM"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["AGRICULTURAL"],"useName":["Scenic Value"],"useStateIrCategory":["1"],"useSupport":["N"],"vision303dPriority":["Y"],"waterType":["WASH"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","reportingCycleLo":"2005","reportingCycleHi":"2022"},"options":{"format":"tsv"}}'
       )} ${origin}/attains/data/assessments`
     );
   });

@@ -35,13 +35,17 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
     //Assessment Unit Name
     cy.selectOption("input-assessmentUnitName", "american creek");
 
+    const queryValue =
+      "format=csv&assessmentUnitId=DN_AM_Watershed-2&assessmentUnitName=American%20Creek";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnitsMonitoringLocations/#format=csv&assessmentUnitId=DN_AM_Watershed-2&assessmentUnitName=American Creek`
+      `${origin}/attains/assessmentUnitsMonitoringLocations/#${queryValue}`
     );
+
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessmentUnitsMonitoringLocations?format=csv&assessmentUnitId=DN_AM_Watershed-2&assessmentUnitName=American Creek`
+      `${origin}/attains/data/assessmentUnitsMonitoringLocations?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -64,13 +68,16 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
     //File Format
     cy.findByText("Microsoft Excel (XLSX)").click();
 
+    const queryValue =
+      "format=xlsx&assessmentUnitStatus=H&monitoringLocationOrgId=TSWQC_WQX&useClassName=NON-CLASS";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnitsMonitoringLocations/#format=xlsx&assessmentUnitStatus=H&monitoringLocationOrgId=TSWQC_WQX&useClassName=NON-CLASS`
+      `${origin}/attains/assessmentUnitsMonitoringLocations/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessmentUnitsMonitoringLocations?format=xlsx&assessmentUnitStatus=H&monitoringLocationOrgId=TSWQC_WQX&useClassName=NON-CLASS`
+      `${origin}/attains/data/assessmentUnitsMonitoringLocations?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -100,18 +107,21 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
     //File Format
     cy.findByText("JavaScript Object Notation (JSON)").click();
 
+    const queryValue =
+      "format=json&assessmentUnitId=DELAWARENATION-1300&assessmentUnitStatus=H&organizationId=21PA&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS&reportingCycleLo=2013&reportingCycleHi=2022";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnitsMonitoringLocations/#format=json&assessmentUnitId=DELAWARENATION-1300&assessmentUnitStatus=H&organizationId=21PA&waterType=HARBOR&reportingCycleLo=2013&reportingCycleHi=2022`
+      `${origin}/attains/assessmentUnitsMonitoringLocations/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessmentUnitsMonitoringLocations?format=json&assessmentUnitId=DELAWARENATION-1300&assessmentUnitStatus=H&organizationId=21PA&waterType=HARBOR&reportingCycleLo=2013&reportingCycleHi=2022`
+      `${origin}/attains/data/assessmentUnitsMonitoringLocations?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitId":["DELAWARENATION-1300"],"assessmentUnitStatus":["H"],"organizationId":["21PA"],"waterType":["HARBOR"],"reportingCycleLo":"2013","reportingCycleHi":"2022"},"options":{"format":"json"}}'
+        '{"filters":{"assessmentUnitId":["DELAWARENATION-1300"],"assessmentUnitStatus":["H"],"organizationId":["21PA"],"waterType":["GREAT LAKES BAYS AND HARBORS"],"reportingCycleLo":"2013","reportingCycleHi":"2022"},"options":{"format":"json"}}'
       )} ${origin}/attains/data/assessmentUnitsMonitoringLocations`
     );
   });
@@ -157,18 +167,21 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
     //File Format
     cy.findByText("JavaScript Object Notation (JSON)").click();
 
+    const queryValue =
+      "format=json&assessmentUnitName=Ashley%20Lake&assessmentUnitStatus=A&monitoringLocationId=A10&monitoringLocationOrgId=21AWIC&organizationId=REDLAKE&organizationName=Wyoming&region=04&state=OK&useClassName=VII&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS&reportingCycleLo=2013&reportingCycleHi=2022";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnitsMonitoringLocations/#format=json&assessmentUnitName=Ashley Lake&assessmentUnitStatus=A&monitoringLocationId=A10&monitoringLocationOrgId=21AWIC&organizationId=REDLAKE&organizationName=Wyoming&region=04&state=OK&useClassName=VII&waterType=HARBOR&reportingCycleLo=2013&reportingCycleHi=2022`
+      `${origin}/attains/assessmentUnitsMonitoringLocations/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessmentUnitsMonitoringLocations?format=json&assessmentUnitName=Ashley Lake&assessmentUnitStatus=A&monitoringLocationId=A10&monitoringLocationOrgId=21AWIC&organizationId=REDLAKE&organizationName=Wyoming&region=04&state=OK&useClassName=VII&waterType=HARBOR&reportingCycleLo=2013&reportingCycleHi=2022`
+      `${origin}/attains/data/assessmentUnitsMonitoringLocations?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitName":["Ashley Lake"],"assessmentUnitStatus":["A"],"monitoringLocationId":["A10"],"monitoringLocationOrgId":["21AWIC"],"organizationId":["REDLAKE"],"organizationName":["Wyoming"],"region":["04"],"state":["OK"],"useClassName":["VII"],"waterType":["HARBOR"],"reportingCycleLo":"2013","reportingCycleHi":"2022"},"options":{"format":"json"}}'
+        '{"filters":{"assessmentUnitName":["Ashley Lake"],"assessmentUnitStatus":["A"],"monitoringLocationId":["A10"],"monitoringLocationOrgId":["21AWIC"],"organizationId":["REDLAKE"],"organizationName":["Wyoming"],"region":["04"],"state":["OK"],"useClassName":["VII"],"waterType":["GREAT LAKES BAYS AND HARBORS"],"reportingCycleLo":"2013","reportingCycleHi":"2022"},"options":{"format":"json"}}'
       )} ${origin}/attains/data/assessmentUnitsMonitoringLocations`
     );
   });

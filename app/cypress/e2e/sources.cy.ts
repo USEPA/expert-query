@@ -35,13 +35,16 @@ describe("Data Profile Sources", () => {
     //Confirmed
     cy.findByRole("checkbox", { name: "No" }).click({ force: true });
 
+    const queryValue =
+      "format=csv&assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/sources/#format=csv&assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`
+      `${origin}/attains/sources/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/sources?format=csv&assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`
+      `${origin}/attains/data/sources?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -83,18 +86,21 @@ describe("Data Profile Sources", () => {
     //File Format
     cy.findByText("Microsoft Excel (XLSX)").click();
 
+    const queryValue =
+      "format=xlsx&assessmentUnitName=Agency%20Creek&confirmed=N&organizationId=TAOSPBLO&organizationName=District%20of%20Columbia&overallStatus=Fully%20Supporting&parameterGroup=PESTICIDES&sourceName=BASEFLOW%20DEPLETION%20FROM%20GROUNDWATER%20WITHDRAWALS&waterType=WETLANDS,%20TIDAL&reportingCycleLo=2003&reportingCycleHi=2015";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/sources/#format=xlsx&assessmentUnitName=Agency Creek&confirmed=N&organizationId=TAOSPBLO&organizationName=District of Columbia&overallStatus=Fully Supporting&parameterGroup=PESTICIDES&sourceName=GROUNDWATER LOADINGS&waterType=WETLANDS, TIDAL&reportingCycleLo=2003&reportingCycleHi=2015`
+      `${origin}/attains/sources/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/sources?format=xlsx&assessmentUnitName=Agency Creek&confirmed=N&organizationId=TAOSPBLO&organizationName=District of Columbia&overallStatus=Fully Supporting&parameterGroup=PESTICIDES&sourceName=GROUNDWATER LOADINGS&waterType=WETLANDS, TIDAL&reportingCycleLo=2003&reportingCycleHi=2015`
+      `${origin}/attains/data/sources?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitName":["Agency Creek"],"confirmed":["N"],"organizationId":["TAOSPBLO"],"organizationName":["District of Columbia"],"overallStatus":["Fully Supporting"],"parameterGroup":["PESTICIDES"],"sourceName":["GROUNDWATER LOADINGS"],"waterType":["WETLANDS, TIDAL"],"reportingCycleLo":"2003","reportingCycleHi":"2015"},"options":{"format":"xlsx"}}'
+        '{"filters":{"assessmentUnitName":["Agency Creek"],"confirmed":["N"],"organizationId":["TAOSPBLO"],"organizationName":["District of Columbia"],"overallStatus":["Fully Supporting"],"parameterGroup":["PESTICIDES"],"sourceName":["BASEFLOW DEPLETION FROM GROUNDWATER WITHDRAWALS"],"waterType":["WETLANDS, TIDAL"],"reportingCycleLo":"2003","reportingCycleHi":"2015"},"options":{"format":"xlsx"}}'
       )} ${origin}/attains/data/sources`
     );
   });
@@ -134,13 +140,16 @@ describe("Data Profile Sources", () => {
     //File Format
     cy.findByText("JavaScript Object Notation (JSON)").click();
 
+    const queryValue =
+      "format=json&assessmentUnitId=MT40Q001_011&assessmentUnitName=Abbie%20Creek&confirmed=N&organizationName=Wisconsin&overallStatus=Not%20Supporting&parameterGroup=NUTRIENTS&sourceName=MANURE%20LAGOONS&state=HI&waterType=WASH&reportingCycleLo=1994&reportingCycleHi=2016";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/sources/#format=json&assessmentUnitId=MT40Q001_011&assessmentUnitName=Abbie Creek&confirmed=N&organizationName=Wisconsin&overallStatus=Not Supporting&parameterGroup=NUTRIENTS&sourceName=MANURE LAGOONS&state=HI&waterType=WASH&reportingCycleLo=1994&reportingCycleHi=2016`
+      `${origin}/attains/sources/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/sources?format=json&assessmentUnitId=MT40Q001_011&assessmentUnitName=Abbie Creek&confirmed=N&organizationName=Wisconsin&overallStatus=Not Supporting&parameterGroup=NUTRIENTS&sourceName=MANURE LAGOONS&state=HI&waterType=WASH&reportingCycleLo=1994&reportingCycleHi=2016`
+      `${origin}/attains/data/sources?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -200,13 +209,16 @@ describe("Data Profile Sources", () => {
     //File Format
     cy.findByText("Tab-separated (TSV)").click();
 
+    const queryValue =
+      "format=tsv&assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitName=American%20Fork&causeName=AMMONIA&confirmed=Y&epaIrCategory=4A&organizationId=21PA&organizationName=South%20Dakota&overallStatus=Fully%20Supporting&parameterGroup=TRASH&region=06&sourceName=PIPELINE%20BREAKS&state=FL&stateIrCategory=5b-t&waterType=INLAND%20BEACH&reportingCycleLo=2016&reportingCycleHi=2019";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/sources/#format=tsv&assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitName=American Fork&causeName=AMMONIA&confirmed=Y&epaIrCategory=4A&organizationId=21PA&organizationName=South Dakota&overallStatus=Fully Supporting&parameterGroup=TRASH&region=06&sourceName=PIPELINE BREAKS&state=FL&stateIrCategory=5b-t&waterType=INLAND BEACH&reportingCycleLo=2016&reportingCycleHi=2019`
+      `${origin}/attains/sources/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/sources?format=tsv&assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitName=American Fork&causeName=AMMONIA&confirmed=Y&epaIrCategory=4A&organizationId=21PA&organizationName=South Dakota&overallStatus=Fully Supporting&parameterGroup=TRASH&region=06&sourceName=PIPELINE BREAKS&state=FL&stateIrCategory=5b-t&waterType=INLAND BEACH&reportingCycleLo=2016&reportingCycleHi=2019`
+      `${origin}/attains/data/sources?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",

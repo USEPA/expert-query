@@ -35,13 +35,15 @@ describe("Data Profile Total Maximum Daily Load", () => {
     //NPDES ID
     cy.selectOption("input-npdesIdentifier", "477001");
 
+    const queryValue = "format=csv&actionAgency=E&npdesIdentifier=477001";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/tmdl/#format=csv&actionAgency=E&npdesIdentifier=477001`
+      `${origin}/attains/tmdl/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/tmdl?format=csv&actionAgency=E&npdesIdentifier=477001`
+      `${origin}/attains/data/tmdl?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -84,13 +86,16 @@ describe("Data Profile Total Maximum Daily Load", () => {
     cy.get("#input-tmdlDateLo").type("1956-01-04");
     cy.get("#input-tmdlDateHi").type("2020-07-11");
 
+    const queryValue =
+      "format=csv&actionName=KS%20Big%20Blue%20River%20TMDL&assessmentUnitStatus=A&explicitMarginOfSafety=10.3%20acre-feet%20per%20year&implicitMarginOfSafety=Implicit%20due%20to%20conservative%20assumptions&npdesIdentifier=477001&sourceType=Both&completionDateLo=10-03-1955&completionDateHi=12-18-1992&tmdlDateLo=01-04-1956&tmdlDateHi=07-11-2020&fiscalYearEstablishedLo=1984&fiscalYearEstablishedHi=2023";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/tmdl/#format=csv&actionName=KS Big Blue River TMDL&assessmentUnitStatus=A&explicitMarginOfSafety=10.3 acre-feet per year&implicitMarginOfSafety=Implicit due to conservative assumptions&npdesIdentifier=477001&sourceType=Both&completionDateLo=10-03-1955&completionDateHi=12-18-1992&tmdlDateLo=01-04-1956&tmdlDateHi=07-11-2020&fiscalYearEstablishedLo=1984&fiscalYearEstablishedHi=2023`
+      `${origin}/attains/tmdl/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/tmdl?format=csv&actionName=KS Big Blue River TMDL&assessmentUnitStatus=A&explicitMarginOfSafety=10.3 acre-feet per year&implicitMarginOfSafety=Implicit due to conservative assumptions&npdesIdentifier=477001&sourceType=Both&completionDateLo=10-03-1955&completionDateHi=12-18-1992&tmdlDateLo=01-04-1956&tmdlDateHi=07-11-2020&fiscalYearEstablishedLo=1984&fiscalYearEstablishedHi=2023`
+      `${origin}/attains/data/tmdl?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -147,13 +152,16 @@ describe("Data Profile Total Maximum Daily Load", () => {
     //File Format
     cy.findByText("Tab-separated (TSV)").click();
 
+    const queryValue =
+      "format=tsv&actionAgency=E&actionId=IA7001&actionName=Cedar%20Creek%20E.%20coli%20TMDL&assessmentUnitStatus=R&inIndianCountry=Y&organizationId=21AWIC&organizationName=Oklahoma&otherIdentifier=City%20of%20Belvue&sourceType=Nonpoint%20source&completionDateLo=11-02-1987&completionDateHi=12-16-1991&tmdlDateLo=08-05-1993&tmdlDateHi=03-09-1994&fiscalYearEstablishedLo=2014&fiscalYearEstablishedHi=2018";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/tmdl/#format=tsv&actionAgency=E&actionId=IA7001&actionName=Cedar Creek E. coli TMDL&assessmentUnitStatus=R&inIndianCountry=Y&organizationId=21AWIC&organizationName=Oklahoma&otherIdentifier=City of Belvue&sourceType=Nonpoint source&completionDateLo=11-02-1987&completionDateHi=12-16-1991&tmdlDateLo=08-05-1993&tmdlDateHi=03-09-1994&fiscalYearEstablishedLo=2014&fiscalYearEstablishedHi=2018`
+      `${origin}/attains/tmdl/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/tmdl?format=tsv&actionAgency=E&actionId=IA7001&actionName=Cedar Creek E. coli TMDL&assessmentUnitStatus=R&inIndianCountry=Y&organizationId=21AWIC&organizationName=Oklahoma&otherIdentifier=City of Belvue&sourceType=Nonpoint source&completionDateLo=11-02-1987&completionDateHi=12-16-1991&tmdlDateLo=08-05-1993&tmdlDateHi=03-09-1994&fiscalYearEstablishedLo=2014&fiscalYearEstablishedHi=2018`
+      `${origin}/attains/data/tmdl?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -240,18 +248,21 @@ describe("Data Profile Total Maximum Daily Load", () => {
     //File Format
     cy.findByText("JavaScript Object Notation (JSON)").click();
 
+    const queryValue =
+      "format=json&actionAgency=T&actionId=70200&actionName=Bear%20Creek%20Unknown%20TMDL%20REVISED&addressedParameter=ALGAE&assessmentUnitId=FL1382G&assessmentUnitName=Ash%20Cr&assessmentUnitStatus=H&explicitMarginOfSafety=1.21E+09&implicitMarginOfSafety=TSS%20target%20based%20on%20the%2025th%20percentile%20concentration%20of%20all%20USGS%20TSS%20data%20from%20Missouri%20in%20the%20EDU%20where%20Mound%20Branch%20is%20located.&includeInMeasure=Y&inIndianCountry=N&npdesIdentifier=59925&organizationId=21PA&organizationName=Florida&otherIdentifier=BPU%20Kaw%20Power%20Station&pollutant=CFC-113&region=06&sourceType=Point%20source&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS&completionDateLo=12-08-2009&completionDateHi=09-08-2017&tmdlDateLo=12-08-2019&tmdlDateHi=09-30-2022&fiscalYearEstablishedLo=2008&fiscalYearEstablishedHi=2019";
+
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/tmdl/#format=json&actionAgency=T&actionId=70200&actionName=Bear Creek Unknown TMDL REVISED&addressedParameter=ALGAE&assessmentUnitId=FL1382G&assessmentUnitName=Ash Cr&assessmentUnitStatus=H&explicitMarginOfSafety=1.21E+09&implicitMarginOfSafety=TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located.&includeInMeasure=Y&inIndianCountry=N&npdesIdentifier=59925&organizationId=21PA&organizationName=Florida&otherIdentifier=BPU Kaw Power Station&pollutant=CFC-113&region=06&sourceType=Point source&waterType=HARBOR&completionDateLo=12-08-2009&completionDateHi=09-08-2017&tmdlDateLo=12-08-2019&tmdlDateHi=09-30-2022&fiscalYearEstablishedLo=2008&fiscalYearEstablishedHi=2019`
+      `${origin}/attains/tmdl/#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/tmdl?format=json&actionAgency=T&actionId=70200&actionName=Bear Creek Unknown TMDL REVISED&addressedParameter=ALGAE&assessmentUnitId=FL1382G&assessmentUnitName=Ash Cr&assessmentUnitStatus=H&explicitMarginOfSafety=1.21E+09&implicitMarginOfSafety=TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located.&includeInMeasure=Y&inIndianCountry=N&npdesIdentifier=59925&organizationId=21PA&organizationName=Florida&otherIdentifier=BPU Kaw Power Station&pollutant=CFC-113&region=06&sourceType=Point source&waterType=HARBOR&completionDateLo=12-08-2009&completionDateHi=09-08-2017&tmdlDateLo=12-08-2019&tmdlDateHi=09-30-2022&fiscalYearEstablishedLo=2008&fiscalYearEstablishedHi=2019`
+      `${origin}/attains/data/tmdl?${queryValue}`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionAgency":["T"],"actionId":["70200"],"actionName":["Bear Creek Unknown TMDL REVISED"],"addressedParameter":["ALGAE"],"assessmentUnitId":["FL1382G"],"assessmentUnitName":["Ash Cr"],"assessmentUnitStatus":["H"],"explicitMarginOfSafety":["1.21E+09"],"implicitMarginOfSafety":["TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located."],"includeInMeasure":["Y"],"inIndianCountry":["N"],"npdesIdentifier":["59925"],"organizationId":["21PA"],"organizationName":["Florida"],"otherIdentifier":["BPU Kaw Power Station"],"pollutant":["CFC-113"],"region":["06"],"sourceType":["Point source"],"waterType":["HARBOR"],"completionDateLo":"12-08-2009","completionDateHi":"09-08-2017","tmdlDateLo":"12-08-2019","tmdlDateHi":"09-30-2022","fiscalYearEstablishedLo":"2008","fiscalYearEstablishedHi":"2019"},"options":{"format":"json"}}'
+        '{"filters":{"actionAgency":["T"],"actionId":["70200"],"actionName":["Bear Creek Unknown TMDL REVISED"],"addressedParameter":["ALGAE"],"assessmentUnitId":["FL1382G"],"assessmentUnitName":["Ash Cr"],"assessmentUnitStatus":["H"],"explicitMarginOfSafety":["1.21E+09"],"implicitMarginOfSafety":["TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located."],"includeInMeasure":["Y"],"inIndianCountry":["N"],"npdesIdentifier":["59925"],"organizationId":["21PA"],"organizationName":["Florida"],"otherIdentifier":["BPU Kaw Power Station"],"pollutant":["CFC-113"],"region":["06"],"sourceType":["Point source"],"waterType":["GREAT LAKES BAYS AND HARBORS"],"completionDateLo":"12-08-2009","completionDateHi":"09-08-2017","tmdlDateLo":"12-08-2019","tmdlDateHi":"09-30-2022","fiscalYearEstablishedLo":"2008","fiscalYearEstablishedHi":"2019"},"options":{"format":"json"}}'
       )} ${origin}/attains/data/tmdl`
     );
   });
