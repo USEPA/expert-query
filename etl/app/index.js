@@ -28,6 +28,10 @@ if (environment.isLocal) {
     'CF_S3_PRIV_BUCKET_ID',
     'CF_S3_PRIV_REGION',
     'CF_S3_PRIV_SECRET_KEY',
+    'CF_S3_PRIV_ETL_ACCESS_KEY',
+    'CF_S3_PRIV_ETL_BUCKET_ID',
+    'CF_S3_PRIV_ETL_REGION',
+    'CF_S3_PRIV_ETL_SECRET_KEY',
     'VCAP_SERVICES',
   );
 }

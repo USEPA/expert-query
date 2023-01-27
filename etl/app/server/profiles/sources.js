@@ -13,26 +13,26 @@ export const tableName = 'sources';
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
-    id SERIAL PRIMARY KEY,
-    assessmentunitid VARCHAR(50) NOT NULL,
-    assessmentunitname VARCHAR(255) NOT NULL,
-    causename VARCHAR(240) NOT NULL,
-    confirmed VARCHAR(1) NOT NULL,
-    epaircategory VARCHAR(5),
-    locationdescription VARCHAR(2000) NOT NULL,
+    objectid INTEGER PRIMARY KEY,
+    state VARCHAR(4000),
+    region VARCHAR(2),
     organizationid VARCHAR(30) NOT NULL,
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
+    reportingcycle NUMERIC(4,0) NOT NULL,
+    assessmentunitid VARCHAR(50) NOT NULL,
+    assessmentunitname VARCHAR(255) NOT NULL,
     overallstatus VARCHAR(4000),
-    parametergroup VARCHAR(60) NOT NULL,
-    region VARCHAR(2),
-    reportingcycle NUMERIC(4) NOT NULL,
-    sourcename VARCHAR(240) NOT NULL,
-    state VARCHAR(4000),
+    epaircategory VARCHAR(5),
     stateircategory VARCHAR(5),
+    sourcename VARCHAR(240) NOT NULL,
+    confirmed VARCHAR(1) NOT NULL,
+    parametergroup VARCHAR(60) NOT NULL,
+    causename VARCHAR(240) NOT NULL,
+    locationdescription VARCHAR(2000) NOT NULL,
+    watertype VARCHAR(40) NOT NULL,
     watersize NUMERIC(18,4) NOT NULL,
-    watersizeunits VARCHAR(15) NOT NULL,
-    watertype VARCHAR(40) NOT NULL
+    watersizeunits VARCHAR(15) NOT NULL
   )`;
 
 const insertColumns = new pgp.helpers.ColumnSet([

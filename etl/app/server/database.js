@@ -187,7 +187,7 @@ const mapping = {
       { name: 'id', alias: 'id' },
       { name: 'assessmentunitid', alias: 'assessmentUnitId' },
       { name: 'assessmentunitname', alias: 'assessmentUnitName' },
-      { name: 'assessmentunitstate', alias: 'assessmentUnitState' },
+      { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       { name: 'locationdescription', alias: 'locationDescription' },
       { name: 'locationtext', alias: 'locationText' },
       { name: 'locationtypecode', alias: 'locationTypeCode' },
@@ -902,24 +902,59 @@ function getProfileEtl(
 
     // Extract, transform, and load the new data
     try {
-      log.info(`Setting ${tableName} to unlogged`);
-      await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
-      let res = await extract(s3Config);
-      let chunksProcessed = 0;
-      const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
-      while (res.data !== null && (!maxChunks || chunksProcessed < maxChunks)) {
-        const query = await transform(res.data, chunksProcessed === 0);
-        await client.query(query);
-        log.info(`Next record offset for table ${tableName}: ${res.next}`);
-        res = await extract(s3Config, res.next);
-        chunksProcessed += 1;
+      if (environment.isLocal) {
+        log.info(`Setting ${tableName} to unlogged`);
+        await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
+        let res = await extract(s3Config);
+        let chunksProcessed = 0;
+        const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
+        while (
+          res.data !== null &&
+          (!maxChunks || chunksProcessed < maxChunks)
+        ) {
+          const query = await transform(res.data, chunksProcessed === 0);
+          await client.query(query);
+          log.info(`Next record offset for table ${tableName}: ${res.next}`);
+          res = await extract(s3Config, res.next);
+          chunksProcessed += 1;
+        }
+      } else {
+        await client.query(
+          `
+          SELECT aws_s3.table_import_from_s3(
+            table_name := $1,
+            column_list := '',
+            options := '(format csv, header true)',
+            s3_info := aws_commons.create_s3_uri(
+              bucket := $2,
+              file_path := $3,
+              region := $4
+            ),
+            credentials := aws_commons.create_aws_credentials(
+              access_key := $5,
+              secret_key := $6,
+              session_token := ''
+            )
+          )
+        `,
+          [
+            `${tableName}`,
+            process.env.CF_S3_PRIV_ETL_BUCKET_ID,
+            `1674716433/${tableName}.csv.gz`, // TODO - Need to add in code to get the julian from S3
+            process.env.CF_S3_PRIV_ETL_REGION,
+            process.env.CF_S3_PRIV_ETL_ACCESS_KEY,
+            process.env.CF_S3_PRIV_ETL_SECRET_KEY,
+          ],
+        );
       }
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
     } finally {
-      log.info(`Setting ${tableName} back to logged`);
-      await client.query(`ALTER TABLE ${tableName} SET LOGGED`);
+      if (environment.isLocal) {
+        log.info(`Setting ${tableName} back to logged`);
+        await client.query(`ALTER TABLE ${tableName} SET LOGGED`);
+      }
     }
 
     log.info(`Table ${tableName} load success`);

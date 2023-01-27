@@ -13,26 +13,26 @@ export const tableName = 'assessment_units_monitoring_locations';
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
-    id SERIAL PRIMARY KEY,
-    assessmentunitid VARCHAR(50) NOT NULL,
-    assessmentunitname VARCHAR(255) NOT NULL,
-    assessmentunitstatus VARCHAR(1) NOT NULL,
-    locationdescription VARCHAR(2000) NOT NULL,
-    monitoringlocationdatalink VARCHAR(255),
-    monitoringlocationid VARCHAR(35),
-    monitoringlocationorgid VARCHAR(30),
+    objectid INTEGER PRIMARY KEY,
+    state VARCHAR(4000),
+    region VARCHAR(2),
     organizationid VARCHAR(30) NOT NULL,
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
-    region VARCHAR(2),
-    reportingcycle NUMERIC(4) NOT NULL,
-    sizesource VARCHAR(100),
-    sourcescale VARCHAR(30) NOT NULL,
-    state VARCHAR(4000),
-    useclassname VARCHAR(50),
+    reportingcycle NUMERIC(4,0) NOT NULL,
+    assessmentunitid VARCHAR(50) NOT NULL,
+    assessmentunitname VARCHAR(255) NOT NULL,
+    locationdescription VARCHAR(2000) NOT NULL,
+    watertype VARCHAR(40) NOT NULL,
     watersize NUMERIC(18,4) NOT NULL,
     watersizeunits VARCHAR(15) NOT NULL,
-    watertype VARCHAR(40) NOT NULL
+    monitoringlocationorgid VARCHAR(30),
+    monitoringlocationid VARCHAR(35),
+    monitoringlocationdatalink VARCHAR(255),
+    assessmentunitstatus VARCHAR(1) NOT NULL,
+    useclassname VARCHAR(50),
+    sizesource VARCHAR(100),
+    sourcescale VARCHAR(30) NOT NULL
   )`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
