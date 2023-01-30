@@ -35,6 +35,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   )`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
+  { name: 'objectid' },
   { name: 'assessmentunitid' },
   { name: 'assessmentunitname' },
   { name: 'assessmentunitstatus' },
@@ -70,6 +71,7 @@ export async function transform(data, first) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({
+      objectid: datum.objectid,
       assessmentunitid: datum.assessmentunitid,
       assessmentunitname: datum.assessmentunitname,
       assessmentunitstatus: datum.assessmentunitstate,

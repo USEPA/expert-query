@@ -47,6 +47,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   )`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
+  { name: 'objectid' },
   { name: 'actionagency' },
   { name: 'actionid' },
   { name: 'actionname' },
@@ -73,7 +74,6 @@ const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'sourcetype' },
   { name: 'state' },
   { name: 'tmdldate' },
-  { name: 'tmdlendpoint' },
   { name: 'wasteloadallocation' },
   { name: 'watersize' },
   { name: 'watersizeunits' },
@@ -90,6 +90,7 @@ export async function transform(data, first) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({
+      objectid: datum.objectid,
       actionagency: datum.actionagency,
       actionid: datum.actionid,
       actionname: datum.actionname,
@@ -116,7 +117,6 @@ export async function transform(data, first) {
       sourcetype: datum.sourcetype,
       state: datum.state,
       tmdldate: datum.tmdldate,
-      tmdlendpoint: datum.tmdlendpoint,
       wasteloadallocation: datum.wasteloadallocation,
       watersize: datum.watersize,
       watersizeunits: datum.watersizeunits,

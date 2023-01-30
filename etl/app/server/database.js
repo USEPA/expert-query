@@ -16,6 +16,7 @@ import {
   archiveNationalDownloads,
   createS3Stream,
   deleteDirectory,
+  readS3File,
 } from './s3.js';
 
 const { Client, Pool } = pg;
@@ -26,9 +27,9 @@ const environment = getEnvironment();
 const mapping = {
   actions: {
     tableName: 'actions',
-    idColumn: 'id',
+    idColumn: 'objectid',
     columns: [
-      { name: 'id', alias: 'id' },
+      { name: 'objectid', alias: 'objectId' },
       { name: 'actionagency', alias: 'actionAgency' },
       { name: 'actionid', alias: 'actionId' },
       { name: 'actionname', alias: 'actionName' },
@@ -58,9 +59,9 @@ const mapping = {
   },
   assessments: {
     tableName: 'assessments',
-    idColumn: 'id',
+    idColumn: 'objectid',
     columns: [
-      { name: 'id', alias: 'id' },
+      { name: 'objectid', alias: 'objectId' },
       {
         name: 'alternatelistingidentifier',
         alias: 'alternateListingIdentifier',
@@ -182,9 +183,9 @@ const mapping = {
   },
   assessmentUnits: {
     tableName: 'assessment_units',
-    idColumn: 'id',
+    idColumn: 'objectid',
     columns: [
-      { name: 'id', alias: 'id' },
+      { name: 'objectid', alias: 'objectId' },
       { name: 'assessmentunitid', alias: 'assessmentUnitId' },
       { name: 'assessmentunitname', alias: 'assessmentUnitName' },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
@@ -212,9 +213,9 @@ const mapping = {
   },
   assessmentUnitsMonitoringLocations: {
     tableName: 'assessment_units_monitoring_locations',
-    idColumn: 'id',
+    idColumn: 'objectid',
     columns: [
-      { name: 'id', alias: 'id' },
+      { name: 'objectid', alias: 'objectId' },
       { name: 'assessmentunitid', alias: 'assessmentUnitId' },
       { name: 'assessmentunitname', alias: 'assessmentUnitName' },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
@@ -246,9 +247,9 @@ const mapping = {
   },
   catchmentCorrespondence: {
     tableName: 'catchment_correspondence',
-    idColumn: 'id',
+    idColumn: 'objectid',
     columns: [
-      { name: 'id', alias: 'id' },
+      { name: 'objectid', alias: 'objectId' },
       { name: 'assessmentunitid', alias: 'assessmentUnitId' },
       { name: 'assessmentunitname', alias: 'assessmentUnitName' },
       { name: 'catchmentnhdplusid', alias: 'catchmentNhdPlusId' },
@@ -267,9 +268,9 @@ const mapping = {
   },
   sources: {
     tableName: 'sources',
-    idColumn: 'id',
+    idColumn: 'objectid',
     columns: [
-      { name: 'id', alias: 'id' },
+      { name: 'objectid', alias: 'objectId' },
       { name: 'assessmentunitid', alias: 'assessmentUnitId' },
       { name: 'assessmentunitname', alias: 'assessmentUnitName' },
       { name: 'causename', alias: 'causeName' },
@@ -298,9 +299,9 @@ const mapping = {
   },
   tmdl: {
     tableName: 'tmdl',
-    idColumn: 'id',
+    idColumn: 'objectid',
     columns: [
-      { name: 'id', alias: 'id' },
+      { name: 'objectid', alias: 'objectId' },
       { name: 'actionagency', alias: 'actionAgency' },
       { name: 'actionid', alias: 'actionId' },
       { name: 'actionname', alias: 'actionName' },
@@ -349,7 +350,6 @@ const mapping = {
         highParam: 'tmdlDateHi',
         type: 'timestamptz',
       },
-      { name: 'tmdlendpoint', alias: 'tmdlEndPoint' },
       { name: 'wasteloadallocation', alias: 'wasteLoadAllocation' },
       { name: 'watersize', alias: 'waterSize' },
       { name: 'watersizeunits', alias: 'waterSizeUnits' },
@@ -434,7 +434,8 @@ export async function checkLogTables() {
           id SERIAL PRIMARY KEY,
           active BOOLEAN NOT NULL,
           creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-          schema_name VARCHAR(20) NOT NULL
+          schema_name VARCHAR(20) NOT NULL,
+          s3_julian VARCHAR(20),
         )`,
     );
 
@@ -609,7 +610,7 @@ export async function createEqDb(client) {
 }
 
 // Create a fresh schema for new data
-async function createNewSchema(pool, schemaName) {
+async function createNewSchema(pool, schemaName, s3Julian) {
   const client = await getClient(pool);
   try {
     // Create new schema
@@ -619,9 +620,9 @@ async function createNewSchema(pool, schemaName) {
     // Add new schema to control table
     const result = await client.query(
       'INSERT INTO logging.etl_schemas' +
-        ' (schema_name, creation_date, active)' +
-        ' VALUES ($1, current_timestamp, $2) RETURNING id',
-      [schemaName, '0'],
+        ' (schema_name, creation_date, active, s3_julian)' +
+        ' VALUES ($1, current_timestamp, $2, $3) RETURNING id',
+      [schemaName, '0', s3Julian],
     );
     const schemaId = result.rows[0].id;
     log.info(`Schema ${schemaName} created`);
@@ -653,9 +654,10 @@ async function loadProfile(
   pool,
   schemaName,
   s3Config,
+  s3Julian,
   retryCount = 0,
 ) {
-  const profileEtl = getProfileEtl(profile, s3Config);
+  const profileEtl = getProfileEtl(profile, s3Config, s3Julian);
   const client = await getClient(pool);
   try {
     await profileEtl(client, schemaName);
@@ -669,6 +671,7 @@ async function loadProfile(
         pool,
         schemaName,
         s3Config,
+        s3Julian,
         retryCount + 1,
       );
     } else {
@@ -729,11 +732,25 @@ export async function updateEtlStatus(pool, columnName, value) {
 }
 
 // Load new data into a fresh schema, then discard old schemas
-export async function runJob(s3Config) {
+export async function runJob(s3Config, checkIfReady = true) {
   const pool = startConnPool();
+
+  // check if the MV data is available in s3 and ready to be loaded
+  let s3Julian = null;
+  if (!environment.isLocal) {
+    const readyResult = await isDataReady(pool);
+    s3Julian = readyResult.julian;
+
+    // exit early if we aren't ready to run etl
+    if (checkIfReady && !readyResult.ready) {
+      await endConnPool(pool);
+      return;
+    }
+  }
+
   updateEtlStatus(pool, 'database', 'running');
   try {
-    await runLoad(pool, s3Config);
+    await runLoad(pool, s3Config, s3Julian);
     await trimSchema(pool, s3Config);
     await updateEtlStatus(pool, 'database', 'success');
   } catch (err) {
@@ -758,7 +775,7 @@ export async function getActiveSchema(pool) {
   return schemas.rows[0].schema_name;
 }
 
-export async function runLoad(pool, s3Config) {
+export async function runLoad(pool, s3Config, s3Julian) {
   log.info('Running ETL process!');
 
   const logId = await logEtlLoadStart(pool);
@@ -769,11 +786,11 @@ export async function runLoad(pool, s3Config) {
   const lastSchemaName = await getActiveSchema(pool);
 
   try {
-    const schemaId = await createNewSchema(pool, schemaName);
+    const schemaId = await createNewSchema(pool, schemaName, s3Julian);
 
     // Add tables to schema and import new data
     const loadTasks = Object.values(profiles).map((profile) => {
-      return loadProfile(profile, pool, schemaName, s3Config);
+      return loadProfile(profile, pool, schemaName, s3Config, s3Julian);
     });
     await Promise.all(loadTasks);
 
@@ -886,6 +903,7 @@ export async function trimNationalDownloads(pool) {
 function getProfileEtl(
   { createQuery, extract, maxChunksOverride, tableName, transform },
   s3Config,
+  s3Julian,
 ) {
   return async function (client, schemaName) {
     // Create the table for the profile
@@ -940,7 +958,7 @@ function getProfileEtl(
           [
             `${tableName}`,
             process.env.CF_S3_PRIV_ETL_BUCKET_ID,
-            `1674716433/${tableName}.csv.gz`, // TODO - Need to add in code to get the julian from S3
+            `${s3Julian}/${tableName}.csv.gz`,
             process.env.CF_S3_PRIV_ETL_REGION,
             process.env.CF_S3_PRIV_ETL_ACCESS_KEY,
             process.env.CF_S3_PRIV_ETL_SECRET_KEY,
@@ -1146,4 +1164,67 @@ async function buildInputStream(activeSchema, pool, profile) {
     client,
     stream,
   };
+}
+
+export async function isDataReady(pool) {
+  try {
+    // get julian date from s3 bucket
+    const latest = await readS3File({
+      bucketInfo: {
+        accessKeyId: process.env.CF_S3_PRIV_ETL_ACCESS_KEY,
+        bucketId: process.env.CF_S3_PRIV_ETL_BUCKET_ID,
+        region: process.env.CF_S3_PRIV_ETL_REGION,
+        secretAccessKey: process.env.CF_S3_PRIV_ETL_SECRET_KEY,
+      },
+      path: 'latest.json',
+    });
+
+    if (!latest) return { ready: false, julian: null };
+
+    const julian = latest.julian;
+
+    // see if this julian has already been loaded into the db
+    const etlRunning = await pool.query(
+      'SELECT database FROM logging.etl_status',
+    );
+    if (
+      etlRunning.rows.length > 0 &&
+      etlRunning.rows[0].database === 'running'
+    ) {
+      return { ready: false, julian };
+    }
+
+    // check etl status to ensure it isn't already running
+    const result = await pool.query(
+      `
+        SELECT active FROM logging.etl_schemas WHERE s3_julian = $1
+      `,
+      [latest.julian],
+    );
+
+    // already been loaded in or is being loaded in
+    if (result.rows.length > 0) return { ready: false, julian };
+
+    const ready = await readS3File({
+      bucketInfo: {
+        accessKeyId: process.env.CF_S3_PRIV_ETL_ACCESS_KEY,
+        bucketId: process.env.CF_S3_PRIV_ETL_BUCKET_ID,
+        region: process.env.CF_S3_PRIV_ETL_REGION,
+        secretAccessKey: process.env.CF_S3_PRIV_ETL_SECRET_KEY,
+      },
+      path: `${latest.julian}/ready.json`,
+    });
+
+    if (ready.problems.length > 0) {
+      ready.problems.forEach((problem) => {
+        log.error(`Error Building MV Backups: ${problem}`);
+      });
+    }
+
+    if (ready.ready === 'go') return { ready: true, julian };
+  } catch (ex) {
+    log.error(`Error checking if MVs are ready: ${ex}`);
+  }
+
+  return { ready: false, julian };
 }
