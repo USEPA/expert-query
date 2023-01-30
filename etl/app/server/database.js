@@ -12,12 +12,7 @@ import { getEnvironment } from './utilities/environment.js';
 import { logger as log } from './utilities/logger.js';
 import StreamingService from './utilities/streamingService.js';
 import * as profiles from './profiles/index.js';
-import {
-  archiveNationalDownloads,
-  createS3Stream,
-  deleteDirectory,
-  readS3File,
-} from './s3.js';
+import { createS3Stream, deleteDirectory, readS3File } from './s3.js';
 
 const { Client, Pool } = pg;
 const setImmediatePromise = util.promisify(setImmediate);
@@ -782,8 +777,6 @@ export async function runLoad(pool, s3Config, s3Julian) {
 
   const now = new Date();
   const schemaName = `schema_${now.valueOf()}`;
-
-  const lastSchemaName = await getActiveSchema(pool);
 
   try {
     const schemaId = await createNewSchema(pool, schemaName, s3Julian);
