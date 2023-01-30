@@ -1,5 +1,5 @@
 // components
-import Checkbox from 'components/checkbox';
+import { Checkbox } from 'components/checkbox';
 // types
 import type { ReactNode } from 'react';
 import type { Option } from 'types';
@@ -7,8 +7,6 @@ import type { Option } from 'types';
 /*
 ## Components
 */
-
-export default Checkboxes;
 
 export function Checkboxes({
   legend,

@@ -3,7 +3,7 @@ import { Dialog } from '@reach/dialog';
 import { useCallback, useEffect, useState } from 'react';
 import { ReactComponent as Close } from 'uswds/img/usa-icons/close.svg';
 // components
-import Alert from 'components/alert';
+import { Alert } from 'components/alert';
 // utils
 import { postData } from 'config';
 // styles
@@ -14,8 +14,6 @@ import type { Primitive, Status } from 'types';
 /*
 ## Components
 */
-
-export default DownloadModal;
 
 export function DownloadModal<D extends PostData>({
   downloadStatus,

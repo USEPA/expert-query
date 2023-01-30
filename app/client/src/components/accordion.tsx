@@ -7,8 +7,6 @@ import type { ReactNode } from 'react';
 ## Components
 */
 
-export default Accordion;
-
 export function Accordion({ children }: { children: ReactNode }) {
   return (
     <div

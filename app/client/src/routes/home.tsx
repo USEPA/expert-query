@@ -17,18 +17,18 @@ import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
-import Accordion, { AccordionItem } from 'components/accordion';
-import Alert from 'components/alert';
-import Checkbox from 'components/checkbox';
-import Checkboxes from 'components/checkboxes';
-import CopyBox from 'components/copyBox';
-import GlossaryPanel, { GlossaryTerm } from 'components/glossaryPanel';
-import InfoTooltip from 'components/infoTooltip';
+import { Accordion, AccordionItem } from 'components/accordion';
+import { Alert } from 'components/alert';
+import { Checkbox } from 'components/checkbox';
+import { Checkboxes } from 'components/checkboxes';
+import { CopyBox } from 'components/copyBox';
+import { GlossaryPanel, GlossaryTerm } from 'components/glossaryPanel';
+import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
-import DownloadModal from 'components/downloadModal';
-import RadioButtons from 'components/radioButtons';
-import SourceSelect from 'components/sourceSelect';
-import Summary from 'components/summary';
+import { DownloadModal } from 'components/downloadModal';
+import { RadioButtons } from 'components/radioButtons';
+import { SourceSelect } from 'components/sourceSelect';
+import { Summary } from 'components/summary';
 // contexts
 import { useContentState } from 'contexts/content';
 // config

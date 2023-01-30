@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ReactComponent as Copy } from 'uswds/img/usa-icons/content_copy.svg';
-import Alert from 'components/alert';
+import { Alert } from 'components/alert';
 // types
 import type { Status } from 'types';
 
 /*
 ## Components
 */
-
-export default CopyBox;
 
 export function CopyBox({
   lengthExceededMessage,

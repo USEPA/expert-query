@@ -28,7 +28,6 @@ function appendLatestToWhere(query, column, columnType, baseQuery) {
 
   const subQuery = baseQuery.clone();
   query.where(column, subQuery.max(column));
-  console.log(query.toString());
 }
 
 /**

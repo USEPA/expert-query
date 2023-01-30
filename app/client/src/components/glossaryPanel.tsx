@@ -2,7 +2,7 @@ import Glossary from 'glossary-panel';
 import { useEffect, useState } from 'react';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 // components
-import Alert from 'components/alert';
+import { Alert } from 'components/alert';
 // contexts
 import { useContentState } from 'contexts/content';
 // types
@@ -12,7 +12,7 @@ import type { ReactNode } from 'react';
 ## Components
 */
 
-export default function GlossaryPanel({ path }: GlossaryPanelProps) {
+export function GlossaryPanel({ path }: GlossaryPanelProps) {
   const { content } = useContentState();
   const [glossary, setGlossary] = useState<Glossary | null>(null);
 

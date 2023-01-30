@@ -7,8 +7,6 @@ import type { ChangeEvent, ReactNode } from 'react';
 ## Components
 */
 
-export default Checkbox;
-
 export function Checkbox({
   checked,
   description,

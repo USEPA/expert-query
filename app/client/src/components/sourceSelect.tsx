@@ -8,8 +8,6 @@ import type { Option } from 'types';
 ## Components
 */
 
-export default SourceSelect;
-
 export function SourceSelect({
   label = null,
   sources,

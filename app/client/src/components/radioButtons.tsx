@@ -8,8 +8,6 @@ import type { Option } from 'types';
 ## Components
 */
 
-export default RadioButtons;
-
 export function RadioButtons({
   legend,
   onChange,
