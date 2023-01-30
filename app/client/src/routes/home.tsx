@@ -141,7 +141,6 @@ type UrlQueryState = {
 function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   return {
     ...values,
-    assessmentUnitState: values.assessmentUnitStatus,
     associatedActionAgency: values.actionAgency,
     associatedActionStatus: values.assessmentUnitStatus,
     parameter: values.pollutant,

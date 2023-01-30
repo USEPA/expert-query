@@ -14,7 +14,6 @@ declare module '*.svg' {
 
 // Columns that share values with those in the `domainValues` object
 type AliasedField =
-  | 'assessmentUnitState'
   | 'associatedActionAgency'
   | 'associatedActionStatus'
   | 'parameter'

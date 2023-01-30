@@ -91,7 +91,7 @@ export default {
     fields: [
       'assessmentUnitId',
       'assessmentUnitName',
-      'assessmentUnitState',
+      'assessmentUnitStatus',
       'locationText',
       'organizationId',
       'organizationName',
@@ -192,7 +192,6 @@ export default {
       'sourceType',
       'tmdlDateLo',
       'tmdlDateHi',
-      'tmdlEndpoint',
       'wasteLoadAllocation',
       'waterType',
     ],

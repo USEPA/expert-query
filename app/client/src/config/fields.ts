@@ -44,11 +44,6 @@ export default [
     type: 'multiselect',
   },
   {
-    key: 'assessmentUnitState',
-    label: 'Assessment Unit State',
-    type: 'multiselect',
-  },
-  {
     key: 'assessmentUnitStatus',
     label: 'Assessment Unit Status',
     type: 'multiselect',
@@ -345,7 +340,6 @@ export default [
     domain: 'tmdlDate',
     boundary: 'high',
   },
-  { key: 'tmdlEndpoint', label: 'TMDL Endpoint', type: 'multiselect' },
   { key: 'useClassName', label: 'Use Class Name', type: 'multiselect' },
   { key: 'useGroup', label: 'Use Group', type: 'multiselect' },
   { key: 'useIrCategory', label: 'Use IR Category', type: 'multiselect' },
