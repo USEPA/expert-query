@@ -2,59 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import { ReactComponent as Filter } from 'uswds/img/usa-icons/filter_list.svg';
 // types
 import type { MutableRefObject, ReactNode } from 'react';
+import type { Option } from 'types';
 
-// Custom hook that is used for handling key presses. This can be used for
-// navigating lists with a keyboard.
-function useKeyPress(
-  targetKey: string,
-  ref: MutableRefObject<HTMLElement | null>,
-) {
-  const [keyPressed, setKeyPressed] = useState(false);
+/*
+## Components
+*/
 
-  function downHandler(ev: KeyboardEvent) {
-    if (ev.key === targetKey) {
-      ev.preventDefault();
-      setKeyPressed(true);
-    }
-  }
-
-  const upHandler = ({ key }: { key: string }) => {
-    if (key === targetKey) {
-      setKeyPressed(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!ref?.current?.addEventListener) return;
-    const tempRef = ref.current;
-
-    ref.current.addEventListener('keydown', downHandler);
-    ref.current.addEventListener('keyup', upHandler);
-
-    return function cleanup() {
-      tempRef.removeEventListener('keydown', downHandler);
-      tempRef.removeEventListener('keyup', upHandler);
-    };
-  });
-
-  return keyPressed;
-}
-
-type Props = {
-  label?: string | null;
-  sources?: Promise<ReadonlyArray<Option>> | null;
-  children: ReactNode;
-  onChange?: ((selected: Option | null) => void) | null;
-  selected?: Option | null;
-};
-
-export default function SourceSelect({
+export function SourceSelect({
   label = null,
   sources,
   children,
   onChange,
   selected,
-}: Props) {
+}: SourceSelectProps) {
   const sourceList = useRef<HTMLButtonElement | null>(null);
   const sourceDownPress = useKeyPress('ArrowDown', sourceList);
   const sourceUpPress = useKeyPress('ArrowUp', sourceList);
@@ -161,7 +121,7 @@ export default function SourceSelect({
           setSourcesVisible(false);
         }
       }}
-      className="display-flex margin-top-1 position-relative"
+      className="display-flex position-relative"
     >
       {allSources && (
         <button
@@ -238,3 +198,56 @@ export default function SourceSelect({
     </div>
   );
 }
+
+/*
+## Hooks
+*/
+
+// Custom hook that is used for handling key presses. This can be used for
+// navigating lists with a keyboard.
+function useKeyPress(
+  targetKey: string,
+  ref: MutableRefObject<HTMLElement | null>,
+) {
+  const [keyPressed, setKeyPressed] = useState(false);
+
+  function downHandler(ev: KeyboardEvent) {
+    if (ev.key === targetKey) {
+      ev.preventDefault();
+      setKeyPressed(true);
+    }
+  }
+
+  const upHandler = ({ key }: { key: string }) => {
+    if (key === targetKey) {
+      setKeyPressed(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!ref?.current?.addEventListener) return;
+    const tempRef = ref.current;
+
+    ref.current.addEventListener('keydown', downHandler);
+    ref.current.addEventListener('keyup', upHandler);
+
+    return function cleanup() {
+      tempRef.removeEventListener('keydown', downHandler);
+      tempRef.removeEventListener('keyup', upHandler);
+    };
+  });
+
+  return keyPressed;
+}
+
+/*
+## Types
+*/
+
+type SourceSelectProps = {
+  label?: string | null;
+  sources?: Promise<ReadonlyArray<Option>> | null;
+  children: ReactNode;
+  onChange?: ((selected: Option | null) => void) | null;
+  selected?: Option | null;
+};

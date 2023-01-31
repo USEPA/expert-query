@@ -2,26 +2,20 @@ import { uniqueId } from 'lodash';
 import { useState } from 'react';
 // types
 import type { ReactNode } from 'react';
+import type { Option } from 'types';
 
-type RadioOption = Option;
+/*
+## Components
+*/
 
-type Props = {
-  legend?: ReactNode;
-  onChange: (selected: RadioOption) => void;
-  options: readonly RadioOption[];
-  selected?: RadioOption | null;
-  styles?: string[];
-  tile?: boolean;
-};
-
-export default function RadioButtons({
+export function RadioButtons({
   legend,
   onChange,
   options,
   selected = null,
   styles = [],
   tile = false,
-}: Props) {
+}: RadioButtonsProps) {
   const [id] = useState(uniqueId('radio-'));
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
@@ -57,3 +51,18 @@ export default function RadioButtons({
     </fieldset>
   );
 }
+
+/*
+## Types
+*/
+
+type RadioButtonsProps = {
+  legend?: ReactNode;
+  onChange: (selected: RadioOption) => void;
+  options: readonly RadioOption[];
+  selected?: RadioOption | null;
+  styles?: string[];
+  tile?: boolean;
+};
+
+type RadioOption = Option;
