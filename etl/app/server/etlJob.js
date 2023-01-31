@@ -13,7 +13,6 @@ export default async function etlJob() {
     return;
   }
 
-  s3.syncGlossary(s3Config);
   s3.syncDomainValues(s3Config);
 
   // Create and load new schema

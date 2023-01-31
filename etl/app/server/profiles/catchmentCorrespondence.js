@@ -13,19 +13,20 @@ export const tableName = 'catchment_correspondence';
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
-    id SERIAL PRIMARY KEY,
-    assessmentunitid VARCHAR(50) NOT NULL,
-    assessmentunitname VARCHAR(255) NOT NULL,
-    catchmentnhdplusid NUMERIC(38),
+    objectid INTEGER PRIMARY KEY,
+    state VARCHAR(4000),
+    region VARCHAR(2),
     organizationid VARCHAR(30) NOT NULL,
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
-    region VARCHAR(2),
-    reportingcycle NUMERIC(4) NOT NULL,
-    state VARCHAR(4000)
+    reportingcycle NUMERIC(4,0) NOT NULL,
+    assessmentunitid VARCHAR(50) NOT NULL,
+    assessmentunitname VARCHAR(255) NOT NULL,
+    catchmentnhdplusid BIGINT
   )`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
+  { name: 'objectid' },
   { name: 'assessmentunitid' },
   { name: 'assessmentunitname' },
   { name: 'catchmentnhdplusid' },
@@ -52,6 +53,7 @@ export async function transform(data, first) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({
+      objectid: datum.objectid,
       assessmentunitid: datum.assessmentunitid,
       assessmentunitname: datum.assessmentunitname,
       catchmentnhdplusid: datum.catchmentnhdplusid,

@@ -10,7 +10,6 @@ declare global {
 
 // Columns that share values with those in the `domainValues` object
 export type AliasedField =
-  | 'assessmentUnitState'
   | 'associatedActionAgency'
   | 'associatedActionStatus'
   | 'parameter'

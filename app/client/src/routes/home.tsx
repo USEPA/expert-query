@@ -661,7 +661,7 @@ function useAbortSignal() {
   useEffect(() => {
     return function cleanup() {
       abortController.current.abort();
-    };
+  };
   }, [getAbortController]);
 
   const getSignal = useCallback(
@@ -944,7 +944,6 @@ function useStaticOptions(
 function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   return {
     ...values,
-    assessmentUnitState: values.assessmentUnitStatus,
     associatedActionAgency: values.actionAgency,
     associatedActionStatus: values.assessmentUnitStatus,
     parameter: values.parameterName,
@@ -1294,23 +1293,23 @@ async function getUrlInputs(
     ...Object.keys(params).map(async (key) => {
       if (!isFilterField(key)) return;
       if (isMultiOptionField(key)) {
-        newState[key] = await matchMultipleOptions(
-          params[key] ?? null,
-          key,
-          getStaticOptions(key, staticOptions),
-          profile,
-        );
+      newState[key] = await matchMultipleOptions(
+        params[key] ?? null,
+        key,
+        getStaticOptions(key, staticOptions),
+        profile,
+      );
       } else if (isSingleOptionField(key)) {
-        newState[key] = await matchSingleOption(
-          params[key] ?? null,
-          key,
-          getStaticOptions(key, staticOptions),
-          profile,
-        );
+      newState[key] = await matchSingleOption(
+        params[key] ?? null,
+        key,
+        getStaticOptions(key, staticOptions),
+        profile,
+      );
       } else if (isDateField(key)) {
-        newState[key] = matchDate(params[key] ?? null);
+      newState[key] = matchDate(params[key] ?? null);
       } else if (isYearField(key)) {
-        newState[key] = matchYear(params[key] ?? null);
+      newState[key] = matchYear(params[key] ?? null);
       }
     }),
   ]);

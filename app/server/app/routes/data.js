@@ -268,12 +268,16 @@ function executeQueryCountOnly(profile, req, res) {
       .then((count) => res.status(200).send(count))
       .catch((error) => {
         log.error(
-          `Failed to get count from the "${profile.tableName}" table...`
+          `Failed to get count from the "${profile.tableName}" table: `,
+          error
         );
         res.status(500).json(error);
       });
   } catch (error) {
-    log.error(`Failed to get count from the "${profile.tableName}" table...`);
+    log.error(
+      `Failed to get count from the "${profile.tableName}" table:`,
+      error
+    );
     return res.status(error.code ?? 500).json(error);
   }
 }

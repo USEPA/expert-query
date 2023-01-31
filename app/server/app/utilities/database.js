@@ -73,9 +73,9 @@ const knex = require("knex")({
 const mapping = {
   actions: {
     tableName: "actions",
-    idColumn: "id",
+    idColumn: "objectid",
     columns: [
-      { name: "id", alias: "id" },
+      { name: "objectid", alias: "objectId" },
       { name: "actionagency", alias: "actionAgency" },
       { name: "actionid", alias: "actionId" },
       { name: "actionname", alias: "actionName" },
@@ -105,9 +105,9 @@ const mapping = {
   },
   assessments: {
     tableName: "assessments",
-    idColumn: "id",
+    idColumn: "objectid",
     columns: [
-      { name: "id", alias: "id" },
+      { name: "objectid", alias: "objectId" },
       {
         name: "alternatelistingidentifier",
         alias: "alternateListingIdentifier",
@@ -250,12 +250,12 @@ const mapping = {
   },
   assessmentUnits: {
     tableName: "assessment_units",
-    idColumn: "id",
+    idColumn: "objectid",
     columns: [
-      { name: "id", alias: "id" },
+      { name: "objectid", alias: "objectid" },
       { name: "assessmentunitid", alias: "assessmentUnitId" },
       { name: "assessmentunitname", alias: "assessmentUnitName" },
-      { name: "assessmentunitstate", alias: "assessmentUnitState" },
+      { name: "assessmentunitstatus", alias: "assessmentUnitStatus" },
       { name: "locationdescription", alias: "locationDescription" },
       { name: "locationtext", alias: "locationText" },
       { name: "locationtypecode", alias: "locationTypeCode" },
@@ -280,9 +280,9 @@ const mapping = {
   },
   assessmentUnitsMonitoringLocations: {
     tableName: "assessment_units_monitoring_locations",
-    idColumn: "id",
+    idColumn: "objectid",
     columns: [
-      { name: "id", alias: "id" },
+      { name: "objectid", alias: "objectId" },
       { name: "assessmentunitid", alias: "assessmentUnitId" },
       { name: "assessmentunitname", alias: "assessmentUnitName" },
       { name: "assessmentunitstatus", alias: "assessmentUnitStatus" },
@@ -314,9 +314,9 @@ const mapping = {
   },
   catchmentCorrespondence: {
     tableName: "catchment_correspondence",
-    idColumn: "id",
+    idColumn: "objectid",
     columns: [
-      { name: "id", alias: "id" },
+      { name: "objectid", alias: "objectId" },
       { name: "assessmentunitid", alias: "assessmentUnitId" },
       { name: "assessmentunitname", alias: "assessmentUnitName" },
       {
@@ -339,9 +339,9 @@ const mapping = {
   },
   sources: {
     tableName: "sources",
-    idColumn: "id",
+    idColumn: "objectid",
     columns: [
-      { name: "id", alias: "id" },
+      { name: "objectid", alias: "objectId" },
       { name: "assessmentunitid", alias: "assessmentUnitId" },
       { name: "assessmentunitname", alias: "assessmentUnitName" },
       { name: "causename", alias: "causeName" },
@@ -370,9 +370,9 @@ const mapping = {
   },
   tmdl: {
     tableName: "tmdl",
-    idColumn: "id",
+    idColumn: "objectid",
     columns: [
-      { name: "id", alias: "id" },
+      { name: "objectid", alias: "objectId" },
       { name: "actionagency", alias: "actionAgency" },
       { name: "actionid", alias: "actionId" },
       { name: "actionname", alias: "actionName" },
@@ -421,7 +421,6 @@ const mapping = {
         highParam: "tmdlDateHi",
         type: "timestamptz",
       },
-      { name: "tmdlendpoint", alias: "tmdlEndpoint" },
       {
         name: "wasteloadallocation",
         alias: "wasteLoadAllocation",
