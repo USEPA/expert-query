@@ -61,6 +61,10 @@ requiredEnvVars.forEach((envVar) => {
 });
 
 app.on('ready', async () => {
+  app.listen(port, () => {
+    log.info(`Expert Query ETL app listening on port ${port}!`);
+  });
+
   // When running locally, just etl everything and exit.
   // All other environments, schedule the etl.
   if (environment.isLocal) {
