@@ -735,6 +735,7 @@ export async function runJob(s3Config, checkIfReady = true) {
   if (!environment.isLocal) {
     const readyResult = await isDataReady(pool);
     s3Julian = readyResult.julian;
+    log.info(`Are MVs ready: ${readyResult.ready} | Julian ${s3Julian}`);
 
     // exit early if we aren't ready to run etl
     if (checkIfReady && !readyResult.ready) {
