@@ -221,7 +221,7 @@ module.exports = function (app) {
       )
       .catch((error) => {
         log.error(
-          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table...`
+          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table: ${error}`
         );
         res.status(500).send("Error! " + error);
       });
