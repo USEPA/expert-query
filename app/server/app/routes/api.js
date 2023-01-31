@@ -37,6 +37,7 @@ function parseResponse(res) {
 async function queryColumnValues(profile, column, params, schema) {
   const parsedParams = {
     text: "",
+    direction: null,
     filters: {},
     limit: null,
   };

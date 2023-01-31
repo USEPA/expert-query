@@ -1,4 +1,4 @@
-export { default as fields } from './fields';
+export * as fields from './fields';
 export * as options from './options';
 export { default as profiles } from './profiles';
 

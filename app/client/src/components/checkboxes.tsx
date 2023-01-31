@@ -1,29 +1,21 @@
 // components
-import Checkbox from 'components/checkbox';
+import { Checkbox } from 'components/checkbox';
 // types
 import type { ReactNode } from 'react';
+import type { Option } from 'types';
 
-type Props = {
-  legend?: ReactNode;
-  onChange: (selected: ReadonlyArray<Option>) => void;
-  options: ReadonlyArray<Option>;
-  selected?: ReadonlyArray<Option>;
-  styles?: string[];
-  tile?: boolean;
-};
+/*
+## Components
+*/
 
-function isSelected(option: Option, selected: ReadonlyArray<Option>) {
-  return !!selected.find((s) => s.value === option.value);
-}
-
-export default function Checkboxes({
+export function Checkboxes({
   legend,
   onChange,
   options,
   selected = [],
   styles = [],
   tile = false,
-}: Props) {
+}: CheckboxesProps) {
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && <legend className="usa-legend">{legend}</legend>}
@@ -49,3 +41,24 @@ export default function Checkboxes({
     </fieldset>
   );
 }
+
+/*
+## Utils
+*/
+
+function isSelected(option: Option, selected: ReadonlyArray<Option>) {
+  return !!selected.find((s) => s.value === option.value);
+}
+
+/*
+## Types
+*/
+
+type CheckboxesProps = {
+  legend?: ReactNode;
+  onChange: (selected: ReadonlyArray<Option>) => void;
+  options: ReadonlyArray<Option>;
+  selected?: ReadonlyArray<Option>;
+  styles?: string[];
+  tile?: boolean;
+};
