@@ -430,7 +430,7 @@ export async function checkLogTables() {
           active BOOLEAN NOT NULL,
           creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
           schema_name VARCHAR(20) NOT NULL,
-          s3_julian VARCHAR(20),
+          s3_julian VARCHAR(20)
         )`,
     );
 
