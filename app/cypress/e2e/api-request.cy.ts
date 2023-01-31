@@ -207,7 +207,6 @@ describe("Api Validations", () => {
       "organizationName",
       "otherIdentifier",
       "region",
-      "tmdlEndpoint",
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
