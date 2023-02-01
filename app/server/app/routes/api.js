@@ -50,12 +50,35 @@ async function queryColumnValues(profile, column, params, schema) {
   });
 
   const query = knex
-    .withSchema(schema)
-    .from(profile.tableName)
-    .column(column.name)
-    .distinctOn(column.name)
-    .orderBy(column.name, parsedParams.direction ?? "asc")
-    .select();
+    .withRecursive("cte", (qb) => {
+      const subQuery1 = qb
+        .withSchema(schema)
+        .min(column.name, { as: column.name })
+        .from(profile.tableName);
+
+      const subQuery2 = knex
+        .withSchema(schema)
+        .min(column.name, { as: column.name })
+        .from(profile.tableName)
+        .whereRaw(`"${column.name}" > "cte"."${column.name}"`)
+        .as("inner");
+
+      // build where clause of the query
+      profile.columns.forEach((col) => {
+        appendToWhere(subQuery1, col.name, parsedParams.filters[col.alias]);
+        appendToWhere(subQuery2, col.name, parsedParams.filters[col.alias]);
+      });
+
+      subQuery1.unionAll((qb) => {
+        qb.select(subQuery2)
+          .from("cte")
+          .whereRaw(`"cte"."${column.name}" IS NOT NULL`);
+      });
+    })
+    .select(column.name)
+    .from("cte")
+    .whereNotNull(column.name)
+    .orderBy(column.name, parsedParams.direction ?? "asc");
 
   if (parsedParams.text) {
     if (column.type === "numeric" || column.type === "timestamptz") {
@@ -69,11 +92,6 @@ async function queryColumnValues(profile, column, params, schema) {
   }
 
   if (parsedParams.limit) query.limit(parsedParams.limit);
-
-  // build where clause of the query
-  profile.columns.forEach((col) => {
-    appendToWhere(query, col.name, parsedParams.filters[col.alias]);
-  });
 
   return await query;
 }
