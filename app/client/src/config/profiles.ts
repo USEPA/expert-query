@@ -169,7 +169,6 @@ export default {
       'addressedParameter',
       'assessmentUnitId',
       'assessmentUnitName',
-      'assessmentUnitStatus',
       'completionDateLo',
       'completionDateHi',
       'explicitMarginOfSafety',
