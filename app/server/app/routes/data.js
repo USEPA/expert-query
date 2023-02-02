@@ -116,7 +116,7 @@ function getQueryParams(req) {
 function parseCriteria(query, profile, queryParams, countOnly = false) {
   const baseQuery = query.clone();
   // build select statement of the query
-  if (countOnly) query.count(profile.idColumn);
+  if (countOnly) query.count();
   else {
     // filter down to requested columns, if the user provided that option
     const columnsToReturn = profile.columns.filter(
