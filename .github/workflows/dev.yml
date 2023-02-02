@@ -177,6 +177,7 @@ jobs:
       CF_S3_PRIV_ETL_BUCKET_ID: ${{ secrets.CF_DEV_S3_PRIV_ETL_BUCKET_ID }}
       CF_S3_PRIV_ETL_REGION: ${{ secrets.CF_DEV_S3_PRIV_ETL_REGION }}
       CF_S3_PRIV_ETL_SECRET_KEY: ${{ secrets.CF_DEV_S3_PRIV_ETL_SECRET_KEY }}
+      CREATE_INDEXES_AFTER_DATA: ${{ 'true' }}
       DB_NAME: ${{ secrets.DB_NAME_DEV }}
       EQ_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       EQ_USERNAME: ${{ secrets.EQ_USER_DEV }}
@@ -218,6 +219,7 @@ jobs:
           cf set-env $APP_NAME "CF_S3_PRIV_ETL_BUCKET_ID" "$CF_S3_PRIV_ETL_BUCKET_ID" > /dev/null
           cf set-env $APP_NAME "CF_S3_PRIV_ETL_REGION" "$CF_S3_PRIV_ETL_REGION" > /dev/null
           cf set-env $APP_NAME "CF_S3_PRIV_ETL_SECRET_KEY" "$CF_S3_PRIV_ETL_SECRET_KEY" > /dev/null
+          cf set-env $APP_NAME "CREATE_INDEXES_AFTER_DATA" "$CREATE_INDEXES_AFTER_DATA" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "EQ_USERNAME" "$EQ_USERNAME" > /dev/null
           cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
