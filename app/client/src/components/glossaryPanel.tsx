@@ -2,22 +2,17 @@ import Glossary from 'glossary-panel';
 import { useEffect, useState } from 'react';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 // components
-import Alert from 'components/alert';
+import { Alert } from 'components/alert';
 // contexts
 import { useContentState } from 'contexts/content';
 // types
 import type { ReactNode } from 'react';
 
-function termsInDOM() {
-  const items = document.getElementsByClassName('glossary__item');
-  return items && items.length > 0;
-}
+/*
+## Components
+*/
 
-type Props = {
-  path: string;
-};
-
-export default function GlossaryPanel({ path }: Props) {
+export function GlossaryPanel({ path }: GlossaryPanelProps) {
   const { content } = useContentState();
   const [glossary, setGlossary] = useState<Glossary | null>(null);
 
@@ -123,11 +118,6 @@ export default function GlossaryPanel({ path }: Props) {
   );
 }
 
-type GlossaryTermProps = {
-  children: ReactNode;
-  term: string;
-};
-
 export function GlossaryTerm({ term, children }: GlossaryTermProps) {
   const { content } = useContentState();
   return (
@@ -164,3 +154,25 @@ export function GlossaryTerm({ term, children }: GlossaryTermProps) {
     </span>
   );
 }
+
+/*
+## Utils
+*/
+
+function termsInDOM() {
+  const items = document.getElementsByClassName('glossary__item');
+  return items && items.length > 0;
+}
+
+/*
+## Types
+*/
+
+type GlossaryPanelProps = {
+  path: string;
+};
+
+type GlossaryTermProps = {
+  children: ReactNode;
+  term: string;
+};

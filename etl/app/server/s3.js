@@ -522,3 +522,23 @@ export async function archiveNationalDownloads(schemaName) {
   });
   log.info('Finished copying "new" to "latest"');
 }
+
+export async function readS3File({ bucketInfo, path }) {
+  setAwsConfig({
+    accessKeyId: bucketInfo.accessKeyId,
+    secretAccessKey: bucketInfo.secretAccessKey,
+    region: bucketInfo.region,
+  });
+  const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+
+  const res = await s3
+    .getObject({
+      Bucket: bucketInfo.bucketId,
+      Key: path,
+    })
+    .promise();
+
+  const parsedData = JSON.parse(res.Body.toString('utf-8'));
+
+  return parsedData;
+}

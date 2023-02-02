@@ -3,17 +3,11 @@ import { useState } from 'react';
 // types
 import type { ChangeEvent, ReactNode } from 'react';
 
-type Props = {
-  checked: boolean;
-  description?: ReactNode;
-  label: ReactNode;
-  onChange: (ev: ChangeEvent) => void;
-  styles?: string[];
-  tile?: boolean;
-  value?: string;
-};
+/*
+## Components
+*/
 
-export default function Checkbox({
+export function Checkbox({
   checked,
   description,
   label,
@@ -21,7 +15,7 @@ export default function Checkbox({
   styles = [],
   tile = false,
   value,
-}: Props) {
+}: CheckboxProps) {
   const [id] = useState(uniqueId('checkbox-'));
   return (
     <div
@@ -45,3 +39,17 @@ export default function Checkbox({
     </div>
   );
 }
+
+/*
+## Types
+*/
+
+type CheckboxProps = {
+  checked: boolean;
+  description?: ReactNode;
+  label: ReactNode;
+  onChange: (ev: ChangeEvent) => void;
+  styles?: string[];
+  tile?: boolean;
+  value?: string;
+};

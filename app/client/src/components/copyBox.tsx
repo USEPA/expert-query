@@ -1,25 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ReactComponent as Copy } from 'uswds/img/usa-icons/content_copy.svg';
-import Alert from 'components/alert';
+import { Alert } from 'components/alert';
+// types
+import type { Status } from 'types';
 
-type Props = {
-  lengthExceededMessage?: string;
-  maxLength?: number;
-  testId?: string;
-  text: string;
-};
+/*
+## Components
+*/
 
-const failureMessage = 'Could not access clipboard.';
-
-const successMessage = 'Copied to clipboard!';
-
-export default function CopyBox({
+export function CopyBox({
   lengthExceededMessage,
   maxLength,
   testId,
   text,
-}: Props) {
-  const [status, setStatus] = useState<'success' | 'failure' | 'idle'>('idle');
+}: CopyBoxProps) {
+  const [status, setStatus] = useState<Status>('idle');
   const [statusVisible, setStatusVisible] = useState(false);
 
   useEffect(() => {
@@ -110,3 +105,21 @@ export default function CopyBox({
     );
   }
 }
+
+/*
+## Constants
+*/
+
+const failureMessage = 'Could not access clipboard.';
+const successMessage = 'Copied to clipboard!';
+
+/*
+## Types
+*/
+
+type CopyBoxProps = {
+  lengthExceededMessage?: string;
+  maxLength?: number;
+  testId?: string;
+  text: string;
+};

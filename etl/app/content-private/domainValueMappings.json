@@ -8,9 +8,6 @@
   "assessmentUnitStatus": {
     "domainName": "StatusIndicator"
   },
-  "associatedActionType": {
-    "domainName": "ActionType"
-  },
   "delistedReason": {
     "domainName": "DelistingReasonCode"
   },
@@ -30,11 +27,11 @@
   "parameterGroup": {
     "domainName": "ParameterGroupCodeType"
   },
+  "parameterName": {
+    "domainName": "ParameterName"
+  },
   "parameterStatus": {
     "domainName": "ParameterStatus"
-  },
-  "pollutant": {
-    "domainName": "ParameterName"
   },
   "sourceName": {
     "domainName": "SourceName"

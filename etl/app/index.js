@@ -7,6 +7,19 @@ import * as database from './server/database.js';
 import { logger as log } from './server/utilities/logger.js';
 import { getEnvironment } from './server/utilities/environment.js';
 
+async function poll(fn, ms) {
+  while (true) {
+    await fn();
+    await wait(ms);
+  }
+}
+
+function wait(ms = 1000) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 const app = express();
 app.disable('x-powered-by');
 
@@ -28,6 +41,10 @@ if (environment.isLocal) {
     'CF_S3_PRIV_BUCKET_ID',
     'CF_S3_PRIV_REGION',
     'CF_S3_PRIV_SECRET_KEY',
+    'CF_S3_PRIV_ETL_ACCESS_KEY',
+    'CF_S3_PRIV_ETL_BUCKET_ID',
+    'CF_S3_PRIV_ETL_REGION',
+    'CF_S3_PRIV_ETL_SECRET_KEY',
     'VCAP_SERVICES',
   );
 }
@@ -47,52 +64,61 @@ app.on('ready', async () => {
   app.listen(port, () => {
     log.info(`Expert Query ETL app listening on port ${port}!`);
   });
-  // Back up logs
-  try {
-    log.info('Backing up logs');
-  } catch (err) {
-    log.error(err);
+
+  // When running locally, just etl everything and exit.
+  // All other environments, schedule the etl.
+  if (environment.isLocal) {
+    // load config from private s3 bucket
+    const s3Config = await s3.loadConfig();
+
+    if (!s3Config) {
+      log.warn(
+        'Failed to get config from private S3 bucket, aborting etl process',
+      );
+      return;
+    }
+
+    s3.syncGlossary(s3Config);
+
+    await etlJob();
+    process.exit();
+  } else {
+    log.info('Scheduling glossary ETL to run every day at 1AM');
+
+    // Schedule glossary ETL to run every day at 1AM
+    cron.schedule(
+      '0 1 * * *',
+      async () => {
+        log.info('Running glossary cron task every day at 1AM');
+
+        // load config from private s3 bucket
+        const s3Config = await s3.loadConfig();
+
+        if (!s3Config) {
+          log.warn(
+            'Failed to get config from private S3 bucket, aborting etl process',
+          );
+          return;
+        }
+
+        s3.syncGlossary(s3Config);
+      },
+      {
+        scheduled: true,
+      },
+    );
+
+    log.info('Starting poll to run full ETL when new data is available');
+
+    // Poll the private ETL S3 bucket. Run the etl process when new data
+    // becomes available
+    poll(
+      async () => {
+        await etlJob();
+      },
+      15 * 60 * 1000, // run every 15 minutes
+    );
   }
-
-  log.info('Scheduling glossary ETL to run every day, except Sunday, at 1AM');
-
-  // Schedule glossary ETL to run every day, except Sunday, at 1AM
-  cron.schedule(
-    '0 1 * * 1-6',
-    async () => {
-      log.info('Running glossary cron task every day, except Sunday, at 1AM');
-
-      // load config from private s3 bucket
-      const s3Config = await s3.loadConfig();
-
-      if (!s3Config) {
-        log.warn(
-          'Failed to get config from private S3 bucket, aborting etl process',
-        );
-        return;
-      }
-
-      s3.syncGlossary(s3Config);
-    },
-    {
-      scheduled: true,
-    },
-  );
-
-  log.info('Scheduling load to run every Sunday at 1AM');
-
-  // Schedule ETL to run every Sunday at 1AM
-  cron.schedule(
-    '0 1 * * Sunday',
-    () => {
-      log.info('Running cron task every Sunday at 1AM');
-
-      etlJob();
-    },
-    {
-      scheduled: true,
-    },
-  );
 });
 
 app.on('tryDb', async () => {

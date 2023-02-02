@@ -23,6 +23,13 @@ class InvalidParameterException extends Error {
   }
 }
 
+function appendLatestToWhere(query, column, columnType, baseQuery) {
+  if (columnType !== "numeric" && columnType !== "timestamptz") return;
+
+  const subQuery = baseQuery.clone();
+  query.where(column, subQuery.max(column));
+}
+
 /**
  * Append a range to the where clause of the provided query.
  * @param {Object} query KnexJS query object
@@ -107,6 +114,7 @@ function getQueryParams(req) {
  * @param {boolean} countOnly (Optional) should query for count only
  */
 function parseCriteria(query, profile, queryParams, countOnly = false) {
+  const baseQuery = query.clone();
   // build select statement of the query
   if (countOnly) query.count(profile.idColumn);
   else {
@@ -128,10 +136,13 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   profile.columns.forEach((col) => {
     const lowArg = "lowParam" in col && queryParams.filters[col.lowParam];
     const highArg = "highParam" in col && queryParams.filters[col.highParam];
+    const exactArg = queryParams.filters[col.alias];
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
-    } else {
+    } else if (exactArg) {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
+    } else if (col.default === "latest") {
+      appendLatestToWhere(query, col.name, col.type, baseQuery);
     }
   });
 }
@@ -244,10 +255,7 @@ function validateQueryParams(queryParams, profile) {
 function executeQueryCountOnly(profile, req, res) {
   // always return json with the count
   try {
-    const query = knex
-      .withSchema(req.activeSchema)
-      .from(profile.tableName)
-      .first();
+    const query = knex.withSchema(req.activeSchema).from(profile.tableName);
 
     const queryParams = getQueryParams(req);
 
@@ -256,15 +264,20 @@ function executeQueryCountOnly(profile, req, res) {
     parseCriteria(query, profile, queryParams, true);
 
     query
+      .first()
       .then((count) => res.status(200).send(count))
       .catch((error) => {
         log.error(
-          `Failed to get count from the "${profile.tableName}" table...`
+          `Failed to get count from the "${profile.tableName}" table: `,
+          error
         );
         res.status(500).json(error);
       });
   } catch (error) {
-    log.error(`Failed to get count from the "${profile.tableName}" table...`);
+    log.error(
+      `Failed to get count from the "${profile.tableName}" table:`,
+      error
+    );
     return res.status(error.code ?? 500).json(error);
   }
 }

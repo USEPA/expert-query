@@ -37,6 +37,7 @@ function parseResponse(res) {
 async function queryColumnValues(profile, column, params, schema) {
   const parsedParams = {
     text: "",
+    direction: null,
     filters: {},
     limit: null,
   };
@@ -220,7 +221,7 @@ module.exports = function (app) {
       )
       .catch((error) => {
         log.error(
-          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table...`
+          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table: ${error}`
         );
         res.status(500).send("Error! " + error);
       });
