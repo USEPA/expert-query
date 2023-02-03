@@ -10,6 +10,7 @@ const pgp = pgPromise({ capSQL: true });
 // Properties
 
 export const tableName = 'assessments';
+const indexTableName = tableName.replaceAll('_', '');
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
@@ -69,6 +70,233 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     associatedactionstatus VARCHAR(30),
     associatedactionagency VARCHAR(10)
   )`;
+
+export const createIndexes = `
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_alternatelistingidentifier_asc
+    ON ${tableName} USING btree
+    (alternatelistingidentifier COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentbasis_asc
+    ON ${tableName} USING btree
+    (assessmentbasis COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentdate_desc
+    ON ${tableName} USING btree
+    (assessmentdate DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentmethods_asc
+    ON ${tableName} USING btree
+    (assessmentmethods COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmenttypes_asc
+    ON ${tableName} USING btree
+    (assessmenttypes COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitid_asc
+    ON ${tableName} USING btree
+    (assessmentunitid COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitname_asc
+    ON ${tableName} USING btree
+    (assessmentunitname COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitstatus_asc
+    ON ${tableName} USING btree
+    (assessmentunitstatus COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_associatedactionagency_asc
+    ON ${tableName} USING btree
+    (associatedactionagency COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_associatedactionid_asc
+    ON ${tableName} USING btree
+    (associatedactionid COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_associatedactionname_asc
+    ON ${tableName} USING btree
+    (associatedactionname COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_associatedactionstatus_asc
+    ON ${tableName} USING btree
+    (associatedactionstatus COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_associatedactiontype_asc
+    ON ${tableName} USING btree
+    (associatedactiontype ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_consentdecreecycle_desc
+    ON ${tableName} USING btree
+    (consentdecreecycle DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_cycleexpectedtoattain_desc
+    ON ${tableName} USING btree
+    (cycleexpectedtoattain DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_cyclefirstlisted_desc
+    ON ${tableName} USING btree
+    (cyclefirstlisted DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_cyclelastassessed_asc
+    ON ${tableName} USING btree
+    (cyclelastassessed ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_cyclescheduledfortmdl_asc
+    ON ${tableName} USING btree
+    (cyclescheduledfortmdl ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_delisted_asc
+    ON ${tableName} USING btree
+    (delisted COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_delistedreason_asc
+    ON ${tableName} USING btree
+    (delistedreason COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_epaircategory_asc
+    ON ${tableName} USING btree
+    (epaircategory COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_monitoringenddate_desc
+    ON ${tableName} USING btree
+    (monitoringenddate DESC NULLS FIRST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_monitoringstartdate_desc
+    ON ${tableName} USING btree
+    (monitoringstartdate DESC NULLS FIRST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationid_asc
+    ON ${tableName} USING btree
+    (organizationid COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationname_asc
+    ON ${tableName} USING btree
+    (organizationname COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_overallstatus_asc
+    ON ${tableName} USING btree
+    (overallstatus COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_parameterattainment_asc
+    ON ${tableName} USING btree
+    (parameterattainment COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_parameterircategory_asc
+    ON ${tableName} USING btree
+    (parameterircategory ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_parameterstateircategory_asc
+    ON ${tableName} USING btree
+    (parameterstateircategory ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_parameterstatus_asc
+    ON ${tableName} USING btree
+    (parameterstatus COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_pollutantindicator_asc
+    ON ${tableName} USING btree
+    (pollutantindicator COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_region_asc
+    ON ${tableName} USING btree
+    (region COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_reportingcycle_desc
+    ON ${tableName} USING btree
+    (reportingcycle DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_seasonenddate_desc
+    ON ${tableName} USING btree
+    (seasonenddate DESC NULLS FIRST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_seasonstartdate_desc
+    ON ${tableName} USING btree
+    (seasonstartdate DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_state_asc
+    ON ${tableName} USING btree
+    (state COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_stateircategory_asc
+    ON ${tableName} USING btree
+    (stateircategory COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_useclassname_asc
+    ON ${tableName} USING btree
+    (useclassname COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_usegroup_asc
+    ON ${tableName} USING btree
+    (usegroup COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_useircategory_asc
+    ON ${tableName} USING btree
+    (useircategory ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_usename_asc
+    ON ${tableName} USING btree
+    (usename COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_usestateircategory_asc
+    ON ${tableName} USING btree
+    (usestateircategory ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_usesupport_asc
+    ON ${tableName} USING btree
+    (usesupport COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_vision303dpriority_asc
+    ON ${tableName} USING btree
+    (vision303dpriority COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_watertype_asc
+    ON ${tableName} USING btree
+    (watertype COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'objectid' },

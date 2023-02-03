@@ -10,6 +10,7 @@ const pgp = pgPromise({ capSQL: true });
 // Properties
 
 export const tableName = 'tmdl';
+const indexTableName = tableName.replaceAll('_', '');
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
@@ -45,6 +46,123 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     inindiancountry VARCHAR(1),
     includeinmeasure VARCHAR(1)
   )`;
+
+export const createIndexes = `
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_actionagency_asc
+    ON ${tableName} USING btree
+    (actionagency COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_actionid_asc
+    ON ${tableName} USING btree
+    (actionid COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_actionname_asc
+    ON ${tableName} USING btree
+    (actionname COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_addressedparameter_asc
+    ON ${tableName} USING btree
+    (addressedparameter COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitid_asc
+    ON ${tableName} USING btree
+    (assessmentunitid COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitname_asc
+    ON ${tableName} USING btree
+    (assessmentunitname COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_completiondate_desc
+    ON ${tableName} USING btree
+    (completiondate DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_explicitmarginofsafety_asc
+    ON ${tableName} USING btree
+    (explicitmarginofsafety COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_fiscalyearestablished_desc
+    ON ${tableName} USING btree
+    (fiscalyearestablished COLLATE pg_catalog."default" DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_implicitmarginofsafety_asc
+    ON ${tableName} USING btree
+    (implicitmarginofsafety COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_includeinmeasure_asc
+    ON ${tableName} USING btree
+    (includeinmeasure COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_inindiancountry_asc
+    ON ${tableName} USING btree
+    (inindiancountry COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_npdesidentifier_asc
+    ON ${tableName} USING btree
+    (npdesidentifier COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationid_asc
+    ON ${tableName} USING btree
+    (organizationid COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationname_asc
+    ON ${tableName} USING btree
+    (organizationname COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_otheridentifier_asc
+    ON ${tableName} USING btree
+    (otheridentifier COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_pollutant_asc
+    ON ${tableName} USING btree
+    (pollutant COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_region_asc
+    ON ${tableName} USING btree
+    (region COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_reportingcycle_desc
+    ON ${tableName} USING btree
+    (reportingcycle DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_sourcetype_asc
+    ON ${tableName} USING btree
+    (sourcetype COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_state_asc
+    ON ${tableName} USING btree
+    (state COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_tmdldate_desc
+    ON ${tableName} USING btree
+    (tmdldate DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_watertype_asc
+    ON ${tableName} USING btree
+    (watertype COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'objectid' },

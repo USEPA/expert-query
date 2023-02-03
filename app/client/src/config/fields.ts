@@ -73,6 +73,11 @@ export const filterFields = [
     label: 'Associated Action Type',
     type: 'multiselect',
   },
+  {
+    key: 'catchmentNhdPlusId',
+    label: 'Catchment NHDPlus ID',
+    type: 'multiselect',
+  },
   { key: 'causeName', label: 'Cause Name', type: 'multiselect' },
   {
     key: 'completionDateLo',
