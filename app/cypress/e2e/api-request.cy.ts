@@ -119,10 +119,10 @@ describe("Api Validations", () => {
       "organizationName",
       "overallStatus",
       "parameterAttainment",
-      // "parameterIrCategory", 500 internal ERROR
+      "parameterIrCategory",
       "region",
       "useGroup",
-      // "useIrCategory" 500 internal ERROR
+      "useIrCategory",
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
@@ -207,7 +207,6 @@ describe("Api Validations", () => {
       "organizationName",
       "otherIdentifier",
       "region",
-      // "tmdlEndpoint", 404 error
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {

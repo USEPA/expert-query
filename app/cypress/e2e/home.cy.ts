@@ -51,7 +51,7 @@ describe("Home Page", () => {
 
   it("Data profile Sources query link", () => {
     cy.selectProfile("Sources");
-    cy.url().should("include", "/attains/sources#format=csv");
+    cy.url().should("include", "/attains/sources");
   });
 
   it("All data profile option are select one by one and check Clear Search button is available ", () => {
@@ -79,16 +79,17 @@ describe("Home Page", () => {
     cy.get("body").click(0, 0);
   });
 
-  it("Verify url by selecting different format", () => {
+  // for new query structure, this verify is not necessary
+  it.skip("Verify url by selecting different format", () => {
     cy.selectProfile("Actions");
     cy.findByText("Comma-separated (CSV)").click();
-    cy.url().should("include", "attains/actions#format=csv");
+    cy.url().should("include", "attains/actions#");
     cy.findByText("Tab-separated (TSV)").click();
-    cy.url().should("include", "attains/actions#format=tsv");
+    cy.url().should("include", "attains/actions#");
     cy.findByText("Microsoft Excel (XLSX)").click();
-    cy.url().should("include", "attains/actions#format=xlsx");
+    cy.url().should("include", "attains/actions#");
     cy.findByText("JavaScript Object Notation (JSON)").click();
-    cy.url().should("include", "attains/actions#format=json");
+    cy.url().should("include", "attains/actions#");
   });
 
   it("Verify Clear Search button after clear", () => {

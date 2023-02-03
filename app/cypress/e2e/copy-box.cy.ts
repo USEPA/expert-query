@@ -57,7 +57,7 @@ describe("CopyBox", () => {
       grantPermissions();
       cy.wait(1000);
       cy.findAllByRole("button", { name: "Copy content" }).first().click();
-      cy.clipboardValue(`${origin}/attains/actions/#format=csv`);
+      cy.clipboardValue(`${origin}/attains/actions#`);
     }
   );
 
