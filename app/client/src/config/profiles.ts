@@ -188,6 +188,7 @@ export default {
       'region',
       'reportingCycle',
       'sourceType',
+      'state',
       'tmdlDateLo',
       'tmdlDateHi',
       'wasteLoadAllocation',
