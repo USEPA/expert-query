@@ -14,7 +14,7 @@ describe("Data Profile Action", () => {
   it("Verify copy box text flavor 1", () => {
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/actions/#format=csv`
+      `${origin}/attains/actions#`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
@@ -36,16 +36,15 @@ describe("Data Profile Action", () => {
     cy.selectOption("input-actionId", "10081");
     cy.selectOption("input-actionId", "56325");
 
-    const queryValue =
-      "format=csv&actionAgency=S&actionId=10081&actionId=56325";
+    const queryValue = "actionAgency=S&actionId=10081&actionId=56325";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/actions/#${queryValue}`
+      `${origin}/attains/actions#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/actions?${queryValue}`
+      `${origin}/attains/data/actions?${queryValue}&format=csv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -66,15 +65,15 @@ describe("Data Profile Action", () => {
     //File Format
     cy.findByText("Tab-separated (TSV)").click();
 
-    const queryValue = "format=tsv&actionAgency=E&region=06&region=09";
+    const queryValue = "actionAgency=E&region=06&region=09";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/actions/#${queryValue}`
+      `${origin}/attains/actions#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/actions?${queryValue}`
+      `${origin}/attains/data/actions?${queryValue}&format=tsv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -100,15 +99,15 @@ describe("Data Profile Action", () => {
     cy.findByText("Microsoft Excel (XLSX)").click();
 
     const queryValue =
-      "format=xlsx&actionAgency=T&assessmentUnitId=AS-10S&assessmentUnitId=AS-05S&waterType=WASH&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS";
+      "actionAgency=T&assessmentUnitId=AS-10S&assessmentUnitId=AS-05S&waterType=WASH&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/actions/#${queryValue}`
+      `${origin}/attains/actions#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/actions?${queryValue}`
+      `${origin}/attains/data/actions?${queryValue}&format=xlsx`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -149,15 +148,15 @@ describe("Data Profile Action", () => {
     cy.findByText("Microsoft Excel (XLSX)").click();
 
     const queryValue =
-      "format=xlsx&actionAgency=T&actionAgency=E&actionId=10081&actionId=10817&actionName=ALDER%20CREEK-%20RUBY%20RIVER%20WATERSHED%20TMDL%20%20&actionName=%20NELSON%20CREEK%20(HEADWATERS%20TO%20THE%20MOUTH%20-%20BIG%20DRY%20CREEK%20ARM%20OF%20FORT%20PECK%20RES)%20-%20REDWATER%20RIVER%20TPA&assessmentUnitId=AS-03O&assessmentUnitId=AS-04S&organizationId=21MSWQ&organizationName=California&organizationName=Montana&waterType=GULF";
+      "actionAgency=T&actionAgency=E&actionId=10081&actionId=10817&actionName=ALDER%20CREEK-%20RUBY%20RIVER%20WATERSHED%20TMDL%20%20&actionName=%20NELSON%20CREEK%20(HEADWATERS%20TO%20THE%20MOUTH%20-%20BIG%20DRY%20CREEK%20ARM%20OF%20FORT%20PECK%20RES)%20-%20REDWATER%20RIVER%20TPA&assessmentUnitId=AS-03O&assessmentUnitId=AS-04S&organizationId=21MSWQ&organizationName=California&organizationName=Montana&waterType=GULF";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/actions/#${queryValue}`
+      `${origin}/attains/actions#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/actions?${queryValue}`
+      `${origin}/attains/data/actions?${queryValue}&format=xlsx`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",

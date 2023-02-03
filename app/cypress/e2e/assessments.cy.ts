@@ -14,7 +14,7 @@ describe("Data Profile Assessments", () => {
   it("Verify copy box Current Query text flavor 1", () => {
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#format=csv`
+      `${origin}/attains/assessments#`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
@@ -36,15 +36,15 @@ describe("Data Profile Assessments", () => {
     cy.findByRole("checkbox", { name: "State" }).click({ force: true });
 
     const queryValue =
-      "format=csv&alternateListingIdentifier=6226&associatedActionAgency=S";
+      "alternateListingIdentifier=6226&associatedActionAgency=S";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#${queryValue}`
+      `${origin}/attains/assessments#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessments?${queryValue}`
+      `${origin}/attains/data/assessments?${queryValue}&format=csv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -59,7 +59,7 @@ describe("Data Profile Assessments", () => {
     cy.get("#input-assessmentDateLo").type("1999-12-31");
     cy.get("#input-assessmentDateHi").type("2023-01-16");
 
-    //Assessment Unit Name
+    //Associated Action Name
     cy.selectOption("input-associatedActionName", "indian fork");
 
     //Associated Action Status
@@ -71,20 +71,20 @@ describe("Data Profile Assessments", () => {
     cy.findByRole("checkbox", { name: "Low" }).click({ force: true });
 
     const queryValue =
-      "format=csv&associatedActionName=Indian%20Fork&associatedActionStatus=A&cwa303dPriorityRanking=Low&assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023";
+      "assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023&associatedActionName=Indian%20Fork&associatedActionStatus=A&cwa303dPriorityRanking=Low";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#${queryValue}`
+      `${origin}/attains/assessments#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessments?${queryValue}`
+      `${origin}/attains/data/assessments?${queryValue}&format=csv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"associatedActionName":["Indian Fork"],"associatedActionStatus":["A"],"cwa303dPriorityRanking":["Low"],"assessmentDateLo":"12-31-1999","assessmentDateHi":"01-16-2023"},"options":{"format":"csv"}}'
+        '{"filters":{"assessmentDateLo":"12-31-1999","assessmentDateHi":"01-16-2023","associatedActionName":["Indian Fork"],"associatedActionStatus":["A"],"cwa303dPriorityRanking":["Low"]},"options":{"format":"csv"}}'
       )} ${origin}/attains/data/assessments`
     );
   });
@@ -100,27 +100,27 @@ describe("Data Profile Assessments", () => {
     //State IR Category
     cy.selectOption("input-stateIrCategory", "3x");
 
-    //Use IR Category
-    cy.selectOption("input-useStateIrCategory", "2");
+    //Use State IR Category
+    cy.selectOption("input-useStateIrCategory", "1");
 
     //File Format
     cy.findByText("Microsoft Excel (XLSX)").click();
 
     const queryValue =
-      "format=xlsx&state=IN&stateIrCategory=3x&useStateIrCategory=2&cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022";
+      "cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022&state=IN&stateIrCategory=3x&useStateIrCategory=1";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#${queryValue}`
+      `${origin}/attains/assessments#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessments?${queryValue}`
+      `${origin}/attains/data/assessments?${queryValue}&format=xlsx`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"state":["IN"],"stateIrCategory":["3x"],"useStateIrCategory":["2"],"cycleExpectedToAttainLo":"2008","cycleExpectedToAttainHi":"2022"},"options":{"format":"xlsx"}}'
+        '{"filters":{"cycleExpectedToAttainLo":"2008","cycleExpectedToAttainHi":"2022","state":["IN"],"stateIrCategory":["3x"],"useStateIrCategory":["1"]},"options":{"format":"xlsx"}}'
       )} ${origin}/attains/data/assessments`
     );
   });
@@ -170,7 +170,7 @@ describe("Data Profile Assessments", () => {
     });
 
     //Associated Action Type
-    cy.selectOption("input-associatedActionType", "a public");
+    cy.selectOption("input-associatedActionType", "3");
 
     //CWA 303d Priority Ranking
     cy.findByRole("checkbox", { name: "Medium" }).click({ force: true });
@@ -225,11 +225,14 @@ describe("Data Profile Assessments", () => {
     //Parameter Group
     cy.selectOption("input-parameterGroup", "other");
 
+    //Parameter IR Category
+    cy.selectOption("input-parameterIrCategory", "19");
+
     //Parameter Name
     cy.selectOption("input-parameterName", "radium");
 
     // //Parameter State IR Category
-    // cy.selectOption("input-parameterStateIrCategory", "cfc-113");
+    cy.selectOption("input-parameterStateIrCategory", "1ht");
 
     //Parameter Status
     cy.findByRole("checkbox", { name: "Meeting Criteria" }).click({
@@ -245,8 +248,7 @@ describe("Data Profile Assessments", () => {
     cy.selectOption("input-region", "08");
 
     //Reporting Cycle
-    cy.get("#input-reportingCycleLo").type("2005");
-    cy.get("#input-reportingCycleHi").type("2022");
+    cy.selectOption("input-reportingCycle", "latest");
 
     //Season End Date
     cy.get("#input-seasonEndDateLo").type("2014-04-23");
@@ -291,21 +293,21 @@ describe("Data Profile Assessments", () => {
     cy.findByText("Tab-separated (TSV)").click();
 
     const queryValue =
-      "format=tsv&alternateListingIdentifier=72992&assessmentBasis=Monitored%20Data&assessmentMethods=Fish%20surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A29R_PAS01A14&assessmentUnitName=Camp&assessmentUnitStatus=H&associatedActionAgency=E&associatedActionId=1024&associatedActionName=Chartiers%20Creek&associatedActionStatus=A&associatedActionType=Public%20Meeting%20Held&cwa303dPriorityRanking=Medium&delisted=Y&delistedReason=NOT_SPECIFIED&epaIrCategory=4A&organizationId=21PA&organizationName=Iowa&overallStatus=Not%20Assessed&parameterAttainment=ALGAE&parameterGroup=METALS%20(OTHER%20THAN%20MERCURY)&parameterName=RADIUM&parameterStatus=Meeting%20Criteria&pollutantIndicator=N&region=08&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=AGRICULTURAL&useName=Scenic%20Value&useStateIrCategory=1&useSupport=N&vision303dPriority=Y&waterType=WASH&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&reportingCycleLo=2005&reportingCycleHi=2022";
+      "alternateListingIdentifier=72992&assessmentBasis=Monitored%20Data&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&assessmentMethods=Fish%20surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A29R_PAS01A14&assessmentUnitName=Camp&assessmentUnitStatus=H&associatedActionAgency=E&associatedActionId=1024&associatedActionName=Chartiers%20Creek&associatedActionStatus=A&associatedActionType=3&cwa303dPriorityRanking=Medium&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&delisted=Y&delistedReason=NOT_SPECIFIED&epaIrCategory=4A&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&organizationId=21PA&organizationName=Iowa&overallStatus=Not%20Assessed&parameterAttainment=ALGAE&parameterGroup=METALS%20(OTHER%20THAN%20MERCURY)&parameterIrCategory=19&parameterName=RADIUM&parameterStateIrCategory=1ht&parameterStatus=Meeting%20Criteria&pollutantIndicator=N&region=08&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=AGRICULTURAL&useName=Scenic%20Value&useStateIrCategory=1&useSupport=N&vision303dPriority=Y&waterType=WASH";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessments/#${queryValue}`
+      `${origin}/attains/assessments#${queryValue}`
     );
 
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessments?${queryValue}`
+      `${origin}/attains/data/assessments?${queryValue}&format=tsv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A29R_PAS01A14"],"assessmentUnitName":["Camp"],"assessmentUnitStatus":["H"],"associatedActionAgency":["E"],"associatedActionId":["1024"],"associatedActionName":["Chartiers Creek"],"associatedActionStatus":["A"],"associatedActionType":["Public Meeting Held"],"cwa303dPriorityRanking":["Medium"],"delisted":["Y"],"delistedReason":["NOT_SPECIFIED"],"epaIrCategory":["4A"],"organizationId":["21PA"],"organizationName":["Iowa"],"overallStatus":["Not Assessed"],"parameterAttainment":["ALGAE"],"parameterGroup":["METALS (OTHER THAN MERCURY)"],"parameterName":["RADIUM"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["AGRICULTURAL"],"useName":["Scenic Value"],"useStateIrCategory":["1"],"useSupport":["N"],"vision303dPriority":["Y"],"waterType":["WASH"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","reportingCycleLo":"2005","reportingCycleHi":"2022"},"options":{"format":"tsv"}}'
+        '{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A29R_PAS01A14"],"assessmentUnitName":["Camp"],"assessmentUnitStatus":["H"],"associatedActionAgency":["E"],"associatedActionId":["1024"],"associatedActionName":["Chartiers Creek"],"associatedActionStatus":["A"],"associatedActionType":[3],"cwa303dPriorityRanking":["Medium"],"cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","delisted":["Y"],"delistedReason":["NOT_SPECIFIED"],"epaIrCategory":["4A"],"monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","organizationId":["21PA"],"organizationName":["Iowa"],"overallStatus":["Not Assessed"],"parameterAttainment":["ALGAE"],"parameterGroup":["METALS (OTHER THAN MERCURY)"],"parameterIrCategory":["19"],"parameterName":["RADIUM"],"parameterStateIrCategory":["1ht"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["AGRICULTURAL"],"useName":["Scenic Value"],"useStateIrCategory":["1"],"useSupport":["N"],"vision303dPriority":["Y"],"waterType":["WASH"]},"options":{"format":"tsv"}}'
       )} ${origin}/attains/data/assessments`
     );
   });

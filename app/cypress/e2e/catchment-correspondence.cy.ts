@@ -14,7 +14,7 @@ describe("Data Profile Catchment Correspondence", () => {
   it("Verify copy box text flavor 1", () => {
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#format=csv`
+      `${origin}/attains/catchmentCorrespondence#`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
@@ -35,15 +35,15 @@ describe("Data Profile Catchment Correspondence", () => {
     //Organization ID
     cy.selectOption("input-organizationId", "21hi");
 
-    const queryValue = "format=csv&assessmentUnitId=AS-04O&organizationId=21HI";
+    const queryValue = "assessmentUnitId=AS-04O&organizationId=21HI";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#${queryValue}`
+      `${origin}/attains/catchmentCorrespondence#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/catchmentCorrespondence?${queryValue}`
+      `${origin}/attains/data/catchmentCorrespondence?${queryValue}&format=csv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -64,15 +64,15 @@ describe("Data Profile Catchment Correspondence", () => {
     cy.findByText("Tab-separated (TSV)").click();
 
     const queryValue =
-      "format=tsv&assessmentUnitName=ABBOTT%20LAKES&organizationName=California";
+      "assessmentUnitName=ABBOTT%20LAKES&organizationName=California";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#${queryValue}`
+      `${origin}/attains/catchmentCorrespondence#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/catchmentCorrespondence?${queryValue}`
+      `${origin}/attains/data/catchmentCorrespondence?${queryValue}&format=tsv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -90,27 +90,26 @@ describe("Data Profile Catchment Correspondence", () => {
     cy.selectOption("input-organizationName", "montana");
 
     //Reporting Cycle
-    cy.get("#input-reportingCycleLo").type("1993");
-    cy.get("#input-reportingCycleHi").type("2010");
+    cy.selectOption("input-reportingCycle", "2016{downArrow}");
 
     //File Format
     cy.findByText("Microsoft Excel (XLSX)").click();
 
     const queryValue =
-      "format=xlsx&assessmentUnitId=AS-04O&organizationName=Montana&reportingCycleLo=1993&reportingCycleHi=2010";
+      "assessmentUnitId=AS-04O&organizationName=Montana&reportingCycle=2016";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#${queryValue}`
+      `${origin}/attains/catchmentCorrespondence#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/catchmentCorrespondence?${queryValue}`
+      `${origin}/attains/data/catchmentCorrespondence?${queryValue}&format=xlsx`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitId":["AS-04O"],"organizationName":["Montana"],"reportingCycleLo":"1993","reportingCycleHi":"2010"},"options":{"format":"xlsx"}}'
+        '{"filters":{"assessmentUnitId":["AS-04O"],"organizationName":["Montana"],"reportingCycle":"2016"},"options":{"format":"xlsx"}}'
       )} ${origin}/attains/data/catchmentCorrespondence`
     );
   });
@@ -132,8 +131,7 @@ describe("Data Profile Catchment Correspondence", () => {
     cy.selectOption("input-region", "06");
 
     //Reporting Cycle
-    cy.get("#input-reportingCycleLo").type("2015");
-    cy.get("#input-reportingCycleHi").type("2023");
+    cy.selectOption("input-reportingCycle", "2016{downArrow}");
 
     //State
     cy.selectOption("input-state", "texas");
@@ -142,20 +140,20 @@ describe("Data Profile Catchment Correspondence", () => {
     cy.findByText("Tab-separated (TSV)").click();
 
     const queryValue =
-      "format=tsv&assessmentUnitId=AS-01O&assessmentUnitName=Aasu-Ocean&organizationId=21PA&organizationName=California&region=06&state=TX&reportingCycleLo=2015&reportingCycleHi=2023";
+      "assessmentUnitId=AS-01O&assessmentUnitName=Aasu-Ocean&organizationId=21PA&organizationName=California&region=06&reportingCycle=2016&state=TX";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/catchmentCorrespondence/#${queryValue}`
+      `${origin}/attains/catchmentCorrespondence#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/catchmentCorrespondence?${queryValue}`
+      `${origin}/attains/data/catchmentCorrespondence?${queryValue}&format=tsv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitId":["AS-01O"],"assessmentUnitName":["Aasu-Ocean"],"organizationId":["21PA"],"organizationName":["California"],"region":["06"],"state":["TX"],"reportingCycleLo":"2015","reportingCycleHi":"2023"},"options":{"format":"tsv"}}'
+        '{"filters":{"assessmentUnitId":["AS-01O"],"assessmentUnitName":["Aasu-Ocean"],"organizationId":["21PA"],"organizationName":["California"],"region":["06"],"reportingCycle":"2016","state":["TX"]},"options":{"format":"tsv"}}'
       )} ${origin}/attains/data/catchmentCorrespondence`
     );
   });

@@ -6,7 +6,7 @@ describe("Download file", () => {
   let count = "0";
   it("Download and Verify Alert message visible when download and hidden after 10 second", () => {
     cy.selectProfile("Assessments");
-    cy.selectOption("input-state", "texas");
+    cy.selectOption("input-state", "north carolina");
     cy.findByText("JavaScript Object Notation (JSON)").click();
     cy.findByRole("button", { name: "Download" }).click();
     cy.wait(2000);
@@ -29,7 +29,7 @@ describe("Download file", () => {
     cy.readFile(path).then((item) => {
       const firstElement = item[0];
       const property = [
-        "id",
+        "objectId",
         "alternateListingIdentifier",
         "assessmentBasis",
         "assessmentDate",
@@ -89,8 +89,8 @@ describe("Download file", () => {
       property.forEach((item) => {
         expect(firstElement).to.have.property(item);
       });
-      // Downloaded assessements.jsom filtered with state Texas
-      expect(firstElement.state).to.eq("TX");
+      // Downloaded assessements.jsom filtered with state North Carolina
+      expect(firstElement.state).to.eq("NC");
     });
   });
 });

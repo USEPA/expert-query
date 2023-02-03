@@ -14,7 +14,7 @@ describe("Data Profile Assessment Units", () => {
   it("Verify copy box text flavor 1", () => {
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnits/#format=csv`
+      `${origin}/attains/assessmentUnits#`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
@@ -39,15 +39,15 @@ describe("Data Profile Assessment Units", () => {
     cy.selectOption("input-assessmentUnitId", "AL-Gulf-of-Mexico-2");
 
     const queryValue =
-      "format=csv&assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitStatus=R&locationText=Buffalo%20County";
+      "assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitStatus=R&locationText=Buffalo%20County";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnits/#${queryValue}`
+      `${origin}/attains/assessmentUnits#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessmentUnits?${queryValue}`
+      `${origin}/attains/data/assessmentUnits?${queryValue}&format=csv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -71,15 +71,15 @@ describe("Data Profile Assessment Units", () => {
     cy.findByText("Tab-separated (TSV)").click();
 
     const queryValue =
-      "format=tsv&assessmentUnitStatus=R&organizationName=Wisconsin&waterType=OCEAN";
+      "assessmentUnitStatus=R&organizationName=Wisconsin&waterType=OCEAN";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnits/#${queryValue}`
+      `${origin}/attains/assessmentUnits#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessmentUnits?${queryValue}`
+      `${origin}/attains/data/assessmentUnits?${queryValue}&format=tsv`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -107,15 +107,15 @@ describe("Data Profile Assessment Units", () => {
     cy.findByText("Microsoft Excel (XLSX)").click();
 
     const queryValue =
-      "format=xlsx&assessmentUnitStatus=H&assessmentUnitStatus=A&organizationName=Montana&useClassName=A-1&waterType=LAKE/RESERVOIR/POND";
+      "assessmentUnitStatus=H&assessmentUnitStatus=A&organizationName=Montana&useClassName=A-1&waterType=LAKE/RESERVOIR/POND";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnits/#${queryValue}`
+      `${origin}/attains/assessmentUnits#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessmentUnits?${queryValue}`
+      `${origin}/attains/data/assessmentUnits?${queryValue}&format=xlsx`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
@@ -162,15 +162,15 @@ describe("Data Profile Assessment Units", () => {
     cy.findByText("Microsoft Excel (XLSX)").click();
 
     const queryValue =
-      "format=xlsx&assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitName=Archibald%20Lake&assessmentUnitStatus=A&assessmentUnitStatus=R&assessmentUnitStatus=H&locationText=Green%20County&organizationId=OKDEQ&organizationName=Tennessee&region=05&state=CO&useClassName=SE3&waterType=FLOWAGE";
+      "assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitName=Archibald%20Lake&assessmentUnitStatus=A&assessmentUnitStatus=R&assessmentUnitStatus=H&locationText=Green%20County&organizationId=OKDEQ&organizationName=Tennessee&region=05&state=CO&useClassName=SE3&waterType=FLOWAGE";
 
     cy.selectCopyBox(
       "current-query-copy-box-container",
-      `${origin}/attains/assessmentUnits/#${queryValue}`
+      `${origin}/attains/assessmentUnits#${queryValue}`
     );
     cy.selectCopyBox(
       "api-query-copy-box-container",
-      `${origin}/attains/data/assessmentUnits?${queryValue}`
+      `${origin}/attains/data/assessmentUnits?${queryValue}&format=xlsx`
     );
     cy.selectCopyBox(
       "curl-copy-box-container",
