@@ -137,6 +137,21 @@ export const createIndexes = `
     (associatedactiontype ASC NULLS LAST)
     TABLESPACE pg_default;
 
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_consentdecreecycle_desc
+    ON ${tableName} USING btree
+    (consentdecreecycle DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_cycleexpectedtoattain_desc
+    ON ${tableName} USING btree
+    (cycleexpectedtoattain DESC NULLS LAST)
+    TABLESPACE pg_default;
+
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_cyclefirstlisted_desc
+    ON ${tableName} USING btree
+    (cyclefirstlisted DESC NULLS LAST)
+    TABLESPACE pg_default;
+
   CREATE INDEX IF NOT EXISTS ${indexTableName}_cyclelastassessed_asc
     ON ${tableName} USING btree
     (cyclelastassessed ASC NULLS LAST)

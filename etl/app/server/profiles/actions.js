@@ -62,6 +62,11 @@ export const createIndexes = `
     (assessmentunitname COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
 
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_completiondate_desc
+    ON ${tableName} USING btree
+    (completiondate DESC NULLS LAST)
+    TABLESPACE pg_default;
+
   CREATE INDEX IF NOT EXISTS ${indexTableName}_includeinmeasure_asc
     ON ${tableName} USING btree
     (includeinmeasure COLLATE pg_catalog."default" ASC NULLS LAST)

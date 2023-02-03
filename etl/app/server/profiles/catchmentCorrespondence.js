@@ -37,6 +37,11 @@ export const createIndexes = `
     (assessmentunitname COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
 
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_catchmentnhdplusid_asc
+    ON ${tableName} USING btree
+    (catchmentnhdplusid ASC NULLS LAST)
+    TABLESPACE pg_default;
+
   CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationid_asc
     ON ${tableName} USING btree
     (organizationid COLLATE pg_catalog."default" ASC NULLS LAST)

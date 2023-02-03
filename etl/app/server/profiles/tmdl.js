@@ -148,6 +148,11 @@ export const createIndexes = `
     (sourcetype COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
 
+  CREATE INDEX IF NOT EXISTS ${indexTableName}_state_asc
+    ON ${tableName} USING btree
+    (state COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
   CREATE INDEX IF NOT EXISTS ${indexTableName}_tmdldate_desc
     ON ${tableName} USING btree
     (tmdldate DESC NULLS LAST)
