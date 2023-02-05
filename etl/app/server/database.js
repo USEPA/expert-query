@@ -984,8 +984,8 @@ function getProfileEtl(
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
     } finally {
-      log.info(`Setting ${tableName} back to logged`);
-      await client.query(`ALTER TABLE ${tableName} SET LOGGED`);
+      // log.info(`Setting ${tableName} back to logged`);
+      // await client.query(`ALTER TABLE ${tableName} SET LOGGED`);
     }
 
     log.info(`Table ${tableName} load success`);
