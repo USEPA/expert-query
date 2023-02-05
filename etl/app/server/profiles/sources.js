@@ -41,76 +41,91 @@ export const createIndexes = `
     ON ${tableName} USING btree
     (assessmentunitid COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitname_asc
     ON ${tableName} USING btree
     (assessmentunitname COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_causename_asc
     ON ${tableName} USING btree
     (causename COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_confirmed_asc
     ON ${tableName} USING btree
     (confirmed COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_epaircategory_asc
     ON ${tableName} USING btree
     (epaircategory COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationid_asc
     ON ${tableName} USING btree
     (organizationid COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationname_asc
     ON ${tableName} USING btree
     (organizationname COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_overallstatus_asc
     ON ${tableName} USING btree
     (overallstatus COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_parametergroup_asc
     ON ${tableName} USING btree
     (parametergroup COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_region_asc
     ON ${tableName} USING btree
     (region COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_reportingcycle_desc
     ON ${tableName} USING btree
     (reportingcycle DESC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_sourcename_asc
     ON ${tableName} USING btree
     (sourcename COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_state_asc
     ON ${tableName} USING btree
     (state COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_stateircategory_asc
     ON ${tableName} USING btree
     (stateircategory COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 
   CREATE INDEX IF NOT EXISTS ${indexTableName}_watertype_asc
     ON ${tableName} USING btree
     (watertype COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+  COMMIT;
 `;
 
 const insertColumns = new pgp.helpers.ColumnSet([
