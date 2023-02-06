@@ -928,8 +928,8 @@ function getProfileEtl(
 
     // Extract, transform, and load the new data
     try {
-      log.info(`Setting ${tableName} to unlogged`);
-      await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
+      // log.info(`Setting ${tableName} to unlogged`);
+      // await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
 
       if (environment.isLocal) {
         let res = await extract(s3Config);
