@@ -72,6 +72,8 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   )`;
 
 export const createIndexes = `
+  SET maintenance_work_mem TO '790MB';
+
   CREATE INDEX IF NOT EXISTS ${indexTableName}_alternatelistingidentifier_asc
     ON ${tableName} USING btree
     (alternatelistingidentifier COLLATE pg_catalog."default" ASC NULLS LAST)

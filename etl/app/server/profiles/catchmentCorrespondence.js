@@ -27,6 +27,8 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   )`;
 
 export const createIndexes = `
+  SET maintenance_work_mem TO '790MB';
+
   CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitid_asc
     ON ${tableName} USING btree
     (assessmentunitid COLLATE pg_catalog."default" ASC NULLS LAST)
