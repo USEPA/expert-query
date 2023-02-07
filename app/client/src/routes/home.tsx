@@ -237,7 +237,7 @@ export function QueryBuilder() {
             )}
           </AccordionItem>
 
-          <AccordionItem heading="Queries">
+          <AccordionItem heading="Advanced API Queries">
             <h4>
               {/* TODO - Remove the glossary linkage before production deployment */}
               <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
