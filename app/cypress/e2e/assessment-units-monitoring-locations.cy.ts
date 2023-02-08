@@ -2,7 +2,7 @@ describe("Data Profile Assessment Units with Monitoring Locations", () => {
   beforeEach(() => {
     cy.visit("/");
     cy.selectProfile("Assessment Units with Monitoring Locations");
-    cy.findByRole("button", { name: "Queries" }).click();
+    cy.findByRole("button", { name: "Advanced API Queries" }).click();
   });
 
   const location = window.location;
