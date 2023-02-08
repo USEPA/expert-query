@@ -26,9 +26,11 @@ import { GlossaryPanel, GlossaryTerm } from 'components/glossaryPanel';
 import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
+import { ConfirmationModal } from 'components/confirmationModal';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
+import { ClearSearchButton } from 'components/clearSearchButton';
 // contexts
 import { useContentState } from 'contexts/content';
 // config
@@ -60,8 +62,15 @@ export function Home() {
 
   const { format, formatHandler } = useFormat();
 
-  const { initializeFilters, filterState, filterHandlers, resetFilters } =
-    useFilterState();
+  const {
+    clearConfirmationVisible,
+    closeClearConfirmation,
+    initializeFilters,
+    filterState,
+    filterHandlers,
+    openClearConfirmation,
+    resetFilters,
+  } = useFilterState();
 
   const { sourceState, sourceHandlers } = useSourceState();
 
@@ -122,10 +131,13 @@ export function Home() {
               {profile && (
                 <Outlet
                   context={{
+                    clearConfirmationVisible,
+                    closeClearConfirmation,
                     filterHandlers,
                     filterState,
                     format,
                     formatHandler,
+                    openClearConfirmation,
                     profile,
                     queryParams,
                     queryUrl: eqDataUrl,
@@ -148,12 +160,15 @@ export function Home() {
 
 export function QueryBuilder() {
   const {
+    clearConfirmationVisible,
+    closeClearConfirmation,
     queryParams,
     queryUrl,
     filterHandlers,
     filterState,
     format,
     formatHandler,
+    openClearConfirmation,
     profile,
     resetFilters,
     sourceHandlers,
@@ -183,9 +198,20 @@ export function QueryBuilder() {
           setDownloadStatus={setDownloadStatus}
         />
       )}
+      {clearConfirmationVisible && (
+        <ConfirmationModal
+          continueHandler={resetFilters}
+          description="Clearing the search will also clear out any filters you have selected for other profiles"
+          heading="Are you sure?"
+          onClose={closeClearConfirmation}
+        />
+      )}
       {profile && (
         <Accordion>
           <AccordionItem heading="Filters" initialExpand>
+            <div className="display-flex margin-top-1 width-full">
+              <ClearSearchButton onClick={openClearConfirmation} />
+            </div>
             <FilterFields
               filterHandlers={filterHandlers}
               filterState={filterState}
@@ -195,13 +221,7 @@ export function QueryBuilder() {
               staticOptions={staticOptions}
             />
             <div className="display-flex margin-top-1 width-full">
-              <button
-                className="margin-top-1 margin-x-auto usa-button usa-button--outline"
-                onClick={resetFilters}
-                type="button"
-              >
-                Clear Search
-              </button>
+              <ClearSearchButton onClick={openClearConfirmation} />
             </div>
           </AccordionItem>
 
@@ -661,7 +681,7 @@ function useAbortSignal() {
   useEffect(() => {
     return function cleanup() {
       abortController.current.abort();
-  };
+    };
   }, [getAbortController]);
 
   const getSignal = useCallback(
@@ -733,6 +753,9 @@ function useFilterState() {
     getDefaultFilterState(),
   );
 
+  const [clearConfirmationVisible, setClearConfirmationVisible] =
+    useState(false);
+
   // Memoize individual dispatch functions
   const filterHandlers = useMemo(() => {
     const newHandlers: Partial<FilterFieldInputHandlers> = {};
@@ -761,9 +784,26 @@ function useFilterState() {
 
   const resetFilters = useCallback(() => {
     filterDispatch({ type: 'reset' });
+    setClearConfirmationVisible(false);
   }, []);
 
-  return { initializeFilters, filterState, filterHandlers, resetFilters };
+  const closeClearConfirmation = useCallback(() => {
+    setClearConfirmationVisible(false);
+  }, []);
+
+  const openClearConfirmation = useCallback(() => {
+    setClearConfirmationVisible(true);
+  }, []);
+
+  return {
+    clearConfirmationVisible,
+    closeClearConfirmation,
+    initializeFilters,
+    filterState,
+    filterHandlers,
+    openClearConfirmation,
+    resetFilters,
+  };
 }
 
 function useProfile() {
@@ -1293,23 +1333,23 @@ async function getUrlInputs(
     ...Object.keys(params).map(async (key) => {
       if (!isFilterField(key)) return;
       if (isMultiOptionField(key)) {
-      newState[key] = await matchMultipleOptions(
-        params[key] ?? null,
-        key,
-        getStaticOptions(key, staticOptions),
-        profile,
-      );
+        newState[key] = await matchMultipleOptions(
+          params[key] ?? null,
+          key,
+          getStaticOptions(key, staticOptions),
+          profile,
+        );
       } else if (isSingleOptionField(key)) {
-      newState[key] = await matchSingleOption(
-        params[key] ?? null,
-        key,
-        getStaticOptions(key, staticOptions),
-        profile,
-      );
+        newState[key] = await matchSingleOption(
+          params[key] ?? null,
+          key,
+          getStaticOptions(key, staticOptions),
+          profile,
+        );
       } else if (isDateField(key)) {
-      newState[key] = matchDate(params[key] ?? null);
+        newState[key] = matchDate(params[key] ?? null);
       } else if (isYearField(key)) {
-      newState[key] = matchYear(params[key] ?? null);
+        newState[key] = matchYear(params[key] ?? null);
       }
     }),
   ]);
@@ -1629,10 +1669,13 @@ type FilterQueryData = Partial<{
 }>;
 
 type HomeContext = {
+  clearConfirmationVisible: boolean;
+  closeClearConfirmation: () => void;
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
   format: FormatOption;
   formatHandler: (format: Option) => void;
+  openClearConfirmation: () => void;
   profile: Profile;
   queryParams: QueryData;
   queryUrl: string;

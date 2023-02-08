@@ -46,7 +46,10 @@ describe("Home Page", () => {
 
   it("Clear Search button is available when data profile is select", () => {
     cy.selectProfile("Actions");
-    cy.findByText("Clear Search").should("exist");
+    cy.findAllByRole("button", { name: "Clear Search" }).should(
+      "have.length",
+      2
+    );
   });
 
   it("Data profile Sources query link", () => {
@@ -66,7 +69,10 @@ describe("Home Page", () => {
     ];
     profiles.forEach((profile) => {
       cy.selectProfile(profile);
-      cy.findByText("Clear Search").should("exist");
+      cy.findAllByRole("button", { name: "Clear Search" }).should(
+        "have.length",
+        2
+      );
     });
   });
 
@@ -94,8 +100,14 @@ describe("Home Page", () => {
 
   it("Verify Clear Search button after clear", () => {
     cy.selectProfile("Actions");
-    cy.findByText("Clear Search").click();
-    cy.findByText("Clear Search").should("exist");
+    cy.findAllByRole("button", { name: "Clear Search" }).each(
+      ($elem, index) => {
+        index === 0 && cy.wrap($elem).click({ force: true });
+      }
+    );
+    cy.wait(2000);
+    cy.findByText("Continue").should("exist");
+    cy.findByText("Cancel").should("exist").click();
   });
 
   it("Verify Download Status Pop-up with stubing api", () => {
@@ -106,7 +118,7 @@ describe("Home Page", () => {
 
     cy.findByRole("button", { name: "Download" }).click();
     cy.wait(2000);
-    cy.findByTestId('downloadfile-length').contains("510");
+    cy.findByTestId("downloadfile-length").contains("510");
 
     // closing button X
     cy.get(`[aria-label="Close this window"]`).should("exist");
@@ -118,7 +130,7 @@ describe("Home Page", () => {
   });
 
   it("Verify desiabled button when count is zero", () => {
-    cy.selectProfile('Assessments')
+    cy.selectProfile("Assessments");
     cy.intercept("POST", `${origin}/attains/data/assessments/count`, {
       count: "0",
     }).as("assessments-count");
@@ -147,5 +159,58 @@ describe("Home Page", () => {
       .and("equal", "false");
     cy.get("body").click(0, 0);
     cy.get("#glossary").should("have.attr", "aria-hidden").and("equal", "true");
+  });
+
+  it("Verify url after clear the query", () => {
+    cy.selectProfile("Sources");
+    //Assessment Unit ID
+    cy.selectOption("input-assessmentUnitId", "SD-BA-L-FREEMAN_01");
+
+    //Confirmed
+    cy.findByRole("checkbox", { name: "No" }).click({ force: true });
+
+    cy.url().should(
+      "equal",
+      `${origin}/attains/sources#assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`
+    );
+
+    cy.findAllByRole("button", { name: "Clear Search" }).each(
+      ($elem, index) => {
+        index === 0 && cy.wrap($elem).click({ force: true });
+      }
+    );
+    cy.wait(2000);
+    cy.findByText("Continue").should("exist").click();
+    cy.url().should("equal", `${origin}/attains/sources`);
+  });
+
+  it("Verify file format after clear the query", () => {
+    cy.selectProfile("Assessment Units");
+    cy.findByRole("button", { name: "Advanced API Queries" }).click();
+
+    //State
+    cy.selectOption("input-state", "texas");
+
+    //Assessment Unit Status
+    cy.findByRole("checkbox", { name: "Retired" }).click({ force: true });
+
+    //File Format
+    cy.findByText("Tab-separated (TSV)").click();
+
+    const queryValue =
+      "/attains/data/assessmentUnits?assessmentUnitStatus=R&state=TX&format=tsv";
+    cy.selectCopyBox("api-query-copy-box-container", `${origin}${queryValue}`);
+
+    cy.findAllByRole("button", { name: "Clear Search" }).each(
+      ($elem, index) => {
+        index === 0 && cy.wrap($elem).click({ force: true });
+      }
+    );
+    cy.wait(2000);
+    cy.findByText("Continue").should("exist").click();
+    cy.selectCopyBox(
+      "api-query-copy-box-container",
+      `${origin}/attains/data/assessmentUnits?format=tsv`
+    );
   });
 });
