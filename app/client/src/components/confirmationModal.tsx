@@ -4,17 +4,19 @@ import { useState } from 'react';
 import { ReactComponent as Close } from 'uswds/img/usa-icons/close.svg';
 // styles
 import '@reach/dialog/styles.css';
+// types
+import type { ReactNode } from 'react';
+// components
+import { Button } from 'components/button';
 
 /*
 ## Components
 */
 
-export function ConfirmationModal({
-  continueHandler,
-  description,
-  heading,
-  onClose,
-}: ConfirmationModalProps) {
+export function ConfirmationModal(props: ConfirmationModalProps) {
+  const { children, heading, ...footerProps } = props;
+  const { onClose } = footerProps;
+
   const [id] = useState(uniqueId('modal-'));
 
   return (
@@ -30,35 +32,7 @@ export function ConfirmationModal({
           <h2 className="usa-modal__heading d-flex justify-content-center">
             {heading}
           </h2>
-          <>
-            <div className="usa-prose">
-              <p className="text-center">
-                {description}
-              </p>
-            </div>
-            <div className="usa-modal__footer">
-              <ul className="flex-justify-center usa-button-group">
-                <li className="usa-button-group__item">
-                  <button
-                    type="button"
-                    className="usa-button"
-                    onClick={onClose}
-                  >
-                    Cancel
-                  </button>
-                </li>
-                <li className="usa-button-group__item">
-                  <button
-                    className="usa-button"
-                    onClick={continueHandler}
-                    type="button"
-                  >
-                    Continue
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </>
+          <>{children}</>
         </div>
         <button
           aria-label="Close this window"
@@ -78,13 +52,43 @@ export function ConfirmationModal({
   );
 }
 
+export function ConfirmationModalFooter({
+  continueDisabled = false,
+  continueText = 'Continue',
+  onClose,
+  onContinue,
+}: ConfirmationModalFooterProps) {
+  return (
+    <div className="usa-modal__footer">
+      <ul className="flex-justify-center usa-button-group">
+        <li className="usa-button-group__item">
+          <Button children="Cancel" onClick={onClose} />
+        </li>
+        <li className="usa-button-group__item">
+          <Button
+            children={continueText}
+            onClick={onContinue}
+            disabled={continueDisabled}
+          />
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 /*
 ## Types
 */
 
-type ConfirmationModalProps = {
-  continueHandler: () => void;
-  description: string;
+export type ConfirmationModalProps = {
+  children: ReactNode;
   heading: string;
   onClose: () => void;
+};
+
+export type ConfirmationModalFooterProps = {
+  continueDisabled?: boolean;
+  continueText?: string;
+  onClose: () => void;
+  onContinue: () => void;
 };

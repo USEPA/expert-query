@@ -26,11 +26,11 @@ import { GlossaryPanel, GlossaryTerm } from 'components/glossaryPanel';
 import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
-import { ConfirmationModal } from 'components/confirmationModal';
+import { ClearSearchModal } from 'components/clearSearchModal';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
-import { ClearSearchButton } from 'components/clearSearchButton';
+import { Button } from 'components/button';
 // contexts
 import { useContentState } from 'contexts/content';
 // config
@@ -62,15 +62,8 @@ export function Home() {
 
   const { format, formatHandler } = useFormat();
 
-  const {
-    clearConfirmationVisible,
-    closeClearConfirmation,
-    initializeFilters,
-    filterState,
-    filterHandlers,
-    openClearConfirmation,
-    resetFilters,
-  } = useFilterState();
+  const { initializeFilters, filterState, filterHandlers, resetFilters } =
+    useFilterState();
 
   const { sourceState, sourceHandlers } = useSourceState();
 
@@ -131,13 +124,10 @@ export function Home() {
               {profile && (
                 <Outlet
                   context={{
-                    clearConfirmationVisible,
-                    closeClearConfirmation,
                     filterHandlers,
                     filterState,
                     format,
                     formatHandler,
-                    openClearConfirmation,
                     profile,
                     queryParams,
                     queryUrl: eqDataUrl,
@@ -160,21 +150,24 @@ export function Home() {
 
 export function QueryBuilder() {
   const {
-    clearConfirmationVisible,
-    closeClearConfirmation,
     queryParams,
     queryUrl,
     filterHandlers,
     filterState,
     format,
     formatHandler,
-    openClearConfirmation,
     profile,
     resetFilters,
     sourceHandlers,
     sourceState,
     staticOptions,
   } = useHomeContext();
+
+  const {
+    clearConfirmationVisible,
+    closeClearConfirmation,
+    openClearConfirmation,
+  } = useClearConfirmationVisibility();
 
   const {
     closeDownloadConfirmation,
@@ -199,18 +192,20 @@ export function QueryBuilder() {
         />
       )}
       {clearConfirmationVisible && (
-        <ConfirmationModal
-          continueHandler={resetFilters}
-          description="Clearing the search will also clear out any filters you have selected for other profiles"
-          heading="Are you sure?"
+        <ClearSearchModal
+          onContinue={resetFilters}
           onClose={closeClearConfirmation}
         />
       )}
       {profile && (
         <Accordion>
           <AccordionItem heading="Filters" initialExpand>
-            <div className="display-flex margin-top-1 width-full">
-              <ClearSearchButton onClick={openClearConfirmation} />
+            <div className="display-flex margin-top-2 width-full justify-content-center">
+              <Button
+                onClick={openClearConfirmation}
+                children="Clear Search"
+                color="white"
+              />
             </div>
             <FilterFields
               filterHandlers={filterHandlers}
@@ -220,8 +215,12 @@ export function QueryBuilder() {
               sourceState={sourceState}
               staticOptions={staticOptions}
             />
-            <div className="display-flex margin-top-1 width-full">
-              <ClearSearchButton onClick={openClearConfirmation} />
+            <div className="display-flex margin-top-2 width-full justify-content-center">
+              <Button
+                onClick={openClearConfirmation}
+                children="Clear Search"
+                color="white"
+              />
             </div>
           </AccordionItem>
 
@@ -692,6 +691,25 @@ function useAbortSignal() {
   return getSignal;
 }
 
+function useClearConfirmationVisibility() {
+  const [clearConfirmationVisible, setClearConfirmationVisible] =
+    useState(false);
+
+  const closeClearConfirmation = useCallback(() => {
+    setClearConfirmationVisible(false);
+  }, []);
+
+  const openClearConfirmation = useCallback(() => {
+    setClearConfirmationVisible(true);
+  }, []);
+
+  return {
+    clearConfirmationVisible,
+    closeClearConfirmation,
+    openClearConfirmation,
+  };
+}
+
 function useDownloadConfirmationVisibility() {
   const [downloadConfirmationVisible, setDownloadConfirmationVisible] =
     useState(false);
@@ -753,9 +771,6 @@ function useFilterState() {
     getDefaultFilterState(),
   );
 
-  const [clearConfirmationVisible, setClearConfirmationVisible] =
-    useState(false);
-
   // Memoize individual dispatch functions
   const filterHandlers = useMemo(() => {
     const newHandlers: Partial<FilterFieldInputHandlers> = {};
@@ -784,24 +799,12 @@ function useFilterState() {
 
   const resetFilters = useCallback(() => {
     filterDispatch({ type: 'reset' });
-    setClearConfirmationVisible(false);
-  }, []);
-
-  const closeClearConfirmation = useCallback(() => {
-    setClearConfirmationVisible(false);
-  }, []);
-
-  const openClearConfirmation = useCallback(() => {
-    setClearConfirmationVisible(true);
   }, []);
 
   return {
-    clearConfirmationVisible,
-    closeClearConfirmation,
     initializeFilters,
     filterState,
     filterHandlers,
-    openClearConfirmation,
     resetFilters,
   };
 }
@@ -1669,13 +1672,10 @@ type FilterQueryData = Partial<{
 }>;
 
 type HomeContext = {
-  clearConfirmationVisible: boolean;
-  closeClearConfirmation: () => void;
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
   format: FormatOption;
   formatHandler: (format: Option) => void;
-  openClearConfirmation: () => void;
   profile: Profile;
   queryParams: QueryData;
   queryUrl: string;
