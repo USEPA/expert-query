@@ -13,10 +13,11 @@ import { Button } from 'components/button';
 ## Components
 */
 
-export function ConfirmationModal(props: ConfirmationModalProps) {
-  const { children, heading, ...footerProps } = props;
-  const { onClose } = footerProps;
-
+export function ConfirmationModal({
+  children,
+  heading,
+  onClose,
+}: ConfirmationModalProps) {
   const [id] = useState(uniqueId('modal-'));
 
   return (
