@@ -561,13 +561,43 @@ export async function trimNationalDownloads(pool) {
   });
 }
 
+// Build the query for creating the indexes
+function buildIndexQuery(overrideWorkMemory, tableName) {
+  const indexTableName = tableName.replaceAll('_', '');
+
+  let query = overrideWorkMemory
+    ? `SET maintenance_work_mem TO '${overrideWorkMemory}';\n`
+    : '';
+
+  const table = Object.values(tableConfig).find(
+    (table) => table.tableName === tableName,
+  );
+  if (!table) return '';
+
+  table.columns.forEach((column) => {
+    if (column.skipIndex) return;
+
+    const sortOrder = column.indexOrder || 'asc';
+    const collate = column.type ? '' : 'COLLATE pg_catalog."default"';
+    query += `
+      CREATE INDEX IF NOT EXISTS ${indexTableName}_${column.name}_${sortOrder}
+        ON ${tableName} USING btree
+        (${column.name} ${collate} ${sortOrder} NULLS LAST)
+        TABLESPACE pg_default;
+      COMMIT;
+    `;
+  });
+
+  return query;
+}
+
 // Get the ETL task for a particular profile
 function getProfileEtl(
   {
     createQuery,
-    createIndexes,
     extract,
     maxChunksOverride,
+    overrideWorkMemory,
     tableName,
     transform,
   },
@@ -584,7 +614,7 @@ function getProfileEtl(
 
       if (process.env.CREATE_INDEXES_AFTER_DATA === 'false') {
         log.info(`${tableName}: Creating indexes`);
-        await client.query(createIndexes);
+        await client.query(buildIndexQuery(overrideWorkMemory, tableName));
         log.info(`${tableName}: Indexes created`);
       }
 
@@ -645,7 +675,7 @@ function getProfileEtl(
 
       if (process.env.CREATE_INDEXES_AFTER_DATA === 'true') {
         log.info(`${tableName}: Creating indexes`);
-        await client.query(createIndexes);
+        await client.query(buildIndexQuery(overrideWorkMemory, tableName));
         log.info(`${tableName}: Indexes created`);
       }
     } catch (err) {

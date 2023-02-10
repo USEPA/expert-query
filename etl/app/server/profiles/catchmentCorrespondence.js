@@ -11,6 +11,7 @@ const pgp = pgPromise({ capSQL: true });
 
 export const tableName = 'catchment_correspondence';
 const indexTableName = tableName.replaceAll('_', '');
+export const overrideWorkMemory = '790MB';
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
@@ -25,58 +26,6 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     assessmentunitname VARCHAR(255) NOT NULL,
     catchmentnhdplusid BIGINT
   )`;
-
-export const createIndexes = `
-  SET maintenance_work_mem TO '790MB';
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitid_asc
-    ON ${tableName} USING btree
-    (assessmentunitid COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitname_asc
-    ON ${tableName} USING btree
-    (assessmentunitname COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_catchmentnhdplusid_asc
-    ON ${tableName} USING btree
-    (catchmentnhdplusid ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationid_asc
-    ON ${tableName} USING btree
-    (organizationid COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationname_asc
-    ON ${tableName} USING btree
-    (organizationname COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_region_asc
-    ON ${tableName} USING btree
-    (region COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_reportingcycle_desc
-    ON ${tableName} USING btree
-    (reportingcycle DESC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_state_asc
-    ON ${tableName} USING btree
-    (state COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'objectid' },
