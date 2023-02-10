@@ -3,8 +3,9 @@ import express from 'express';
 import { readdirSync, statSync } from 'node:fs';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
-import { knex, mapping } from '../utilities/database.js';
+import { knex } from '../utilities/database.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)
@@ -79,7 +80,7 @@ export default function (app) {
       }
 
       // verify a query can be ran against each table in the active db
-      for (const profile of Object.values(mapping)) {
+      for (const profile of Object.values(tableConfig)) {
         query = knex
           .withSchema(req.activeSchema)
           .from(profile.tableName)

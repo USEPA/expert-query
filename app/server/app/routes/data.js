@@ -1,8 +1,9 @@
 import cors from 'cors';
 import express from 'express';
 import Excel from 'exceljs';
+import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
-import { appendToWhere, knex, mapping } from '../utilities/database.js';
+import { appendToWhere, knex } from '../utilities/database.js';
 import { log } from '../utilities/logger.js';
 import StreamingService from '../utilities/streamingService.js';
 
@@ -290,7 +291,7 @@ export default function (app) {
     methods: 'GET,HEAD,POST',
   };
 
-  Object.entries(mapping).forEach(([profileName, profile]) => {
+  Object.entries(tableConfig).forEach(([profileName, profile]) => {
     // create get requests
     router.get(`/${profileName}`, cors(corsOptions), function (req, res) {
       executeQuery(profile, req, res);

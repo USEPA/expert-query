@@ -3,8 +3,9 @@ import express from 'express';
 import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
-import { appendToWhere, knex, mapping } from '../utilities/database.js';
+import { appendToWhere, knex } from '../utilities/database.js';
 import {
   formatLogMsg,
   log,
@@ -222,7 +223,7 @@ export default function (app) {
 
   // create post requests
   router.get('/:profile/values/:column', function (req, res) {
-    const profile = mapping[req.params.profile];
+    const profile = tableConfig[req.params.profile];
     if (!profile) {
       return res
         .status(404)
