@@ -919,9 +919,10 @@ export async function isDataReady(pool) {
     }
 
     if (ready.ready === 'go') return { ready: true, julian };
+    else return { ready: false, julian };
   } catch (ex) {
     log.error(`Error checking if MVs are ready: ${ex}`);
   }
 
-  return { ready: false, julian };
+  return { ready: false, julian: null };
 }
