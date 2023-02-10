@@ -2,7 +2,7 @@ describe('Data Profile Sources', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Sources');
-    cy.findByRole('button', { name: 'Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
   });
 
   const location = window.location;
