@@ -11,7 +11,7 @@ const pgp = pgPromise({ capSQL: true });
 
 export const tableName = 'assessments';
 const indexTableName = tableName.replaceAll('_', '');
-export const overrideWorkMemory = '790MB';
+export const overrideWorkMemory = '1GB';
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
