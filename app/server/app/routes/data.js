@@ -1,11 +1,11 @@
-const cors = require("cors");
-const express = require("express");
-const Excel = require("exceljs");
-const { getActiveSchema } = require("../middleware");
-const { appendToWhere, knex, mapping } = require("../utilities/database");
-const logger = require("../utilities/logger");
+const cors = require('cors');
+const express = require('express');
+const Excel = require('exceljs');
+const { getActiveSchema } = require('../middleware');
+const { appendToWhere, knex, mapping } = require('../utilities/database');
+const logger = require('../utilities/logger');
 const log = logger.logger;
-const StreamingService = require("../utilities/streamingService");
+const StreamingService = require('../utilities/streamingService');
 
 class DuplicateParameterException extends Error {
   constructor(parameter) {
@@ -24,7 +24,7 @@ class InvalidParameterException extends Error {
 }
 
 function appendLatestToWhere(query, column, columnType, baseQuery) {
-  if (columnType !== "numeric" && columnType !== "timestamptz") return;
+  if (columnType !== 'numeric' && columnType !== 'timestamptz') return;
 
   const subQuery = baseQuery.clone();
   query.where(column, subQuery.max(column));
@@ -38,7 +38,7 @@ function appendLatestToWhere(query, column, columnType, baseQuery) {
  * @param {string} highParamValue URL query high value
  */
 function appendRangeToWhere(query, column, lowParamValue, highParamValue) {
-  const isTimestampColumn = column.type === "timestamptz";
+  const isTimestampColumn = column.type === 'timestamptz';
   const lowValue = isTimestampColumn
     ? dateToUtcTime(lowParamValue)
     : lowParamValue;
@@ -51,9 +51,9 @@ function appendRangeToWhere(query, column, lowParamValue, highParamValue) {
   if (lowValue && highValue) {
     query.whereBetween(column.name, [lowValue, highValue]);
   } else if (lowValue) {
-    query.where(column.name, ">=", lowValue);
+    query.where(column.name, '>=', lowValue);
   } else {
-    query.where(column.name, "<=", highValue);
+    query.where(column.name, '<=', highValue);
   }
 }
 
@@ -81,7 +81,7 @@ function dateToUtcTime(value, endOfDay = false) {
  */
 function getQueryParams(req) {
   // return post parameters, default to empty objects if not provided
-  if (req.method === "POST") {
+  if (req.method === 'POST') {
     return {
       filters: req.body.filters ?? {},
       options: req.body.options ?? {},
@@ -90,7 +90,7 @@ function getQueryParams(req) {
   }
 
   // organize GET parameters to follow what we expect from POST
-  const optionsParams = ["f", "format"];
+  const optionsParams = ['f', 'format'];
   const parameters = {
     filters: {},
     options: {},
@@ -98,7 +98,7 @@ function getQueryParams(req) {
   };
   Object.entries(req.query).forEach(([name, value]) => {
     if (optionsParams.includes(name)) parameters.options[name] = value;
-    else if (name === "columns") parameters.columns = value;
+    else if (name === 'columns') parameters.columns = value;
     else parameters.filters[name] = value;
   });
 
@@ -120,28 +120,28 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   else {
     // filter down to requested columns, if the user provided that option
     const columnsToReturn = profile.columns.filter(
-      (col) => queryParams.columns && queryParams.columns.includes(col.alias)
+      (col) => queryParams.columns && queryParams.columns.includes(col.alias),
     );
 
     // build the select query
     const selectColumns =
       columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
     const selectText = selectColumns.map((col) =>
-      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`
+      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
     );
     query.select(selectText);
   }
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    const lowArg = "lowParam" in col && queryParams.filters[col.lowParam];
-    const highArg = "highParam" in col && queryParams.filters[col.highParam];
+    const lowArg = 'lowParam' in col && queryParams.filters[col.lowParam];
+    const highArg = 'highParam' in col && queryParams.filters[col.highParam];
     const exactArg = queryParams.filters[col.alias];
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
     } else if (exactArg) {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
-    } else if (col.default === "latest") {
+    } else if (col.default === 'latest') {
       appendLatestToWhere(query, col.name, col.type, baseQuery);
     }
   });
@@ -171,23 +171,23 @@ async function executeQuery(profile, req, res) {
     });
 
     // close the stream if the request is canceled
-    stream.on("close", stream.end.bind(stream));
+    stream.on('close', stream.end.bind(stream));
 
     const format = queryParams.options.format ?? queryParams.options.f;
     switch (format) {
-      case "csv":
-      case "tsv":
+      case 'csv':
+      case 'tsv':
         // output the data
         res.setHeader(
-          "Content-disposition",
-          `attachment; filename=${profile.tableName}.${format}`
+          'Content-disposition',
+          `attachment; filename=${profile.tableName}.${format}`,
         );
         StreamingService.streamResponse(res, stream, format);
         break;
-      case "xlsx":
+      case 'xlsx':
         res.setHeader(
-          "Content-Disposition",
-          `attachment; filename=${profile.tableName}.xlsx`
+          'Content-Disposition',
+          `attachment; filename=${profile.tableName}.xlsx`,
         );
 
         const workbook = new Excel.stream.xlsx.WorkbookWriter({
@@ -195,17 +195,17 @@ async function executeQuery(profile, req, res) {
           useStyles: true,
         });
 
-        const worksheet = workbook.addWorksheet("data");
+        const worksheet = workbook.addWorksheet('data');
 
         StreamingService.streamResponse(res, stream, format, {
           workbook,
           worksheet,
         });
         break;
-      case "json":
+      case 'json':
         res.setHeader(
-          "Content-disposition",
-          `attachment; filename=${profile.tableName}.json`
+          'Content-disposition',
+          `attachment; filename=${profile.tableName}.json`,
         );
         StreamingService.streamResponse(res, stream, format);
         break;
@@ -269,14 +269,14 @@ function executeQueryCountOnly(profile, req, res) {
       .catch((error) => {
         log.error(
           `Failed to get count from the "${profile.tableName}" table: `,
-          error
+          error,
         );
         res.status(500).json(error);
       });
   } catch (error) {
     log.error(
       `Failed to get count from the "${profile.tableName}" table:`,
-      error
+      error,
     );
     return res.status(error.code ?? 500).json(error);
   }
@@ -288,7 +288,7 @@ module.exports = function (app) {
   router.use(getActiveSchema);
 
   const corsOptions = {
-    methods: "GET,HEAD,POST",
+    methods: 'GET,HEAD,POST',
   };
 
   Object.entries(mapping).forEach(([profileName, profile]) => {
@@ -309,9 +309,9 @@ module.exports = function (app) {
       cors(corsOptions),
       function (req, res) {
         executeQueryCountOnly(profile, req, res);
-      }
+      },
     );
   });
 
-  app.use("/attains/data", router);
+  app.use('/attains/data', router);
 };

@@ -1,9 +1,9 @@
-const AWS = require("aws-sdk");
-const express = require("express");
-const { getActiveSchema } = require("../middleware");
-const { readdirSync, statSync } = require("node:fs");
-const { resolve } = require("node:path");
-const { knex, mapping } = require("../utilities/database");
+const AWS = require('aws-sdk');
+const express = require('express');
+const { getActiveSchema } = require('../middleware');
+const { readdirSync, statSync } = require('node:fs');
+const { resolve } = require('node:path');
+const { knex, mapping } = require('../utilities/database');
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)
 function setAwsConfig({
@@ -24,9 +24,9 @@ let isDevelopment = false;
 let isStaging = false;
 
 if (process.env.NODE_ENV) {
-  isLocal = "local" === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = "development" === process.env.NODE_ENV.toLowerCase();
-  isStaging = "staging" === process.env.NODE_ENV.toLowerCase();
+  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
+  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
+  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
 }
 
 const minDateTime = new Date(-8640000000000000);
@@ -37,34 +37,34 @@ module.exports = function (app) {
 
   router.use(getActiveSchema);
 
-  router.get("/", function (req, res) {
-    res.json({ status: "UP" });
+  router.get('/', function (req, res) {
+    res.json({ status: 'UP' });
   });
 
-  router.get("/etlDatabase", async function (req, res) {
+  router.get('/etlDatabase', async function (req, res) {
     try {
       // check etl status in db
       let query = knex
-        .withSchema("logging")
-        .from("etl_status")
-        .select("database")
+        .withSchema('logging')
+        .from('etl_status')
+        .select('database')
         .first();
       let results = await query;
-      if (results.database === "failed") {
-        res.status(200).json({ status: "FAILED-DB" });
+      if (results.database === 'failed') {
+        res.status(200).json({ status: 'FAILED-DB' });
         return;
       }
 
       // verify the latest entry in the schema table is active
       query = knex
-        .withSchema("logging")
-        .from("etl_schemas")
-        .select("active", "creation_date")
-        .orderBy("creation_date", "desc")
+        .withSchema('logging')
+        .from('etl_schemas')
+        .select('active', 'creation_date')
+        .orderBy('creation_date', 'desc')
         .first();
       results = await query;
       if (!results.active) {
-        res.status(200).json({ status: "FAILED-SCHEMA" });
+        res.status(200).json({ status: 'FAILED-SCHEMA' });
         return;
       }
 
@@ -72,7 +72,7 @@ module.exports = function (app) {
       const timeSinceLastUpdate =
         (Date.now() - results.creation_date) / (1000 * 60 * 60);
       if (timeSinceLastUpdate >= 169) {
-        res.status(200).json({ status: "FAILED-TIME" });
+        res.status(200).json({ status: 'FAILED-TIME' });
         return;
       }
 
@@ -86,29 +86,29 @@ module.exports = function (app) {
           .first();
         results = await query;
         if (!results[profile.idColumn]) {
-          res.status(200).json({ status: "FAILED-QUERY" });
+          res.status(200).json({ status: 'FAILED-QUERY' });
           return;
         }
       }
 
       // everything passed
-      res.status(200).json({ status: "UP" });
+      res.status(200).json({ status: 'UP' });
     } catch (err) {
-      res.status(500).send("Error!" + err);
+      res.status(500).send('Error!' + err);
     }
   });
 
-  router.get("/etlDomainValues", async function (req, res) {
+  router.get('/etlDomainValues', async function (req, res) {
     try {
       // check etl status in db
       const query = knex
-        .withSchema("logging")
-        .from("etl_status")
-        .select("domain_values")
+        .withSchema('logging')
+        .from('etl_status')
+        .select('domain_values')
         .first();
       const results = await query;
-      if (results.domain_values === "failed") {
-        res.status(200).json({ status: "FAILED-DB" });
+      if (results.domain_values === 'failed') {
+        res.status(200).json({ status: 'FAILED-DB' });
         return;
       }
 
@@ -135,13 +135,13 @@ module.exports = function (app) {
         // setup public s3 bucket
         setAwsConfig();
 
-        const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
+        const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
         // get a list of files in the directory
         const data = await s3
           .listObjects({
             Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-            Prefix: "content-etl/domainValues",
+            Prefix: 'content-etl/domainValues',
           })
           .promise();
 
@@ -158,23 +158,23 @@ module.exports = function (app) {
       // check that domain values was updated in the last week and 1 hour
       res
         .status(200)
-        .json({ status: timeSinceLastUpdate >= 169 ? "FAILED-FILE" : "UP" });
+        .json({ status: timeSinceLastUpdate >= 169 ? 'FAILED-FILE' : 'UP' });
     } catch (err) {
-      res.status(500).send("Error!" + err);
+      res.status(500).send('Error!' + err);
     }
   });
 
-  router.get("/etlGlossary", async function (req, res) {
+  router.get('/etlGlossary', async function (req, res) {
     try {
       // check etl status in db
       const query = knex
-        .withSchema("logging")
-        .from("etl_status")
-        .select("glossary")
+        .withSchema('logging')
+        .from('etl_status')
+        .select('glossary')
         .first();
       const results = await query;
-      if (results.glossary === "failed") {
-        res.status(200).json({ status: "FAILED-DB" });
+      if (results.glossary === 'failed') {
+        res.status(200).json({ status: 'FAILED-DB' });
         return;
       }
 
@@ -192,13 +192,13 @@ module.exports = function (app) {
         // setup public s3 bucket
         setAwsConfig();
 
-        const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
+        const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
         // get a list of files in the directory
         const data = await s3
           .getObject({
             Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-            Key: "content-etl/glossary.json",
+            Key: 'content-etl/glossary.json',
           })
           .promise();
 
@@ -209,11 +209,11 @@ module.exports = function (app) {
       // check that glossary was updated in the last 25 hours
       res
         .status(200)
-        .json({ status: timeSinceLastUpdate >= 24.5 ? "FAILED-FILE" : "UP" });
+        .json({ status: timeSinceLastUpdate >= 24.5 ? 'FAILED-FILE' : 'UP' });
     } catch (err) {
-      res.status(500).send("Error!" + err);
+      res.status(500).send('Error!' + err);
     }
   });
 
-  app.use("/health", router);
+  app.use('/health', router);
 };

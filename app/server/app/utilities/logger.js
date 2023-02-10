@@ -1,24 +1,24 @@
-var log4js = require("log4js");
+var log4js = require('log4js');
 
 log4js.configure({
   appenders: {
-    stdout: { type: "stdout", layout: { type: "pattern", pattern: "%p - %m" } },
+    stdout: { type: 'stdout', layout: { type: 'pattern', pattern: '%p - %m' } },
     stdoutFilter: {
-      type: "logLevelFilter",
-      appender: "stdout",
-      level: "TRACE",
-      maxLevel: "WARN",
+      type: 'logLevelFilter',
+      appender: 'stdout',
+      level: 'TRACE',
+      maxLevel: 'WARN',
     },
-    stderr: { type: "stderr", layout: { type: "pattern", pattern: "%p - %m" } },
+    stderr: { type: 'stderr', layout: { type: 'pattern', pattern: '%p - %m' } },
     stderrFilter: {
-      type: "logLevelFilter",
-      appender: "stderr",
-      level: "ERROR",
-      maxLevel: "FATAL",
+      type: 'logLevelFilter',
+      appender: 'stderr',
+      level: 'ERROR',
+      maxLevel: 'FATAL',
     },
   },
   categories: {
-    default: { appenders: ["stderrFilter", "stdoutFilter"], level: "all" },
+    default: { appenders: ['stderrFilter', 'stdoutFilter'], level: 'all' },
   },
 });
 
@@ -26,9 +26,9 @@ var logger = log4js.getLogger();
 
 if (process.env.LOGGER_LEVEL)
   logger.level = process.env.LOGGER_LEVEL.toUpperCase();
-else logger.level = "INFO"; //default level
+else logger.level = 'INFO'; //default level
 
-logger.info("LOGGER_LEVEL = " + logger.level);
+logger.info('LOGGER_LEVEL = ' + logger.level);
 
 var getLogger = function () {
   return logger;
@@ -52,19 +52,19 @@ exports.populateMetdataObjFromRequest = function (request) {
   let metadata = {};
 
   metadata.b3 =
-    request.header("b3") === undefined ? null : request.header("b3");
+    request.header('b3') === undefined ? null : request.header('b3');
   metadata.x_b3_traceid =
-    request.header("x-b3-traceid") === undefined
+    request.header('x-b3-traceid') === undefined
       ? null
-      : request.header("x-b3-traceid");
+      : request.header('x-b3-traceid');
   metadata.x_b3_spanid =
-    request.header("x-b3-spanid") === undefined
+    request.header('x-b3-spanid') === undefined
       ? null
-      : request.header("x-b3-spanid");
+      : request.header('x-b3-spanid');
   metadata.x_b3_parentspanid =
-    request.header("x_b3_parentspanid") === undefined
+    request.header('x_b3_parentspanid') === undefined
       ? null
-      : request.header("x_b3_parentspanid");
+      : request.header('x_b3_parentspanid');
 
   return metadata;
 };

@@ -1,6 +1,6 @@
-const express = require("express");
-const { knex } = require("./utilities/database");
-const logger = require("./utilities/logger");
+const express = require('express');
+const { knex } = require('./utilities/database');
+const logger = require('./utilities/logger');
 const log = logger.logger;
 
 /**
@@ -14,11 +14,11 @@ async function getActiveSchema(req, res, next) {
   try {
     // query the logging schema to get the active schema
     const schema = await knex
-      .withSchema("logging")
-      .select("schema_name", "active")
-      .from("etl_schemas")
-      .where("active", true)
-      .orderBy("creation_date", "desc")
+      .withSchema('logging')
+      .select('schema_name', 'active')
+      .from('etl_schemas')
+      .where('active', true)
+      .orderBy('creation_date', 'desc')
       .first();
 
     // Add activeSchema to the request object
@@ -26,8 +26,8 @@ async function getActiveSchema(req, res, next) {
 
     next();
   } catch (error) {
-    log.error("Failed to get active schema: ", error);
-    res.status(500).send("Error !" + error);
+    log.error('Failed to get active schema: ', error);
+    res.status(500).send('Error !' + error);
   }
 }
 
