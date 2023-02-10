@@ -1,6 +1,6 @@
 import * as database from './database.js';
 import * as s3 from './s3.js';
-import { logger as log } from './utilities/logger.js';
+import { log } from './utilities/logger.js';
 
 export default async function etlJob() {
   // load config from private s3 bucket

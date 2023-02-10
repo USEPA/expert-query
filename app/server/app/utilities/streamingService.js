@@ -1,12 +1,11 @@
-const { Transform, Readable, Writable, pipeline } = require('stream');
-const Papa = require('papaparse');
-const bl = require('bl');
-const util = require('util');
-const logger = require('../utilities/logger');
-const log = logger.logger;
+import bl from 'bl';
+import { Transform, Readable, Writable, pipeline } from 'node:stream';
+import util from 'node:util';
+import Papa from 'papaparse';
+import { log } from '../utilities/logger.js';
 const setImmediatePromise = util.promisify(setImmediate);
 
-class StreamingService {
+export default class StreamingService {
   static getOptions = (outStream, format) => {
     return {
       preHook: () => {
@@ -176,5 +175,3 @@ class StreamingService {
     pipeline(inStream, transform, outStream, errorHandler);
   };
 }
-
-module.exports = StreamingService;

@@ -1,8 +1,15 @@
-const path = require('path');
-const express = require('express');
-const helmet = require('helmet');
-const logger = require('./utilities/logger');
-const log = logger.logger;
+import browserSync from 'browser-sync';
+import express from 'express';
+import helmet from 'helmet';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import routes from './routes/index.js';
+import {
+  formatLogMsg,
+  log,
+  populateMetdataObjFromRequest,
+} from './utilities/logger.js';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const browserSyncPort = 9091;
@@ -42,9 +49,9 @@ app.use(function (req, res, next) {
   if (whiteList.indexOf(req.method) != -1) next();
   else {
     res.sendStatus(401);
-    var metadataObj = logger.populateMetdataObjFromRequest(req);
+    var metadataObj = populateMetdataObjFromRequest(req);
     log.error(
-      logger.formatLogMsg(
+      formatLogMsg(
         metadataObj,
         `Attempted use of unsupported HTTP method. HTTP method = ${req.method}`,
       ),
@@ -107,7 +114,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 
 // setup server routes
-require('./routes')(app);
+routes(app);
 
 // setup client routes (built React app)
 app.get('*', function (req, res) {
@@ -120,8 +127,6 @@ if (port === 9090 && !isLocal) port = browserSyncPort;
 
 app.listen(port, function () {
   if (isLocal) {
-    const browserSync = require('browser-sync');
-
     log.info(`Application listening on port ${browserSyncPort}`);
 
     browserSync({

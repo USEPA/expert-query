@@ -6,7 +6,7 @@ import {
   trimNationalDownloads,
 } from '../server/database.js';
 import { archiveNationalDownloads, loadConfig } from '../server/s3.js';
-import { logger as log } from '../server/utilities/logger.js';
+import { log } from '../server/utilities/logger.js';
 
 log.info('Starting Task: etl_national_downloads');
 

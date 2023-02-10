@@ -1,9 +1,11 @@
-const AWS = require('aws-sdk');
-const express = require('express');
-const { getActiveSchema } = require('../middleware');
-const { readdirSync, statSync } = require('node:fs');
-const { resolve } = require('node:path');
-const { knex, mapping } = require('../utilities/database');
+import AWS from 'aws-sdk';
+import express from 'express';
+import { readdirSync, statSync } from 'node:fs';
+import path, { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { getActiveSchema } from '../middleware.js';
+import { knex, mapping } from '../utilities/database.js';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)
 function setAwsConfig({
@@ -32,7 +34,7 @@ if (process.env.NODE_ENV) {
 const minDateTime = new Date(-8640000000000000);
 const maxDateTime = new Date(8640000000000000);
 
-module.exports = function (app) {
+export default function (app) {
   const router = express.Router();
 
   router.use(getActiveSchema);
@@ -216,4 +218,4 @@ module.exports = function (app) {
   });
 
   app.use('/health', router);
-};
+}

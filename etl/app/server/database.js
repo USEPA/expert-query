@@ -9,7 +9,7 @@ import util from 'util';
 import zlib from 'zlib';
 // utils
 import { getEnvironment } from './utilities/environment.js';
-import { logger as log } from './utilities/logger.js';
+import { log } from './utilities/logger.js';
 import StreamingService from './utilities/streamingService.js';
 import * as profiles from './profiles/index.js';
 import { createS3Stream, deleteDirectory, readS3File } from './s3.js';

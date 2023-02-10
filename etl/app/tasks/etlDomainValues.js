@@ -1,5 +1,5 @@
 import * as s3 from '../server/s3.js';
-import { logger as log } from '../server/utilities/logger.js';
+import { log } from '../server/utilities/logger.js';
 
 log.info('Starting Task: etl_domain_values');
 

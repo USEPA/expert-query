@@ -1,7 +1,7 @@
 import { Transform, pipeline } from 'stream';
 import Papa from 'papaparse';
 import util from 'util';
-import { logger as log } from './logger.js';
+import { log } from './logger.js';
 const setImmediatePromise = util.promisify(setImmediate);
 
 export default class StreamingService {

@@ -51,5 +51,6 @@
   },
   "lint-staged": {
     "app/**/*.{js,json,css,md}": "prettier --write"
-  }
+  },
+  "type": "module"
 }

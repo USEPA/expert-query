@@ -1,7 +1,6 @@
-const express = require('express');
-const { knex } = require('./utilities/database');
-const logger = require('./utilities/logger');
-const log = logger.logger;
+import express from 'express';
+import { knex } from './utilities/database.js';
+import { log } from './utilities/logger.js';
 
 /**
  * Middleware to get/set the active schema and add it to the original request
@@ -31,6 +30,4 @@ async function getActiveSchema(req, res, next) {
   }
 }
 
-module.exports = {
-  getActiveSchema,
-};
+export { getActiveSchema };

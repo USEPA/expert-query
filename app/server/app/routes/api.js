@@ -1,11 +1,16 @@
-const { resolve } = require('node:path');
-const { readFile } = require('node:fs/promises');
-const express = require('express');
-const axios = require('axios');
-const { getActiveSchema } = require('../middleware');
-const { appendToWhere, knex, mapping } = require('../utilities/database');
-const logger = require('../utilities/logger');
-const log = logger.logger;
+import axios from 'axios';
+import express from 'express';
+import { readFile } from 'node:fs/promises';
+import path, { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { getActiveSchema } from '../middleware.js';
+import { appendToWhere, knex, mapping } from '../utilities/database.js';
+import {
+  formatLogMsg,
+  log,
+  populateMetdataObjFromRequest,
+} from '../utilities/logger.js';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const isLocal = process.env.NODE_ENV === 'local';
 const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
@@ -96,14 +101,14 @@ async function queryColumnValues(profile, column, params, schema) {
   return await query;
 }
 
-module.exports = function (app) {
+export default function (app) {
   const router = express.Router();
 
   router.use(getActiveSchema);
 
   // --- get static content from S3
   router.get('/lookupFiles', (req, res) => {
-    const metadataObj = logger.populateMetdataObjFromRequest(req);
+    const metadataObj = populateMetdataObjFromRequest(req);
 
     // NOTE: static content files found in `app/server/app/content/` directory
     const filenames = [
@@ -159,14 +164,14 @@ module.exports = function (app) {
       .then((data) => res.json({ ...data[0], ...data[1] }))
       .catch((error) => {
         if (typeof error.toJSON === 'function') {
-          log.debug(logger.formatLogMsg(metadataObj, error.toJSON()));
+          log.debug(formatLogMsg(metadataObj, error.toJSON()));
         }
 
         const errorStatus = error.response?.status;
         const errorMethod = error.response?.config?.method?.toUpperCase();
         const errorUrl = error.response?.config?.url;
         const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
-        log.error(logger.formatLogMsg(metadataObj, message));
+        log.error(formatLogMsg(metadataObj, message));
 
         return res
           .status(error?.response?.status || 500)
@@ -179,7 +184,7 @@ module.exports = function (app) {
     const { filepath } = req.query;
     const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
     const s3Region = process.env.CF_S3_PUB_REGION;
-    const metadataObj = logger.populateMetdataObjFromRequest(req);
+    const metadataObj = populateMetdataObjFromRequest(req);
 
     const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
@@ -200,14 +205,14 @@ module.exports = function (app) {
       })
       .catch((error) => {
         if (typeof error.toJSON === 'function') {
-          log.debug(logger.formatLogMsg(metadataObj, error.toJSON()));
+          log.debug(formatLogMsg(metadataObj, error.toJSON()));
         }
 
         const errorStatus = error.response?.status;
         const errorMethod = error.response?.config?.method?.toUpperCase();
         const errorUrl = error.response?.config?.url;
         const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
-        log.error(logger.formatLogMsg(metadataObj, message));
+        log.error(formatLogMsg(metadataObj, message));
 
         return res
           .status(error?.response?.status || 500)
@@ -246,4 +251,4 @@ module.exports = function (app) {
   });
 
   app.use('/api', router);
-};
+}

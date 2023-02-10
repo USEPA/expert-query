@@ -1,5 +1,5 @@
-const logger = require('../utilities/logger');
-const log = logger.logger;
+import knexJs from 'knex';
+import { log } from '../utilities/logger.js';
 
 let isLocal = false;
 let isDevelopment = false;
@@ -54,7 +54,7 @@ function appendToWhere(query, paramName, paramValue) {
   }
 }
 
-const knex = require('knex')({
+const knex = knexJs({
   client: 'pg',
   connection: {
     host: dbHost,
@@ -433,8 +433,4 @@ const mapping = {
   },
 };
 
-module.exports = {
-  appendToWhere,
-  knex,
-  mapping,
-};
+export { appendToWhere, knex, mapping };

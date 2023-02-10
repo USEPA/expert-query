@@ -4,7 +4,7 @@ import express from 'express';
 import * as s3 from './server/s3.js';
 import etlJob from './server/etlJob.js';
 import * as database from './server/database.js';
-import { logger as log } from './server/utilities/logger.js';
+import { log } from './server/utilities/logger.js';
 import { getEnvironment } from './server/utilities/environment.js';
 
 async function poll(fn, ms) {

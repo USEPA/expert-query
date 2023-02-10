@@ -1,11 +1,10 @@
-const cors = require('cors');
-const express = require('express');
-const Excel = require('exceljs');
-const { getActiveSchema } = require('../middleware');
-const { appendToWhere, knex, mapping } = require('../utilities/database');
-const logger = require('../utilities/logger');
-const log = logger.logger;
-const StreamingService = require('../utilities/streamingService');
+import cors from 'cors';
+import express from 'express';
+import Excel from 'exceljs';
+import { getActiveSchema } from '../middleware.js';
+import { appendToWhere, knex, mapping } from '../utilities/database.js';
+import { log } from '../utilities/logger.js';
+import StreamingService from '../utilities/streamingService.js';
 
 class DuplicateParameterException extends Error {
   constructor(parameter) {
@@ -282,7 +281,7 @@ function executeQueryCountOnly(profile, req, res) {
   }
 }
 
-module.exports = function (app) {
+export default function (app) {
   const router = express.Router();
 
   router.use(getActiveSchema);
@@ -314,4 +313,4 @@ module.exports = function (app) {
   });
 
   app.use('/attains/data', router);
-};
+}

@@ -12,7 +12,7 @@ import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
-import { logger as log } from './utilities/logger.js';
+import { log } from './utilities/logger.js';
 import { fileURLToPath } from 'url';
 import { endConnPool, startConnPool, updateEtlStatus } from './database.js';
 
