@@ -10,7 +10,6 @@ const pgp = pgPromise({ capSQL: true });
 // Properties
 
 export const tableName = 'assessment_units_monitoring_locations';
-const indexTableName = tableName.replaceAll('_', '');
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
@@ -70,7 +69,7 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   );
 }
 
-export async function transform(data, first) {
+export async function transform(data) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({

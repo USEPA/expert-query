@@ -10,7 +10,6 @@ const pgp = pgPromise({ capSQL: true });
 // Properties
 
 export const tableName = 'catchment_correspondence';
-const indexTableName = tableName.replaceAll('_', '');
 export const overrideWorkMemory = '790MB';
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
@@ -51,7 +50,7 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   );
 }
 
-export async function transform(data, first) {
+export async function transform(data) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({

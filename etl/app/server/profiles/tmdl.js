@@ -10,7 +10,6 @@ const pgp = pgPromise({ capSQL: true });
 // Properties
 
 export const tableName = 'tmdl';
-const indexTableName = tableName.replaceAll('_', '');
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
@@ -87,7 +86,7 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   return await innerExtract('profile_tmdl', s3Config, next, retryCount);
 }
 
-export async function transform(data, first) {
+export async function transform(data) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({

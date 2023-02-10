@@ -1,4 +1,3 @@
-import express from 'express';
 import { knex } from './utilities/database.js';
 import { log } from './utilities/logger.js';
 

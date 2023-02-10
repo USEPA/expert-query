@@ -10,7 +10,6 @@ const pgp = pgPromise({ capSQL: true });
 // Properties
 
 export const tableName = 'assessments';
-const indexTableName = tableName.replaceAll('_', '');
 export const overrideWorkMemory = '1GB';
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
@@ -136,7 +135,7 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   return await innerExtract('profile_assessments', s3Config, next, retryCount);
 }
 
-export async function transform(data, first) {
+export async function transform(data) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({
