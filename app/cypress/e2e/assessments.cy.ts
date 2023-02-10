@@ -2,7 +2,7 @@ describe("Data Profile Assessments", () => {
   beforeEach(() => {
     cy.visit("/");
     cy.selectProfile("Assessments");
-    cy.findByRole("button", { name: "Queries" }).click();
+    cy.findByRole("button", { name: "Advanced API Queries" }).click();
   });
 
   const location = window.location;

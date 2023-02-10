@@ -26,9 +26,11 @@ import { GlossaryPanel, GlossaryTerm } from 'components/glossaryPanel';
 import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
+import { ClearSearchModal } from 'components/clearSearchModal';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
+import { Button } from 'components/button';
 // contexts
 import { useContentState } from 'contexts/content';
 // config
@@ -162,6 +164,12 @@ export function QueryBuilder() {
   } = useHomeContext();
 
   const {
+    clearConfirmationVisible,
+    closeClearConfirmation,
+    openClearConfirmation,
+  } = useClearConfirmationVisibility();
+
+  const {
     closeDownloadConfirmation,
     downloadConfirmationVisible,
     openDownloadConfirmation,
@@ -183,9 +191,22 @@ export function QueryBuilder() {
           setDownloadStatus={setDownloadStatus}
         />
       )}
+      {clearConfirmationVisible && (
+        <ClearSearchModal
+          onContinue={resetFilters}
+          onClose={closeClearConfirmation}
+        />
+      )}
       {profile && (
         <Accordion>
           <AccordionItem heading="Filters" initialExpand>
+            <div className="display-flex margin-top-2 width-full justify-content-center">
+              <Button
+                onClick={openClearConfirmation}
+                children="Clear Search"
+                color="white"
+              />
+            </div>
             <FilterFields
               filterHandlers={filterHandlers}
               filterState={filterState}
@@ -194,14 +215,12 @@ export function QueryBuilder() {
               sourceState={sourceState}
               staticOptions={staticOptions}
             />
-            <div className="display-flex margin-top-1 width-full">
-              <button
-                className="margin-top-1 margin-x-auto usa-button usa-button--outline"
-                onClick={resetFilters}
-                type="button"
-              >
-                Clear Search
-              </button>
+            <div className="display-flex margin-top-2 width-full justify-content-center">
+              <Button
+                onClick={openClearConfirmation}
+                children="Clear Search"
+                color="white"
+              />
             </div>
           </AccordionItem>
 
@@ -661,7 +680,7 @@ function useAbortSignal() {
   useEffect(() => {
     return function cleanup() {
       abortController.current.abort();
-  };
+    };
   }, [getAbortController]);
 
   const getSignal = useCallback(
@@ -670,6 +689,25 @@ function useAbortSignal() {
   );
 
   return getSignal;
+}
+
+function useClearConfirmationVisibility() {
+  const [clearConfirmationVisible, setClearConfirmationVisible] =
+    useState(false);
+
+  const closeClearConfirmation = useCallback(() => {
+    setClearConfirmationVisible(false);
+  }, []);
+
+  const openClearConfirmation = useCallback(() => {
+    setClearConfirmationVisible(true);
+  }, []);
+
+  return {
+    clearConfirmationVisible,
+    closeClearConfirmation,
+    openClearConfirmation,
+  };
 }
 
 function useDownloadConfirmationVisibility() {
@@ -763,7 +801,12 @@ function useFilterState() {
     filterDispatch({ type: 'reset' });
   }, []);
 
-  return { initializeFilters, filterState, filterHandlers, resetFilters };
+  return {
+    initializeFilters,
+    filterState,
+    filterHandlers,
+    resetFilters,
+  };
 }
 
 function useProfile() {
@@ -1293,23 +1336,23 @@ async function getUrlInputs(
     ...Object.keys(params).map(async (key) => {
       if (!isFilterField(key)) return;
       if (isMultiOptionField(key)) {
-      newState[key] = await matchMultipleOptions(
-        params[key] ?? null,
-        key,
-        getStaticOptions(key, staticOptions),
-        profile,
-      );
+        newState[key] = await matchMultipleOptions(
+          params[key] ?? null,
+          key,
+          getStaticOptions(key, staticOptions),
+          profile,
+        );
       } else if (isSingleOptionField(key)) {
-      newState[key] = await matchSingleOption(
-        params[key] ?? null,
-        key,
-        getStaticOptions(key, staticOptions),
-        profile,
-      );
+        newState[key] = await matchSingleOption(
+          params[key] ?? null,
+          key,
+          getStaticOptions(key, staticOptions),
+          profile,
+        );
       } else if (isDateField(key)) {
-      newState[key] = matchDate(params[key] ?? null);
+        newState[key] = matchDate(params[key] ?? null);
       } else if (isYearField(key)) {
-      newState[key] = matchYear(params[key] ?? null);
+        newState[key] = matchYear(params[key] ?? null);
       }
     }),
   ]);

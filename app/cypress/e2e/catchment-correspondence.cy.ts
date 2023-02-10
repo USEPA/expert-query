@@ -2,7 +2,7 @@ describe("Data Profile Catchment Correspondence", () => {
   beforeEach(() => {
     cy.visit("/");
     cy.selectProfile("Catchment Correspondence");
-    cy.findByRole("button", { name: "Queries" }).click();
+    cy.findByRole("button", { name: "Advanced API Queries" }).click();
   });
 
   const location = window.location;
