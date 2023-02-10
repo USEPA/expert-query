@@ -612,12 +612,6 @@ function getProfileEtl(
       await client.query(`DROP TABLE IF EXISTS ${tableName}`);
       await client.query(createQuery);
 
-      if (process.env.CREATE_INDEXES_AFTER_DATA === 'false') {
-        log.info(`${tableName}: Creating indexes`);
-        await client.query(buildIndexQuery(overrideWorkMemory, tableName));
-        log.info(`${tableName}: Indexes created`);
-      }
-
       log.info(`Table ${tableName} created`);
     } catch (err) {
       log.warn(`Failed to create table ${tableName}: ${err}`);
@@ -626,9 +620,6 @@ function getProfileEtl(
 
     // Extract, transform, and load the new data
     try {
-      // log.info(`Setting ${tableName} to unlogged`);
-      // await client.query(`ALTER TABLE ${tableName} SET UNLOGGED`);
-
       if (environment.isLocal) {
         let res = await extract(s3Config);
         let chunksProcessed = 0;
@@ -673,17 +664,12 @@ function getProfileEtl(
         );
       }
 
-      if (process.env.CREATE_INDEXES_AFTER_DATA === 'true') {
-        log.info(`${tableName}: Creating indexes`);
-        await client.query(buildIndexQuery(overrideWorkMemory, tableName));
-        log.info(`${tableName}: Indexes created`);
-      }
+      log.info(`${tableName}: Creating indexes`);
+      await client.query(buildIndexQuery(overrideWorkMemory, tableName));
+      log.info(`${tableName}: Indexes created`);
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
-    } finally {
-      // log.info(`Setting ${tableName} back to logged`);
-      // await client.query(`ALTER TABLE ${tableName} SET LOGGED`);
     }
 
     log.info(`Table ${tableName} load success`);
