@@ -27,7 +27,8 @@ function appendLatestToWhere(query, column, columnType, baseQuery) {
   if (columnType !== 'numeric' && columnType !== 'timestamptz') return;
 
   const subQuery = baseQuery.clone();
-  query.where(column, subQuery.max(column));
+  subQuery.select('organizationid').max(column).groupBy('organizationid');
+  query.whereIn(['organizationid', column], subQuery);
 }
 
 /**
