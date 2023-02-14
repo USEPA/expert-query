@@ -584,7 +584,6 @@ function buildIndexQuery(overrideWorkMemory, tableName) {
         ON ${tableName} USING btree
         (${column.name} ${collate} ${sortOrder} NULLS LAST)
         TABLESPACE pg_default;
-      COMMIT;
     `;
   });
 
