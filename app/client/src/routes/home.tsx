@@ -366,13 +366,21 @@ function FilterFields({
               ? MultiSelectFilterProps
               : SingleSelectFilterProps;
 
+            const tooltip =
+              'tooltip' in fieldConfig ? fieldConfig.tooltip : null;
+
             return [
               <label
                 className="usa-label"
                 key={fieldConfig.key}
                 htmlFor={`input-${fieldConfig.key}`}
               >
-                <b>{fieldConfig.label}</b>
+                <span className="display-flex align-items-center">
+                  <b>{fieldConfig.label}</b>{' '}
+                  {tooltip && (
+                    <InfoTooltip text={tooltip} styles={['margin-left-05']} />
+                  )}
+                </span>
                 <div className="margin-top-1">
                   {sourceFieldConfig ? (
                     <SourceSelectFilter
