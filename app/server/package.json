@@ -23,6 +23,7 @@
   "dependencies": {
     "aws-sdk": "2.1282.0",
     "axios": "1.1.2",
+    "browser-sync": "2.27.10",
     "cors": "2.8.5",
     "dotenv": "16.0.3",
     "exceljs": "4.3.0",
@@ -36,7 +37,6 @@
     "serve-favicon": "2.5.0"
   },
   "devDependencies": {
-    "browser-sync": "2.27.10",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",
     "husky": "8.0.1",
