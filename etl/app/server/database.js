@@ -576,8 +576,6 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
   for (const column of table.columns) {
     if (column.skipIndex) continue;
 
-    const result = await client.query(`SHOW maintenance_work_mem`);
-
     const sortOrder = column.indexOrder || 'asc';
     const collate = column.type ? '' : 'COLLATE pg_catalog."default"';
     await client.query(`
