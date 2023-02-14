@@ -10,7 +10,6 @@ const pgp = pgPromise({ capSQL: true });
 // Properties
 
 export const tableName = 'actions';
-const indexTableName = tableName.replaceAll('_', '');
 
 export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
   (
@@ -35,92 +34,6 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     inindiancountry VARCHAR(1),
     includeinmeasure VARCHAR(1)
   )`;
-
-export const createIndexes = `
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_actionagency_asc
-    ON ${tableName} USING btree
-    (actionagency COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_actionid_asc
-    ON ${tableName} USING btree
-    (actionid COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_actionname_asc
-    ON ${tableName} USING btree
-    (actionname COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitid_asc
-    ON ${tableName} USING btree
-    (assessmentunitid COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_assessmentunitname_asc
-    ON ${tableName} USING btree
-    (assessmentunitname COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_completiondate_desc
-    ON ${tableName} USING btree
-    (completiondate DESC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_includeinmeasure_asc
-    ON ${tableName} USING btree
-    (includeinmeasure COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_inindiancountry_asc
-    ON ${tableName} USING btree
-    (inindiancountry COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationid_asc
-    ON ${tableName} USING btree
-    (organizationid COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_organizationname_asc
-    ON ${tableName} USING btree
-    (organizationname COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_parameter_asc
-    ON ${tableName} USING btree
-    (parameter COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_region_asc
-    ON ${tableName} USING btree
-    (region COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_state_asc
-    ON ${tableName} USING btree
-    (state COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-
-  CREATE INDEX IF NOT EXISTS ${indexTableName}_watertype_asc
-    ON ${tableName} USING btree
-    (watertype COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-  COMMIT;
-`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'objectid' },
@@ -151,7 +64,7 @@ export async function extract(s3Config, next = 0, retryCount = 0) {
   return await innerExtract('profile_actions', s3Config, next, retryCount);
 }
 
-export async function transform(data, first) {
+export async function transform(data) {
   const rows = [];
   data.forEach((datum) => {
     rows.push({

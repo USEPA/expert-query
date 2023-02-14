@@ -1,13 +1,19 @@
-const { resolve } = require("node:path");
-const { readFile } = require("node:fs/promises");
-const express = require("express");
-const axios = require("axios");
-const { getActiveSchema } = require("../middleware");
-const { appendToWhere, knex, mapping } = require("../utilities/database");
-const logger = require("../utilities/logger");
-const log = logger.logger;
+import axios from 'axios';
+import express from 'express';
+import { readFile } from 'node:fs/promises';
+import path, { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { tableConfig } from '../config/tableConfig.js';
+import { getActiveSchema } from '../middleware.js';
+import { appendToWhere, knex } from '../utilities/database.js';
+import {
+  formatLogMsg,
+  log,
+  populateMetdataObjFromRequest,
+} from '../utilities/logger.js';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const isLocal = process.env.NODE_ENV === "local";
+const isLocal = process.env.NODE_ENV === 'local';
 const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
 const s3Region = process.env.CF_S3_PUB_REGION;
 const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
@@ -16,9 +22,9 @@ const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 // Cloud.gov: fetch files from the public s3 bucket
 function getFile(filename) {
   return isLocal
-    ? readFile(resolve(__dirname, "../", filename), "utf8")
+    ? readFile(resolve(__dirname, '../', filename), 'utf8')
     : axios({
-        method: "get",
+        method: 'get',
         url: `${s3BucketUrl}/${filename}`,
         timeout: 10000,
       });
@@ -36,21 +42,21 @@ function parseResponse(res) {
 
 async function queryColumnValues(profile, column, params, schema) {
   const parsedParams = {
-    text: "",
+    text: '',
     direction: null,
     filters: {},
     limit: null,
   };
 
   Object.entries(params).forEach(([name, value]) => {
-    if (name === "text") parsedParams.text = value;
-    else if (name === "limit") parsedParams.limit = value;
-    else if (name === "direction") parsedParams.direction = value;
+    if (name === 'text') parsedParams.text = value;
+    else if (name === 'limit') parsedParams.limit = value;
+    else if (name === 'direction') parsedParams.direction = value;
     else parsedParams.filters[name] = value;
   });
 
   const query = knex
-    .withRecursive("cte", (qb) => {
+    .withRecursive('cte', (qb) => {
       const subQuery1 = qb
         .withSchema(schema)
         .min(column.name, { as: column.name })
@@ -61,7 +67,7 @@ async function queryColumnValues(profile, column, params, schema) {
         .min(column.name, { as: column.name })
         .from(profile.tableName)
         .whereRaw(`"${column.name}" > "cte"."${column.name}"`)
-        .as("inner");
+        .as('inner');
 
       // build where clause of the query
       profile.columns.forEach((col) => {
@@ -71,18 +77,18 @@ async function queryColumnValues(profile, column, params, schema) {
 
       subQuery1.unionAll((qb) => {
         qb.select(subQuery2)
-          .from("cte")
+          .from('cte')
           .whereRaw(`"cte"."${column.name}" IS NOT NULL`);
       });
     })
     .select(column.name)
-    .from("cte")
+    .from('cte')
     .whereNotNull(column.name)
-    .orderBy(column.name, parsedParams.direction ?? "asc");
+    .orderBy(column.name, parsedParams.direction ?? 'asc');
 
   if (parsedParams.text) {
-    if (column.type === "numeric" || column.type === "timestamptz") {
-      query.whereRaw("CAST(?? as TEXT) ILIKE ?", [
+    if (column.type === 'numeric' || column.type === 'timestamptz') {
+      query.whereRaw('CAST(?? as TEXT) ILIKE ?', [
         column.name,
         `%${parsedParams.text}%`,
       ]);
@@ -96,26 +102,26 @@ async function queryColumnValues(profile, column, params, schema) {
   return await query;
 }
 
-module.exports = function (app) {
+export default function (app) {
   const router = express.Router();
 
   router.use(getActiveSchema);
 
   // --- get static content from S3
-  router.get("/lookupFiles", (req, res) => {
-    const metadataObj = logger.populateMetdataObjFromRequest(req);
+  router.get('/lookupFiles', (req, res) => {
+    const metadataObj = populateMetdataObjFromRequest(req);
 
     // NOTE: static content files found in `app/server/app/content/` directory
     const filenames = [
-      "content/config/services.json",
-      "content/alerts/config.json",
-      "content-etl/glossary.json",
+      'content/config/services.json',
+      'content/alerts/config.json',
+      'content-etl/glossary.json',
     ];
 
     const filePromises = Promise.all(
       filenames.map((filename) => {
         return getFile(filename);
-      })
+      }),
     )
       .then((stringsOrResponses) => {
         return parseResponse(stringsOrResponses);
@@ -128,7 +134,7 @@ module.exports = function (app) {
         };
       });
 
-    const directories = ["content-etl/domainValues"];
+    const directories = ['content-etl/domainValues'];
 
     const directoryPromises = Promise.all(
       directories.map((directory) => {
@@ -137,7 +143,7 @@ module.exports = function (app) {
           return Promise.all(
             dirFiles.map((dirFile) => {
               return getFile(`${directory}/${dirFile}`);
-            })
+            }),
           )
             .then((stringsOrResponses) => {
               return parseResponse(stringsOrResponses);
@@ -148,7 +154,7 @@ module.exports = function (app) {
               }, {});
             });
         });
-      })
+      }),
     ).then((data) => {
       return {
         domainValues: data[0],
@@ -158,37 +164,37 @@ module.exports = function (app) {
     Promise.all([filePromises, directoryPromises])
       .then((data) => res.json({ ...data[0], ...data[1] }))
       .catch((error) => {
-        if (typeof error.toJSON === "function") {
-          log.debug(logger.formatLogMsg(metadataObj, error.toJSON()));
+        if (typeof error.toJSON === 'function') {
+          log.debug(formatLogMsg(metadataObj, error.toJSON()));
         }
 
         const errorStatus = error.response?.status;
         const errorMethod = error.response?.config?.method?.toUpperCase();
         const errorUrl = error.response?.config?.url;
         const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
-        log.error(logger.formatLogMsg(metadataObj, message));
+        log.error(formatLogMsg(metadataObj, message));
 
         return res
           .status(error?.response?.status || 500)
-          .json({ message: "Error getting static content from S3 bucket" });
+          .json({ message: 'Error getting static content from S3 bucket' });
       });
   });
 
   // --- get static content from S3
-  router.get("/getFile", (req, res) => {
+  router.get('/getFile', (req, res) => {
     const { filepath } = req.query;
     const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
     const s3Region = process.env.CF_S3_PUB_REGION;
-    const metadataObj = logger.populateMetdataObjFromRequest(req);
+    const metadataObj = populateMetdataObjFromRequest(req);
 
     const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
     // local development: read files directly from disk
     // Cloud.gov: fetch files from the public s3 bucket
     (isLocal
-      ? readFile(resolve(__dirname, "../content", filepath), "utf8")
+      ? readFile(resolve(__dirname, '../content', filepath), 'utf8')
       : axios({
-          method: "get",
+          method: 'get',
           url: `${s3BucketUrl}/content/${filepath}`,
           timeout: 10000,
         })
@@ -199,51 +205,51 @@ module.exports = function (app) {
         return res.send(isLocal ? stringsOrResponses : stringsOrResponses.data);
       })
       .catch((error) => {
-        if (typeof error.toJSON === "function") {
-          log.debug(logger.formatLogMsg(metadataObj, error.toJSON()));
+        if (typeof error.toJSON === 'function') {
+          log.debug(formatLogMsg(metadataObj, error.toJSON()));
         }
 
         const errorStatus = error.response?.status;
         const errorMethod = error.response?.config?.method?.toUpperCase();
         const errorUrl = error.response?.config?.url;
         const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
-        log.error(logger.formatLogMsg(metadataObj, message));
+        log.error(formatLogMsg(metadataObj, message));
 
         return res
           .status(error?.response?.status || 500)
-          .json({ message: "Error getting static content from S3 bucket" });
+          .json({ message: 'Error getting static content from S3 bucket' });
       });
   });
 
   // create post requests
-  router.get("/:profile/values/:column", function (req, res) {
-    const profile = mapping[req.params.profile];
+  router.get('/:profile/values/:column', function (req, res) {
+    const profile = tableConfig[req.params.profile];
     if (!profile) {
       return res
         .status(404)
-        .json({ message: "The requested profile does not exist" });
+        .json({ message: 'The requested profile does not exist' });
     }
 
     const column = profile.columns.find(
-      (col) => col.alias === req.params.column
+      (col) => col.alias === req.params.column,
     );
     if (!column) {
       return res.status(404).json({
-        message: "The requested column does not exist on the selected profile",
+        message: 'The requested column does not exist on the selected profile',
       });
     }
 
     queryColumnValues(profile, column, req.query, req.activeSchema)
       .then((values) =>
-        res.status(200).json(values.map((value) => value[column.name]))
+        res.status(200).json(values.map((value) => value[column.name])),
       )
       .catch((error) => {
         log.error(
-          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table: ${error}`
+          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table: ${error}`,
         );
-        res.status(500).send("Error! " + error);
+        res.status(500).send('Error! ' + error);
       });
   });
 
-  app.use("/api", router);
-};
+  app.use('/api', router);
+}

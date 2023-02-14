@@ -1,7 +1,9 @@
-const path = require('path');
-const express = require('express');
+import express from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-module.exports = function (app) {
+export default function (app) {
   const router = express.Router();
 
   router.get('/', function (req, res, next) {
@@ -9,4 +11,4 @@ module.exports = function (app) {
   });
 
   app.use('/404.html', router);
-};
+}

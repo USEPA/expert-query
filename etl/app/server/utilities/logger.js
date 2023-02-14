@@ -22,10 +22,10 @@ log4js.configure({
   },
 });
 
-export const logger = log4js.getLogger();
+export const log = log4js.getLogger();
 
 if (process.env.LOGGER_LEVEL)
-  logger.level = process.env.LOGGER_LEVEL.toUpperCase();
-else logger.level = 'INFO'; //default level
+  log.level = process.env.LOGGER_LEVEL.toUpperCase();
+else log.level = 'INFO'; //default level
 
-logger.info('LOGGER_LEVEL = ' + logger.level);
+log.info('LOGGER_LEVEL = ' + log.level);

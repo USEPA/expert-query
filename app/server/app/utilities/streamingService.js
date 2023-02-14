@@ -1,12 +1,10 @@
-const { Transform, Readable, Writable, pipeline } = require("stream");
-const Papa = require("papaparse");
-const bl = require("bl");
-const util = require("util");
-const logger = require("../utilities/logger");
-const log = logger.logger;
+import { Transform, pipeline } from 'node:stream';
+import util from 'node:util';
+import Papa from 'papaparse';
+import { log } from '../utilities/logger.js';
 const setImmediatePromise = util.promisify(setImmediate);
 
-class StreamingService {
+export default class StreamingService {
   static getOptions = (outStream, format) => {
     return {
       preHook: () => {
@@ -17,9 +15,9 @@ class StreamingService {
       },
       errorHandler: (error) => {
         if (!error) return;
-        if (error.message === "Premature close") return;
+        if (error.message === 'Premature close') return;
 
-        log.warn("Out stream Error! " + error);
+        log.warn('Out stream Error! ' + error);
       },
     };
   };
@@ -31,18 +29,18 @@ class StreamingService {
    * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
    */
   static writeHead = (res, status, format) => {
-    if (typeof res.headersSent === "boolean" && !res.headersSent) {
-      let contentType = "application/json; charset=utf-8";
-      if (format === "csv") contentType = "text/csv";
-      if (format === "tsv") contentType = "text/tsv";
-      if (format === "xlsx")
+    if (typeof res.headersSent === 'boolean' && !res.headersSent) {
+      let contentType = 'application/json; charset=utf-8';
+      if (format === 'csv') contentType = 'text/csv';
+      if (format === 'tsv') contentType = 'text/tsv';
+      if (format === 'xlsx')
         contentType =
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
       res.writeHead(status, {
-        "Content-Type": contentType,
-        "Transfer-Encoding": "chunked",
-        "X-Content-Type-Options": "nosniff",
+        'Content-Type': contentType,
+        'Transfer-Encoding': 'chunked',
+        'X-Content-Type-Options': 'nosniff',
       });
     }
   };
@@ -62,13 +60,13 @@ class StreamingService {
 
         // convert the json to csv
         const unparsedData = Papa.unparse(JSON.stringify([data]), {
-          delimiter: format === "tsv" ? "\t" : ",",
+          delimiter: format === 'tsv' ? '\t' : ',',
           header: !this.comma,
         });
         this.push(unparsedData);
 
         // set comma for subsequent data
-        if (!this.comma) this.comma = "\n";
+        if (!this.comma) this.comma = '\n';
         this.push(this.comma);
         callback();
       },
@@ -90,16 +88,16 @@ class StreamingService {
         // preHook on first data only
         if (!this.comma) preHook();
         // if first data && error then no open/close brackets
-        const prefix = this.comma || (data.error ? "" : "[");
-        const suffix = this.comma && data.error ? "]" : "";
+        const prefix = this.comma || (data.error ? '' : '[');
+        const suffix = this.comma && data.error ? ']' : '';
         this.push(`${prefix}${JSON.stringify(data)}${suffix}`);
         // set comma for subsequent data
-        if (!this.comma) this.comma = ",\n";
+        if (!this.comma) this.comma = ',\n';
         callback();
       },
       final(callback) {
-        if (!this.comma) this.push("[");
-        this.push("]");
+        if (!this.comma) this.push('[');
+        this.push(']');
         callback();
       },
     });
@@ -128,7 +126,7 @@ class StreamingService {
         await setImmediatePromise();
 
         // set comma for subsequent data
-        if (!this.comma) this.comma = "\n";
+        if (!this.comma) this.comma = '\n';
 
         callback();
       },
@@ -139,7 +137,7 @@ class StreamingService {
             callback();
           })
           .catch((err) => {
-            res.status(500).send("Error! " + err);
+            res.status(500).send('Error! ' + err);
           });
       },
     });
@@ -156,25 +154,23 @@ class StreamingService {
   static streamResponse = (outStream, inStream, format, excelDoc = null) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,
-      format
+      format,
     );
-    inStream.on("error", (error) => {
+    inStream.on('error', (error) => {
       errorHook();
-      log.warn("Streaming in error! " + error);
+      log.warn('Streaming in error! ' + error);
       inStream.push({ error: error.message });
       outStream.end();
     });
 
     let transform = StreamingService.getJsonTransform(preHook);
-    if (format === "csv" || format === "tsv") {
+    if (format === 'csv' || format === 'tsv') {
       transform = StreamingService.getBasicTransform(preHook, format);
     }
-    if (format === "xlsx" && excelDoc) {
+    if (format === 'xlsx' && excelDoc) {
       transform = StreamingService.getXlsxTransform(preHook, excelDoc);
     }
 
     pipeline(inStream, transform, outStream, errorHandler);
   };
 }
-
-module.exports = StreamingService;

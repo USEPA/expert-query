@@ -1,6 +1,6 @@
-const fs = require("fs");
+import fs from "node:fs";
 
-module.exports = {
+export {
   root: true,
   env: {
     node: true,
