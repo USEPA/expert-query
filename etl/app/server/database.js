@@ -562,32 +562,31 @@ export async function trimNationalDownloads(pool) {
 }
 
 // Build the query for creating the indexes
-function buildIndexQuery(overrideWorkMemory, tableName) {
+async function createIndexes(client, overrideWorkMemory, tableName) {
   const indexTableName = tableName.replaceAll('_', '');
-
-  let query = overrideWorkMemory
-    ? `SET maintenance_work_mem TO '${overrideWorkMemory}';\n`
-    : '';
 
   const table = Object.values(tableConfig).find(
     (table) => table.tableName === tableName,
   );
-  if (!table) return '';
+  if (!table) return;
 
-  table.columns.forEach((column) => {
-    if (column.skipIndex) return;
+  if (overrideWorkMemory)
+    await client.query(`SET maintenance_work_mem TO '${overrideWorkMemory}'`);
+
+  for (const column of table.columns) {
+    if (column.skipIndex) continue;
+
+    const result = await client.query(`SHOW maintenance_work_mem`);
 
     const sortOrder = column.indexOrder || 'asc';
     const collate = column.type ? '' : 'COLLATE pg_catalog."default"';
-    query += `
+    await client.query(`
       CREATE INDEX IF NOT EXISTS ${indexTableName}_${column.name}_${sortOrder}
         ON ${tableName} USING btree
         (${column.name} ${collate} ${sortOrder} NULLS LAST)
-        TABLESPACE pg_default;
-    `;
-  });
-
-  return query;
+        TABLESPACE pg_default
+    `);
+  }
 }
 
 // Get the ETL task for a particular profile
@@ -664,7 +663,7 @@ function getProfileEtl(
       }
 
       log.info(`${tableName}: Creating indexes`);
-      await client.query(buildIndexQuery(overrideWorkMemory, tableName));
+      await createIndexes(client, overrideWorkMemory, tableName);
       log.info(`${tableName}: Indexes created`);
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);
