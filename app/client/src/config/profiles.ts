@@ -1,6 +1,7 @@
 export default {
   actions: {
-    description: 'Descriptions of actions',
+    description:
+      'Contains detailed information on plans to restore and protect water quality including Total Maximum Daily Loads (TMDLs), 4b Plans, 5R Plans, Protection Approaches, and other plans.',
     fields: [
       'actionAgency',
       'actionId',
@@ -22,7 +23,8 @@ export default {
     resource: 'actions',
   },
   assessments: {
-    description: 'Description of assessments',
+    description:
+      'Contains detailed information on waters assessed under Section 305(b) of the Clean Water Act and waters listed as impaired under Section 303(d) of the Clean Water Act. This includes assessed uses and parameter attainments.',
     fields: [
       'alternateListingIdentifier',
       'assessmentBasis',
@@ -87,7 +89,8 @@ export default {
     resource: 'assessments',
   },
   assessmentUnits: {
-    description: 'Description of assessment units',
+    description:
+      'Contains detailed information on assessment unit location and waterbody types. Please note, some waters may contain more than one water type.',
     fields: [
       'assessmentUnitId',
       'assessmentUnitName',
@@ -105,7 +108,8 @@ export default {
     resource: 'assessmentUnits',
   },
   assessmentUnitsMonitoringLocations: {
-    description: 'Description of assessment units with monitoring locations',
+    description:
+      'Contains information on the monitoring locations used to make assessment determinations at specific assessment units.',
     fields: [
       'assessmentUnitId',
       'assessmentUnitName',
@@ -125,7 +129,8 @@ export default {
     resource: 'assessmentUnitsMonitoringLocations',
   },
   catchmentCorrespondence: {
-    description: 'Description of Catchment Correspondence',
+    description:
+      'Contains the association between assessment units and National Hydrography Dataset Plus (NHDPlus) high resolution catchments.',
     fields: [
       'assessmentUnitId',
       'assessmentUnitName',
@@ -140,7 +145,7 @@ export default {
     resource: 'catchmentCorrespondence',
   },
   sources: {
-    description: 'Description of Sources',
+    description: 'Identifies sources of impairment for assessed waters.',
     fields: [
       'assessmentUnitId',
       'assessmentUnitName',
@@ -162,7 +167,8 @@ export default {
     resource: 'sources',
   },
   tmdl: {
-    description: 'Description of Total Maximum Daily Load',
+    description:
+      'Contains detailed information on Total Maximum Daily Load (TMDL) plans.',
     fields: [
       'actionAgency',
       'actionId',
