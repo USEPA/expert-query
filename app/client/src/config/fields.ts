@@ -268,7 +268,13 @@ export const filterFields = [
     label: 'Parameter IR Category',
     type: 'multiselect',
   },
-  { key: 'parameterName', label: 'Parameter Name', type: 'multiselect' },
+  {
+    key: 'parameterName',
+    label: 'Parameter Name',
+    type: 'multiselect',
+    tooltip:
+      'The dropdown list contains only active (non-retired) parameter names.',
+  },
   {
     key: 'parameterStateIrCategory',
     label: 'Parameter State IR Category',
