@@ -49,6 +49,9 @@
   "useName": {
     "domainName": "UseName"
   },
+  "useSupport": {
+    "domainName": "UseAttainmentCode"
+  },
   "waterType": {
     "domainName": "WaterTypeUnitsCode",
     "labelField": "context",

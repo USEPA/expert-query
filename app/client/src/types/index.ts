@@ -38,6 +38,7 @@ export type ConcreteField =
   | 'stateIrCategory'
   | 'useClassName'
   | 'useName'
+  | 'useSupport'
   | 'waterType';
 
 type ConcreteOptions = {
