@@ -272,7 +272,8 @@ export const filterFields = [
     key: 'parameterName',
     label: 'Parameter Name',
     type: 'multiselect',
-    tooltip: 'The dropdown list only contains active (non-retired) parameter names.',
+    tooltip:
+      'The dropdown list contains only active (non-retired) parameter names.',
   },
   {
     key: 'parameterStateIrCategory',
