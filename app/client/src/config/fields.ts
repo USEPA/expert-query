@@ -1,7 +1,14 @@
-export const filterGroups = {
+import profiles from './profiles';
+
+export const filterGroups: {
+  [P in keyof typeof profiles]: Array<{
+    key: keyof typeof filterGroupLabels;
+    fields: string[];
+  }>;
+} = {
   actions: [
     {
-      group: 'action',
+      key: 'action',
       fields: [
         'actionType',
         'actionId',
@@ -14,11 +21,11 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'actionsAssessmentUnit',
+      key: 'actionsAssessmentUnit',
       fields: ['assessmentUnitId', 'assessmentUnitName'],
     },
     {
-      group: 'areaOfInterest',
+      key: 'areaOfInterest',
       fields: [
         'region',
         'state',
@@ -29,13 +36,13 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'parameter',
+      key: 'parameter',
       fields: ['parameter'],
     },
   ],
   assessments: [
     {
-      group: 'areaOfInterest',
+      key: 'areaOfInterest',
       fields: [
         'region',
         'state',
@@ -46,7 +53,7 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'assessmentUnit',
+      key: 'assessmentUnit',
       fields: [
         'assessmentUnitId',
         'assessmentUnitName',
@@ -54,7 +61,7 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'associatedAction',
+      key: 'associatedAction',
       fields: [
         'associatedActionId',
         'associatedActionName',
@@ -64,11 +71,11 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'overallStatus',
+      key: 'overallStatus',
       fields: ['overallStatus', 'epaIrCategory', 'stateIrCategory'],
     },
     {
-      group: 'parameter',
+      key: 'parameter',
       fields: [
         'parameterGroup',
         'parameterName',
@@ -95,11 +102,11 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'reportingCycle',
+      key: 'reportingCycle',
       fields: ['reportingCycle', 'cycleLastAssessedLo', 'cycleLastAssessedHi'],
     },
     {
-      group: 'use',
+      key: 'use',
       fields: [
         'useGroup',
         'useName',
@@ -121,7 +128,7 @@ export const filterGroups = {
   ],
   assessmentUnits: [
     {
-      group: 'areaOfInterest',
+      key: 'areaOfInterest',
       fields: [
         'region',
         'state',
@@ -134,7 +141,7 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'assessmentUnit',
+      key: 'assessmentUnit',
       fields: [
         'assessmentUnitId',
         'assessmentUnitName',
@@ -145,7 +152,7 @@ export const filterGroups = {
   ],
   assessmentUnitsMonitoringLocations: [
     {
-      group: 'areaOfInterest',
+      key: 'areaOfInterest',
       fields: [
         'region',
         'state',
@@ -159,7 +166,7 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'assessmentUnit',
+      key: 'assessmentUnit',
       fields: [
         'assessmentUnitId',
         'assessmentUnitName',
@@ -170,7 +177,7 @@ export const filterGroups = {
   ],
   catchmentCorrespondence: [
     {
-      group: 'areaOfInterest',
+      key: 'areaOfInterest',
       fields: [
         'region',
         'state',
@@ -180,7 +187,7 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'catchmentAssessmentUnit',
+      key: 'catchmentAssessmentUnit',
       fields: [
         'assessmentUnitId',
         'assessmentUnitName',
@@ -191,7 +198,7 @@ export const filterGroups = {
   ],
   sources: [
     {
-      group: 'areaOfInterest',
+      key: 'areaOfInterest',
       fields: [
         'region',
         'state',
@@ -202,29 +209,29 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'assessmentUnit',
+      key: 'assessmentUnit',
       fields: ['assessmentUnitId', 'assessmentUnitName', 'reportingCycle'],
     },
     {
-      group: 'impairmentCause',
+      key: 'impairmentCause',
       fields: ['parameterGroup', 'causeName'],
     },
     {
-      group: 'impairmentSource',
+      key: 'impairmentSource',
       fields: ['sourceName', 'confirmed'],
     },
     {
-      group: 'overallStatus',
+      key: 'overallStatus',
       fields: ['overallStatus', 'epaIrCategory', 'stateIrCategory'],
     },
   ],
   tmdl: [
     {
-      group: 'actionsAssessmentUnit',
+      key: 'actionsAssessmentUnit',
       fields: ['assessmentUnitId', 'assessmentUnitName'],
     },
     {
-      group: 'areaOfInterest',
+      key: 'areaOfInterest',
       fields: [
         'region',
         'state',
@@ -235,15 +242,15 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'permitId',
+      key: 'permitId',
       fields: ['npdesIdentifier', 'otherIdentifier'],
     },
     {
-      group: 'pollutantParameter',
+      key: 'pollutantParameter',
       fields: ['pollutant', 'addressedParameter', 'sourceType'],
     },
     {
-      group: 'timeFrame',
+      key: 'timeFrame',
       fields: [
         'completionDateLo',
         'completionDateHi',
@@ -254,7 +261,7 @@ export const filterGroups = {
       ],
     },
     {
-      group: 'tmdl',
+      key: 'tmdl',
       fields: [
         'actionId',
         'actionName',
@@ -772,21 +779,6 @@ export const filterFields = [
     type: 'multiselect',
   },
 ] as const;
-
-export const groupedFilterFields = Object.entries(filterGroups).reduce(
-  (grouped, [profile, groups]) => {
-    return {
-      ...grouped,
-      [profile]: groups.map((group) => ({
-        ...group,
-        fields: group.fields.map((field) =>
-          filterFields.find((f) => f.key === field),
-        ),
-      })),
-    };
-  },
-  {},
-);
 
 export const sourceFields = [
   {
