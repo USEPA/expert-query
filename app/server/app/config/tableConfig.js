@@ -1,4 +1,4 @@
-// IMPORTANT - Copy any changes to the "app/server/app/config/tableConfig.js" file
+// IMPORTANT - Copy any changes to the "etl/app/config/tableConfig.js" file
 export const tableConfig = {
   actions: {
     tableName: 'actions',
