@@ -21,9 +21,10 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
     reportingcycle NUMERIC(4,0) NOT NULL,
+    cycleid NUMERIC(38,0) NOT NULL,
     assessmentunitid VARCHAR(50) NOT NULL,
     assessmentunitname VARCHAR(255) NOT NULL,
-    catchmentnhdplusid BIGINT
+    catchmentnhdplusid NUMERIC(38,0)
   )`;
 
 const insertColumns = new pgp.helpers.ColumnSet([
@@ -31,6 +32,7 @@ const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'assessmentunitid' },
   { name: 'assessmentunitname' },
   { name: 'catchmentnhdplusid' },
+  { name: 'cycleid' },
   { name: 'organizationid' },
   { name: 'organizationname' },
   { name: 'organizationtype' },
@@ -58,6 +60,7 @@ export async function transform(data) {
       assessmentunitid: datum.assessmentunitid,
       assessmentunitname: datum.assessmentunitname,
       catchmentnhdplusid: datum.catchmentnhdplusid,
+      cycleid: datum.cycleid,
       organizationid: datum.organizationid,
       organizationname: datum.organizationname,
       organizationtype: datum.organizationtype,
