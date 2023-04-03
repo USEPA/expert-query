@@ -186,7 +186,6 @@ export default {
       'otherIdentifier',
       'pollutant',
       'region',
-      'reportingCycle',
       'sourceType',
       'state',
       'tmdlDateLo',
