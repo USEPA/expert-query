@@ -12,6 +12,7 @@ declare global {
 export type AliasedField =
   | 'associatedActionAgency'
   | 'associatedActionStatus'
+  | 'associatedActionType'
   | 'parameter'
   | 'parameterStateIrCategory'
   | 'pollutant'
@@ -24,6 +25,7 @@ export type AliasedOptions = {
 // Fields provided in the `domainValues` of the Content context
 export type ConcreteField =
   | 'actionAgency'
+  | 'actionType'
   | 'assessmentTypes'
   | 'assessmentUnitStatus'
   | 'delistedReason'

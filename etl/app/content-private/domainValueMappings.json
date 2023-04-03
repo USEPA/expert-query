@@ -2,6 +2,10 @@
   "actionAgency": {
     "domainName": "AgencyCode"
   },
+  "actionType": {
+    "domainName": "ActionType",
+    "labelField": "code"
+  },
   "assessmentTypes": {
     "domainName": "AssessmentTypeCode"
   },

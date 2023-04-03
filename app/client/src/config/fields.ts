@@ -2,6 +2,7 @@ export const filterFields = [
   { key: 'actionAgency', label: 'Action Agency', type: 'multiselect' },
   { key: 'actionId', label: 'Action ID', type: 'multiselect' },
   { key: 'actionName', label: 'Action Name', type: 'multiselect' },
+  { key: 'actionType', label: 'Action Type', type: 'multiselect' },
   {
     key: 'addressedParameter',
     label: 'Addressed Parameter',

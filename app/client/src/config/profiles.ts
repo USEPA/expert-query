@@ -5,6 +5,7 @@ export default {
       'actionAgency',
       'actionId',
       'actionName',
+      'actionType',
       'assessmentUnitId',
       'assessmentUnitName',
       'completionDateLo',
