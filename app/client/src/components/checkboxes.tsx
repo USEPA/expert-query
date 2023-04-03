@@ -18,7 +18,7 @@ export function Checkboxes({
 }: CheckboxesProps) {
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
-      {legend && <legend className="usa-legend">{legend}</legend>}
+      {legend && <legend className="margin-top-0 usa-legend">{legend}</legend>}
       {options.map((option, i) => {
         return (
           <Checkbox
