@@ -63,6 +63,11 @@ async function queryColumnValues(profile, column, params, schema) {
     .orderBy(column.name, parsedParams.direction ?? 'asc')
     .select();
 
+  // build where clause of the query
+  profile.columns.forEach((col) => {
+    appendToWhere(query, col.name, parsedParams.filters[col.alias]);
+  });
+
   if (parsedParams.text) {
     if (column.type === 'numeric' || column.type === 'timestamptz') {
       query.whereRaw('CAST(?? as TEXT) ILIKE ?', [
