@@ -76,7 +76,7 @@ export async function transform(data) {
       objectid: datum.objectid,
       assessmentunitid: datum.assessmentunitid,
       assessmentunitname: datum.assessmentunitname,
-      assessmentunitstatus: datum.assessmentunitstate,
+      assessmentunitstatus: datum.assessmentunitstatus,
       cycleid: datum.cycleid,
       locationdescription: datum.locationdescription,
       locationtext: datum.locationtext,
