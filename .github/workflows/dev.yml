@@ -67,7 +67,8 @@ jobs:
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       DB_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
-      SERVER_URL: https://expert-query-dev.app.cloud.gov
+      SERVER_BASE_PATH: /expertquery
+      SERVER_URL: https://owapps-dev.app.cloud.gov/expertquery
       STREAM_BATCH_SIZE: 2000
       STREAM_HIGH_WATER_MARK: 10000
 
