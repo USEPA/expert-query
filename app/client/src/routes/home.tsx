@@ -459,7 +459,7 @@ function FilterGroups(props: FilterGroupsProps) {
           key={group.key}
         >
           <hr />
-          <h4>{filterGroupLabels[group.key]}</h4>
+          <h4 className="text-primary">{filterGroupLabels[group.key]}</h4>
           <FilterFields
             {...props}
             fields={group.fields as Array<typeof filterFieldsConfig[number]>}

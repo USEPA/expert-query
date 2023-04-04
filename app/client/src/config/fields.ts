@@ -291,7 +291,7 @@ export const filterGroupLabels = {
   parameter: 'Search by Parameter',
   permitId: 'Search by Permit ID',
   pollutantParameter: 'Search by Pollutant or Parameter',
-  reportingCycle: 'Search for Reporting Cycle',
+  reportingCycle: 'Search by Reporting Cycle',
   timeFrame: 'Search by Time Frame',
   tmdl: 'Search for a specific TMDL',
   use: 'Search by Use',
