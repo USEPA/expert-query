@@ -3,7 +3,7 @@ applications:
   - name: expert-query-etl-dev
     instances: 1
     no-route: true
-    memory: 1GB
+    memory: 128M
     disk_quota: 512MB
     timeout: 180
     buildpacks:

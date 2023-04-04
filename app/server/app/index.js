@@ -85,7 +85,7 @@ if (!isLocal && !isDevelopment && !isStaging)
  Required Environment Variables
 ****************************************************************/
 // initialize to common variables
-const requiredEnvVars = ['DB_NAME', 'DB_USERNAME', 'DB_PASSWORD'];
+const requiredEnvVars = ['DB_NAME', 'DB_USERNAME', 'DB_PASSWORD', 'SERVER_URL'];
 
 if (isLocal) {
   requiredEnvVars.push('DB_HOST');
@@ -113,8 +113,11 @@ app.use(express.static(__dirname + '/public'));
 // parse json in body of post requests
 app.use(express.json());
 
+// If SERVER_BASE_PATH is provided, serve routes and static files from there (e.g. /csb)
+const basePath = `${process.env.SERVER_BASE_PATH || ''}/`;
+
 // setup server routes
-routes(app);
+routes(app, basePath);
 
 // setup client routes (built React app)
 app.get('*', function (req, res) {

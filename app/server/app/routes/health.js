@@ -35,7 +35,7 @@ if (process.env.NODE_ENV) {
 const minDateTime = new Date(-8640000000000000);
 const maxDateTime = new Date(8640000000000000);
 
-export default function (app) {
+export default function (app, basePath) {
   const router = express.Router();
 
   router.use(getActiveSchema);
@@ -218,5 +218,5 @@ export default function (app) {
     }
   });
 
-  app.use('/health', router);
+  app.use(`${basePath}health`, router);
 }
