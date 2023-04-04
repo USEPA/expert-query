@@ -2,6 +2,10 @@
   "actionAgency": {
     "domainName": "AgencyCode"
   },
+  "actionType": {
+    "domainName": "ActionType",
+    "labelField": "code"
+  },
   "assessmentTypes": {
     "domainName": "AssessmentTypeCode"
   },
@@ -48,6 +52,9 @@
   },
   "useName": {
     "domainName": "UseName"
+  },
+  "useSupport": {
+    "domainName": "UseAttainmentCode"
   },
   "waterType": {
     "domainName": "WaterTypeUnitsCode",
