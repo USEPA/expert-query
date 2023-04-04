@@ -28,7 +28,7 @@ function appendLatestToWhere(query, column, columnType, baseQuery) {
 
   const subQuery = baseQuery.clone();
   subQuery.select('organizationid').max(column).groupBy('organizationid');
-  query.whereIn(['organizationid', column], subQuery);
+  return subQuery;
 }
 
 /**
@@ -133,6 +133,19 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
     query.select(selectText);
   }
 
+  // get a subquery for when "Latest" is used, so that we can apply the
+  // same filters to the subquery
+  const latestColumn = profile.columns.find((col) => col.default === 'latest');
+  let subQuery = null;
+  if (latestColumn) {
+    subQuery = appendLatestToWhere(
+      query,
+      latestColumn.name,
+      latestColumn.type,
+      baseQuery,
+    );
+  }
+
   // build where clause of the query
   profile.columns.forEach((col) => {
     const lowArg = 'lowParam' in col && queryParams.filters[col.lowParam];
@@ -140,12 +153,16 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
     const exactArg = queryParams.filters[col.alias];
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
+      if (subQuery) appendRangeToWhere(subQuery, col, lowArg, highArg);
     } else if (exactArg) {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
-    } else if (col.default === 'latest') {
-      appendLatestToWhere(query, col.name, col.type, baseQuery);
+      if (subQuery)
+        appendToWhere(subQuery, col.name, queryParams.filters[col.alias]);
     }
   });
+
+  // add the "latest" subquery to the where clause
+  query.whereIn(['organizationid', latestColumn.name], subQuery);
 }
 
 /**

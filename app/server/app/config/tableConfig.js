@@ -69,11 +69,7 @@ export const tableConfig = {
       { name: 'associatedactionid', alias: 'associatedActionId' },
       { name: 'associatedactionname', alias: 'associatedActionName' },
       { name: 'associatedactionstatus', alias: 'associatedActionStatus' },
-      {
-        name: 'associatedactiontype',
-        alias: 'associatedActionType',
-        type: 'numeric',
-      },
+      { name: 'associatedactiontype', alias: 'associatedActionType' },
       {
         name: 'consentdecreecycle',
         alias: 'consentDecreeCycle',
@@ -98,6 +94,11 @@ export const tableConfig = {
         highParam: 'cycleFirstListedHi',
         type: 'numeric',
         indexOrder: 'desc',
+      },
+      {
+        name: 'cycleid',
+        alias: 'cycleId',
+        type: 'numeric',
       },
       {
         name: 'cyclelastassessed',
@@ -216,6 +217,11 @@ export const tableConfig = {
       { name: 'assessmentunitname', alias: 'assessmentUnitName' },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       {
+        name: 'cycleid',
+        alias: 'cycleId',
+        type: 'numeric',
+      },
+      {
         name: 'locationdescription',
         alias: 'locationDescription',
         skipIndex: true,
@@ -255,6 +261,11 @@ export const tableConfig = {
       { name: 'assessmentunitid', alias: 'assessmentUnitId' },
       { name: 'assessmentunitname', alias: 'assessmentUnitName' },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
+      {
+        name: 'cycleid',
+        alias: 'cycleId',
+        type: 'numeric',
+      },
       {
         name: 'locationdescription',
         alias: 'locationDescription',
@@ -304,6 +315,11 @@ export const tableConfig = {
         alias: 'catchmentNhdPlusId',
         type: 'numeric',
       },
+      {
+        name: 'cycleid',
+        alias: 'cycleId',
+        type: 'numeric',
+      },
       { name: 'organizationid', alias: 'organizationId' },
       { name: 'organizationname', alias: 'organizationName' },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
@@ -327,6 +343,11 @@ export const tableConfig = {
       { name: 'assessmentunitname', alias: 'assessmentUnitName' },
       { name: 'causename', alias: 'causeName' },
       { name: 'confirmed', alias: 'confirmed' },
+      {
+        name: 'cycleid',
+        alias: 'cycleId',
+        type: 'numeric',
+      },
       { name: 'epaircategory', alias: 'epaIrCategory' },
       {
         name: 'locationdescription',
@@ -412,13 +433,6 @@ export const tableConfig = {
       { name: 'otheridentifier', alias: 'otherIdentifier' },
       { name: 'pollutant', alias: 'pollutant' },
       { name: 'region', alias: 'region' },
-      {
-        name: 'reportingcycle',
-        alias: 'reportingCycle',
-        default: 'latest',
-        type: 'numeric',
-        indexOrder: 'desc',
-      },
       { name: 'sourcetype', alias: 'sourceType' },
       { name: 'state', alias: 'state' },
       {
