@@ -192,7 +192,6 @@ export const profiles = {
       'otherIdentifier',
       'pollutant',
       'region',
-      'reportingCycle',
       'sourceType',
       'state',
       'tmdlDateLo',

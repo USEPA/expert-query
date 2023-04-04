@@ -314,6 +314,11 @@ export const filterFields = [
     type: 'multiselect',
   },
   {
+    key: 'actionType',
+    label: 'Action Type',
+    type: 'multiselect',
+  },
+  {
     key: 'addressedParameter',
     label: 'Addressed Parameter',
     type: 'multiselect',

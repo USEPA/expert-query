@@ -651,11 +651,11 @@ function getProfileEtl(
         `,
           [
             `${tableName}`,
-            process.env.CF_S3_PRIV_ETL_BUCKET_ID,
-            `${s3Julian}/${tableName}.csv.gz`,
-            process.env.CF_S3_PRIV_ETL_REGION,
-            process.env.CF_S3_PRIV_ETL_ACCESS_KEY,
-            process.env.CF_S3_PRIV_ETL_SECRET_KEY,
+            process.env.CF_S3_PUB_BUCKET_ID,
+            `national-downloads/${s3Julian}/${tableName}.csv.gz`,
+            process.env.CF_S3_PUB_REGION,
+            process.env.CF_S3_PUB_ACCESS_KEY,
+            process.env.CF_S3_PUB_SECRET_KEY,
           ],
         );
       }
@@ -864,12 +864,12 @@ export async function isDataReady(pool) {
     // get julian date from s3 bucket
     const latest = await readS3File({
       bucketInfo: {
-        accessKeyId: process.env.CF_S3_PRIV_ETL_ACCESS_KEY,
-        bucketId: process.env.CF_S3_PRIV_ETL_BUCKET_ID,
-        region: process.env.CF_S3_PRIV_ETL_REGION,
-        secretAccessKey: process.env.CF_S3_PRIV_ETL_SECRET_KEY,
+        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+        bucketId: process.env.CF_S3_PUB_BUCKET_ID,
+        region: process.env.CF_S3_PUB_REGION,
+        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
       },
-      path: 'latest.json',
+      path: 'national-downloads/latest.json',
     });
 
     if (!latest) return { ready: false, julian: null };
@@ -900,12 +900,12 @@ export async function isDataReady(pool) {
 
     const ready = await readS3File({
       bucketInfo: {
-        accessKeyId: process.env.CF_S3_PRIV_ETL_ACCESS_KEY,
-        bucketId: process.env.CF_S3_PRIV_ETL_BUCKET_ID,
-        region: process.env.CF_S3_PRIV_ETL_REGION,
-        secretAccessKey: process.env.CF_S3_PRIV_ETL_SECRET_KEY,
+        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+        bucketId: process.env.CF_S3_PUB_BUCKET_ID,
+        region: process.env.CF_S3_PUB_REGION,
+        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
       },
-      path: `${latest.julian}/ready.json`,
+      path: `national-downloads/${latest.julian}/ready.json`,
     });
 
     if (ready.problems.length > 0) {

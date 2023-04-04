@@ -20,6 +20,7 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
     reportingcycle NUMERIC(4,0) NOT NULL,
+    cycleid NUMERIC(38,0) NOT NULL,    
     assessmentunitid VARCHAR(50) NOT NULL,
     assessmentunitname VARCHAR(255) NOT NULL,
     locationdescription VARCHAR(2000) NOT NULL,
@@ -29,8 +30,8 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     assessmentunitstatus VARCHAR(1) NOT NULL,
     useclassname VARCHAR(50),
     sizesource VARCHAR(100),
-    sourcescale VARCHAR(30) NOT NULL,
-    locationtypecode VARCHAR(22) NOT NULL,
+    sourcescale VARCHAR(30),
+    locationtypecode VARCHAR(22),
     locationtext VARCHAR(100)
   )`;
 
@@ -39,6 +40,7 @@ const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'assessmentunitid' },
   { name: 'assessmentunitname' },
   { name: 'assessmentunitstatus' },
+  { name: 'cycleid' },
   { name: 'locationdescription' },
   { name: 'locationtext' },
   { name: 'locationtypecode' },
@@ -74,7 +76,8 @@ export async function transform(data) {
       objectid: datum.objectid,
       assessmentunitid: datum.assessmentunitid,
       assessmentunitname: datum.assessmentunitname,
-      assessmentunitstatus: datum.assessmentunitstate,
+      assessmentunitstatus: datum.assessmentunitstatus,
+      cycleid: datum.cycleid,
       locationdescription: datum.locationdescription,
       locationtext: datum.locationtext,
       locationtypecode: datum.locationtypecode,
