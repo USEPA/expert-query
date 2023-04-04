@@ -1233,12 +1233,12 @@ function getDateFields(fields: typeof allFieldsConfig) {
   );
 }
 
-// Returns the empty state for inputs (default values populated in `getUrlInputs`)
+// Returns the default state for inputs
 function getDefaultFilterState() {
   return filterFields.reduce((a, b) => {
     const defaultValue = getDefaultValue(b);
     const defaultState =
-      defaultValue && !isSingleValueField(b) ? [defaultValue] : defaultValue;
+      defaultValue && isMultiOptionField(b) ? [defaultValue] : defaultValue;
     return { ...a, [b]: defaultState };
   }, {}) as FilterFieldState;
 }
