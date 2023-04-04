@@ -119,6 +119,15 @@ const basePath = `${process.env.SERVER_BASE_PATH || ''}/`;
 // setup server routes
 routes(app, basePath);
 
+// Use regex to add trailing slash on static requests (required when using sub path)
+const pathRegex = new RegExp(`^\\${process.env.SERVER_BASE_PATH || ''}$`);
+app.all(pathRegex, (req, res) => res.redirect(`${basePath}`));
+
+// Serve client app's static built files
+// NOTE: client app's `build` directory contents copied into server app's
+// `public` directory in CI/CD step
+app.use(basePath, express.static(path.join(__dirname, 'public')));
+
 // setup client routes (built React app)
 app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, 'public/index.html'));
