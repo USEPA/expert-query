@@ -82,6 +82,4 @@ export const organizationType = [
 
 export const pollutantIndicator = yesNo;
 
-export const useSupport = yesNo;
-
 export const vision303dPriority = yesNo;

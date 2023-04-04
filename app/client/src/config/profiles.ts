@@ -6,6 +6,7 @@ export const profiles = {
       'actionAgency',
       'actionId',
       'actionName',
+      'actionType',
       'assessmentUnitId',
       'assessmentUnitName',
       'completionDateLo',
