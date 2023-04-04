@@ -46,6 +46,7 @@ import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import type { GroupBase } from 'react-select';
 import type { AsyncProps } from 'react-select/async';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
+import type { Profile } from 'config/profiles';
 
 /*
 ## Components
@@ -200,12 +201,10 @@ export function QueryBuilder() {
       {profile && (
         <Accordion>
           <AccordionItem heading="Filters" initialExpand>
-            <div className="display-flex margin-top-2 width-full justify-content-center">
-              <Button
-                onClick={openClearConfirmation}
-                children="Clear Search"
-                color="white"
-              />
+            <div className="display-flex width-full justify-content-center">
+              <Button onClick={openClearConfirmation} color="white">
+                Clear Search
+              </Button>
             </div>
             <FilterGroups
               filterHandlers={filterHandlers}
@@ -215,13 +214,6 @@ export function QueryBuilder() {
               sourceState={sourceState}
               staticOptions={staticOptions}
             />
-            <div className="display-flex margin-top-2 width-full justify-content-center">
-              <Button
-                onClick={openClearConfirmation}
-                children="Clear Search"
-                color="white"
-              />
-            </div>
           </AccordionItem>
 
           <AccordionItem heading="Download the Data" initialExpand>
@@ -461,8 +453,11 @@ function FilterGroups(props: FilterGroupsProps) {
 
   return (
     <>
-      {groupedFields.map((group) => (
-        <section className="margin-top-6" key={group.key}>
+      {groupedFields.map((group, i) => (
+        <section
+          className={`margin-top-${i === 0 ? '2' : '6'}`}
+          key={group.key}
+        >
           <hr />
           <h4>{filterGroupLabels[group.key]}</h4>
           <FilterFields
@@ -1155,6 +1150,7 @@ function filterOptions({
     return filterStaticOptions(
       staticOptions[field as keyof StaticOptions] ?? [],
       sourceValue,
+      defaultOption,
     );
   } else {
     return filterDynamicOptions({
@@ -1173,6 +1169,7 @@ function filterOptions({
 function filterStaticOptions(
   options: ReadonlyArray<Option>,
   source?: Primitive | null,
+  defaultOption?: Option | null,
 ) {
   const sourceOptions = filterStaticOptionsBySource(options, source);
 
@@ -1191,7 +1188,9 @@ function filterStaticOptions(
       }
       return true;
     });
-    return Promise.resolve(matches);
+    return Promise.resolve(
+      defaultOption ? [defaultOption, ...matches] : matches,
+    );
   };
 }
 
@@ -1237,7 +1236,10 @@ function getDateFields(fields: typeof allFieldsConfig) {
 // Returns the empty state for inputs (default values populated in `getUrlInputs`)
 function getDefaultFilterState() {
   return filterFields.reduce((a, b) => {
-    return { ...a, [b]: getDefaultValue(b) };
+    const defaultValue = getDefaultValue(b);
+    const defaultState =
+      defaultValue && !isSingleValueField(b) ? [defaultValue] : defaultValue;
+    return { ...a, [b]: defaultState };
   }, {}) as FilterFieldState;
 }
 
@@ -1741,8 +1743,6 @@ type ParameterErrors = {
   duplicate: Set<string>;
   invalid: Set<string>;
 };
-
-type Profile = keyof typeof profiles;
 
 type QueryData = {
   filters: FilterQueryData;

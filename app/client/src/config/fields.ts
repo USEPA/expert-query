@@ -1,12 +1,27 @@
-import profiles from './profiles';
+import type { Profile } from './profiles';
 
 export const filterGroups: {
-  [P in keyof typeof profiles]: Array<{
+  [P in Profile]: Array<{
     key: keyof typeof filterGroupLabels;
     fields: string[];
   }>;
 } = {
   actions: [
+    {
+      key: 'areaOfInterest',
+      fields: [
+        'region',
+        'state',
+        'organizationType',
+        'organizationName',
+        'organizationId',
+        'waterType',
+      ],
+    },
+    {
+      key: 'parameter',
+      fields: ['parameter'],
+    },
     {
       key: 'action',
       fields: [
@@ -24,21 +39,6 @@ export const filterGroups: {
       key: 'actionsAssessmentUnit',
       fields: ['assessmentUnitId', 'assessmentUnitName'],
     },
-    {
-      key: 'areaOfInterest',
-      fields: [
-        'region',
-        'state',
-        'organizationType',
-        'organizationName',
-        'organizationId',
-        'waterType',
-      ],
-    },
-    {
-      key: 'parameter',
-      fields: ['parameter'],
-    },
   ],
   assessments: [
     {
@@ -53,6 +53,10 @@ export const filterGroups: {
       ],
     },
     {
+      key: 'reportingCycle',
+      fields: ['reportingCycle', 'cycleLastAssessedLo', 'cycleLastAssessedHi'],
+    },
+    {
       key: 'assessmentUnit',
       fields: [
         'assessmentUnitId',
@@ -61,49 +65,8 @@ export const filterGroups: {
       ],
     },
     {
-      key: 'associatedAction',
-      fields: [
-        'associatedActionId',
-        'associatedActionName',
-        'associatedActionType',
-        'associatedActionStatus',
-        'associatedActionAgency',
-      ],
-    },
-    {
       key: 'overallStatus',
       fields: ['overallStatus', 'epaIrCategory', 'stateIrCategory'],
-    },
-    {
-      key: 'parameter',
-      fields: [
-        'parameterGroup',
-        'parameterName',
-        'parameterStatus',
-        'parameterAttainment',
-        'parameterIrCategory',
-        'parameterStateIrCategory',
-        'delisted',
-        'delistedReason',
-        'pollutantIndicator',
-        'cycleFirstListedLo',
-        'cycleFirstListedHi',
-        'alternateListingIdentifier',
-        'vision303dPriority',
-        'cwa303dPriorityRanking',
-        'cycleExpectedToAttainLo',
-        'cycleExpectedToAttainHi',
-        'consentDecreeCycleLo',
-        'consentDecreeCycleHi',
-        'seasonStartDateLo',
-        'seasonStartDateHi',
-        'seasonEndDateLo',
-        'seasonEndDateHi',
-      ],
-    },
-    {
-      key: 'reportingCycle',
-      fields: ['reportingCycle', 'cycleLastAssessedLo', 'cycleLastAssessedHi'],
     },
     {
       key: 'use',
@@ -123,6 +86,45 @@ export const filterGroups: {
         'assessmentTypes',
         'assessmentMethods',
         'assessmentBasis',
+      ],
+    },
+    {
+      key: 'parameter',
+      fields: [
+        'parameterGroup',
+        'parameterName',
+        'parameterStatus',
+        'parameterAttainment',
+        'parameterIrCategory',
+        'parameterStateIrCategory',
+        'delisted',
+        'delistedReason',
+        'pollutantIndicator',
+        'cycleFirstListedLo',
+        'cycleFirstListedHi',
+        'alternateListingIdentifier',
+        'vision303dPriority',
+        'cwa303dPriorityRanking',
+        'cycleScheduledForTmdlLo',
+        'cycleScheduledForTmdlHi',
+        'cycleExpectedToAttainLo',
+        'cycleExpectedToAttainHi',
+        'consentDecreeCycleLo',
+        'consentDecreeCycleHi',
+        'seasonStartDateLo',
+        'seasonStartDateHi',
+        'seasonEndDateLo',
+        'seasonEndDateHi',
+      ],
+    },
+    {
+      key: 'associatedAction',
+      fields: [
+        'associatedActionId',
+        'associatedActionName',
+        'associatedActionType',
+        'associatedActionStatus',
+        'associatedActionAgency',
       ],
     },
   ],
@@ -213,6 +215,10 @@ export const filterGroups: {
       fields: ['assessmentUnitId', 'assessmentUnitName', 'reportingCycle'],
     },
     {
+      key: 'overallStatus',
+      fields: ['overallStatus', 'epaIrCategory', 'stateIrCategory'],
+    },
+    {
       key: 'impairmentCause',
       fields: ['parameterGroup', 'causeName'],
     },
@@ -220,16 +226,8 @@ export const filterGroups: {
       key: 'impairmentSource',
       fields: ['sourceName', 'confirmed'],
     },
-    {
-      key: 'overallStatus',
-      fields: ['overallStatus', 'epaIrCategory', 'stateIrCategory'],
-    },
   ],
   tmdl: [
-    {
-      key: 'actionsAssessmentUnit',
-      fields: ['assessmentUnitId', 'assessmentUnitName'],
-    },
     {
       key: 'areaOfInterest',
       fields: [
@@ -242,12 +240,24 @@ export const filterGroups: {
       ],
     },
     {
+      key: 'pollutantParameter',
+      fields: ['pollutant', 'addressedParameter', 'sourceType'],
+    },
+    {
       key: 'permitId',
       fields: ['npdesIdentifier', 'otherIdentifier'],
     },
     {
-      key: 'pollutantParameter',
-      fields: ['pollutant', 'addressedParameter', 'sourceType'],
+      key: 'tmdl',
+      fields: [
+        'actionId',
+        'actionName',
+        'actionAgency',
+        'inIndianCountry',
+        'explicitMarginOfSafety',
+        'implicitMarginOfSafety',
+        'includeInMeasure',
+      ],
     },
     {
       key: 'timeFrame',
@@ -261,16 +271,8 @@ export const filterGroups: {
       ],
     },
     {
-      key: 'tmdl',
-      fields: [
-        'actionId',
-        'actionName',
-        'actionAgency',
-        'inIndianCountry',
-        'explicitMarginOfSafety',
-        'implicitMarginOfSafety',
-        'includeInMeasure',
-      ],
+      key: 'actionsAssessmentUnit',
+      fields: ['assessmentUnitId', 'assessmentUnitName'],
     },
   ],
 };

@@ -1,4 +1,4 @@
-export default {
+export const profiles = {
   actions: {
     description:
       'Contains detailed information on plans to restore and protect water quality including Total Maximum Daily Loads (TMDLs), 4b Plans, 5R Plans, Protection Approaches, and other plans.',
@@ -204,3 +204,5 @@ export default {
     resource: 'tmdl',
   },
 } as const;
+
+export type Profile = keyof typeof profiles;
