@@ -161,8 +161,10 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
     }
   });
 
-  // add the "latest" subquery to the where clause
-  query.whereIn(['organizationid', latestColumn.name], subQuery);
+  if (latestColumn && subQuery) {
+    // add the "latest" subquery to the where clause
+    query.whereIn(['organizationid', latestColumn.name], subQuery);
+  }
 }
 
 /**
