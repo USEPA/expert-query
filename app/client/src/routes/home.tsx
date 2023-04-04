@@ -76,7 +76,7 @@ export function Home() {
   });
 
   const eqDataUrl =
-    content.data.services?.eqDataApi || `${window.location.origin}/attains`;
+    content.data.services?.eqDataApi || `${serverUrl}/attains`;
 
   if (content.status === 'pending') return <Loading />;
 

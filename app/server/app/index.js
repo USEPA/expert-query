@@ -120,10 +120,6 @@ routes(app, basePath);
 const pathRegex = new RegExp(`^\\${process.env.SERVER_BASE_PATH || ''}$`);
 app.all(pathRegex, (req, res) => res.redirect(`${basePath}`));
 
-log.info(`basePath: ${basePath}`);
-log.info(`__dirname: ${__dirname}`);
-log.info(`path.join(__dirname, 'public'): ${path.join(__dirname, 'public')}`);
-
 // Serve client app's static built files
 // NOTE: client app's `build` directory contents copied into server app's
 // `public` directory in CI/CD step

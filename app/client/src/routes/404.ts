@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+// config
+import { serverUrl } from 'config';
 
 // --- components ---
 function PageNotFound() {
@@ -6,7 +8,7 @@ function PageNotFound() {
   useEffect(() => {
     const location = window.location;
 
-    let url = `${location.origin}/404.html`;
+    let url = `${serverUrl}/404.html`;
     if (location.hostname === 'localhost') {
       url = `${location.protocol}//${location.hostname}:9090/404.html`;
     }
