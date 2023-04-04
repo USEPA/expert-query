@@ -107,9 +107,6 @@ requiredEnvVars.forEach((envVar) => {
 /****************************************************************
  Setup server and routes
 ****************************************************************/
-// serve static assets normally
-app.use(express.static(__dirname + '/public'));
-
 // parse json in body of post requests
 app.use(express.json());
 
