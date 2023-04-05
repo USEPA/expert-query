@@ -76,8 +76,7 @@ export function Home() {
     initializeFilters,
   });
 
-  const eqDataUrl =
-    content.data.services?.eqDataApi || `${window.location.origin}/attains`;
+  const eqDataUrl = content.data.services?.eqDataApi || `${serverUrl}/attains`;
 
   if (content.status === 'pending') return <Loading />;
 
@@ -645,24 +644,57 @@ function SelectFilter<
   sourceValue,
   staticOptions,
 }: P) {
+  const loadOptions = useCallback(
+    (inputValue?: string) => {
+      return filterOptions({
+        defaultOption,
+        profile,
+        field: filterKey,
+        sortDirection,
+        staticOptions,
+        sourceField: sourceKey,
+        sourceValue: sourceValue?.value,
+      })(inputValue);
+    },
+    [
+      defaultOption,
+      filterKey,
+      profile,
+      sortDirection,
+      sourceKey,
+      sourceValue,
+      staticOptions,
+    ],
+  );
+
+  // Options that are visible before search text is provided
+  const [initialOptions, setInitialOptions] = useState<
+    boolean | readonly Option[]
+  >(defaultOptions);
+
+  const loadInitialOptions = useCallback(() => {
+    loadOptions('').then((options) => {
+      setInitialOptions(options);
+    });
+  }, [loadOptions]);
+
+  // Re-render default options when `sourceValue` changes
+  useEffect(() => {
+    if (!sourceValue) return;
+    loadInitialOptions();
+  }, [loadInitialOptions, sourceValue]);
+
   const asyncSelectProps = {
     'aria-Label': `${filterLabel} input`,
     className: 'width-full',
     inputId: `input-${filterKey}`,
     isMulti: isMultiOptionField(filterKey),
-    // Re-renders default options when `sourceValue` changes
-    key: JSON.stringify(sourceValue?.value),
     onChange: filterHandler,
-    defaultOptions: defaultOptions,
-    loadOptions: filterOptions({
-      defaultOption,
-      profile,
-      field: filterKey,
-      sortDirection,
-      staticOptions,
-      sourceField: sourceKey,
-      sourceValue: sourceValue?.value,
-    }),
+    onMenuOpen: () => {
+      if (!initialOptions) loadInitialOptions();
+    },
+    defaultOptions: initialOptions,
+    loadOptions,
     menuPortalTarget: document.body,
     placeholder: `Select ${getArticle(
       filterLabel.split(' ')[0],
@@ -672,9 +704,6 @@ function SelectFilter<
         ...base,
         border: '1px solid #adadad',
         borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
-      }),
-      loadingIndicator: () => ({
-        display: 'none',
       }),
       menuPortal: (base) => ({
         ...base,
@@ -1117,7 +1146,7 @@ function filterDynamicOptions({
   sourceField?: string | null;
   sourceValue?: Primitive | null;
 }) {
-  return async function (inputValue?: string): Promise<Array<Option>> {
+  return async function (inputValue = ''): Promise<Array<Option>> {
     let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}&direction=${direction}`;
     if (isNotEmpty(limit)) url += `&limit=${limit}`;
     if (isNotEmpty(sourceField) && isNotEmpty(sourceValue)) {
@@ -1174,7 +1203,7 @@ function filterStaticOptions(
 ) {
   const sourceOptions = filterStaticOptionsBySource(options, source);
 
-  return function (inputValue: string) {
+  return function (inputValue = '') {
     const value = inputValue.trim().toLowerCase();
     const matches: Option[] = [];
     sourceOptions.every((option) => {
@@ -1276,8 +1305,8 @@ function getInitialOptions(
       ? sourceOptions.slice(0, staticOptionLimit)
       : sourceOptions;
   }
-  // Return true to trigger an immediate fetch from the database
-  return true;
+  // Return false to delay fetching options
+  return false;
 }
 
 // Extracts the value field from Option items, otherwise returns the item
