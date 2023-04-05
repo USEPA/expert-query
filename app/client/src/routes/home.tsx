@@ -691,34 +691,39 @@ function SelectFilter<
 
   // Options that are visible before search text is provided
   const [initialOptions, setInitialOptions] = useState<
-    boolean | readonly Option[]
+    readonly Option[] | null
   >(defaultOptions);
 
   const loadInitialOptions = useCallback(() => {
-    // Don't debounce initial loads or refreshes
+    // Don't debounce initial loads
     loadOptions('').then((options) => {
       setInitialOptions(options);
     });
   }, [loadOptions]);
 
-  // Re-render default options when `sourceValue` changes
+  // Reset default options when `sourceValue` changes
   useEffect(() => {
     if (!sourceValue) return;
-    loadInitialOptions();
+    setInitialOptions(null);
   }, [loadInitialOptions, sourceValue]);
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const asyncSelectProps = {
     'aria-Label': `${filterLabel} input`,
     className: 'width-full',
-    inputId: `input-${filterKey}`,
-    isMulti: isMultiOptionField(filterKey),
-    onChange: filterHandler,
-    onMenuOpen: () => {
-      if (!initialOptions) loadInitialOptions();
-    },
     defaultOptions: initialOptions,
+    inputId: `input-${filterKey}`,
+    isLoading: menuOpen && !initialOptions,
+    isMulti: isMultiOptionField(filterKey),
     loadOptions: debouncedLoadOptions ?? loadOptions,
     menuPortalTarget: document.body,
+    onChange: filterHandler,
+    onMenuClose: () => setMenuOpen(false),
+    onMenuOpen: () => {
+      setMenuOpen(true);
+      if (!initialOptions) loadInitialOptions();
+    },
     placeholder: `Select ${getArticle(
       filterLabel.split(' ')[0],
     )} ${filterLabel}...`,
@@ -1328,8 +1333,7 @@ function getInitialOptions(
       ? sourceOptions.slice(0, staticOptionLimit)
       : sourceOptions;
   }
-  // Return false to delay fetching options
-  return false;
+  return null;
 }
 
 // Extracts the value field from Option items, otherwise returns the item
@@ -1818,7 +1822,7 @@ type SelectFilterProps<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 > = {
   defaultOption?: Option | null;
-  defaultOptions: boolean | readonly Option[];
+  defaultOptions: readonly Option[] | null;
   filterHandler: FilterFieldInputHandlers[F];
   filterKey: F;
   filterLabel: string;
