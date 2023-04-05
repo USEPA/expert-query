@@ -46,6 +46,7 @@ import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import type { GroupBase } from 'react-select';
 import type { AsyncProps } from 'react-select/async';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
+import type { Profile } from 'config/profiles';
 
 /*
 ## Components
@@ -200,14 +201,12 @@ export function QueryBuilder() {
       {profile && (
         <Accordion>
           <AccordionItem heading="Filters" initialExpand>
-            <div className="display-flex margin-top-2 width-full justify-content-center">
-              <Button
-                onClick={openClearConfirmation}
-                children="Clear Search"
-                color="white"
-              />
+            <div className="display-flex width-full justify-content-center">
+              <Button onClick={openClearConfirmation} color="white">
+                Clear Search
+              </Button>
             </div>
-            <FilterFields
+            <FilterGroups
               filterHandlers={filterHandlers}
               filterState={filterState}
               profile={profile}
@@ -215,13 +214,6 @@ export function QueryBuilder() {
               sourceState={sourceState}
               staticOptions={staticOptions}
             />
-            <div className="display-flex margin-top-2 width-full justify-content-center">
-              <Button
-                onClick={openClearConfirmation}
-                children="Clear Search"
-                color="white"
-              />
-            </div>
           </AccordionItem>
 
           <AccordionItem heading="Download the Data" initialExpand>
@@ -296,6 +288,7 @@ export function QueryBuilder() {
 }
 
 function FilterFields({
+  fields,
   filterHandlers,
   filterState,
   profile,
@@ -303,133 +296,127 @@ function FilterFields({
   sourceState,
   staticOptions,
 }: FilterFieldsProps) {
-  const profileFields: readonly string[] = profiles[profile].fields;
-
   // Store each field's element in a tuple with its key
   const fieldsJsx: Array<[JSX.Element, string]> = removeNulls(
-    filterFieldsConfig
-      .filter((fieldConfig) => profileFields.includes(fieldConfig.key))
-      .map((fieldConfig) => {
-        const sourceFieldConfig =
-          'source' in fieldConfig
-            ? sourceFieldsConfig.find((f) => f.id === fieldConfig.source)
-            : null;
-        const sourceValue =
-          sourceFieldConfig && sourceState[sourceFieldConfig.id]?.value;
+    fields.map((fieldConfig) => {
+      const sourceFieldConfig =
+        'source' in fieldConfig
+          ? sourceFieldsConfig.find((f) => f.id === fieldConfig.source)
+          : null;
+      const sourceValue =
+        sourceFieldConfig && sourceState[sourceFieldConfig.id]?.value;
 
-        switch (fieldConfig.type) {
-          case 'multiselect':
-          case 'select':
-            const defaultOptions = getInitialOptions(
-              staticOptions,
-              fieldConfig.key,
-              sourceValue,
-            );
+      switch (fieldConfig.type) {
+        case 'multiselect':
+        case 'select':
+          const defaultOptions = getInitialOptions(
+            staticOptions,
+            fieldConfig.key,
+            sourceValue,
+          );
 
-            if (
-              !sourceFieldConfig &&
-              fieldConfig.type === 'multiselect' &&
-              Array.isArray(defaultOptions) &&
-              defaultOptions.length <= 5
-            ) {
-              return [
-                <Checkboxes
-                  key={fieldConfig.key}
-                  legend={<b>{fieldConfig.label}</b>}
-                  onChange={filterHandlers[fieldConfig.key]}
-                  options={defaultOptions}
-                  selected={filterState[fieldConfig.key] ?? []}
-                  styles={['margin-top-3']}
-                />,
-                fieldConfig.key,
-              ];
-            }
-            const selectProps = {
-              defaultOption:
-                'default' in fieldConfig ? fieldConfig.default : null,
-              defaultOptions,
-              filterHandler: filterHandlers[fieldConfig.key],
-              filterKey: fieldConfig.key,
-              filterLabel: fieldConfig.label,
-              filterValue: filterState[fieldConfig.key],
-              profile,
-              sortDirection:
-                'direction' in fieldConfig
-                  ? (fieldConfig.direction as SortDirection)
-                  : 'asc',
-              sourceKey: sourceFieldConfig?.key ?? null,
-              sourceValue: sourceFieldConfig
-                ? sourceState[sourceFieldConfig.id]
-                : null,
-              staticOptions,
-            } as typeof fieldConfig.key extends MultiOptionField
-              ? MultiSelectFilterProps
-              : SingleSelectFilterProps;
-
-            const tooltip =
-              'tooltip' in fieldConfig ? fieldConfig.tooltip : null;
-
+          if (
+            !sourceFieldConfig &&
+            fieldConfig.type === 'multiselect' &&
+            Array.isArray(defaultOptions) &&
+            defaultOptions.length <= 5
+          ) {
             return [
-              <label
-                className="usa-label"
+              <Checkboxes
                 key={fieldConfig.key}
-                htmlFor={`input-${fieldConfig.key}`}
-              >
-                <span className="display-flex align-items-center">
-                  <b>{fieldConfig.label}</b>{' '}
-                  {tooltip && (
-                    <InfoTooltip text={tooltip} styles={['margin-left-05']} />
-                  )}
-                </span>
-                <div className="margin-top-1">
-                  {sourceFieldConfig ? (
-                    <SourceSelectFilter
-                      {...selectProps}
-                      sourceHandler={sourceHandlers[sourceFieldConfig.id]}
-                      sourceKey={sourceFieldConfig.key}
-                      sourceLabel={sourceFieldConfig.label}
-                    />
-                  ) : (
-                    <SelectFilter {...selectProps} />
-                  )}
-                </div>
-              </label>,
-              fieldConfig.key,
-            ];
-          case 'date':
-          case 'year':
-            // Prevents range fields from rendering twice
-            if (fieldConfig.boundary === 'high') return null;
-
-            const pairedField = filterFieldsConfig.find(
-              (otherField) =>
-                otherField.key !== fieldConfig.key &&
-                'domain' in otherField &&
-                otherField.domain === fieldConfig.domain,
-            );
-            // All range inputs should have a high and a low boundary field
-            if (!pairedField || !isSingleValueField(pairedField.key))
-              return null;
-
-            return [
-              <RangeFilter
-                domain={fieldConfig.domain}
-                highHandler={filterHandlers[pairedField.key]}
-                highKey={pairedField.key}
-                highValue={filterState[pairedField.key]}
-                key={fieldConfig.key}
-                label={fieldConfig.label}
-                lowHandler={filterHandlers[fieldConfig.key]}
-                lowKey={fieldConfig.key}
-                lowValue={filterState[fieldConfig.key]}
-                type={fieldConfig.type}
+                legend={<b>{fieldConfig.label}</b>}
+                onChange={filterHandlers[fieldConfig.key]}
+                options={defaultOptions}
+                selected={filterState[fieldConfig.key] ?? []}
+                styles={['margin-top-3']}
               />,
-              fieldConfig.domain,
+              fieldConfig.key,
             ];
-          default:
-            return null;
-        }
-      }),
+          }
+          const selectProps = {
+            defaultOption:
+              'default' in fieldConfig ? fieldConfig.default : null,
+            defaultOptions,
+            filterHandler: filterHandlers[fieldConfig.key],
+            filterKey: fieldConfig.key,
+            filterLabel: fieldConfig.label,
+            filterValue: filterState[fieldConfig.key],
+            profile,
+            sortDirection:
+              'direction' in fieldConfig
+                ? (fieldConfig.direction as SortDirection)
+                : 'asc',
+            sourceKey: sourceFieldConfig?.key ?? null,
+            sourceValue: sourceFieldConfig
+              ? sourceState[sourceFieldConfig.id]
+              : null,
+            staticOptions,
+          } as typeof fieldConfig.key extends MultiOptionField
+            ? MultiSelectFilterProps
+            : SingleSelectFilterProps;
+
+          const tooltip = 'tooltip' in fieldConfig ? fieldConfig.tooltip : null;
+
+          return [
+            <label
+              className="usa-label"
+              key={fieldConfig.key}
+              htmlFor={`input-${fieldConfig.key}`}
+            >
+              <span className="display-flex align-items-center">
+                <b>{fieldConfig.label}</b>{' '}
+                {tooltip && (
+                  <InfoTooltip text={tooltip} styles={['margin-left-05']} />
+                )}
+              </span>
+              <div className="margin-top-1">
+                {sourceFieldConfig ? (
+                  <SourceSelectFilter
+                    {...selectProps}
+                    sourceHandler={sourceHandlers[sourceFieldConfig.id]}
+                    sourceKey={sourceFieldConfig.key}
+                    sourceLabel={sourceFieldConfig.label}
+                  />
+                ) : (
+                  <SelectFilter {...selectProps} />
+                )}
+              </div>
+            </label>,
+            fieldConfig.key,
+          ];
+        case 'date':
+        case 'year':
+          // Prevents range fields from rendering twice
+          if (fieldConfig.boundary === 'high') return null;
+
+          const pairedField = filterFieldsConfig.find(
+            (otherField) =>
+              otherField.key !== fieldConfig.key &&
+              'domain' in otherField &&
+              otherField.domain === fieldConfig.domain,
+          );
+          // All range inputs should have a high and a low boundary field
+          if (!pairedField || !isSingleValueField(pairedField.key)) return null;
+
+          return [
+            <RangeFilter
+              domain={fieldConfig.domain}
+              highHandler={filterHandlers[pairedField.key]}
+              highKey={pairedField.key}
+              highValue={filterState[pairedField.key]}
+              key={fieldConfig.key}
+              label={fieldConfig.label}
+              lowHandler={filterHandlers[fieldConfig.key]}
+              lowKey={fieldConfig.key}
+              lowValue={filterState[fieldConfig.key]}
+              type={fieldConfig.type}
+            />,
+            fieldConfig.domain,
+          ];
+        default:
+          return null;
+      }
+    }),
   );
 
   // Store each row as a tuple with its row key
@@ -452,6 +439,34 @@ function FilterFields({
         </div>
       ))}
     </div>
+  );
+}
+
+function FilterGroups(props: FilterGroupsProps) {
+  const { profile } = props;
+  const groupedFields = filterGroupsConfig[profile].map((group) => ({
+    ...group,
+    fields: group.fields
+      .map((field) => filterFieldsConfig.find((f) => f.key === field))
+      .filter((field) => field !== undefined),
+  }));
+
+  return (
+    <>
+      {groupedFields.map((group, i) => (
+        <section
+          className={`margin-top-${i === 0 ? '2' : '6'}`}
+          key={group.key}
+        >
+          <hr />
+          <h4 className="text-primary">{filterGroupLabels[group.key]}</h4>
+          <FilterFields
+            {...props}
+            fields={group.fields as Array<typeof filterFieldsConfig[number]>}
+          />
+        </section>
+      ))}
+    </>
   );
 }
 
@@ -1136,6 +1151,7 @@ function filterOptions({
     return filterStaticOptions(
       staticOptions[field as keyof StaticOptions] ?? [],
       sourceValue,
+      defaultOption,
     );
   } else {
     return filterDynamicOptions({
@@ -1154,6 +1170,7 @@ function filterOptions({
 function filterStaticOptions(
   options: ReadonlyArray<Option>,
   source?: Primitive | null,
+  defaultOption?: Option | null,
 ) {
   const sourceOptions = filterStaticOptionsBySource(options, source);
 
@@ -1172,7 +1189,9 @@ function filterStaticOptions(
       }
       return true;
     });
-    return Promise.resolve(matches);
+    return Promise.resolve(
+      defaultOption ? [defaultOption, ...matches] : matches,
+    );
   };
 }
 
@@ -1215,10 +1234,13 @@ function getDateFields(fields: typeof allFieldsConfig) {
   );
 }
 
-// Returns the empty state for inputs (default values populated in `getUrlInputs`)
+// Returns the default state for inputs
 function getDefaultFilterState() {
   return filterFields.reduce((a, b) => {
-    return { ...a, [b]: getDefaultValue(b) };
+    const defaultValue = getDefaultValue(b);
+    const defaultState =
+      defaultValue && isMultiOptionField(b) ? [defaultValue] : defaultValue;
+    return { ...a, [b]: defaultState };
   }, {}) as FilterFieldState;
 }
 
@@ -1610,8 +1632,12 @@ function storageAvailable(
 const dynamicOptionLimit = 20;
 const staticOptionLimit = 100;
 
-const { filterFields: filterFieldsConfig, sourceFields: sourceFieldsConfig } =
-  fields;
+const {
+  filterFields: filterFieldsConfig,
+  filterGroupLabels,
+  filterGroups: filterGroupsConfig,
+  sourceFields: sourceFieldsConfig,
+} = fields;
 const allFieldsConfig = [...filterFieldsConfig, ...sourceFieldsConfig];
 const filterFields = filterFieldsConfig.map((f) => f.key);
 const sourceFields = sourceFieldsConfig.map((fieldConfig) => fieldConfig.id);
@@ -1659,13 +1685,8 @@ type FilterFieldInputHandlers = {
   [F in Extract<FilterField, SingleValueField>]: SingleValueInputHandler;
 };
 
-type FilterFieldsProps = {
-  filterHandlers: FilterFieldInputHandlers;
-  filterState: FilterFieldState;
-  profile: Profile;
-  sourceHandlers: SourceFieldInputHandlers;
-  sourceState: SourceFieldState;
-  staticOptions: StaticOptions;
+type FilterFieldsProps = FilterGroupsProps & {
+  fields: Array<typeof filterFieldsConfig[number]>;
 };
 
 type FilterFieldState = {
@@ -1674,6 +1695,15 @@ type FilterFieldState = {
   [F in Extract<FilterField, SingleOptionField>]: SingleOptionState;
 } & {
   [F in Extract<FilterField, SingleValueField>]: string;
+};
+
+type FilterGroupsProps = {
+  filterHandlers: FilterFieldInputHandlers;
+  filterState: FilterFieldState;
+  profile: Profile;
+  sourceHandlers: SourceFieldInputHandlers;
+  sourceState: SourceFieldState;
+  staticOptions: StaticOptions;
 };
 
 type FilterQueryData = Partial<{
@@ -1714,8 +1744,6 @@ type ParameterErrors = {
   duplicate: Set<string>;
   invalid: Set<string>;
 };
-
-type Profile = keyof typeof profiles;
 
 type QueryData = {
   filters: FilterQueryData;

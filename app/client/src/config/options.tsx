@@ -1,4 +1,4 @@
-import profiles from './profiles';
+import { profiles } from './profiles';
 
 const yesNo = [
   {
