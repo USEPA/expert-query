@@ -33,7 +33,7 @@ export type Content = {
     definitionHtml: string;
   }>;
   parameters: {
-    debounceDelay: number;
+    debounceMilliseconds: number;
   };
 };
 

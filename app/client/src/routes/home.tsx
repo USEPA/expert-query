@@ -1,4 +1,4 @@
-import { throttle } from 'lodash';
+import { debounce } from 'lodash';
 import {
   useCallback,
   useEffect,
@@ -14,7 +14,6 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
-import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
 // components
@@ -44,8 +43,6 @@ import {
 } from 'config';
 // types
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
-import type { GroupBase } from 'react-select';
-import type { AsyncProps } from 'react-select/async';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
 import type { Profile } from 'config/profiles';
 
@@ -309,7 +306,7 @@ function FilterFields({
       switch (fieldConfig.type) {
         case 'multiselect':
         case 'select':
-          const defaultOptions = getInitialOptions(
+          const initialOptions = getInitialOptions(
             staticOptions,
             fieldConfig.key,
             sourceValue,
@@ -318,15 +315,15 @@ function FilterFields({
           if (
             !sourceFieldConfig &&
             fieldConfig.type === 'multiselect' &&
-            Array.isArray(defaultOptions) &&
-            defaultOptions.length <= 5
+            Array.isArray(initialOptions) &&
+            initialOptions.length <= 5
           ) {
             return [
               <Checkboxes
                 key={fieldConfig.key}
                 legend={<b>{fieldConfig.label}</b>}
                 onChange={filterHandlers[fieldConfig.key]}
-                options={defaultOptions}
+                options={initialOptions}
                 selected={filterState[fieldConfig.key] ?? []}
                 styles={['margin-top-3']}
               />,
@@ -336,7 +333,6 @@ function FilterFields({
           const selectProps = {
             defaultOption:
               'default' in fieldConfig ? fieldConfig.default : null,
-            defaultOptions,
             filterHandler: filterHandlers[fieldConfig.key],
             filterKey: fieldConfig.key,
             filterLabel: fieldConfig.label,
@@ -634,7 +630,6 @@ function SelectFilter<
   P extends SingleSelectFilterProps | MultiSelectFilterProps,
 >({
   defaultOption,
-  defaultOptions,
   filterHandler,
   filterKey,
   filterLabel,
@@ -646,6 +641,7 @@ function SelectFilter<
   staticOptions,
 }: P) {
   const { content } = useContentState();
+  const { abort, getSignal } = useAbort();
 
   // Create the filter function from the HOF
   const filterFunc = useMemo(() => {
@@ -668,87 +664,91 @@ function SelectFilter<
     staticOptions,
   ]);
 
-  const loadOptions = useCallback(
+  const [options, setOptions] = useState<readonly Option[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchOptions = useCallback(
     (inputValue: string) => {
-      return filterFunc(inputValue);
+      abort();
+      setLoading(true);
+      return filterFunc(inputValue, getSignal())
+        .then((newOptions) => setOptions(newOptions))
+        .catch((err) => !isAbort(err) && console.error(err))
+        .finally(() => setLoading(false));
     },
-    [filterFunc],
+    [abort, filterFunc, getSignal],
   );
 
-  const debouncedLoadOptions = useMemo(() => {
+  const debouncedFetchOptions = useMemo(() => {
     if (content.status !== 'success') return null;
-    return throttle(loadOptions, content.data.parameters.debounceDelay, {
-      leading: true,
-      trailing: true,
-    });
-  }, [content, loadOptions]);
+    return debounce(
+      fetchOptions,
+      content.data.parameters.debounceMilliseconds,
+      {
+        leading: true,
+        trailing: true,
+      },
+    );
+  }, [content, fetchOptions]);
 
   useEffect(() => {
     return function cleanup() {
-      debouncedLoadOptions?.cancel();
+      debouncedFetchOptions?.cancel();
     };
-  }, [debouncedLoadOptions]);
+  }, [debouncedFetchOptions]);
 
-  // Options that are visible before search text is provided
-  const [initialOptions, setInitialOptions] = useState<
-    readonly Option[] | null
-  >(defaultOptions);
-
-  const loadInitialOptions = useCallback(() => {
-    // Don't debounce initial loads
-    loadOptions('').then((options) => {
-      setInitialOptions(options);
-    });
-  }, [loadOptions]);
+  const loadOptions = (inputValue: string | null = null) =>
+    inputValue === null || !debouncedFetchOptions
+      ? fetchOptions(inputValue ?? '')
+      : debouncedFetchOptions(inputValue);
 
   // Reset default options when `sourceValue` changes
   useEffect(() => {
     if (!sourceValue) return;
-    setInitialOptions(null);
-  }, [loadInitialOptions, sourceValue]);
+    setOptions(null);
+  }, [sourceValue]);
 
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const asyncSelectProps = {
-    'aria-Label': `${filterLabel} input`,
-    className: 'width-full',
-    defaultOptions: initialOptions,
-    inputId: `input-${filterKey}`,
-    isLoading: menuOpen && !initialOptions,
-    isMulti: isMultiOptionField(filterKey),
-    loadOptions: debouncedLoadOptions ?? loadOptions,
-    menuPortalTarget: document.body,
-    onChange: filterHandler,
-    onMenuClose: () => setMenuOpen(false),
-    onMenuOpen: () => {
-      setMenuOpen(true);
-      if (!initialOptions) loadInitialOptions();
-    },
-    placeholder: `Select ${getArticle(
-      filterLabel.split(' ')[0],
-    )} ${filterLabel}...`,
-    styles: {
-      control: (base) => ({
-        ...base,
-        border: '1px solid #adadad',
-        borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
-      }),
-      menuPortal: (base) => ({
-        ...base,
-        zIndex: 9999,
-      }),
-    },
-    value: filterValue,
-  } as AsyncProps<Option, boolean, GroupBase<Option>>;
-
-  return <AsyncSelect {...asyncSelectProps} />;
+  return (
+    <Select
+      aria-label={`${filterLabel} input`}
+      className="width-full"
+      inputId={`input-${filterKey}`}
+      isLoading={loading}
+      isMulti={isMultiOptionField(filterKey)}
+      menuPortalTarget={document.body}
+      onChange={filterHandler}
+      onInputChange={(inputValue, actionMeta) => {
+        if (actionMeta.action !== 'input-change') return;
+        loadOptions(inputValue);
+      }}
+      onMenuOpen={() => {
+        if (!options) loadOptions();
+      }}
+      options={options ?? undefined}
+      placeholder={`Select ${getArticle(
+        filterLabel.split(' ')[0],
+      )} ${filterLabel}...`}
+      styles={{
+        control: (base) => ({
+          ...base,
+          border: '1px solid #adadad',
+          borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
+        }),
+        menuPortal: (base) => ({
+          ...base,
+          zIndex: 9999,
+        }),
+      }}
+      value={filterValue}
+    />
+  );
 }
 
 /*
 ## Hooks
 */
 
-function useAbortSignal() {
+function useAbort() {
   const abortController = useRef(new AbortController());
   const getAbortController = useCallback(() => {
     if (abortController.current.signal.aborted) {
@@ -756,6 +756,10 @@ function useAbortSignal() {
     }
     return abortController.current;
   }, []);
+
+  const abort = useCallback(() => {
+    getAbortController().abort();
+  }, [getAbortController]);
 
   useEffect(() => {
     return function cleanup() {
@@ -768,7 +772,7 @@ function useAbortSignal() {
     [getAbortController],
   );
 
-  return getSignal;
+  return { abort, getSignal };
 }
 
 function useClearConfirmationVisibility() {
@@ -856,11 +860,15 @@ function useFilterState() {
     const newHandlers: Partial<FilterFieldInputHandlers> = {};
     filterFields.forEach((field) => {
       if (isMultiOptionField(field)) {
-        newHandlers[field] = (ev: MultiOptionState) =>
+        newHandlers[field] = (ev: MultiOptionState | SingleOptionState) => {
+          if (!Array.isArray(ev)) return;
           filterDispatch({ type: field, payload: ev } as FilterFieldAction);
+        };
       } else if (isSingleOptionField(field)) {
-        newHandlers[field] = (ev: SingleOptionState) =>
+        newHandlers[field] = (ev: MultiOptionState | SingleOptionState) => {
+          if (Array.isArray(ev)) return;
           filterDispatch({ type: field, payload: ev } as FilterFieldAction);
+        };
       } else if (isSingleValueField(field)) {
         newHandlers[field] = (ev: ChangeEvent<HTMLInputElement>) => {
           filterDispatch({
@@ -939,7 +947,7 @@ function useQueryParams({
   initializeFilters: (state: FilterFieldState) => void;
   staticOptions: StaticOptions | null;
 }) {
-  const getAbortSignal = useAbortSignal();
+  const { getSignal } = useAbort();
 
   const [parameterErrors, setParameterErrors] =
     useState<ParameterErrors | null>(null);
@@ -947,7 +955,7 @@ function useQueryParams({
   // Populate the input fields with URL parameters, if any
   useEffect(() => {
     if (parametersLoaded || !profile || !staticOptions) return;
-    getUrlInputs(staticOptions, profile, getAbortSignal())
+    getUrlInputs(staticOptions, profile, getSignal())
       .then(({ filters, errors }) => {
         initializeFilters(filters);
         if (errors.invalid.size || errors.duplicate.size)
@@ -957,13 +965,7 @@ function useQueryParams({
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setParametersLoaded(true));
-  }, [
-    getAbortSignal,
-    initializeFilters,
-    parametersLoaded,
-    profile,
-    staticOptions,
-  ]);
+  }, [getSignal, initializeFilters, parametersLoaded, profile, staticOptions]);
 
   // Track non-empty values relevant to the current profile
   const [parameters, setParameters] = useState<QueryData>({
@@ -1174,13 +1176,16 @@ function filterDynamicOptions({
   sourceField?: string | null;
   sourceValue?: Primitive | null;
 }) {
-  return async function (inputValue: string): Promise<Array<Option>> {
+  return async function (
+    inputValue: string,
+    signal?: AbortSignal,
+  ): Promise<Array<Option>> {
     let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}&direction=${direction}`;
     if (isNotEmpty(limit)) url += `&limit=${limit}`;
     if (isNotEmpty(sourceField) && isNotEmpty(sourceValue)) {
       url += `&${sourceField}=${sourceValue}`;
     }
-    const values = await getData<Primitive[]>(url);
+    const values = await getData<Primitive[]>(url, signal);
     const options = values.map((value) => ({ label: value, value }));
     return defaultOption ? [defaultOption, ...options] : options;
   };
@@ -1445,6 +1450,11 @@ async function getUrlInputs(
   ]);
 
   return { filters: newState, errors };
+}
+
+function isAbort(error: unknown) {
+  if (!error || typeof error !== 'object' || !('name' in error)) return false;
+  return (error as Error).name === 'AbortError';
 }
 
 // Type narrowing
@@ -1734,9 +1744,9 @@ type FilterFieldActionHandlers = {
 type FilterField = typeof filterFields[number];
 
 type FilterFieldInputHandlers = {
-  [F in Extract<FilterField, MultiOptionField>]: MultiOptionInputHandler;
+  [F in Extract<FilterField, MultiOptionField>]: OptionInputHandler;
 } & {
-  [F in Extract<FilterField, SingleOptionField>]: SingleOptionInputHandler;
+  [F in Extract<FilterField, SingleOptionField>]: OptionInputHandler;
 } & {
   [F in Extract<FilterField, SingleValueField>]: SingleValueInputHandler;
 };
@@ -1786,11 +1796,13 @@ type MultiOptionField = typeof multiOptionFields[number];
 
 type MultiOptionState = ReadonlyArray<Option> | null;
 
-type MultiOptionInputHandler = (ev: MultiOptionState) => void;
-
 type MultiSelectFilterProps = SelectFilterProps<
   Extract<FilterField, MultiOptionField>
 >;
+
+type OptionInputHandler = (
+  option: SingleOptionState | MultiOptionState,
+) => void;
 
 type OptionQueryData = Partial<{
   format: Format;
@@ -1822,7 +1834,6 @@ type SelectFilterProps<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 > = {
   defaultOption?: Option | null;
-  defaultOptions: readonly Option[] | null;
   filterHandler: FilterFieldInputHandlers[F];
   filterKey: F;
   filterLabel: string;
