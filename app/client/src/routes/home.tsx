@@ -1,3 +1,4 @@
+import { throttle } from 'lodash';
 import {
   useCallback,
   useEffect,
@@ -644,28 +645,49 @@ function SelectFilter<
   sourceValue,
   staticOptions,
 }: P) {
-  const loadOptions = useCallback(
-    (inputValue?: string) => {
-      return filterOptions({
-        defaultOption,
-        profile,
-        field: filterKey,
-        sortDirection,
-        staticOptions,
-        sourceField: sourceKey,
-        sourceValue: sourceValue?.value,
-      })(inputValue);
-    },
-    [
+  const { content } = useContentState();
+
+  // Create the filter function from the HOF
+  const filterFunc = useMemo(() => {
+    return filterOptions({
       defaultOption,
-      filterKey,
       profile,
+      field: filterKey,
       sortDirection,
-      sourceKey,
-      sourceValue,
       staticOptions,
-    ],
+      sourceField: sourceKey,
+      sourceValue: sourceValue?.value,
+    });
+  }, [
+    defaultOption,
+    filterKey,
+    profile,
+    sortDirection,
+    sourceKey,
+    sourceValue,
+    staticOptions,
+  ]);
+
+  const loadOptions = useCallback(
+    (inputValue: string) => {
+      return filterFunc(inputValue);
+    },
+    [filterFunc],
   );
+
+  const debouncedLoadOptions = useMemo(() => {
+    if (content.status !== 'success') return null;
+    return throttle(loadOptions, content.data.parameters.debounceDelay, {
+      leading: true,
+      trailing: true,
+    });
+  }, [content, loadOptions]);
+
+  useEffect(() => {
+    return function cleanup() {
+      debouncedLoadOptions?.cancel();
+    };
+  }, [debouncedLoadOptions]);
 
   // Options that are visible before search text is provided
   const [initialOptions, setInitialOptions] = useState<
@@ -673,6 +695,7 @@ function SelectFilter<
   >(defaultOptions);
 
   const loadInitialOptions = useCallback(() => {
+    // Don't debounce initial loads or refreshes
     loadOptions('').then((options) => {
       setInitialOptions(options);
     });
@@ -694,7 +717,7 @@ function SelectFilter<
       if (!initialOptions) loadInitialOptions();
     },
     defaultOptions: initialOptions,
-    loadOptions,
+    loadOptions: debouncedLoadOptions ?? loadOptions,
     menuPortalTarget: document.body,
     placeholder: `Select ${getArticle(
       filterLabel.split(' ')[0],
@@ -1146,7 +1169,7 @@ function filterDynamicOptions({
   sourceField?: string | null;
   sourceValue?: Primitive | null;
 }) {
-  return async function (inputValue = ''): Promise<Array<Option>> {
+  return async function (inputValue: string): Promise<Array<Option>> {
     let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}&direction=${direction}`;
     if (isNotEmpty(limit)) url += `&limit=${limit}`;
     if (isNotEmpty(sourceField) && isNotEmpty(sourceValue)) {
@@ -1203,7 +1226,7 @@ function filterStaticOptions(
 ) {
   const sourceOptions = filterStaticOptionsBySource(options, source);
 
-  return function (inputValue = '') {
+  return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     const matches: Option[] = [];
     sourceOptions.every((option) => {
@@ -1343,7 +1366,7 @@ function getOptions(
   if (options !== null) {
     return Promise.resolve(options);
   } else {
-    return filterDynamicOptions({ profile, fieldName: field })();
+    return filterDynamicOptions({ profile, fieldName: field })('');
   }
 }
 

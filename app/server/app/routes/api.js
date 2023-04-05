@@ -98,6 +98,7 @@ export default function (app) {
       'content/config/services.json',
       'content/alerts/config.json',
       'content-etl/glossary.json',
+      'content/config/parameters.json',
     ];
 
     const filePromises = Promise.all(
@@ -113,6 +114,7 @@ export default function (app) {
           services: data[0],
           alertsConfig: data[1],
           glossary: data[2],
+          parameters: data[3],
         };
       });
 
