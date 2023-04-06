@@ -123,6 +123,7 @@ jobs:
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "PUBLIC_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null
           cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
