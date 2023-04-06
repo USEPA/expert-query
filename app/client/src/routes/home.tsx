@@ -672,9 +672,15 @@ function SelectFilter<
       abort();
       setLoading(true);
       return filterFunc(inputValue, getSignal())
-        .then((newOptions) => setOptions(newOptions))
-        .catch((err) => !isAbort(err) && console.error(err))
-        .finally(() => setLoading(false));
+        .then((newOptions) => {
+          setLoading(false);
+          setOptions(newOptions);
+        })
+        .catch((err) => {
+          if (isAbort(err)) return;
+          setLoading(false);
+          console.error(err);
+        });
     },
     [abort, filterFunc, getSignal],
   );
@@ -720,6 +726,10 @@ function SelectFilter<
       onInputChange={(inputValue, actionMeta) => {
         if (actionMeta.action !== 'input-change') return;
         loadOptions(inputValue);
+      }}
+      onMenuClose={() => {
+        abort();
+        setLoading(false);
       }}
       onMenuOpen={() => {
         if (!options) loadOptions();
