@@ -95,7 +95,9 @@ export function DownloadModal<D extends PostData>({
               <div className="usa-prose">
                 <p>
                   Your query will return{' '}
-                  <strong data-testid="downloadfile-length">{count?.toLocaleString()}</strong>{' '}
+                  <strong data-testid="downloadfile-length">
+                    {count?.toLocaleString()}
+                  </strong>{' '}
                   rows.
                 </p>
                 <p>Click continue to download the data.</p>
@@ -158,6 +160,7 @@ type DownloadModalProps<D extends PostData> = {
 };
 
 type PostData = {
+  columns: string[];
   filters: {
     [field: string]: Primitive | Primitive[];
   };

@@ -76,8 +76,7 @@ export function Home() {
     initializeFilters,
   });
 
-  const eqDataUrl =
-    content.data.services?.eqDataApi || `${serverUrl}/attains`;
+  const eqDataUrl = content.data.services?.eqDataApi || `${serverUrl}/attains`;
 
   if (content.status === 'pending') return <Loading />;
 
@@ -269,6 +268,7 @@ export function QueryBuilder() {
               }?${buildUrlQueryString(
                 queryParams.filters,
                 queryParams.options,
+                queryParams.columns,
               )}`}
             />
             <h4>cURL</h4>
@@ -910,6 +910,7 @@ function useQueryParams({
 
   // Track non-empty values relevant to the current profile
   const [parameters, setParameters] = useState<QueryData>({
+    columns: [],
     filters: {},
     options: {},
   });
@@ -932,9 +933,7 @@ function useQueryParams({
             ? fromIsoDateString(flattenedValue)
             : flattenedValue;
 
-        const profileFields = profiles[profile].fields as readonly string[];
-
-        if (formattedValue && profileFields.includes(field)) {
+        if (formattedValue && isProfileField(field, profile)) {
           newFilterQueryParams[field as FilterField] = formattedValue;
         }
       },
@@ -944,7 +943,11 @@ function useQueryParams({
       window.location.hash = buildUrlQueryString(newFilterQueryParams);
     } else removeHash();
 
-    setParameters({ filters: newFilterQueryParams, options: { format } });
+    setParameters({
+      filters: newFilterQueryParams,
+      options: { format },
+      columns: getOrderedProfileColumns(profile),
+    });
   }, [filterState, format, parametersLoaded, profile]);
 
   return { queryParams: parameters, queryParamErrors: parameterErrors };
@@ -1024,8 +1027,10 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
 function buildUrlQueryString(
   filters: FilterQueryData,
   options?: OptionQueryData,
+  columns?: string[],
 ) {
   const paramsList: UrlQueryParam[] = [];
+  columns?.forEach((column) => paramsList.push(['columns', column]));
   Object.entries({ ...filters, ...options }).forEach(([field, value]) => {
     // Duplicate the query parameter for an array of values
     if (Array.isArray(value)) value.forEach((v) => paramsList.push([field, v]));
@@ -1318,6 +1323,34 @@ function getOptions(
   }
 }
 
+function getOrderedProfileColumns(profile: Profile) {
+  const columns = new Set<string>();
+  const filters = filterGroupsConfig[profile].reduce<string[]>(
+    (current, group) => {
+      return [...current, ...group.fields];
+    },
+    [],
+  );
+  filters.forEach((filter) => {
+    const fieldConfig = filterFieldsConfig.find(
+      (config) => config.key === filter,
+    );
+    if (!fieldConfig) return;
+    if ('source' in fieldConfig) {
+      const sourceConfig = sourceFieldsConfig.find(
+        (config) => config.id === fieldConfig.source,
+      );
+      if (sourceConfig) columns.add(sourceConfig.key);
+    }
+    if ('domain' in fieldConfig) columns.add(fieldConfig.domain);
+    else columns.add(fieldConfig.key);
+  });
+  profiles[profile].columns.forEach((column) => {
+    if (!columns.has(column)) columns.add(column);
+  });
+  return Array.from(columns);
+}
+
 function getPageName() {
   const pathParts = window.location.pathname.split('/');
   return pathParts.length > 1 ? pathParts[1] : '';
@@ -1434,6 +1467,16 @@ function isOption(maybeOption: Option | Primitive): maybeOption is Option {
 // Type narrowing
 function isProfile(maybeProfile: string | Profile): maybeProfile is Profile {
   return maybeProfile in profiles;
+}
+
+function isProfileField(field: string, profile: Profile) {
+  const profileColumns = profiles[profile].columns;
+  const fieldConfig = filterFieldsConfig.find((config) => config.key === field);
+  if (!fieldConfig) return false;
+  if (profileColumns.has(fieldConfig.key)) return true;
+  if ('domain' in fieldConfig && profileColumns.has(fieldConfig.domain))
+    return true;
+  return false;
 }
 
 // Type narrowing
@@ -1558,8 +1601,7 @@ function parseInitialParams(
       if (value instanceof Set) value.add(newValue);
       else uniqueParams[field] = new Set([value, newValue]);
     } else {
-      const profileFields = profiles[profile].fields as readonly string[];
-      if (!profileFields.find((f) => f === field)) {
+      if (!isProfileField(field, profile)) {
         paramErrors.invalid.add(field);
         return;
       }
@@ -1746,6 +1788,7 @@ type ParameterErrors = {
 };
 
 type QueryData = {
+  columns: string[];
   filters: FilterQueryData;
   options: OptionQueryData;
 };
