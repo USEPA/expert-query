@@ -1017,9 +1017,7 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
     associatedActionStatus: values.assessmentUnitStatus,
     associatedActionType: values.actionType,
     parameter: values.parameterName,
-    parameterStateIrCategory: values.stateIrCategory,
     pollutant: values.parameterName,
-    useStateIrCategory: values.stateIrCategory,
   };
 }
 
@@ -1336,18 +1334,20 @@ function getOrderedProfileColumns(profile: Profile) {
       (config) => config.key === filter,
     );
     if (!fieldConfig) return;
+    // Pair column with its "source" column, if applicable
     if ('source' in fieldConfig) {
       const sourceConfig = sourceFieldsConfig.find(
         (config) => config.id === fieldConfig.source,
       );
       if (sourceConfig) columns.add(sourceConfig.key);
     }
+    // If it's a input, add the underlying column
     if ('domain' in fieldConfig) columns.add(fieldConfig.domain);
+    // Otherwise, the key matches the field key
     else columns.add(fieldConfig.key);
   });
-  profiles[profile].columns.forEach((column) => {
-    if (!columns.has(column)) columns.add(column);
-  });
+  // Add unordered columns to the end
+  profiles[profile].columns.forEach((column) => columns.add(column));
   return Array.from(columns);
 }
 
