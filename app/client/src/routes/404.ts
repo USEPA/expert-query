@@ -1,0 +1,25 @@
+import { useEffect } from 'react';
+// config
+import { serverUrl } from 'config';
+
+// --- components ---
+function PageNotFound() {
+  // redirect to the server side 400.html page
+  useEffect(() => {
+    const location = window.location;
+
+    let url = `${serverUrl}/404.html`;
+    if (location.hostname === 'localhost') {
+      url = `${location.protocol}//${location.hostname}:9090/404.html`;
+    }
+
+    // append the original url for tracking purposes
+    url += `?src=${location.href}`;
+
+    window.location.assign(url);
+  }, []);
+
+  return null;
+}
+
+export default PageNotFound;

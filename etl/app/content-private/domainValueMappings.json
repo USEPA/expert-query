@@ -1,0 +1,64 @@
+{
+  "actionAgency": {
+    "domainName": "AgencyCode"
+  },
+  "actionType": {
+    "domainName": "ActionType",
+    "labelField": "code"
+  },
+  "assessmentTypes": {
+    "domainName": "AssessmentTypeCode"
+  },
+  "assessmentUnitStatus": {
+    "domainName": "StatusIndicator"
+  },
+  "delistedReason": {
+    "domainName": "DelistingReasonCode"
+  },
+  "locationTypeCode": {
+    "domainName": "LocationTypeCode"
+  },
+  "organizationId": {
+    "domainName": "OrgStateCode",
+    "labelField": "context",
+    "valueField": "context",
+    "contextField": "context2",
+    "filters": [
+      ["context2", ["EPA", "Test"]],
+      ["context", "TEST_TRIBE_B"]
+    ]
+  },
+  "parameterGroup": {
+    "domainName": "ParameterGroupCodeType"
+  },
+  "parameterName": {
+    "domainName": "ParameterName"
+  },
+  "parameterStatus": {
+    "domainName": "ParameterStatus"
+  },
+  "sourceName": {
+    "domainName": "SourceName"
+  },
+  "sourceType": {
+    "domainName": "PollutantSourceType"
+  },
+  "stateIrCategory": {
+    "domainName": "StateIRCategoryCode"
+  },
+  "useClassName": {
+    "domainName": "UseClassType",
+    "valueField": "name"
+  },
+  "useName": {
+    "domainName": "UseName"
+  },
+  "useSupport": {
+    "domainName": "UseAttainmentCode"
+  },
+  "waterType": {
+    "domainName": "WaterTypeUnitsCode",
+    "labelField": "context",
+    "valueField": "context"
+  }
+}

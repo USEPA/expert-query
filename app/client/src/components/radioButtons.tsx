@@ -1,0 +1,68 @@
+import { uniqueId } from 'lodash';
+import { useState } from 'react';
+// types
+import type { ReactNode } from 'react';
+import type { Option } from 'types';
+
+/*
+## Components
+*/
+
+export function RadioButtons({
+  legend,
+  onChange,
+  options,
+  selected = null,
+  styles = [],
+  tile = false,
+}: RadioButtonsProps) {
+  const [id] = useState(uniqueId('radio-'));
+  return (
+    <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
+      {legend && (
+        <legend className="align-items-center display-flex usa-legend">
+          {legend}
+        </legend>
+      )}
+      {options.map((option) => {
+        return (
+          <div
+            key={option.value.toString()}
+            className="usa-radio"
+            style={{ background: 'inherit' }}
+          >
+            <input
+              className={`usa-radio__input ${tile && 'usa-radio__input--tile'}`}
+              id={`${id}-${option.value}`}
+              type="radio"
+              value={option.value.toString()}
+              checked={option.value === selected?.value}
+              onChange={(_ev) => onChange(option)}
+            />
+            <label
+              className="usa-radio__label"
+              htmlFor={`${id}-${option.value}`}
+            >
+              {option.label}
+            </label>
+          </div>
+        );
+      })}
+    </fieldset>
+  );
+}
+
+/*
+## Types
+*/
+
+type RadioButtonsProps = {
+  legend?: ReactNode;
+  onChange: (selected: RadioOption) => void;
+  options: readonly RadioOption[];
+  selected?: RadioOption | null;
+  styles?: string[];
+  tile?: boolean;
+};
+
+type RadioOption = Option;

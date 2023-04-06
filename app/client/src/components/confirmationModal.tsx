@@ -1,0 +1,95 @@
+import { uniqueId } from 'lodash';
+import { Dialog } from '@reach/dialog';
+import { useState } from 'react';
+import { ReactComponent as Close } from 'uswds/img/usa-icons/close.svg';
+// styles
+import '@reach/dialog/styles.css';
+// types
+import type { ReactNode } from 'react';
+// components
+import { Button } from 'components/button';
+
+/*
+## Components
+*/
+
+export function ConfirmationModal({
+  children,
+  heading,
+  onClose,
+}: ConfirmationModalProps) {
+  const [id] = useState(uniqueId('modal-'));
+
+  return (
+    <Dialog
+      isOpen
+      onDismiss={onClose}
+      className="usa-modal"
+      aria-labelledby={`${id}-heading`}
+      aria-describedby={`${id}-description`}
+    >
+      <div className="usa-modal__content">
+        <div className="usa-modal__main">
+          <h2 className="usa-modal__heading d-flex justify-content-center">
+            {heading}
+          </h2>
+          <>{children}</>
+        </div>
+        <button
+          aria-label="Close this window"
+          className="usa-button usa-modal__close"
+          onClick={onClose}
+          type="button"
+        >
+          <Close
+            aria-hidden
+            className="usa-icon"
+            focusable="false"
+            role="img"
+          />
+        </button>
+      </div>
+    </Dialog>
+  );
+}
+
+export function ConfirmationModalFooter({
+  continueDisabled = false,
+  continueText = 'Continue',
+  onClose,
+  onContinue,
+}: ConfirmationModalFooterProps) {
+  return (
+    <div className="usa-modal__footer">
+      <ul className="flex-justify-center usa-button-group">
+        <li className="usa-button-group__item">
+          <Button children="Cancel" onClick={onClose} />
+        </li>
+        <li className="usa-button-group__item">
+          <Button
+            children={continueText}
+            onClick={onContinue}
+            disabled={continueDisabled}
+          />
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+/*
+## Types
+*/
+
+export type ConfirmationModalProps = {
+  children: ReactNode;
+  heading: string;
+  onClose: () => void;
+};
+
+export type ConfirmationModalFooterProps = {
+  continueDisabled?: boolean;
+  continueText?: string;
+  onClose: () => void;
+  onContinue: () => void;
+};

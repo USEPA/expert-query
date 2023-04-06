@@ -1,0 +1,10 @@
+{
+  "eqDataApi": "",
+  "googleAnalyticsMapping": [
+    {
+      "urlLookup": "eqDataApi",
+      "wildcardUrl": "{urlLookup}*",
+      "name": "expert query - data api"
+    }
+  ]
+}

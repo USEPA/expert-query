@@ -1,0 +1,250 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Staging Deploy
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch    branches: [ staging ]
+  push:
+    branches: [ staging ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  changes:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    environment: staging
+
+    outputs: 
+      workflows: ${{ steps.filter.outputs.workflows }}
+      app: ${{ steps.filter.outputs.app }}
+      etl: ${{ steps.filter.outputs.etl }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:      
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it 
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          base: staging
+          filters: |
+            workflows:
+              - '.github/workflows/staging.yml'
+            app:
+              - 'app/**'
+            etl:
+              - 'etl/**'
+        
+  app:
+    # Check if this folder has any changes
+    needs: changes
+    if: ${{ 
+      needs.changes.outputs.app == 'true' ||  
+      needs.changes.outputs.workflows == 'true' }}
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    environment: staging
+
+    # Set environment variables
+    env:
+      APP_NAME: expert-query-staging
+      CLOUD_SPACE: staging
+      CF_ORG: ${{ secrets.CF_ORG }}
+      CF_SPACE: ${{ secrets.CF_SPACE_STAGING }}
+      CF_USER_STAGING: ${{ secrets.CF_USER_STAGING }}
+      CF_PASSWORD_STAGING: ${{ secrets.CF_PASSWORD_STAGING }}
+      CF_S3_PUB_ACCESS_KEY: ${{ secrets.CF_STAGING_S3_PUB_ACCESS_KEY }}
+      CF_S3_PUB_BUCKET_ID: ${{ secrets.CF_STAGING_S3_PUB_BUCKET_ID }}
+      CF_S3_PUB_REGION: ${{ secrets.CF_STAGING_S3_PUB_REGION }}
+      CF_S3_PUB_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PUB_SECRET_KEY }}
+      DB_POOL_MAX: 20
+      DB_POOL_MIN: 5
+      DB_NAME: ${{ secrets.DB_NAME_STAGING }}
+      DB_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
+      DB_USERNAME: ${{ secrets.EQ_USER_STAGING }}
+      GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
+      SERVER_BASE_PATH: /expertquery
+      SERVER_URL: https://owapps-stage.app.cloud.gov/expertquery
+      STREAM_BATCH_SIZE: 2000
+      STREAM_HIGH_WATER_MARK: 10000
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      
+      # Set up node and npm
+      - uses: actions/setup-node@v3
+      
+      # Run front-end processes (install, lint, test, bundle)
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/client/.npm
+          key: v1-npm-client-deps-${{ hashFiles('**/client/package-lock.json') }}
+          restore-keys: v1-npm-client-deps-
+
+      - name: Install front-end dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: app/client
+
+      - name: Build front-end files and move to server
+        run: |
+          PUBLIC_URL="$SERVER_URL" \
+            REACT_APP_SERVER_BASE_PATH="$SERVER_BASE_PATH" \
+            REACT_APP_CLOUD_SPACE="$CLOUD_SPACE" \
+            npm run build
+          cd build
+          cp -r * ../../server/app/public
+          rm -rf *
+        working-directory: app/client
+
+      # Run CloudFoundry/Cloud.gov deployment
+      - name: Set up Cloud Foundry CLI
+        run: |
+          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v7&source=github'
+          sudo dpkg -i cf-cli_amd64.deb
+          cf -v
+          cf api https://api.fr.cloud.gov
+          cf auth "$CF_USER_STAGING" "$CF_PASSWORD_STAGING"
+          cf target -o "$CF_ORG" -s "$CF_SPACE"
+
+      - name: Set application-level variables
+        run: |
+          cf set-env $APP_NAME "CF_S3_PUB_BUCKET_ID" "$CF_S3_PUB_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_REGION" "$CF_S3_PUB_REGION" > /dev/null
+          cf set-env $APP_NAME "DB_POOL_MAX" "$DB_POOL_MAX" > /dev/null
+          cf set-env $APP_NAME "DB_POOL_MIN" "$DB_POOL_MIN" > /dev/null
+          cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
+          cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
+          cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
+          cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "PUBLIC_URL" "$SERVER_URL" > /dev/null
+          cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null
+          cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
+          cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
+          cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
+          cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
+
+      - name: Configure Public AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ env.CF_S3_PUB_ACCESS_KEY }}
+          aws-secret-access-key: ${{ env.CF_S3_PUB_SECRET_KEY }}
+          aws-region: ${{ env.CF_S3_PUB_REGION }}
+
+      # Sync static content to public S3 bucket
+      - name: Sync static content to S3
+        run: aws s3 sync . s3://$CF_S3_PUB_BUCKET_ID/content
+        working-directory: app/server/app/content
+
+      # Set CORS configuration for public S3 bucket
+      - name: Set public S3 CORS configuration
+        run: aws s3api put-bucket-cors --bucket $CF_S3_PUB_BUCKET_ID --cors-configuration file://s3CORS.json
+        working-directory: app/server/app/config
+
+      # Now that front-end is built in server/dist, only push server dir to Cloud.gov
+      - name: Deploy application to Cloud.gov
+        run: cf push $APP_NAME --strategy rolling -f ../manifest-staging.yml -p . -t 180
+        working-directory: app/server
+
+  etl:
+    # Check if this folder has any changes
+    needs: changes
+    if: ${{ 
+        needs.changes.outputs.etl == 'true' ||  
+        needs.changes.outputs.workflows == 'true' }}
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    environment: staging
+
+    # Set environment variables
+    env:
+      APP_NAME: expert-query-etl-staging
+      CF_ORG: ${{ secrets.CF_ORG }}
+      CF_SPACE: ${{ secrets.CF_SPACE_STAGING }}
+      CF_USER_STAGING: ${{ secrets.CF_USER_STAGING }}
+      CF_PASSWORD_STAGING: ${{ secrets.CF_PASSWORD_STAGING }}
+      CF_S3_PUB_ACCESS_KEY: ${{ secrets.CF_STAGING_S3_PUB_ACCESS_KEY }}
+      CF_S3_PUB_BUCKET_ID: ${{ secrets.CF_STAGING_S3_PUB_BUCKET_ID }}
+      CF_S3_PUB_REGION: ${{ secrets.CF_STAGING_S3_PUB_REGION }}
+      CF_S3_PUB_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PUB_SECRET_KEY }}
+      CF_S3_PRIV_ACCESS_KEY: ${{ secrets.CF_STAGING_S3_PRIV_ACCESS_KEY }}
+      CF_S3_PRIV_BUCKET_ID: ${{ secrets.CF_STAGING_S3_PRIV_BUCKET_ID }}
+      CF_S3_PRIV_REGION: ${{ secrets.CF_STAGING_S3_PRIV_REGION }}
+      CF_S3_PRIV_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PRIV_SECRET_KEY }}
+      DB_NAME: ${{ secrets.DB_NAME_STAGING }}
+      EQ_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
+      EQ_USERNAME: ${{ secrets.EQ_USER_STAGING }}
+      GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
+      MV_API_KEY: ${{ secrets.MV_API_KEY }}
+      STREAM_BATCH_SIZE: 2000
+      STREAM_HIGH_WATER_MARK: 10000
+      STREAM_SERIALLY: ${{ 'false' }}
+      STREAM_SHARED: ${{ 'false' }}
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      
+      # Set up node and npm
+      - uses: actions/setup-node@v3
+
+      # Run CloudFoundry/Cloud.gov deployment
+      - name: Set up Cloud Foundry CLI
+        run: |
+          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v7&source=github'
+          sudo dpkg -i cf-cli_amd64.deb
+          cf -v
+          cf api https://api.fr.cloud.gov
+          cf auth "$CF_USER_STAGING" "$CF_PASSWORD_STAGING"
+          cf target -o "$CF_ORG" -s "$CF_SPACE"
+
+      - name: Set application-level variables
+        run: |
+          cf set-env $APP_NAME "CF_S3_PUB_ACCESS_KEY" "$CF_S3_PUB_ACCESS_KEY" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_BUCKET_ID" "$CF_S3_PUB_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_REGION" "$CF_S3_PUB_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_SECRET_KEY" "$CF_S3_PUB_SECRET_KEY" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_ACCESS_KEY" "$CF_S3_PRIV_ACCESS_KEY" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_BUCKET_ID" "$CF_S3_PRIV_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_REGION" "$CF_S3_PRIV_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_SECRET_KEY" "$CF_S3_PRIV_SECRET_KEY" > /dev/null
+          cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
+          cf set-env $APP_NAME "EQ_USERNAME" "$EQ_USERNAME" > /dev/null
+          cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
+          cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "MV_API_KEY" "$MV_API_KEY" > /dev/null
+          cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
+          cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
+          cf set-env $APP_NAME "STREAM_SERIALLY" "$STREAM_SERIALLY" > /dev/null
+          cf set-env $APP_NAME "STREAM_SHARED" "$STREAM_SHARED" > /dev/null
+          cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
+
+      - name: Configure Private AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ env.CF_S3_PRIV_ACCESS_KEY }}
+          aws-secret-access-key: ${{ env.CF_S3_PRIV_SECRET_KEY }}
+          aws-region: ${{ env.CF_S3_PRIV_REGION }}
+
+      # Sync private static content to private S3 bucket
+      - name: Sync private static content to S3
+        run: aws s3 sync . s3://$CF_S3_PRIV_BUCKET_ID/content-private
+        working-directory: etl/app/content-private
+
+      # Set CORS configuration for private S3 bucket
+      - name: Set private S3 CORS configuration
+        run: aws s3api put-bucket-cors --bucket $CF_S3_PRIV_BUCKET_ID --cors-configuration file://s3CORS.json
+        working-directory: etl/app/config
+
+      # Now that front-end is built in server/dist, only push server dir to Cloud.gov
+      - name: Deploy application to Cloud.gov
+        run: cf push $APP_NAME --strategy rolling -f manifest-staging.yml -p . -t 180
+        working-directory: etl

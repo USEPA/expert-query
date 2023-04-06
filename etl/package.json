@@ -1,0 +1,76 @@
+{
+  "name": "expert-query-etl",
+  "version": "1.0.0",
+  "description": "The ‘Expert Query’ ETL application is used to load data from ATTAINS (Oracle) into the ‘Expert Query’ Postgres DB.",
+  "keywords": [
+    "Expert Query",
+    "ATTAINS",
+    "ETL"
+  ],
+  "homepage": "https://github.com/Eastern-Research-Group/expert-query",
+  "bugs": {
+    "url": "https://github.com/Eastern-Research-Group/expert-query/issues"
+  },
+  "license": "CC0-1.0",
+  "author": "USEPA (https://www.epa.gov)",
+  "contributors": [
+    "Brad Cooper <brad.cooper@erg.com>",
+    "Caleb Schwind <caleb.schwind@erg.com",
+    "Max Diebold <max.diebold@erg.com>"
+  ],
+  "engines": {
+    "node": "18.x"
+  },
+  "repository": "github:USEPA/expert-query",
+  "scripts": {
+    "etl_all": "node -r dotenv/config --inspect app/tasks/etlAll.js dotenv_config_path=./.env.local",
+    "etl_database": "node -r dotenv/config --inspect app/tasks/etlDatabase.js dotenv_config_path=./.env.local",
+    "etl_domain_values": "node -r dotenv/config --inspect app/tasks/etlDomainValues.js dotenv_config_path=./.env.local",
+    "etl_glossary": "node -r dotenv/config --inspect app/tasks/etlGlossary.js dotenv_config_path=./.env.local",
+    "etl_national_downloads": "node -r dotenv/config --inspect app/tasks/etlNationalDownloads.js dotenv_config_path=./.env.local",
+    "start": "npm run start_local_cmd",
+    "start_local_cmd": "cross-env nodemon -r dotenv/config --ignore 'app/tests' --inspect app/index.js dotenv_config_path=.env.local",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "dependencies": {
+    "aws-sdk": "2.1232.0",
+    "axios": "1.1.3",
+    "dotenv": "16.0.3",
+    "exceljs": "4.3.0",
+    "express": "4.18.2",
+    "log4js": "6.7.0",
+    "node-cron": "3.0.2",
+    "papaparse": "5.3.2",
+    "pg": "8.8.0",
+    "pg-promise": "10.14.0",
+    "pg-query-stream": "4.2.4"
+  },
+  "devDependencies": {
+    "browser-sync": "2.27.10",
+    "cross-env": "7.0.3",
+    "eslint": "8.25.0",
+    "husky": "8.0.1",
+    "lint-staged": "13.0.3",
+    "nodemon": "2.0.20",
+    "prettier": "2.7.1"
+  },
+  "lint-staged": {
+    "linters": {
+      "app/**/*.{js,jsx,json,css}": [
+        "prettier --write",
+        "git add"
+      ]
+    },
+    "ignore": [
+      "app/css/epa/*.css",
+      "app/css/lib/*.css",
+      "app/js/lib/*.js"
+    ]
+  },
+  "type": "module"
+}
