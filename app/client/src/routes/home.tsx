@@ -1341,7 +1341,7 @@ function getOrderedProfileColumns(profile: Profile) {
       );
       if (sourceConfig) columns.add(sourceConfig.key);
     }
-    // If it's a input, add the underlying column
+    // If it's a range input, add the underlying column
     if ('domain' in fieldConfig) columns.add(fieldConfig.domain);
     // Otherwise, the key matches the field key
     else columns.add(fieldConfig.key);
