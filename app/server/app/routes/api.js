@@ -84,7 +84,7 @@ async function queryColumnValues(profile, column, params, schema) {
   return await query;
 }
 
-export default function (app) {
+export default function (app, basePath) {
   const router = express.Router();
 
   router.use(getActiveSchema);
@@ -235,5 +235,5 @@ export default function (app) {
       });
   });
 
-  app.use('/api', router);
+  app.use(`${basePath}api`, router);
 }

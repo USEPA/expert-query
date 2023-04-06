@@ -302,7 +302,7 @@ function executeQueryCountOnly(profile, req, res) {
   }
 }
 
-export default function (app) {
+export default function (app, basePath) {
   const router = express.Router();
 
   router.use(getActiveSchema);
@@ -333,5 +333,5 @@ export default function (app) {
     );
   });
 
-  app.use('/attains/data', router);
+  app.use(`${basePath}attains/data`, router);
 }

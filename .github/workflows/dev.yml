@@ -67,7 +67,8 @@ jobs:
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       DB_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
-      SERVER_URL: https://expert-query-dev.app.cloud.gov/
+      SERVER_BASE_PATH: /expertquery
+      SERVER_URL: https://owapps-dev.app.cloud.gov/expertquery
       STREAM_BATCH_SIZE: 2000
       STREAM_HIGH_WATER_MARK: 10000
 
@@ -94,6 +95,7 @@ jobs:
       - name: Build front-end files and move to server
         run: |
           PUBLIC_URL="$SERVER_URL" \
+            REACT_APP_SERVER_BASE_PATH="$SERVER_BASE_PATH" \
             REACT_APP_CLOUD_SPACE="$CLOUD_SPACE" \
             npm run build
           cd build
@@ -121,6 +123,8 @@ jobs:
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null
+          cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
           cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null

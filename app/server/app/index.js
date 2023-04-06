@@ -85,7 +85,7 @@ if (!isLocal && !isDevelopment && !isStaging)
  Required Environment Variables
 ****************************************************************/
 // initialize to common variables
-const requiredEnvVars = ['DB_NAME', 'DB_USERNAME', 'DB_PASSWORD'];
+const requiredEnvVars = ['DB_NAME', 'DB_USERNAME', 'DB_PASSWORD', 'SERVER_URL'];
 
 if (isLocal) {
   requiredEnvVars.push('DB_HOST');
@@ -107,14 +107,23 @@ requiredEnvVars.forEach((envVar) => {
 /****************************************************************
  Setup server and routes
 ****************************************************************/
-// serve static assets normally
-app.use(express.static(__dirname + '/public'));
-
 // parse json in body of post requests
 app.use(express.json());
 
+// If SERVER_BASE_PATH is provided, serve routes and static files from there (e.g. /csb)
+const basePath = `${process.env.SERVER_BASE_PATH || ''}/`;
+
 // setup server routes
-routes(app);
+routes(app, basePath);
+
+// Use regex to add trailing slash on static requests (required when using sub path)
+const pathRegex = new RegExp(`^\\${process.env.SERVER_BASE_PATH || ''}$`);
+app.all(pathRegex, (req, res) => res.redirect(`${basePath}`));
+
+// Serve client app's static built files
+// NOTE: client app's `build` directory contents copied into server app's
+// `public` directory in CI/CD step
+app.use(basePath, express.static(path.join(__dirname, 'public')));
 
 // setup client routes (built React app)
 app.get('*', function (req, res) {
