@@ -120,9 +120,11 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   if (countOnly) query.count();
   else {
     // filter down to requested columns, if the user provided that option
-    const columnsToReturn = profile.columns.filter(
-      (col) => queryParams.columns && queryParams.columns.includes(col.alias),
-    );
+    const columnsToReturn = [];
+    queryParams.columns?.forEach((col) => {
+      const profileCol = profile.columns.find((pc) => pc.alias === col);
+      if (profileCol) columnsToReturn.push(profileCol);
+    });
 
     // build the select query
     const selectColumns =
