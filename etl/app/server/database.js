@@ -81,6 +81,20 @@ export async function checkLogTables() {
   // Ensure the log tables exist; if not, create them
   try {
     await client.query('BEGIN');
+
+    if (!environment.isLocal) {
+      // create aws_s3 extension, used for pulling in data from S3
+      await client.query(
+        'CREATE EXTENSION IF NOT EXISTS aws_s3 WITH SCHEMA pg_catalog CASCADE',
+      );
+    }
+
+    // create the pg_trgm extension, used for creating gin indexes used
+    // for fast ILIKE queries
+    await client.query(
+      'CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA pg_catalog',
+    );
+
     await client.query('CREATE SCHEMA IF NOT EXISTS logging');
     await client.query(
       `CREATE TABLE IF NOT EXISTS logging.etl_log
@@ -584,6 +598,13 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
         (${column.name} ${collate} ${sortOrder} NULLS LAST)
         TABLESPACE pg_default
     `);
+
+    if (column.includeGinIndex) {
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS ${indexTableName}_${column.name}_${sortOrder}_gin
+          ON ${tableName} USING gin (${column.name} gin_trgm_ops);
+      `);
+    }
   }
 }
 
