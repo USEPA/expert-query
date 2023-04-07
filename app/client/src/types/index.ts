@@ -14,9 +14,7 @@ export type AliasedField =
   | 'associatedActionStatus'
   | 'associatedActionType'
   | 'parameter'
-  | 'parameterStateIrCategory'
-  | 'pollutant'
-  | 'useStateIrCategory';
+  | 'pollutant';
 
 export type AliasedOptions = {
   [key in AliasedField]: Array<Option>;
