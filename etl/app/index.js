@@ -7,19 +7,6 @@ import * as database from './server/database.js';
 import { log } from './server/utilities/logger.js';
 import { getEnvironment } from './server/utilities/environment.js';
 
-async function poll(fn, ms) {
-  while (true) {
-    await fn();
-    await wait(ms);
-  }
-}
-
-function wait(ms = 1000) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
 const app = express();
 app.disable('x-powered-by');
 
@@ -60,6 +47,8 @@ app.on('ready', async () => {
   app.listen(port, () => {
     log.info(`Expert Query ETL app listening on port ${port}!`);
   });
+
+  database.checkForServerCrash();
 
   // When running locally, just etl everything and exit.
   // All other environments, schedule the etl.
@@ -108,11 +97,14 @@ app.on('ready', async () => {
 
     // Poll the private ETL S3 bucket. Run the etl process when new data
     // becomes available
-    poll(
+    cron.schedule(
+      '*/15 * * * *',
       async () => {
         await etlJob();
       },
-      15 * 60 * 1000, // run every 15 minutes
+      {
+        scheduled: true,
+      },
     );
   }
 });
