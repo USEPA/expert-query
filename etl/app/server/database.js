@@ -587,23 +587,43 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
   if (overrideWorkMemory)
     await client.query(`SET maintenance_work_mem TO '${overrideWorkMemory}'`);
 
+  // count the total number of indexes needed (for logging status)
+  let indexCount = 0;
+  table.columns.forEach((col) => {
+    if (col.skipIndex) return;
+
+    indexCount += 1;
+    if (col.includeGinIndex) indexCount += 1;
+  });
+
+  let count = 0;
   for (const column of table.columns) {
     if (column.skipIndex) continue;
 
     const sortOrder = column.indexOrder || 'asc';
     const collate = column.type ? '' : 'COLLATE pg_catalog."default"';
+    const indexName = `${indexTableName}_${column.name}_${sortOrder}`;
+
     await client.query(`
-      CREATE INDEX IF NOT EXISTS ${indexTableName}_${column.name}_${sortOrder}
+      CREATE INDEX IF NOT EXISTS ${indexName}
         ON ${tableName} USING btree
         (${column.name} ${collate} ${sortOrder} NULLS LAST)
         TABLESPACE pg_default
     `);
+    count += 1;
+    log.info(
+      `${tableName}: Created index (${count} of ${indexCount}): ${indexName}`,
+    );
 
     if (column.includeGinIndex) {
       await client.query(`
-        CREATE INDEX IF NOT EXISTS ${indexTableName}_${column.name}_${sortOrder}_gin
+        CREATE INDEX IF NOT EXISTS ${indexName}_gin
           ON ${tableName} USING gin (${column.name} gin_trgm_ops);
       `);
+      count += 1;
+      log.info(
+        `${tableName}: Created index (${count} of ${indexCount}): ${indexName}_gin`,
+      );
     }
   }
 }
@@ -688,8 +708,6 @@ function getProfileEtl(
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
     }
-
-    log.info(`Table ${tableName} load success`);
   };
 }
 
