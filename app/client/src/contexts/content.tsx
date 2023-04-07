@@ -32,6 +32,9 @@ export type Content = {
     definition: string;
     definitionHtml: string;
   }>;
+  parameters: {
+    debounceMilliseconds: number;
+  };
 };
 
 type State = {
@@ -66,18 +69,11 @@ function reducer(state: State, action: Action): State {
     }
 
     case 'FETCH_CONTENT_SUCCESS': {
-      const { services, alertsConfig, domainValues, glossary } = action.payload;
-
       return {
         ...state,
         content: {
           status: 'success',
-          data: {
-            services,
-            alertsConfig,
-            domainValues,
-            glossary,
-          },
+          data: action.payload,
         },
       };
     }
