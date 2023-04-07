@@ -51,3 +51,4 @@ database/docker/server/postgres/data/
 
 # EQ ETL Bucket
 app/server/app/content-etl/
+app/server/app/national-downloads/

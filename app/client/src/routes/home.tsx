@@ -1,12 +1,5 @@
 import { debounce } from 'lodash';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
   Outlet,
   useNavigate,
@@ -16,6 +9,7 @@ import {
 import Select from 'react-select';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
+import { ReactComponent as Folder } from 'uswds/img/usa-icons/folder.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -41,8 +35,17 @@ import {
   profiles,
   serverUrl,
 } from 'config';
+// utils
+import { isAbort, useAbort } from 'utils';
 // types
-import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import type {
+  ChangeEvent,
+  Dispatch,
+  FunctionComponent,
+  MouseEvent,
+  SetStateAction,
+  SVGProps,
+} from 'react';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
 import type { Profile } from 'config/profiles';
 
@@ -53,6 +56,8 @@ import type { Profile } from 'config/profiles';
 export default Home;
 
 export function Home() {
+  const navigate = useNavigate();
+
   const { content } = useContentState();
 
   const staticOptions = useStaticOptions(content);
@@ -89,22 +94,20 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <button
-          title="Glossary"
-          className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
-          style={{ cursor: 'pointer' }}
-          type="button"
-        >
-          <Book
-            aria-hidden="true"
-            className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
-            focusable="false"
-            role="img"
-          />
-          <span className="font-ui-md text-bold text-primary">Glossary</span>
-        </button>
+        <NavButton
+          label="Glossary"
+          icon={Book}
+          styles={['js-glossary-toggle']}
+        />
+        <NavButton
+          label="National Downloads"
+          icon={Folder}
+          onClick={() => navigate('/national-downloads')}
+        />
         <GlossaryPanel path={getPageName()} />
         <div>
+          <h2>Query ATTAINS Data</h2>
+          <hr />
           <ParameterErrorAlert parameters={queryParamErrors} />
           <Intro />
           {staticOptions && (
@@ -513,6 +516,46 @@ function Intro() {
   );
 }
 
+function NavButton({
+  icon,
+  label,
+  onClick = () => {},
+  styles = [],
+}: NavButtonProps) {
+  const buttonStyles = [
+    'margin-bottom-2',
+    'bg-white',
+    'border-2px',
+    'border-transparent',
+    'padding-1',
+    'radius-md',
+    'width-auto',
+    'hover:bg-white',
+    'hover:border-primary',
+    ...styles,
+  ].join(' ');
+
+  const Icon = icon;
+
+  return (
+    <button
+      title={label}
+      className={buttonStyles}
+      onClick={onClick}
+      style={{ cursor: 'pointer' }}
+      type="button"
+    >
+      <Icon
+        aria-hidden="true"
+        className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
+        focusable="false"
+        role="img"
+      />
+      <span className="font-ui-md text-bold text-primary">{label}</span>
+    </button>
+  );
+}
+
 function ParameterErrorAlert({
   parameters,
 }: {
@@ -758,33 +801,6 @@ function SelectFilter<
 /*
 ## Hooks
 */
-
-function useAbort() {
-  const abortController = useRef(new AbortController());
-  const getAbortController = useCallback(() => {
-    if (abortController.current.signal.aborted) {
-      abortController.current = new AbortController();
-    }
-    return abortController.current;
-  }, []);
-
-  const abort = useCallback(() => {
-    getAbortController().abort();
-  }, [getAbortController]);
-
-  useEffect(() => {
-    return function cleanup() {
-      abortController.current.abort();
-    };
-  }, [getAbortController]);
-
-  const getSignal = useCallback(
-    () => getAbortController().signal,
-    [getAbortController],
-  );
-
-  return { abort, getSignal };
-}
 
 function useClearConfirmationVisibility() {
   const [clearConfirmationVisible, setClearConfirmationVisible] =
@@ -1496,11 +1512,6 @@ async function getUrlInputs(
   return { filters: newState, errors };
 }
 
-function isAbort(error: unknown) {
-  if (!error || typeof error !== 'object' || !('name' in error)) return false;
-  return (error as Error).name === 'AbortError';
-}
-
 // Type narrowing
 function isDateField(field: string): field is DateField {
   return (dateFields as string[]).includes(field);
@@ -1852,6 +1863,13 @@ type MultiOptionState = ReadonlyArray<Option> | null;
 type MultiSelectFilterProps = SelectFilterProps<
   Extract<FilterField, MultiOptionField>
 >;
+
+type NavButtonProps = {
+  icon: FunctionComponent<SVGProps<SVGSVGElement>>;
+  label: string;
+  onClick?: (ev: MouseEvent) => void;
+  styles?: string[];
+};
 
 type OptionInputHandler = (
   option: SingleOptionState | MultiOptionState,
