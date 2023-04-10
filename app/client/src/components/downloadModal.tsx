@@ -17,7 +17,6 @@ import type { FetchState, Primitive, Status } from 'types';
 
 export function DownloadModal<D extends PostData>({
   dataId,
-  disabled = false,
   downloadStatus,
   filename,
   maxCount = Infinity,
@@ -34,7 +33,6 @@ export function DownloadModal<D extends PostData>({
   // Get the row count for the current query
   useEffect(() => {
     if (!queryUrl) return;
-    if (disabled) return;
 
     const countUrl = `${queryUrl}/count`;
     setCount({ status: 'pending', data: null });
@@ -46,7 +44,7 @@ export function DownloadModal<D extends PostData>({
         console.error(err);
         setCount({ status: 'failure', data: null });
       });
-  }, [disabled, queryData, queryUrl]);
+  }, [queryData, queryUrl]);
 
   // Retrieve the requested data in the specified format
   const executeQuery = useCallback(() => {
@@ -85,63 +83,68 @@ export function DownloadModal<D extends PostData>({
       <div className="usa-modal__content">
         <div className="usa-modal__main">
           <h2 className="usa-modal__heading">Download Status</h2>
-          {disabled ? (
-            <CountExceededContent dataId={dataId} />
-          ) : (
+          {count.status === 'pending' && (
+            <div className="usa-prose">
+              <p>Validating query, please wait...</p>
+            </div>
+          )}
+          {count.status === 'failure' && (
+            <Alert type="error">
+              The specified query could not be executed at this time.
+            </Alert>
+          )}
+          {count.status === 'success' && (
             <>
-              {count.status === 'pending' && (
-                <div className="usa-prose">
-                  <p>Validating query, please wait...</p>
-                </div>
-              )}
-              {count.status === 'failure' && (
-                <Alert type="error">
-                  The specified query could not be executed at this time.
+              {count.data > maxCount ? (
+                <Alert type="warning">
+                  <p>The current query exceeds the maximum query size.</p>{' '}
+                  <p>
+                    Please refine the search or visit the{' '}
+                    <a
+                      href={`/national-downloads${dataId ? '#' + dataId : ''}`}
+                    >
+                      National Downloads
+                    </a>{' '}
+                    page to download a compressed dataset.
+                  </p>
                 </Alert>
-              )}
-              {count.status === 'success' && (
+              ) : (
                 <>
-                  {count.data > maxCount ? (
-                    <CountExceededContent dataId={dataId} />
-                  ) : (
-                    <>
-                      <div className="usa-prose">
-                        <p>
-                          Your query will return{' '}
-                          <strong data-testid="downloadfile-length">
-                            {count.data.toLocaleString()}
-                          </strong>{' '}
-                          rows.
-                        </p>
-                        <p>Click continue to download the data.</p>
-                      </div>
-                      <div className="usa-modal__footer">
-                        <ul className="flex-justify-center usa-button-group">
-                          <li className="usa-button-group__item">
-                            <button
-                              type="button"
-                              className="usa-button"
-                              onClick={onClose}
-                            >
-                              Cancel
-                            </button>
-                          </li>
-                          <li className="usa-button-group__item">
-                            <button
-                              className="usa-button"
-                              disabled={count.data === 0}
-                              onClick={executeQuery}
-                              type="button"
-                            >
-                              {downloadStatus === 'pending'
-                                ? 'Working...'
-                                : 'Continue'}
-                            </button>
-                          </li>
-                        </ul>
-                      </div>
-                    </>
-                  )}
+                  <div className="usa-prose">
+                    <p>
+                      Your query will return{' '}
+                      <strong data-testid="downloadfile-length">
+                        {count.data.toLocaleString()}
+                      </strong>{' '}
+                      rows.
+                    </p>
+                    <p>Click continue to download the data.</p>
+                  </div>
+                  <div className="usa-modal__footer">
+                    <ul className="flex-justify-center usa-button-group">
+                      <li className="usa-button-group__item">
+                        <button
+                          type="button"
+                          className="usa-button"
+                          onClick={onClose}
+                        >
+                          Cancel
+                        </button>
+                      </li>
+                      <li className="usa-button-group__item">
+                        <button
+                          className="usa-button"
+                          disabled={count.data === 0}
+                          onClick={executeQuery}
+                          type="button"
+                        >
+                          {downloadStatus === 'pending'
+                            ? 'Working...'
+                            : 'Continue'}
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
                 </>
               )}
             </>
@@ -165,28 +168,12 @@ export function DownloadModal<D extends PostData>({
   );
 }
 
-function CountExceededContent({ dataId }: { dataId?: string }) {
-  return (
-    <Alert type="warning">
-      <p>The current query exceeds the maximum query size.</p>{' '}
-      <p>
-        Please refine the search or visit the{' '}
-        <a href={`/national-downloads${dataId ? '#' + dataId : ''}`}>
-          National Downloads
-        </a>{' '}
-        page to download a compressed dataset.
-      </p>
-    </Alert>
-  );
-}
-
 /*
 ## Types
 */
 
 type DownloadModalProps<D extends PostData> = {
   dataId?: string;
-  disabled?: boolean;
   downloadStatus: Status;
   filename: string | null;
   maxCount?: number;

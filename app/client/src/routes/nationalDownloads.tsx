@@ -96,23 +96,25 @@ function AttainsData({ metadata }: AttainsDataProps) {
           </tr>
         </thead>
         <tbody>
-          {Object.entries(metadata.data.files).map(([profile, fileInfo]) => (
-            <tr key={profile}>
-              <th scope="row">
-                <a href={fileInfo.url}>
-                  {profiles[profile as Profile].label} Profile Data
-                  <Exit
-                    aria-hidden="true"
-                    className="height-2 margin-left-05 text-primary top-05 usa-icon width-2"
-                    focusable="false"
-                    role="img"
-                    title="Exit EPA's Website"
-                  />
-                </a>
-              </th>
-              <td>{formatBytes(fileInfo.size)}</td>
-            </tr>
-          ))}
+          {Object.entries(metadata.data.files)
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([profile, fileInfo]) => (
+              <tr key={profile}>
+                <th scope="row">
+                  <a href={fileInfo.url}>
+                    {profiles[profile as Profile].label} Profile Data
+                    <Exit
+                      aria-hidden="true"
+                      className="height-2 margin-left-05 text-primary top-05 usa-icon width-2"
+                      focusable="false"
+                      role="img"
+                      title="Exit EPA's Website"
+                    />
+                  </a>
+                </th>
+                <td>{formatBytes(fileInfo.size)}</td>
+              </tr>
+            ))}
         </tbody>
       </table>
     );

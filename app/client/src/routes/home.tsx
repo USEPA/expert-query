@@ -179,10 +179,6 @@ export function QueryBuilder() {
       {downloadConfirmationVisible && (
         <DownloadModal
           dataId="attains"
-          disabled={
-            !profiles[profile].columns.has('reportingCycle') &&
-            Object.keys(queryParams.filters).length === 0
-          }
           filename={profile && format ? `${profile}.${format.value}` : null}
           downloadStatus={downloadStatus}
           maxCount={maxQuerySize}
