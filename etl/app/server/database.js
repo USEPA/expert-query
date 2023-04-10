@@ -81,6 +81,20 @@ export async function checkLogTables() {
   // Ensure the log tables exist; if not, create them
   try {
     await client.query('BEGIN');
+
+    if (!environment.isLocal) {
+      // create aws_s3 extension, used for pulling in data from S3
+      await client.query(
+        'CREATE EXTENSION IF NOT EXISTS aws_s3 WITH SCHEMA pg_catalog CASCADE',
+      );
+    }
+
+    // create the pg_trgm extension, used for creating gin indexes used
+    // for fast ILIKE queries
+    await client.query(
+      'CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA pg_catalog',
+    );
+
     await client.query('CREATE SCHEMA IF NOT EXISTS logging');
     await client.query(
       `CREATE TABLE IF NOT EXISTS logging.etl_log
@@ -573,17 +587,44 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
   if (overrideWorkMemory)
     await client.query(`SET maintenance_work_mem TO '${overrideWorkMemory}'`);
 
+  // count the total number of indexes needed (for logging status)
+  let indexCount = 0;
+  table.columns.forEach((col) => {
+    if (col.skipIndex) return;
+
+    indexCount += 1;
+    if (col.includeGinIndex) indexCount += 1;
+  });
+
+  let count = 0;
   for (const column of table.columns) {
     if (column.skipIndex) continue;
 
     const sortOrder = column.indexOrder || 'asc';
     const collate = column.type ? '' : 'COLLATE pg_catalog."default"';
+    const indexName = `${indexTableName}_${column.name}_${sortOrder}`;
+
     await client.query(`
-      CREATE INDEX IF NOT EXISTS ${indexTableName}_${column.name}_${sortOrder}
+      CREATE INDEX IF NOT EXISTS ${indexName}
         ON ${tableName} USING btree
         (${column.name} ${collate} ${sortOrder} NULLS LAST)
         TABLESPACE pg_default
     `);
+    count += 1;
+    log.info(
+      `${tableName}: Created index (${count} of ${indexCount}): ${indexName}`,
+    );
+
+    if (column.includeGinIndex) {
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS ${indexName}_gin
+          ON ${tableName} USING gin (${column.name} gin_trgm_ops);
+      `);
+      count += 1;
+      log.info(
+        `${tableName}: Created index (${count} of ${indexCount}): ${indexName}_gin`,
+      );
+    }
   }
 }
 
@@ -667,8 +708,6 @@ function getProfileEtl(
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
     }
-
-    log.info(`Table ${tableName} load success`);
   };
 }
 
