@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ReactComponent as Exit } from 'uswds/img/usa-icons/launch.svg';
+import { ReactComponent as Home } from 'uswds/img/usa-icons/home.svg';
 // components
+import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
+import { NavButton } from 'components/navButton';
 import { Summary } from 'components/summary';
 // config
 import { getData, profiles, serverUrl } from 'config';
@@ -18,6 +23,7 @@ export default NationalDownloads;
 
 export function NationalDownloads() {
   const { getSignal } = useAbort();
+  const navigate = useNavigate();
 
   const [metadata, setMetadata] = useState<FetchState<Metadata>>({
     status: 'idle',
@@ -37,18 +43,27 @@ export function NationalDownloads() {
 
   return (
     <>
-      <h2>National Downloads</h2>
-      {/* page links? */}
-      <hr />
-      <Summary heading="Description">
-        <></>
-      </Summary>
-      <section className="margin-top-6">
-        <h3 id="attains" className="text-primary">
-          ATTAINS Data
-        </h3>
-        <AttainsData metadata={metadata} />
-      </section>
+      <NavButton label="Home" icon={Home} onClick={() => navigate('/')} />
+      <div>
+        <h2>National Downloads</h2>
+        <ul className="usa-list">
+          <li>
+            <a href="#attains">ATTAINS Data</a>
+          </li>
+        </ul>
+        <hr />
+        <Summary heading="Description">
+          <p>
+            Datasets provided on this page are available as prepackaged national
+            downloads. They are produced and periodically updated by EPA using
+            state-submitted data.
+          </p>
+        </Summary>
+        <section className="margin-top-6" id="attains">
+          <h3 className="text-primary">ATTAINS Data</h3>
+          <AttainsData metadata={metadata} />
+        </section>
+      </div>
     </>
   );
 }
@@ -60,14 +75,20 @@ type AttainsDataProps = {
 function AttainsData({ metadata }: AttainsDataProps) {
   const status = metadata.status;
 
-  if (status === 'failure') return <></>;
+  if (status === 'failure')
+    return (
+      <Alert type="error">
+        There was an error retrieving ATTAINS national data, please try again
+        later.
+      </Alert>
+    );
 
   if (status === 'pending') return <Loading />;
 
   if (status === 'success')
     return (
       <table className="margin-x-auto usa-table usa-table--borderless width-full maxw-tablet-lg">
-        <caption>Extracted on {metadata.data.julianDate}</caption>
+        <caption>Extracted on {formatDate(metadata.data.epochSeconds)}</caption>
         <thead>
           <tr>
             <th scope="col">Download link</th>
@@ -78,7 +99,16 @@ function AttainsData({ metadata }: AttainsDataProps) {
           {Object.entries(metadata.data.files).map(([profile, fileInfo]) => (
             <tr key={profile}>
               <th scope="row">
-                <a href={fileInfo.url}>{profiles[profile as Profile].label}</a>
+                <a href={fileInfo.url}>
+                  {profiles[profile as Profile].label} Profile Data
+                  <Exit
+                    aria-hidden="true"
+                    className="height-2 margin-left-05 text-primary top-05 usa-icon width-2"
+                    focusable="false"
+                    role="img"
+                    title="Exit EPA's Website"
+                  />
+                </a>
               </th>
               <td>{formatBytes(fileInfo.size)}</td>
             </tr>
@@ -99,21 +129,16 @@ function formatBytes(bytes: number, decimals = 2) {
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = [
-    'Bytes',
-    'KiB',
-    'MiB',
-    'GiB',
-    'TiB',
-    'PiB',
-    'EiB',
-    'ZiB',
-    'YiB',
-  ];
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+function formatDate(seconds: number) {
+  const date = new Date(seconds * 1000);
+  return date.toDateString();
 }
 
 /*
@@ -121,7 +146,7 @@ function formatBytes(bytes: number, decimals = 2) {
 */
 
 type Metadata = {
-  julianDate: number;
+  epochSeconds: number;
   files: Partial<{
     [P in Profile]: {
       url: string;

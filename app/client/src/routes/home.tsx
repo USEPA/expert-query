@@ -21,6 +21,7 @@ import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
+import { NavButton } from 'components/navButton';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -38,14 +39,7 @@ import {
 // utils
 import { isAbort, useAbort } from 'utils';
 // types
-import type {
-  ChangeEvent,
-  Dispatch,
-  FunctionComponent,
-  MouseEvent,
-  SetStateAction,
-  SVGProps,
-} from 'react';
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
 import type { Profile } from 'config/profiles';
 
@@ -97,7 +91,7 @@ export function Home() {
         <NavButton
           label="Glossary"
           icon={Book}
-          styles={['js-glossary-toggle']}
+          styles={['js-glossary-toggle', 'margin-right-05']}
         />
         <NavButton
           label="National Downloads"
@@ -129,6 +123,7 @@ export function Home() {
                     filterState,
                     format,
                     formatHandler,
+                    maxQuerySize: content.data.parameters.maxQuerySize,
                     profile,
                     queryParams,
                     queryUrl: eqDataUrl,
@@ -157,6 +152,7 @@ export function QueryBuilder() {
     filterState,
     format,
     formatHandler,
+    maxQuerySize,
     profile,
     resetFilters,
     sourceHandlers,
@@ -182,8 +178,14 @@ export function QueryBuilder() {
     <>
       {downloadConfirmationVisible && (
         <DownloadModal
+          dataId="attains"
+          disabled={
+            !profiles[profile].columns.has('reportingCycle') &&
+            Object.keys(queryParams.filters).length === 0
+          }
           filename={profile && format ? `${profile}.${format.value}` : null}
           downloadStatus={downloadStatus}
+          maxCount={maxQuerySize}
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
           queryUrl={
@@ -221,7 +223,7 @@ export function QueryBuilder() {
               legend={
                 <>
                   <b className="margin-right-05">File Format</b>
-                  <InfoTooltip text="Choose a file format for the result set" />
+                  <InfoTooltip text="Choose a file format for the result set." />
                 </>
               }
               onChange={formatHandler}
@@ -513,46 +515,6 @@ function Intro() {
         </button>
       </div>
     </Summary>
-  );
-}
-
-function NavButton({
-  icon,
-  label,
-  onClick = () => {},
-  styles = [],
-}: NavButtonProps) {
-  const buttonStyles = [
-    'margin-bottom-2',
-    'bg-white',
-    'border-2px',
-    'border-transparent',
-    'padding-1',
-    'radius-md',
-    'width-auto',
-    'hover:bg-white',
-    'hover:border-primary',
-    ...styles,
-  ].join(' ');
-
-  const Icon = icon;
-
-  return (
-    <button
-      title={label}
-      className={buttonStyles}
-      onClick={onClick}
-      style={{ cursor: 'pointer' }}
-      type="button"
-    >
-      <Icon
-        aria-hidden="true"
-        className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
-        focusable="false"
-        role="img"
-      />
-      <span className="font-ui-md text-bold text-primary">{label}</span>
-    </button>
   );
 }
 
@@ -979,6 +941,7 @@ function useQueryParams({
   const [parameterErrors, setParameterErrors] =
     useState<ParameterErrors | null>(null);
   const [parametersLoaded, setParametersLoaded] = useState(false);
+
   // Populate the input fields with URL parameters, if any
   useEffect(() => {
     if (parametersLoaded || !profile || !staticOptions) return;
@@ -1845,6 +1808,7 @@ type HomeContext = {
   filterState: FilterFieldState;
   format: FormatOption;
   formatHandler: (format: Option) => void;
+  maxQuerySize: number;
   profile: Profile;
   queryParams: QueryData;
   queryUrl: string;
@@ -1863,13 +1827,6 @@ type MultiOptionState = ReadonlyArray<Option> | null;
 type MultiSelectFilterProps = SelectFilterProps<
   Extract<FilterField, MultiOptionField>
 >;
-
-type NavButtonProps = {
-  icon: FunctionComponent<SVGProps<SVGSVGElement>>;
-  label: string;
-  onClick?: (ev: MouseEvent) => void;
-  styles?: string[];
-};
 
 type OptionInputHandler = (
   option: SingleOptionState | MultiOptionState,

@@ -13,26 +13,21 @@ import {
 } from '../utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// const isLocal = process.env.NODE_ENV === 'local';
-const isLocal = false;
+const isLocal = process.env.NODE_ENV === 'local';
 const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
 const s3Region = process.env.CF_S3_PUB_REGION;
 const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
-function handleError(error, metadataObj) {
-  if (isLocal) {
-    console.error(error);
-  } else {
-    if (typeof error.toJSON === 'function') {
-      log.debug(formatLogMsg(metadataObj, error.toJSON()));
-    }
-
-    const errorStatus = error.response?.status;
-    const errorMethod = error.response?.config?.method?.toUpperCase();
-    const errorUrl = error.response?.config?.url;
-    const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
-    log.error(formatLogMsg(metadataObj, message));
+function logError(error, metadataObj) {
+  if (typeof error.toJSON === 'function') {
+    log.debug(formatLogMsg(metadataObj, error.toJSON()));
   }
+
+  const errorStatus = error.response?.status;
+  const errorMethod = error.response?.config?.method?.toUpperCase();
+  const errorUrl = error.response?.config?.url;
+  const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
+  log.error(formatLogMsg(metadataObj, message));
 }
 
 // local development: read files directly from disk
@@ -269,7 +264,7 @@ export default function (app, basePath) {
 
     const baseDir = 'national-downloads';
     const resLatest = await getFile(`${baseDir}/latest.json`).catch((err) =>
-      handleError(err, metadataObj),
+      logError(err, metadataObj),
     );
 
     if (!resLatest)
@@ -280,7 +275,7 @@ export default function (app, basePath) {
     const latest = parseInt(parseResponse(resLatest).julian);
 
     const data = {
-      julianDate: latest,
+      epochSeconds: latest,
       files: {},
     };
 
@@ -295,7 +290,7 @@ export default function (app, basePath) {
             size: filesize,
           };
         } catch (err) {
-          handleError(err, metadataObj);
+          logError(err, metadataObj);
         }
       }),
     ]);
