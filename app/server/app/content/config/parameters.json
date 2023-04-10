@@ -1,4 +1,4 @@
 {
   "debounceMilliseconds": 250,
-  "maxQuerySize": 1_000_000
+  "maxQuerySize": 1000000
 }

@@ -172,15 +172,7 @@ export default function (app, basePath) {
     Promise.all([filePromises, directoryPromises])
       .then((data) => res.json({ ...data[0], ...data[1] }))
       .catch((error) => {
-        if (typeof error.toJSON === 'function') {
-          log.debug(formatLogMsg(metadataObj, error.toJSON()));
-        }
-
-        const errorStatus = error.response?.status;
-        const errorMethod = error.response?.config?.method?.toUpperCase();
-        const errorUrl = error.response?.config?.url;
-        const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
-        log.error(formatLogMsg(metadataObj, message));
+        logError(error, metadataObj);
 
         return res
           .status(error?.response?.status || 500)
