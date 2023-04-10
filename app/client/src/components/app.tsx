@@ -108,6 +108,12 @@ function useDisclaimerBanner() {
   }, []);
 }
 
+// workaround to preserve the href in the url, without this
+// the ErrorPage will 
+// redirect to http://localhost:9090/404.html?src=http://localhost:3000/404
+// instead of  http://localhost:9090/404.html?src=http://localhost:3000/some-url-doesnt-exist
+const href = window.location.href;
+
 export function App() {
   useFetchedContent();
   useDisclaimerBanner();
@@ -120,8 +126,7 @@ export function App() {
         <Route path="/attains" element={<Home />}>
           <Route path=":profile" element={<QueryBuilder />} />
         </Route>
-        <Route path="/404" element={<ErrorPage />} />
-        <Route path="*" element={<ErrorPage />} />
+        <Route path="*" element={<ErrorPage src={href} />} />
       </Routes>
     </BrowserRouter>
   );

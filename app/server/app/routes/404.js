@@ -7,7 +7,7 @@ export default function (app, basePath) {
   const router = express.Router();
 
   router.get('/', function (req, res, next) {
-    res.status(404).sendFile(path.join(__dirname, '../../public', '400.html'));
+    res.status(404).sendFile(path.join(__dirname, '../public', '400.html'));
   });
 
   app.use(`${basePath}404.html`, router);
