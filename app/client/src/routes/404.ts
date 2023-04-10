@@ -2,8 +2,12 @@ import { useEffect } from 'react';
 // config
 import { serverUrl } from 'config';
 
-// --- components ---
-function PageNotFound() {
+type Props = {
+  src: string
+};
+
+
+function PageNotFound({ src }: Props) {
   // redirect to the server side 400.html page
   useEffect(() => {
     const location = window.location;
@@ -14,10 +18,10 @@ function PageNotFound() {
     }
 
     // append the original url for tracking purposes
-    url += `?src=${location.href}`;
+    url += `?src=${src}`;
 
     window.location.assign(url);
-  }, []);
+  }, [src]);
 
   return null;
 }

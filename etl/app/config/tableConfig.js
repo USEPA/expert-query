@@ -6,11 +6,19 @@ export const tableConfig = {
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
       { name: 'actionagency', alias: 'actionAgency' },
-      { name: 'actionid', alias: 'actionId' },
-      { name: 'actionname', alias: 'actionName' },
+      { name: 'actionid', alias: 'actionId', includeGinIndex: true },
+      { name: 'actionname', alias: 'actionName', includeGinIndex: true },
       { name: 'actiontype', alias: 'actionType', skipIndex: true },
-      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
-      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      {
+        name: 'assessmentunitid',
+        alias: 'assessmentUnitId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'assessmentunitname',
+        alias: 'assessmentUnitName',
+        includeGinIndex: true,
+      },
       {
         name: 'completiondate',
         alias: 'completionDate',
@@ -27,10 +35,14 @@ export const tableConfig = {
         skipIndex: true,
       },
       { name: 'organizationid', alias: 'organizationId' },
-      { name: 'organizationname', alias: 'organizationName' },
+      {
+        name: 'organizationname',
+        alias: 'organizationName',
+        includeGinIndex: true,
+      },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
       { name: 'parameter', alias: 'parameter' },
-      { name: 'region', alias: 'region' },
+      { name: 'region', alias: 'region', includeGinIndex: true },
       { name: 'state', alias: 'state' },
       {
         name: 'watersize',
@@ -50,8 +62,13 @@ export const tableConfig = {
       {
         name: 'alternatelistingidentifier',
         alias: 'alternateListingIdentifier',
+        includeGinIndex: true,
       },
-      { name: 'assessmentbasis', alias: 'assessmentBasis' },
+      {
+        name: 'assessmentbasis',
+        alias: 'assessmentBasis',
+        includeGinIndex: true,
+      },
       {
         name: 'assessmentdate',
         alias: 'assessmentDate',
@@ -60,14 +77,34 @@ export const tableConfig = {
         type: 'timestamptz',
         indexOrder: 'desc',
       },
-      { name: 'assessmentmethods', alias: 'assessmentMethods' },
+      {
+        name: 'assessmentmethods',
+        alias: 'assessmentMethods',
+        includeGinIndex: true,
+      },
       { name: 'assessmenttypes', alias: 'assessmentTypes' },
-      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
-      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      {
+        name: 'assessmentunitid',
+        alias: 'assessmentUnitId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'assessmentunitname',
+        alias: 'assessmentUnitName',
+        includeGinIndex: true,
+      },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       { name: 'associatedactionagency', alias: 'associatedActionAgency' },
-      { name: 'associatedactionid', alias: 'associatedActionId' },
-      { name: 'associatedactionname', alias: 'associatedActionName' },
+      {
+        name: 'associatedactionid',
+        alias: 'associatedActionId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'associatedactionname',
+        alias: 'associatedActionName',
+        includeGinIndex: true,
+      },
       { name: 'associatedactionstatus', alias: 'associatedActionStatus' },
       { name: 'associatedactiontype', alias: 'associatedActionType' },
       {
@@ -118,7 +155,7 @@ export const tableConfig = {
       },
       { name: 'delisted', alias: 'delisted' },
       { name: 'delistedreason', alias: 'delistedReason' },
-      { name: 'epaircategory', alias: 'epaIrCategory' },
+      { name: 'epaircategory', alias: 'epaIrCategory', includeGinIndex: true },
       {
         name: 'locationdescription',
         alias: 'locationDescription',
@@ -141,10 +178,18 @@ export const tableConfig = {
         indexOrder: 'desc',
       },
       { name: 'organizationid', alias: 'organizationId' },
-      { name: 'organizationname', alias: 'organizationName' },
+      {
+        name: 'organizationname',
+        alias: 'organizationName',
+        includeGinIndex: true,
+      },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'overallstatus', alias: 'overallStatus' },
-      { name: 'parameterattainment', alias: 'parameterAttainment' },
+      { name: 'overallstatus', alias: 'overallStatus', includeGinIndex: true },
+      {
+        name: 'parameterattainment',
+        alias: 'parameterAttainment',
+        includeGinIndex: true,
+      },
       { name: 'parametergroup', alias: 'parameterGroup' },
       {
         name: 'parameterircategory',
@@ -159,7 +204,7 @@ export const tableConfig = {
       },
       { name: 'parameterstatus', alias: 'parameterStatus' },
       { name: 'pollutantindicator', alias: 'pollutantIndicator' },
-      { name: 'region', alias: 'region' },
+      { name: 'region', alias: 'region', includeGinIndex: true },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -188,7 +233,7 @@ export const tableConfig = {
       { name: 'state', alias: 'state' },
       { name: 'stateircategory', alias: 'stateIrCategory' },
       { name: 'useclassname', alias: 'useClassName' },
-      { name: 'usegroup', alias: 'useGroup' },
+      { name: 'usegroup', alias: 'useGroup', includeGinIndex: true },
       { name: 'useircategory', alias: 'useIrCategory', type: 'numeric' },
       { name: 'usename', alias: 'useName' },
       {
@@ -213,8 +258,16 @@ export const tableConfig = {
     idColumn: 'objectid',
     columns: [
       { name: 'objectid', alias: 'objectid', skipIndex: true },
-      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
-      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      {
+        name: 'assessmentunitid',
+        alias: 'assessmentUnitId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'assessmentunitname',
+        alias: 'assessmentUnitName',
+        includeGinIndex: true,
+      },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       {
         name: 'cycleid',
@@ -226,12 +279,16 @@ export const tableConfig = {
         alias: 'locationDescription',
         skipIndex: true,
       },
-      { name: 'locationtext', alias: 'locationText' },
+      { name: 'locationtext', alias: 'locationText', includeGinIndex: true },
       { name: 'locationtypecode', alias: 'locationTypeCode', skipIndex: true },
       { name: 'organizationid', alias: 'organizationId' },
-      { name: 'organizationname', alias: 'organizationName' },
+      {
+        name: 'organizationname',
+        alias: 'organizationName',
+        includeGinIndex: true,
+      },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'region', alias: 'region' },
+      { name: 'region', alias: 'region', includeGinIndex: true },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -258,8 +315,16 @@ export const tableConfig = {
     idColumn: 'objectid',
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
-      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
-      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      {
+        name: 'assessmentunitid',
+        alias: 'assessmentUnitId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'assessmentunitname',
+        alias: 'assessmentUnitName',
+        includeGinIndex: true,
+      },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       {
         name: 'cycleid',
@@ -276,12 +341,24 @@ export const tableConfig = {
         alias: 'monitoringLocationDataLink',
         skipIndex: true,
       },
-      { name: 'monitoringlocationid', alias: 'monitoringLocationId' },
-      { name: 'monitoringlocationorgid', alias: 'monitoringLocationOrgId' },
+      {
+        name: 'monitoringlocationid',
+        alias: 'monitoringLocationId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'monitoringlocationorgid',
+        alias: 'monitoringLocationOrgId',
+        includeGinIndex: true,
+      },
       { name: 'organizationid', alias: 'organizationId' },
-      { name: 'organizationname', alias: 'organizationName' },
+      {
+        name: 'organizationname',
+        alias: 'organizationName',
+        includeGinIndex: true,
+      },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'region', alias: 'region' },
+      { name: 'region', alias: 'region', includeGinIndex: true },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -308,8 +385,16 @@ export const tableConfig = {
     idColumn: 'objectid',
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
-      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
-      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      {
+        name: 'assessmentunitid',
+        alias: 'assessmentUnitId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'assessmentunitname',
+        alias: 'assessmentUnitName',
+        includeGinIndex: true,
+      },
       {
         name: 'catchmentnhdplusid',
         alias: 'catchmentNhdPlusId',
@@ -321,9 +406,13 @@ export const tableConfig = {
         type: 'numeric',
       },
       { name: 'organizationid', alias: 'organizationId' },
-      { name: 'organizationname', alias: 'organizationName' },
+      {
+        name: 'organizationname',
+        alias: 'organizationName',
+        includeGinIndex: true,
+      },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'region', alias: 'region' },
+      { name: 'region', alias: 'region', includeGinIndex: true },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -339,27 +428,39 @@ export const tableConfig = {
     idColumn: 'objectid',
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
-      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
-      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
-      { name: 'causename', alias: 'causeName' },
+      {
+        name: 'assessmentunitid',
+        alias: 'assessmentUnitId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'assessmentunitname',
+        alias: 'assessmentUnitName',
+        includeGinIndex: true,
+      },
+      { name: 'causename', alias: 'causeName', includeGinIndex: true },
       { name: 'confirmed', alias: 'confirmed' },
       {
         name: 'cycleid',
         alias: 'cycleId',
         type: 'numeric',
       },
-      { name: 'epaircategory', alias: 'epaIrCategory' },
+      { name: 'epaircategory', alias: 'epaIrCategory', includeGinIndex: true },
       {
         name: 'locationdescription',
         alias: 'locationDescription',
         skipIndex: true,
       },
       { name: 'organizationid', alias: 'organizationId' },
-      { name: 'organizationname', alias: 'organizationName' },
+      {
+        name: 'organizationname',
+        alias: 'organizationName',
+        includeGinIndex: true,
+      },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'overallstatus', alias: 'overallStatus' },
+      { name: 'overallstatus', alias: 'overallStatus', includeGinIndex: true },
       { name: 'parametergroup', alias: 'parameterGroup' },
-      { name: 'region', alias: 'region' },
+      { name: 'region', alias: 'region', includeGinIndex: true },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -386,11 +487,23 @@ export const tableConfig = {
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
       { name: 'actionagency', alias: 'actionAgency' },
-      { name: 'actionid', alias: 'actionId' },
-      { name: 'actionname', alias: 'actionName' },
-      { name: 'addressedparameter', alias: 'addressedParameter' },
-      { name: 'assessmentunitid', alias: 'assessmentUnitId' },
-      { name: 'assessmentunitname', alias: 'assessmentUnitName' },
+      { name: 'actionid', alias: 'actionId', includeGinIndex: true },
+      { name: 'actionname', alias: 'actionName', includeGinIndex: true },
+      {
+        name: 'addressedparameter',
+        alias: 'addressedParameter',
+        includeGinIndex: true,
+      },
+      {
+        name: 'assessmentunitid',
+        alias: 'assessmentUnitId',
+        includeGinIndex: true,
+      },
+      {
+        name: 'assessmentunitname',
+        alias: 'assessmentUnitName',
+        includeGinIndex: true,
+      },
       {
         name: 'completiondate',
         alias: 'completionDate',
@@ -399,7 +512,11 @@ export const tableConfig = {
         type: 'timestamptz',
         indexOrder: 'desc',
       },
-      { name: 'explicitmarginofsafety', alias: 'explicitMarginOfSafety' },
+      {
+        name: 'explicitmarginofsafety',
+        alias: 'explicitMarginOfSafety',
+        includeGinIndex: true,
+      },
       {
         name: 'fiscalyearestablished',
         alias: 'fiscalYearEstablished',
@@ -407,7 +524,11 @@ export const tableConfig = {
         highParam: 'fiscalYearEstablishedHi',
         indexOrder: 'desc',
       },
-      { name: 'implicitmarginofsafety', alias: 'implicitMarginOfSafety' },
+      {
+        name: 'implicitmarginofsafety',
+        alias: 'implicitMarginOfSafety',
+        includeGinIndex: true,
+      },
       { name: 'includeinmeasure', alias: 'includeInMeasure' },
       { name: 'inindiancountry', alias: 'inIndianCountry' },
       {
@@ -426,13 +547,25 @@ export const tableConfig = {
         alias: 'locationDescription',
         skipIndex: true,
       },
-      { name: 'npdesidentifier', alias: 'npdesIdentifier' },
+      {
+        name: 'npdesidentifier',
+        alias: 'npdesIdentifier',
+        includeGinIndex: true,
+      },
       { name: 'organizationid', alias: 'organizationId' },
-      { name: 'organizationname', alias: 'organizationName' },
+      {
+        name: 'organizationname',
+        alias: 'organizationName',
+        includeGinIndex: true,
+      },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'otheridentifier', alias: 'otherIdentifier' },
+      {
+        name: 'otheridentifier',
+        alias: 'otherIdentifier',
+        includeGinIndex: true,
+      },
       { name: 'pollutant', alias: 'pollutant' },
-      { name: 'region', alias: 'region' },
+      { name: 'region', alias: 'region', includeGinIndex: true },
       { name: 'sourcetype', alias: 'sourceType' },
       { name: 'state', alias: 'state' },
       {
