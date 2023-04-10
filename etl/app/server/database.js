@@ -462,12 +462,7 @@ export async function runLoad(pool, s3Config, s3Julian) {
     // Verify the etl was successfull and the data matches what we expect.
     // We skip this when running locally, since the row counts will never match.
     if (!environment.isLocal) {
-      const certified = await certifyEtlComplete(
-        pool,
-        s3Config,
-        schemaId,
-        schemaName,
-      );
+      await certifyEtlComplete(pool, s3Config, schemaId, schemaName);
     }
 
     await transferSchema(pool, schemaName, schemaId);
