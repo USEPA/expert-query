@@ -9,37 +9,40 @@ import { postData } from 'config';
 // styles
 import '@reach/dialog/styles.css';
 // types
-import type { Primitive, Status } from 'types';
+import type { FetchState, Primitive, Status } from 'types';
 
 /*
 ## Components
 */
 
 export function DownloadModal<D extends PostData>({
+  dataId,
   downloadStatus,
   filename,
+  maxCount = Infinity,
   onClose,
   queryData,
   queryUrl,
   setDownloadStatus,
 }: DownloadModalProps<D>) {
-  const [count, setCount] = useState<number | null>(null);
-  const [countStatus, setCountStatus] = useState<Status>('idle');
+  const [count, setCount] = useState<FetchState<number>>({
+    status: 'idle',
+    data: null,
+  });
 
   // Get the row count for the current query
   useEffect(() => {
     if (!queryUrl) return;
 
     const countUrl = `${queryUrl}/count`;
-    setCountStatus('pending');
+    setCount({ status: 'pending', data: null });
     postData(countUrl, queryData)
       .then((res) => {
-        setCount(parseInt(res.count));
-        setCountStatus('success');
+        setCount({ status: 'success', data: parseInt(res.count) });
       })
       .catch((err) => {
         console.error(err);
-        setCountStatus('failure');
+        setCount({ status: 'failure', data: null });
       });
   }, [queryData, queryUrl]);
 
@@ -80,51 +83,70 @@ export function DownloadModal<D extends PostData>({
       <div className="usa-modal__content">
         <div className="usa-modal__main">
           <h2 className="usa-modal__heading">Download Status</h2>
-          {countStatus === 'pending' && (
+          {count.status === 'pending' && (
             <div className="usa-prose">
               <p>Validating query, please wait...</p>
             </div>
           )}
-          {countStatus === 'failure' && (
+          {count.status === 'failure' && (
             <Alert type="error">
               The specified query could not be executed at this time.
             </Alert>
           )}
-          {countStatus === 'success' && (
+          {count.status === 'success' && (
             <>
-              <div className="usa-prose">
-                <p>
-                  Your query will return{' '}
-                  <strong data-testid="downloadfile-length">
-                    {count?.toLocaleString()}
-                  </strong>{' '}
-                  rows.
-                </p>
-                <p>Click continue to download the data.</p>
-              </div>
-              <div className="usa-modal__footer">
-                <ul className="flex-justify-center usa-button-group">
-                  <li className="usa-button-group__item">
-                    <button
-                      type="button"
-                      className="usa-button"
-                      onClick={onClose}
+              {count.data > maxCount ? (
+                <Alert type="warning">
+                  <p>The current query exceeds the maximum query size.</p>{' '}
+                  <p>
+                    Please refine the search or visit the{' '}
+                    <a
+                      href={`/national-downloads${dataId ? '#' + dataId : ''}`}
                     >
-                      Cancel
-                    </button>
-                  </li>
-                  <li className="usa-button-group__item">
-                    <button
-                      className="usa-button"
-                      disabled={count === 0}
-                      onClick={executeQuery}
-                      type="button"
-                    >
-                      {downloadStatus === 'pending' ? 'Working...' : 'Continue'}
-                    </button>
-                  </li>
-                </ul>
-              </div>
+                      National Downloads
+                    </a>{' '}
+                    page to download a compressed dataset.
+                  </p>
+                </Alert>
+              ) : (
+                <>
+                  <div className="usa-prose">
+                    <p>
+                      Your query will return{' '}
+                      <strong data-testid="downloadfile-length">
+                        {count.data.toLocaleString()}
+                      </strong>{' '}
+                      rows.
+                    </p>
+                    <p>Click continue to download the data.</p>
+                  </div>
+                  <div className="usa-modal__footer">
+                    <ul className="flex-justify-center usa-button-group">
+                      <li className="usa-button-group__item">
+                        <button
+                          type="button"
+                          className="usa-button"
+                          onClick={onClose}
+                        >
+                          Cancel
+                        </button>
+                      </li>
+                      <li className="usa-button-group__item">
+                        <button
+                          className="usa-button"
+                          disabled={count.data === 0}
+                          onClick={executeQuery}
+                          type="button"
+                        >
+                          {downloadStatus === 'pending'
+                            ? 'Working...'
+                            : 'Continue'}
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
@@ -151,8 +173,10 @@ export function DownloadModal<D extends PostData>({
 */
 
 type DownloadModalProps<D extends PostData> = {
+  dataId?: string;
   downloadStatus: Status;
   filename: string | null;
+  maxCount?: number;
   onClose: () => void;
   queryData: D;
   queryUrl: string | null;

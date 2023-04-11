@@ -47,6 +47,20 @@ type ConcreteOptions = {
 
 export type DomainOptions = ConcreteOptions & Partial<AliasedOptions>;
 
+type EmptyStatus = Exclude<Status, 'success'>;
+
+type FetchEmptyState = {
+  status: EmptyStatus;
+  data: null;
+};
+
+export type FetchState<Type> = FetchEmptyState | FetchSuccessState<Type>;
+
+type FetchSuccessState<Type> = {
+  status: 'success';
+  data: Type;
+};
+
 export type Option = {
   context?: string;
   description?: ReactNode;

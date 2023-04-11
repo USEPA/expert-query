@@ -1,12 +1,5 @@
 import { debounce } from 'lodash';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
   Outlet,
   useNavigate,
@@ -16,6 +9,7 @@ import {
 import Select from 'react-select';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
+import { ReactComponent as Folder } from 'uswds/img/usa-icons/folder.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -27,6 +21,7 @@ import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
+import { NavButton } from 'components/navButton';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -41,6 +36,8 @@ import {
   profiles,
   serverUrl,
 } from 'config';
+// utils
+import { isAbort, useAbort } from 'utils';
 // types
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
@@ -53,6 +50,8 @@ import type { Profile } from 'config/profiles';
 export default Home;
 
 export function Home() {
+  const navigate = useNavigate();
+
   const { content } = useContentState();
 
   const staticOptions = useStaticOptions(content);
@@ -89,22 +88,20 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <button
-          title="Glossary"
-          className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
-          style={{ cursor: 'pointer' }}
-          type="button"
-        >
-          <Book
-            aria-hidden="true"
-            className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
-            focusable="false"
-            role="img"
-          />
-          <span className="font-ui-md text-bold text-primary">Glossary</span>
-        </button>
+        <NavButton
+          label="Glossary"
+          icon={Book}
+          styles={['js-glossary-toggle', 'margin-right-05']}
+        />
+        <NavButton
+          label="National Downloads"
+          icon={Folder}
+          onClick={() => navigate('/national-downloads')}
+        />
         <GlossaryPanel path={getPageName()} />
         <div>
+          <h2>Query ATTAINS Data</h2>
+          <hr />
           <ParameterErrorAlert parameters={queryParamErrors} />
           <Intro />
           {staticOptions && (
@@ -126,6 +123,7 @@ export function Home() {
                     filterState,
                     format,
                     formatHandler,
+                    maxQuerySize: content.data.parameters.maxQuerySize,
                     profile,
                     queryParams,
                     queryUrl: eqDataUrl,
@@ -154,6 +152,7 @@ export function QueryBuilder() {
     filterState,
     format,
     formatHandler,
+    maxQuerySize,
     profile,
     resetFilters,
     sourceHandlers,
@@ -179,8 +178,10 @@ export function QueryBuilder() {
     <>
       {downloadConfirmationVisible && (
         <DownloadModal
+          dataId="attains"
           filename={profile && format ? `${profile}.${format.value}` : null}
           downloadStatus={downloadStatus}
+          maxCount={maxQuerySize}
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
           queryUrl={
@@ -218,7 +219,7 @@ export function QueryBuilder() {
               legend={
                 <>
                   <b className="margin-right-05">File Format</b>
-                  <InfoTooltip text="Choose a file format for the result set" />
+                  <InfoTooltip text="Choose a file format for the result set." />
                 </>
               }
               onChange={formatHandler}
@@ -759,33 +760,6 @@ function SelectFilter<
 ## Hooks
 */
 
-function useAbort() {
-  const abortController = useRef(new AbortController());
-  const getAbortController = useCallback(() => {
-    if (abortController.current.signal.aborted) {
-      abortController.current = new AbortController();
-    }
-    return abortController.current;
-  }, []);
-
-  const abort = useCallback(() => {
-    getAbortController().abort();
-  }, [getAbortController]);
-
-  useEffect(() => {
-    return function cleanup() {
-      abortController.current.abort();
-    };
-  }, [getAbortController]);
-
-  const getSignal = useCallback(
-    () => getAbortController().signal,
-    [getAbortController],
-  );
-
-  return { abort, getSignal };
-}
-
 function useClearConfirmationVisibility() {
   const [clearConfirmationVisible, setClearConfirmationVisible] =
     useState(false);
@@ -963,6 +937,7 @@ function useQueryParams({
   const [parameterErrors, setParameterErrors] =
     useState<ParameterErrors | null>(null);
   const [parametersLoaded, setParametersLoaded] = useState(false);
+
   // Populate the input fields with URL parameters, if any
   useEffect(() => {
     if (parametersLoaded || !profile || !staticOptions) return;
@@ -1496,11 +1471,6 @@ async function getUrlInputs(
   return { filters: newState, errors };
 }
 
-function isAbort(error: unknown) {
-  if (!error || typeof error !== 'object' || !('name' in error)) return false;
-  return (error as Error).name === 'AbortError';
-}
-
 // Type narrowing
 function isDateField(field: string): field is DateField {
   return (dateFields as string[]).includes(field);
@@ -1834,6 +1804,7 @@ type HomeContext = {
   filterState: FilterFieldState;
   format: FormatOption;
   formatHandler: (format: Option) => void;
+  maxQuerySize: number;
   profile: Profile;
   queryParams: QueryData;
   queryUrl: string;
