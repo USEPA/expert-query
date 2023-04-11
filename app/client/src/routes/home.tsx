@@ -732,10 +732,9 @@ function SelectFilter<
       onMenuClose={() => {
         abort();
         setLoading(false);
+        setOptions(null);
       }}
-      onMenuOpen={() => {
-        if (!options) loadOptions();
-      }}
+      onMenuOpen={loadOptions}
       options={options ?? undefined}
       placeholder={`Select ${getArticle(
         filterLabel.split(' ')[0],
