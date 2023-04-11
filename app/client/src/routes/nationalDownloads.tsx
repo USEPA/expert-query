@@ -87,20 +87,21 @@ function AttainsData({ metadata }: AttainsDataProps) {
 
   if (status === 'success')
     return (
-      <table className="margin-x-auto usa-table usa-table--borderless width-full maxw-tablet-lg">
-        <caption>Extracted on {formatDate(metadata.data.epochSeconds)}</caption>
+      <table className="margin-x-auto usa-table usa-table--borderless usa-table--stacked width-full maxw-tablet-lg">
         <thead>
           <tr>
             <th scope="col">Download link</th>
+            <th scope="col">Time last refreshed</th>
+            <th scope="col">Number of rows</th>
             <th scope="col">File size</th>
           </tr>
         </thead>
         <tbody>
-          {Object.entries(metadata.data.files)
+          {Object.entries(metadata.data)
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([profile, fileInfo]) => (
               <tr key={profile}>
-                <th scope="row">
+                <th scope="row" data-label="Download link">
                   <a href={fileInfo.url}>
                     {profiles[profile as Profile].label} Profile Data
                     <Exit
@@ -112,7 +113,13 @@ function AttainsData({ metadata }: AttainsDataProps) {
                     />
                   </a>
                 </th>
-                <td>{formatBytes(fileInfo.size)}</td>
+                <td data-label="Time last refreshed">
+                  {formatDate(fileInfo.timestamp)}
+                </td>
+                <td data-label="Number of rows">
+                  {fileInfo.numRows.toLocaleString()}
+                </td>
+                <td data-label="File size">{formatBytes(fileInfo.size)}</td>
               </tr>
             ))}
         </tbody>
@@ -135,24 +142,31 @@ function formatBytes(bytes: number, decimals = 2) {
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+  return `${parseFloat(
+    (bytes / Math.pow(k, i)).toFixed(dm),
+  ).toLocaleString()} ${sizes[i]}`;
 }
 
-function formatDate(seconds: number) {
-  const date = new Date(seconds * 1000);
-  return date.toDateString();
+function formatDate(isoTimestamp: string) {
+  const datestring = new Date(isoTimestamp).toLocaleString();
+  const [date, time] = datestring.split(',');
+  return (
+    <div className="display-flex flex-wrap">
+      <span className="margin-right-05">{date},</span>
+      <span>{time}</span>
+    </div>
+  );
 }
 
 /*
 ## Types
 */
 
-type Metadata = {
-  epochSeconds: number;
-  files: Partial<{
-    [P in Profile]: {
-      url: string;
-      size: number;
-    };
-  }>;
-};
+type Metadata = Partial<{
+  [P in Profile]: {
+    url: string;
+    size: number;
+    numRows: number;
+    timestamp: string;
+  };
+}>;

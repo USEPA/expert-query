@@ -13,12 +13,18 @@ import {
 } from '../utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const isLocal = process.env.NODE_ENV === 'local';
+// const isLocal = process.env.NODE_ENV === 'local';
+const isLocal = false;
 const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
 const s3Region = process.env.CF_S3_PUB_REGION;
 const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
 function logError(error, metadataObj) {
+  if (isLocal) {
+    log.error(error);
+    return;
+  }
+
   if (typeof error.toJSON === 'function') {
     log.debug(formatLogMsg(metadataObj, error.toJSON()));
   }
@@ -32,7 +38,7 @@ function logError(error, metadataObj) {
 
 // local development: read files directly from disk
 // Cloud.gov: fetch files from the public s3 bucket
-function getFile(filename) {
+async function getFile(filename) {
   return isLocal
     ? readFile(resolve(__dirname, '../', filename), 'utf8')
     : axios({
@@ -42,7 +48,7 @@ function getFile(filename) {
       });
 }
 
-function getFileSize(filename) {
+async function getFileSize(filename) {
   return isLocal
     ? stat(resolve(__dirname, '../', filename), 'utf8').then(
         (stats) => stats.size,
@@ -255,21 +261,35 @@ export default function (app, basePath) {
     const metadataObj = populateMetdataObjFromRequest(req);
 
     const baseDir = 'national-downloads';
-    const resLatest = await getFile(`${baseDir}/latest.json`).catch((err) =>
-      logError(err, metadataObj),
-    );
 
-    if (!resLatest)
+    const [latestRes, profileStats] = await Promise.all([
+      getFile(`${baseDir}/latest.json`).catch((err) => {
+        logError(err, metadataObj);
+      }),
+
+      knex
+        .withSchema('logging')
+        .column({
+          profileName: 'profile_name',
+          numRows: 'num_rows',
+          timestamp: 'last_refresh_end_time',
+        })
+        .from('mv_profile_stats')
+        .where('schema_name', req.activeSchema)
+        .select()
+        .catch((err) => {
+          logError(err, metadataObj);
+        }),
+    ]);
+
+    if (!latestRes || !profileStats)
       return res
         .status(500)
-        .json({ message: 'Error getting static content from S3 bucket' });
+        .json({ message: 'Error getting national downloads data' });
 
-    const latest = parseInt(parseResponse(resLatest).julian);
+    const data = {};
 
-    const data = {
-      epochSeconds: latest,
-      files: {},
-    };
+    const latest = parseInt(parseResponse(latestRes).julian);
 
     await Promise.all([
       ...Object.entries(tableConfig).map(async ([profile, config]) => {
@@ -277,9 +297,16 @@ export default function (app, basePath) {
         const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
         try {
           const filesize = await getFileSize(filename);
-          data.files[profile] = {
-            url: `${s3BucketUrl}/${filename}`,
+          const stats = profileStats.find(
+            (p) => p.profileName === config.tableName,
+          );
+          if (!stats) return;
+
+          data[profile] = {
+            numRows: stats.numRows,
             size: filesize,
+            timestamp: stats.timestamp,
+            url: `${s3BucketUrl}/${filename}`,
           };
         } catch (err) {
           logError(err, metadataObj);
