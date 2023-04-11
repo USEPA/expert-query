@@ -1,5 +1,8 @@
+import axios from 'axios';
+import crypto from 'crypto';
 import Excel from 'exceljs';
 import { createWriteStream, mkdirSync } from 'fs';
+import https from 'https';
 import path, { resolve } from 'path';
 import pg from 'pg';
 import QueryStream from 'pg-query-stream';
@@ -470,6 +473,12 @@ export async function runLoad(pool, s3Config, s3Julian) {
     });
     await Promise.all(loadTasks);
 
+    // Verify the etl was successfull and the data matches what we expect.
+    // We skip this when running locally, since the row counts will never match.
+    if (!environment.isLocal) {
+      await certifyEtlComplete(pool, s3Config, schemaId, schemaName);
+    }
+
     await transferSchema(pool, schemaName, schemaId);
 
     log.info('Tables updated');
@@ -479,6 +488,69 @@ export async function runLoad(pool, s3Config, s3Julian) {
     await logEtlLoadError(pool, logId, err);
     throw err;
   }
+}
+
+// Verify the data pulled in from the ETL matches the materialized views.
+export async function certifyEtlComplete(
+  pool,
+  s3Config,
+  logId,
+  schemaName,
+  retryCount = 0,
+) {
+  // get profile stats
+  const url = `${s3Config.services.materializedViews}/profile_stats`;
+  const res = await axios.get(url, {
+    headers: { 'API-key': process.env.MV_API_KEY },
+    httpsAgent: new https.Agent({
+      // TODO - Remove this when ordspub supports OpenSSL 3.0
+      // This is needed to allow node 18 to talk with ordspub, which does
+      //   not support OpenSSL 3.0
+      secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
+    }),
+  });
+
+  if (res.status !== 200) {
+    log.info('Non-200 response returned from profile_stats service, retrying');
+    if (retryCount < s3Config.config.retryLimit) {
+      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
+      return await certifyEtlComplete(pool, s3Config, retryCount + 1);
+    } else {
+      throw new Error('Retry count exceeded');
+    }
+  }
+
+  // loop through and make sure the tables exist and the counts match
+  let issuesMessage = '';
+  for (const profile of res.data.details) {
+    // check date
+    if (profile.last_refresh_end_time <= profile.last_refresh_date) {
+      issuesMessage += `${profile.name} issue: last_refresh_end_time (${profile.last_refresh_end_time}) is not after last_refresh_date (${profile.last_refresh_date}).\n`;
+    }
+
+    // query to get row count
+    const queryRes = await pool.query(
+      `SELECT COUNT(*) FROM "${schemaName}"."${profile.name.replace(
+        'attains_app.profile_',
+        '',
+      )}"`,
+    );
+    const queryCount = parseInt(queryRes.rows[0].count);
+
+    // verify row counts match
+    if (queryCount !== profile.num_rows) {
+      issuesMessage += `${profile.name} issue: count mismatch MV has "${profile.num_rows}" rows and DB has "${queryCount}".\n`;
+    }
+  }
+
+  if (issuesMessage) {
+    issuesMessage = `ETL process failed!\n${issuesMessage}`;
+    log.warn(issuesMessage);
+    await logEtlLoadError(pool, logId, issuesMessage);
+    throw issuesMessage;
+  }
+
+  return true;
 }
 
 // Grant usage privileges on the new schema to the read-only user
