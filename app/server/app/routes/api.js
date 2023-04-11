@@ -13,8 +13,7 @@ import {
 } from '../utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// const isLocal = process.env.NODE_ENV === 'local';
-const isLocal = false;
+const isLocal = process.env.NODE_ENV === 'local';
 const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
 const s3Region = process.env.CF_S3_PUB_REGION;
 const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
