@@ -87,7 +87,7 @@ function AttainsData({ metadata }: AttainsDataProps) {
 
   if (status === 'success')
     return (
-      <table className="margin-x-auto usa-table usa-table--borderless usa-table--stacked width-full maxw-tablet-lg">
+      <table className="margin-x-auto usa-table usa-table--stacked width-full">
         <thead>
           <tr>
             <th scope="col">Download link</th>
