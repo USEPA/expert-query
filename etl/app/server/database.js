@@ -84,13 +84,14 @@ async function cacheProfileStats(pool, schemaName, profileStats) {
     await client.query('BEGIN');
     for (const profile of profileStats) {
       await client.query(
-        'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, creation_date)' +
-          ' VALUES ($1, $2, $3, $4, current_timestamp)',
+        'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, last_refresh_elapsed, creation_date)' +
+          ' VALUES ($1, $2, $3, $4, $5, current_timestamp)',
         [
           profile['name'].replace('attains_app.profile_', ''),
           schemaName,
           profile['num_rows'],
           profile['last_refresh_end_time'],
+          profile['last_refresh_elapsed'],
         ],
       );
     }
@@ -163,6 +164,7 @@ export async function checkLogTables() {
           schema_name VARCHAR(20) NOT NULL,
           num_rows INTEGER NOT NULL,
           last_refresh_end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+          last_refresh_elapsed VARCHAR(20) NOT NULL,
           creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
           PRIMARY KEY (profile_name, schema_name)
         )`,
