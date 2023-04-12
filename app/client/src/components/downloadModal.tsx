@@ -19,13 +19,12 @@ export function DownloadModal<D extends PostData>({
   dataId,
   downloadStatus,
   filename,
-  maxCount = Infinity,
   onClose,
   queryData,
   queryUrl,
   setDownloadStatus,
 }: DownloadModalProps<D>) {
-  const [count, setCount] = useState<FetchState<number>>({
+  const [count, setCount] = useState<FetchState<number | null>>({
     status: 'idle',
     data: null,
   });
@@ -38,7 +37,10 @@ export function DownloadModal<D extends PostData>({
     setCount({ status: 'pending', data: null });
     postData(countUrl, queryData)
       .then((res) => {
-        setCount({ status: 'success', data: parseInt(res.count) });
+        setCount({
+          status: 'success',
+          data: 'count' in res ? parseInt(res.count) : null,
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -51,8 +53,16 @@ export function DownloadModal<D extends PostData>({
     if (!queryUrl) return;
     if (!filename) return;
 
+    const queryDataNoCount = {
+      ...queryData,
+      options: {
+        ...queryData.options,
+        count: false,
+      },
+    };
+
     setDownloadStatus('pending');
-    postData(queryUrl, queryData, 'blob')
+    postData(queryUrl, queryDataNoCount, 'blob')
       .then((res) => {
         const fileUrl = window.URL.createObjectURL(res);
         const trigger = document.createElement('a');
@@ -95,11 +105,11 @@ export function DownloadModal<D extends PostData>({
           )}
           {count.status === 'success' && (
             <>
-              {count.data > maxCount ? (
+              {count.data === null ? (
                 <Alert type="warning">
                   <p>The current query exceeds the maximum query size.</p>{' '}
                   <p>
-                    Please refine the search or visit the{' '}
+                    Please refine the search, or visit the{' '}
                     <a
                       href={`/national-downloads${dataId ? '#' + dataId : ''}`}
                     >
@@ -189,6 +199,6 @@ type PostData = {
     [field: string]: Primitive | Primitive[];
   };
   options: {
-    [field: string]: string;
+    [field: string]: string | boolean;
   };
 };

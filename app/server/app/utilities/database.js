@@ -37,6 +37,7 @@ log.info(`STREAM_BATCH_SIZE: ${parseInt(process.env.STREAM_BATCH_SIZE)}`);
 log.info(
   `STREAM_HIGH_WATER_MARK: ${parseInt(process.env.STREAM_HIGH_WATER_MARK)}`,
 );
+log.info(`MAX_QUERY_SIZE: ${parseInt(process.env.MAX_QUERY_SIZE)}`);
 
 /**
  * Appends to the where clause of the provided query.

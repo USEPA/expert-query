@@ -123,7 +123,6 @@ export function Home() {
                     filterState,
                     format,
                     formatHandler,
-                    maxQuerySize: content.data.parameters.maxQuerySize,
                     profile,
                     queryParams,
                     queryUrl: eqDataUrl,
@@ -152,7 +151,6 @@ export function QueryBuilder() {
     filterState,
     format,
     formatHandler,
-    maxQuerySize,
     profile,
     resetFilters,
     sourceHandlers,
@@ -181,7 +179,6 @@ export function QueryBuilder() {
           dataId="attains"
           filename={profile && format ? `${profile}.${format.value}` : null}
           downloadStatus={downloadStatus}
-          maxCount={maxQuerySize}
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
           queryUrl={
@@ -1803,7 +1800,6 @@ type HomeContext = {
   filterState: FilterFieldState;
   format: FormatOption;
   formatHandler: (format: Option) => void;
-  maxQuerySize: number;
   profile: Profile;
   queryParams: QueryData;
   queryUrl: string;
@@ -1828,6 +1824,7 @@ type OptionInputHandler = (
 ) => void;
 
 type OptionQueryData = Partial<{
+  count: boolean;
   format: Format;
 }>;
 
