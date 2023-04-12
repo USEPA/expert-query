@@ -119,12 +119,6 @@ export async function checkLogTables() {
       );
     }
 
-    // create the pg_trgm extension, used for creating gin indexes used
-    // for fast ILIKE queries
-    await client.query(
-      'CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA pg_catalog',
-    );
-
     await client.query('CREATE SCHEMA IF NOT EXISTS logging');
     await client.query(
       `CREATE TABLE IF NOT EXISTS logging.etl_log
@@ -715,17 +709,6 @@ async function createIndividualIndex(
     `${tableName}: Created index (${count} of ${indexCount}): ${indexName}`,
   );
 
-  if (column.includeGinIndex) {
-    await client.query(`
-      CREATE INDEX IF NOT EXISTS ${indexName}_gin
-        ON ${tableName} USING gin (${column.name} gin_trgm_ops);
-    `);
-    count += 1;
-    log.info(
-      `${tableName}: Created index (${count} of ${indexCount}): ${indexName}_gin`,
-    );
-  }
-
   return count;
 }
 
@@ -742,22 +725,16 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
     await client.query(`SET maintenance_work_mem TO '${overrideWorkMemory}'`);
 
   // count the total number of indexes needed (for logging status)
-  let indexCount = 0;
-  table.columns.forEach((col) => {
-    if (col.skipIndex) return;
-
-    indexCount += 1;
-    if (col.includeGinIndex) indexCount += 1;
-  });
+  const indexableColumns = table.columns.filter((col) => !col.skipIndex);
 
   // create indexes for the table
   let count = 0;
-  for (const column of table.columns) {
+  for (const column of indexableColumns) {
     count = await createIndividualIndex(
       client,
       column,
       count,
-      indexCount,
+      indexableColumns.length,
       indexTableName,
       tableName,
     );
@@ -779,23 +756,17 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
       `${tableName}: Created materialized view (${count} of ${table.materializedViews.length}): ${mv.name}`,
     );
 
-    indexCount = 0;
-    mv.columns.forEach((col) => {
-      if (col.skipIndex) return;
-
-      indexCount += 1;
-      if (col.includeGinIndex) indexCount += 1;
-    });
+    const indexableColumnsMv = mv.columns.filter((col) => !col.skipIndex);
 
     // create indexes for the materialized view
     let mvIndexCount = 0;
     const mvIndexTableName = mv.name.replaceAll('_', '');
-    for (const column of mv.columns) {
+    for (const column of indexableColumnsMv) {
       mvIndexCount = await createIndividualIndex(
         client,
         column,
         mvIndexCount,
-        indexCount,
+        indexableColumnsMv.length,
         mvIndexTableName,
         mv.name,
       );
