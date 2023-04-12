@@ -3,7 +3,7 @@
     "summary": "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/4"
   },
   "domainValues": "https://attains.epa.gov/attains-public/api/domains",
-  "glossaryURL": "https://etss.epa.gov/synaptica_rest_services/api/savedreport/terms/HMWGlossary",
+  "glossaryURL": "https://etss.epa.gov/synaptica_rest_services/api/vocabs/name/Expert%20Query%20Glossary/terms/full",
   "materializedViews": "https://ordspub.epa.gov/ords/attains_eq/",
   "stateCodes": "https://attains.epa.gov/attains-public/api/states"
 }
