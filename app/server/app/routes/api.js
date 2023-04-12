@@ -90,13 +90,10 @@ async function queryColumnValues(profile, column, params, schema) {
   // search through tableconfig.materializedViews to see if the column
   // we need is in here
   const materializedView = profile.materializedViews.find((mv) => {
-    let hasAllColumns = mv.columns.find((mvCol) => mvCol.name === column.name);
-    columnsForFilter.forEach((col) => {
-      const column = mv.columns.find((mvCol) => mvCol.name === col);
-      if (!column) hasAllColumns = false;
-    });
-
-    if (hasAllColumns) return mv;
+    for (const col of columnsForFilter.concat(column.name)) {
+      if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
+    }
+    return mv;
   });
 
   // query table directly if a suitable materialized view was not found
