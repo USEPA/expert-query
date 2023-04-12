@@ -78,22 +78,29 @@ export async function endConnPool(pool) {
   log.info('EqPool connection pool ended');
 }
 
-async function cacheProfileStats(
-  pool,
-  profileName,
-  schemaName,
-  numRows,
-  refreshTime,
-) {
+async function cacheProfileStats(pool, schemaName, profileStats) {
+  const client = await getClient(pool);
   try {
-    await pool.query(
-      'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, creation_date)' +
-        ' VALUES ($1, $2, $3, $4, current_timestamp)',
-      [profileName, schemaName, numRows, refreshTime],
-    );
-    log.info(`Profile stats for ${profileName} cached`);
+    await client.query('BEGIN');
+    for (const profile of profileStats) {
+      await client.query(
+        'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, creation_date)' +
+          ' VALUES ($1, $2, $3, $4, current_timestamp)',
+        [
+          profile['name'].replace('attains_app.profile_', ''),
+          schemaName,
+          profile['num_rows'],
+          profile['last_refresh_end_time'],
+        ],
+      );
+    }
+    await client.query('COMMIT');
+    log.info(`Profile stats cached`);
   } catch (err) {
-    log.warn(`Failed to cache stats for profile ${profileName}: ${err}`);
+    await client.query('ROLLBACK');
+    log.warn(`Failed to cache profile stats: ${err}`);
+  } finally {
+    client.release();
   }
 }
 
@@ -546,15 +553,7 @@ async function getProfileStats(pool, s3Config, schemaName, retryCount = 0) {
     }
   }
 
-  for (const profile of res.data.details) {
-    cacheProfileStats(
-      pool,
-      profile.name.replace('attains_app.profile_', ''),
-      schemaName,
-      profile.num_rows,
-      profile.last_refresh_end_time,
-    );
-  }
+  await cacheProfileStats(pool, schemaName, res.data.details);
 
   return res.data.details;
 }
