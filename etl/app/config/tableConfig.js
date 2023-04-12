@@ -8,7 +8,7 @@ export const tableConfig = {
       { name: 'actionagency', alias: 'actionAgency' },
       { name: 'actionid', alias: 'actionId' },
       { name: 'actionname', alias: 'actionName' },
-      { name: 'actiontype', alias: 'actionType', skipIndex: true },
+      { name: 'actiontype', alias: 'actionType' },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
@@ -556,11 +556,11 @@ export const tableConfig = {
       },
       {
         name: 'catchmentcorrespondence_catchmentnhdplusid',
-        columns: [{ name: 'catchmentnhdplusid', skipIndex: true }],
+        columns: [{ name: 'catchmentnhdplusid', type: 'numeric' }],
       },
       {
         name: 'catchmentcorrespondence_reportingcycle',
-        columns: [{ name: 'reportingcycle', skipIndex: true }],
+        columns: [{ name: 'reportingcycle', type: 'numeric' }],
       },
     ],
   },
@@ -644,7 +644,7 @@ export const tableConfig = {
       },
       {
         name: 'sources_reportingcycle',
-        columns: [{ name: 'reportingcycle', skipIndex: true }],
+        columns: [{ name: 'reportingcycle', type: 'numeric' }],
       },
     ],
   },
