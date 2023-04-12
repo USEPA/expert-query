@@ -190,11 +190,10 @@ async function executeQuery(profile, req, res) {
 
     parseCriteria(query, profile, queryParams);
 
-    if (
-      queryParams.options.count !== false &&
-      parseInt((await getQueryCount(query)).count) >
-        parseInt(process.env.MAX_QUERY_SIZE)
-    ) {
+    // Check that the query doesn't exceed the MAX_QUERY_SIZE.
+    // This check can be bypassed by setting the 'count' option to false,
+    // but the query itself will still be limited by MAX_QUERY_SIZE.
+    if (queryParams.options.count !== false && !(await getQueryCount(query))) {
       return res.status(200).json({
         message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
       });
@@ -281,8 +280,14 @@ function validateQueryParams(queryParams, profile) {
   });
 }
 
-function getQueryCount(query) {
-  return knex
+/**
+ * Counts the number of rows returned be a specified query without modifying
+ * the query object. Limited by the MAX_QUERY_SIZE environment variable.
+ * @param {Object} query KnexJS query object
+ * @returns {Object | null} object with 'count' property or null
+ */
+async function getQueryCount(query) {
+  const count = await knex
     .from(
       query
         .clone()
@@ -291,6 +296,9 @@ function getQueryCount(query) {
     )
     .count()
     .first();
+
+  if (parseInt(count.count) > parseInt(process.env.MAX_QUERY_SIZE)) return null;
+  return count;
 }
 
 /**
@@ -311,7 +319,7 @@ function executeQueryCountOnly(profile, req, res) {
     parseCriteria(query, profile, queryParams, true);
 
     getQueryCount(query).then((count) => {
-      if (parseInt(count.count) > parseInt(process.env.MAX_QUERY_SIZE)) {
+      if (!count) {
         res.status(200).json({
           message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
         });
