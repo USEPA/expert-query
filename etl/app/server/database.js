@@ -689,6 +689,46 @@ export async function trimNationalDownloads(pool) {
   });
 }
 
+// Creates an individual index
+async function createIndividualIndex(
+  client,
+  column,
+  count,
+  indexCount,
+  indexTableName,
+  tableName,
+) {
+  if (column.skipIndex) return count;
+
+  const sortOrder = column.indexOrder || 'asc';
+  const collate = column.type ? '' : 'COLLATE pg_catalog."default"';
+  const indexName = `${indexTableName}_${column.name}_${sortOrder}`;
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS ${indexName}
+      ON ${tableName} USING btree
+      (${column.name} ${collate} ${sortOrder} NULLS LAST)
+      TABLESPACE pg_default
+  `);
+  count += 1;
+  log.info(
+    `${tableName}: Created index (${count} of ${indexCount}): ${indexName}`,
+  );
+
+  if (column.includeGinIndex) {
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS ${indexName}_gin
+        ON ${tableName} USING gin (${column.name} gin_trgm_ops);
+    `);
+    count += 1;
+    log.info(
+      `${tableName}: Created index (${count} of ${indexCount}): ${indexName}_gin`,
+    );
+  }
+
+  return count;
+}
+
 // Build the query for creating the indexes
 async function createIndexes(client, overrideWorkMemory, tableName) {
   const indexTableName = tableName.replaceAll('_', '');
@@ -710,33 +750,54 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
     if (col.includeGinIndex) indexCount += 1;
   });
 
+  // create indexes for the table
   let count = 0;
   for (const column of table.columns) {
-    if (column.skipIndex) continue;
+    count = await createIndividualIndex(
+      client,
+      column,
+      count,
+      indexCount,
+      indexTableName,
+      tableName,
+    );
+  }
 
-    const sortOrder = column.indexOrder || 'asc';
-    const collate = column.type ? '' : 'COLLATE pg_catalog."default"';
-    const indexName = `${indexTableName}_${column.name}_${sortOrder}`;
-
+  // create materialized views for the table
+  count = 0;
+  for (const mv of table.materializedViews) {
     await client.query(`
-      CREATE INDEX IF NOT EXISTS ${indexName}
-        ON ${tableName} USING btree
-        (${column.name} ${collate} ${sortOrder} NULLS LAST)
-        TABLESPACE pg_default
+      CREATE MATERIALIZED VIEW IF NOT EXISTS ${mv.name}
+      AS
+      SELECT DISTINCT ${mv.columns.map((col) => col.name).join(', ')}
+      FROM ${tableName} 
+
+      WITH DATA;
     `);
     count += 1;
     log.info(
-      `${tableName}: Created index (${count} of ${indexCount}): ${indexName}`,
+      `${tableName}: Created materialized view (${count} of ${table.materializedViews.length}): ${mv.name}`,
     );
 
-    if (column.includeGinIndex) {
-      await client.query(`
-        CREATE INDEX IF NOT EXISTS ${indexName}_gin
-          ON ${tableName} USING gin (${column.name} gin_trgm_ops);
-      `);
-      count += 1;
-      log.info(
-        `${tableName}: Created index (${count} of ${indexCount}): ${indexName}_gin`,
+    indexCount = 0;
+    mv.columns.forEach((col) => {
+      if (col.skipIndex) return;
+
+      indexCount += 1;
+      if (col.includeGinIndex) indexCount += 1;
+    });
+
+    // create indexes for the materialized view
+    let mvIndexCount = 0;
+    const mvIndexTableName = mv.name.replaceAll('_', '');
+    for (const column of mv.columns) {
+      mvIndexCount = await createIndividualIndex(
+        client,
+        column,
+        mvIndexCount,
+        indexCount,
+        mvIndexTableName,
+        mv.name,
       );
     }
   }

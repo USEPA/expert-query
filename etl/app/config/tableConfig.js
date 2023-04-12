@@ -6,18 +6,16 @@ export const tableConfig = {
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
       { name: 'actionagency', alias: 'actionAgency' },
-      { name: 'actionid', alias: 'actionId', includeGinIndex: true },
-      { name: 'actionname', alias: 'actionName', includeGinIndex: true },
+      { name: 'actionid', alias: 'actionId' },
+      { name: 'actionname', alias: 'actionName' },
       { name: 'actiontype', alias: 'actionType', skipIndex: true },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
-        includeGinIndex: true,
       },
       {
         name: 'completiondate',
@@ -38,11 +36,10 @@ export const tableConfig = {
       {
         name: 'organizationname',
         alias: 'organizationName',
-        includeGinIndex: true,
       },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
       { name: 'parameter', alias: 'parameter' },
-      { name: 'region', alias: 'region', includeGinIndex: true },
+      { name: 'region', alias: 'region' },
       { name: 'state', alias: 'state' },
       {
         name: 'watersize',
@@ -53,6 +50,33 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViews: [
+      {
+        name: 'actions_assessments',
+        columns: [
+          { name: 'assessmentunitid' },
+          { name: 'assessmentunitname' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'organizationtype' },
+          { name: 'region' },
+          { name: 'state' },
+        ],
+      },
+      {
+        name: 'actions_actions',
+        columns: [
+          { name: 'actionid' },
+          { name: 'actionname' },
+          { name: 'actiontype' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'organizationtype' },
+          { name: 'region' },
+          { name: 'state' },
+        ],
+      },
+    ],
   },
   assessments: {
     tableName: 'assessments',
@@ -62,12 +86,10 @@ export const tableConfig = {
       {
         name: 'alternatelistingidentifier',
         alias: 'alternateListingIdentifier',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentbasis',
         alias: 'assessmentBasis',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentdate',
@@ -80,30 +102,25 @@ export const tableConfig = {
       {
         name: 'assessmentmethods',
         alias: 'assessmentMethods',
-        includeGinIndex: true,
       },
       { name: 'assessmenttypes', alias: 'assessmentTypes' },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
-        includeGinIndex: true,
       },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       { name: 'associatedactionagency', alias: 'associatedActionAgency' },
       {
         name: 'associatedactionid',
         alias: 'associatedActionId',
-        includeGinIndex: true,
       },
       {
         name: 'associatedactionname',
         alias: 'associatedActionName',
-        includeGinIndex: true,
       },
       { name: 'associatedactionstatus', alias: 'associatedActionStatus' },
       { name: 'associatedactiontype', alias: 'associatedActionType' },
@@ -155,7 +172,7 @@ export const tableConfig = {
       },
       { name: 'delisted', alias: 'delisted' },
       { name: 'delistedreason', alias: 'delistedReason' },
-      { name: 'epaircategory', alias: 'epaIrCategory', includeGinIndex: true },
+      { name: 'epaircategory', alias: 'epaIrCategory' },
       {
         name: 'locationdescription',
         alias: 'locationDescription',
@@ -181,14 +198,12 @@ export const tableConfig = {
       {
         name: 'organizationname',
         alias: 'organizationName',
-        includeGinIndex: true,
       },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'overallstatus', alias: 'overallStatus', includeGinIndex: true },
+      { name: 'overallstatus', alias: 'overallStatus' },
       {
         name: 'parameterattainment',
         alias: 'parameterAttainment',
-        includeGinIndex: true,
       },
       { name: 'parametergroup', alias: 'parameterGroup' },
       {
@@ -204,7 +219,7 @@ export const tableConfig = {
       },
       { name: 'parameterstatus', alias: 'parameterStatus' },
       { name: 'pollutantindicator', alias: 'pollutantIndicator' },
-      { name: 'region', alias: 'region', includeGinIndex: true },
+      { name: 'region', alias: 'region' },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -233,7 +248,7 @@ export const tableConfig = {
       { name: 'state', alias: 'state' },
       { name: 'stateircategory', alias: 'stateIrCategory' },
       { name: 'useclassname', alias: 'useClassName' },
-      { name: 'usegroup', alias: 'useGroup', includeGinIndex: true },
+      { name: 'usegroup', alias: 'useGroup' },
       { name: 'useircategory', alias: 'useIrCategory', type: 'numeric' },
       { name: 'usename', alias: 'useName' },
       {
@@ -252,6 +267,77 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViews: [
+      {
+        name: 'assessments_assessments',
+        columns: [
+          { name: 'assessmentunitid' },
+          { name: 'assessmentunitname' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'organizationtype' },
+          { name: 'region' },
+          { name: 'state' },
+        ],
+      },
+      {
+        name: 'assessments_alternatelistingidentifier',
+        columns: [{ name: 'alternatelistingidentifier' }],
+      },
+      {
+        name: 'assessments_assessmentbasis',
+        columns: [{ name: 'assessmentbasis' }],
+      },
+      {
+        name: 'assessments_assessmentmethods',
+        columns: [{ name: 'assessmentmethods' }],
+      },
+      {
+        name: 'assessments_associatedaction',
+        columns: [
+          { name: 'associatedactionid' },
+          { name: 'associatedactionname' },
+          { name: 'associatedactionstatus' },
+          { name: 'associatedactiontype' },
+        ],
+      },
+      {
+        name: 'assessments_epaircategory',
+        columns: [{ name: 'epaircategory' }],
+      },
+      {
+        name: 'assessments_overallstatus',
+        columns: [{ name: 'overallstatus' }],
+      },
+      {
+        name: 'assessments_parameterattainment',
+        columns: [{ name: 'parameterattainment' }],
+      },
+      {
+        name: 'assessments_parameterircategory',
+        columns: [{ name: 'parameterircategory', type: 'numeric' }],
+      },
+      {
+        name: 'assessments_parameterstateircategory',
+        columns: [{ name: 'parameterstateircategory', type: 'numeric' }],
+      },
+      {
+        name: 'assessments_reportingcycle',
+        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+      },
+      {
+        name: 'assessments_usegroup',
+        columns: [{ name: 'usegroup' }],
+      },
+      {
+        name: 'assessments_useircategory',
+        columns: [{ name: 'useircategory', type: 'numeric' }],
+      },
+      {
+        name: 'assessments_usestateircategory',
+        columns: [{ name: 'usestateircategory', type: 'numeric' }],
+      },
+    ],
   },
   assessmentUnits: {
     tableName: 'assessment_units',
@@ -261,12 +347,10 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
-        includeGinIndex: true,
       },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       {
@@ -279,16 +363,15 @@ export const tableConfig = {
         alias: 'locationDescription',
         skipIndex: true,
       },
-      { name: 'locationtext', alias: 'locationText', includeGinIndex: true },
-      { name: 'locationtypecode', alias: 'locationTypeCode', skipIndex: true },
+      { name: 'locationtext', alias: 'locationText' },
+      { name: 'locationtypecode', alias: 'locationTypeCode' },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
         alias: 'organizationName',
-        includeGinIndex: true,
       },
-      { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'region', alias: 'region', includeGinIndex: true },
+      { name: 'organizationtype', alias: 'organizationType' },
+      { name: 'region', alias: 'region' },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -309,6 +392,27 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViews: [
+      {
+        name: 'assessmentunits_assessments',
+        columns: [
+          { name: 'assessmentunitid' },
+          { name: 'assessmentunitname' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'region' },
+          { name: 'state' },
+        ],
+      },
+      {
+        name: 'assessmentunits_locationtext',
+        columns: [{ name: 'locationtext' }],
+      },
+      {
+        name: 'assessmentunits_reportingcycle',
+        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+      },
+    ],
   },
   assessmentUnitsMonitoringLocations: {
     tableName: 'assessment_units_monitoring_locations',
@@ -318,12 +422,10 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
-        includeGinIndex: true,
       },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       {
@@ -344,21 +446,18 @@ export const tableConfig = {
       {
         name: 'monitoringlocationid',
         alias: 'monitoringLocationId',
-        includeGinIndex: true,
       },
       {
         name: 'monitoringlocationorgid',
         alias: 'monitoringLocationOrgId',
-        includeGinIndex: true,
       },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
         alias: 'organizationName',
-        includeGinIndex: true,
       },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'region', alias: 'region', includeGinIndex: true },
+      { name: 'region', alias: 'region' },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -379,6 +478,30 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViews: [
+      {
+        name: 'assessmentunitsmonitoringlocations_assessments',
+        columns: [
+          { name: 'assessmentunitid' },
+          { name: 'assessmentunitname' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'region' },
+          { name: 'state' },
+        ],
+      },
+      {
+        name: 'assessmentunitsmonitoringlocations_locationtext',
+        columns: [
+          { name: 'monitoringlocationid' },
+          { name: 'monitoringlocationorgid' },
+        ],
+      },
+      {
+        name: 'assessmentunitsmonitoringlocations_reportingcycle',
+        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+      },
+    ],
   },
   catchmentCorrespondence: {
     tableName: 'catchment_correspondence',
@@ -388,12 +511,10 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
-        includeGinIndex: true,
       },
       {
         name: 'catchmentnhdplusid',
@@ -409,10 +530,9 @@ export const tableConfig = {
       {
         name: 'organizationname',
         alias: 'organizationName',
-        includeGinIndex: true,
       },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'region', alias: 'region', includeGinIndex: true },
+      { name: 'region', alias: 'region' },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -421,6 +541,27 @@ export const tableConfig = {
         indexOrder: 'desc',
       },
       { name: 'state', alias: 'state' },
+    ],
+    materializedViews: [
+      {
+        name: 'catchmentcorrespondence_assessments',
+        columns: [
+          { name: 'assessmentunitid' },
+          { name: 'assessmentunitname' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'region' },
+          { name: 'state' },
+        ],
+      },
+      {
+        name: 'catchmentcorrespondence_catchmentnhdplusid',
+        columns: [{ name: 'catchmentnhdplusid', skipIndex: true }],
+      },
+      {
+        name: 'catchmentcorrespondence_reportingcycle',
+        columns: [{ name: 'reportingcycle', skipIndex: true }],
+      },
     ],
   },
   sources: {
@@ -431,21 +572,19 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
-        includeGinIndex: true,
       },
-      { name: 'causename', alias: 'causeName', includeGinIndex: true },
+      { name: 'causename', alias: 'causeName' },
       { name: 'confirmed', alias: 'confirmed' },
       {
         name: 'cycleid',
         alias: 'cycleId',
         type: 'numeric',
       },
-      { name: 'epaircategory', alias: 'epaIrCategory', includeGinIndex: true },
+      { name: 'epaircategory', alias: 'epaIrCategory' },
       {
         name: 'locationdescription',
         alias: 'locationDescription',
@@ -455,12 +594,11 @@ export const tableConfig = {
       {
         name: 'organizationname',
         alias: 'organizationName',
-        includeGinIndex: true,
       },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
-      { name: 'overallstatus', alias: 'overallStatus', includeGinIndex: true },
+      { name: 'overallstatus', alias: 'overallStatus' },
       { name: 'parametergroup', alias: 'parameterGroup' },
-      { name: 'region', alias: 'region', includeGinIndex: true },
+      { name: 'region', alias: 'region' },
       {
         name: 'reportingcycle',
         alias: 'reportingCycle',
@@ -480,6 +618,35 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViews: [
+      {
+        name: 'sources_assessments',
+        columns: [
+          { name: 'assessmentunitid' },
+          { name: 'assessmentunitname' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'region' },
+          { name: 'state' },
+        ],
+      },
+      {
+        name: 'sources_causename',
+        columns: [{ name: 'causename' }],
+      },
+      {
+        name: 'sources_epaircategory',
+        columns: [{ name: 'epaircategory' }],
+      },
+      {
+        name: 'sources_overallstatus',
+        columns: [{ name: 'overallstatus' }],
+      },
+      {
+        name: 'sources_reportingcycle',
+        columns: [{ name: 'reportingcycle', skipIndex: true }],
+      },
+    ],
   },
   tmdl: {
     tableName: 'tmdl',
@@ -487,22 +654,19 @@ export const tableConfig = {
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
       { name: 'actionagency', alias: 'actionAgency' },
-      { name: 'actionid', alias: 'actionId', includeGinIndex: true },
-      { name: 'actionname', alias: 'actionName', includeGinIndex: true },
+      { name: 'actionid', alias: 'actionId' },
+      { name: 'actionname', alias: 'actionName' },
       {
         name: 'addressedparameter',
         alias: 'addressedParameter',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
-        includeGinIndex: true,
       },
       {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
-        includeGinIndex: true,
       },
       {
         name: 'completiondate',
@@ -515,7 +679,6 @@ export const tableConfig = {
       {
         name: 'explicitmarginofsafety',
         alias: 'explicitMarginOfSafety',
-        includeGinIndex: true,
       },
       {
         name: 'fiscalyearestablished',
@@ -527,7 +690,6 @@ export const tableConfig = {
       {
         name: 'implicitmarginofsafety',
         alias: 'implicitMarginOfSafety',
-        includeGinIndex: true,
       },
       { name: 'includeinmeasure', alias: 'includeInMeasure' },
       { name: 'inindiancountry', alias: 'inIndianCountry' },
@@ -550,22 +712,19 @@ export const tableConfig = {
       {
         name: 'npdesidentifier',
         alias: 'npdesIdentifier',
-        includeGinIndex: true,
       },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
         alias: 'organizationName',
-        includeGinIndex: true,
       },
       { name: 'organizationtype', alias: 'organizationType', skipIndex: true },
       {
         name: 'otheridentifier',
         alias: 'otherIdentifier',
-        includeGinIndex: true,
       },
       { name: 'pollutant', alias: 'pollutant' },
-      { name: 'region', alias: 'region', includeGinIndex: true },
+      { name: 'region', alias: 'region' },
       { name: 'sourcetype', alias: 'sourceType' },
       { name: 'state', alias: 'state' },
       {
@@ -590,6 +749,47 @@ export const tableConfig = {
       },
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
+    ],
+    materializedViews: [
+      {
+        name: 'tmdl_assessments',
+        columns: [
+          { name: 'assessmentunitid' },
+          { name: 'assessmentunitname' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'region' },
+          { name: 'state' },
+        ],
+      },
+      {
+        name: 'tmdl_actions',
+        columns: [
+          { name: 'actionid' },
+          { name: 'actionname' },
+          { name: 'actionagency' },
+        ],
+      },
+      {
+        name: 'tmdl_addressedparameter',
+        columns: [{ name: 'addressedparameter' }],
+      },
+      {
+        name: 'tmdl_explicitmarginofsafety',
+        columns: [{ name: 'explicitmarginofsafety' }],
+      },
+      {
+        name: 'tmdl_implicitmarginofsafety',
+        columns: [{ name: 'implicitmarginofsafety' }],
+      },
+      {
+        name: 'tmdl_npdesidentifier',
+        columns: [{ name: 'npdesidentifier' }],
+      },
+      {
+        name: 'tmdl_otheridentifier',
+        columns: [{ name: 'otheridentifier' }],
+      },
     ],
   },
 };

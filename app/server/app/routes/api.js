@@ -84,10 +84,29 @@ async function queryColumnValues(profile, column, params, schema) {
     else parsedParams.filters[name] = value;
   });
 
+  // get columns for where clause
+  const columnsForFilter = [];
+  profile.columns.forEach((col) => {
+    if (parsedParams.filters.hasOwnProperty(col.alias)) {
+      columnsForFilter.push(col.name);
+    }
+  });
+
+  // search through tableconfig.materializedViews to see if the column
+  // we need is in here
+  const materializedView = profile.materializedViews.find((mv) => {
+    for (const col of columnsForFilter.concat(column.name)) {
+      if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
+    }
+    return mv;
+  });
+
+  // query table directly if a suitable materialized view was not found
   const query = knex
     .withSchema(schema)
-    .from(profile.tableName)
+    .from(materializedView ? materializedView.name : profile.tableName)
     .column(column.name)
+    .whereNotNull(column.name)
     .distinctOn(column.name)
     .orderBy(column.name, parsedParams.direction ?? 'asc')
     .select();
