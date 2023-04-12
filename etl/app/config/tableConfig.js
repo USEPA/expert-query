@@ -68,6 +68,7 @@ export const tableConfig = {
         columns: [
           { name: 'actionid' },
           { name: 'actionname' },
+          { name: 'actiontype' },
           { name: 'organizationid' },
           { name: 'organizationname' },
           { name: 'organizationtype' },
