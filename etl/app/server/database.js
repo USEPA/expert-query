@@ -78,6 +78,33 @@ export async function endConnPool(pool) {
   log.info('EqPool connection pool ended');
 }
 
+async function cacheProfileStats(pool, schemaName, profileStats) {
+  const client = await getClient(pool);
+  try {
+    await client.query('BEGIN');
+    for (const profile of profileStats) {
+      await client.query(
+        'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, last_refresh_elapsed, creation_date)' +
+          ' VALUES ($1, $2, $3, $4, $5, current_timestamp)',
+        [
+          profile['name'].replace('attains_app.profile_', ''),
+          schemaName,
+          profile['num_rows'],
+          profile['last_refresh_end_time'],
+          profile['last_refresh_elapsed'],
+        ],
+      );
+    }
+    await client.query('COMMIT');
+    log.info(`Profile stats cached`);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    log.warn(`Failed to cache profile stats: ${err}`);
+  } finally {
+    client.release();
+  }
+}
+
 export async function checkLogTables() {
   const client = await connectClient(eqConfig);
 
@@ -126,6 +153,20 @@ export async function checkLogTables() {
           database VARCHAR(20),
           glossary VARCHAR(20),
           domain_values VARCHAR(20)
+        )`,
+    );
+
+    // create mv_profile_stats table
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS logging.mv_profile_stats
+        (
+          profile_name VARCHAR(40) NOT NULL,
+          schema_name VARCHAR(20) NOT NULL,
+          num_rows INTEGER NOT NULL,
+          last_refresh_end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+          last_refresh_elapsed VARCHAR(20) NOT NULL,
+          creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+          PRIMARY KEY (profile_name, schema_name)
         )`,
     );
 
@@ -473,10 +514,12 @@ export async function runLoad(pool, s3Config, s3Julian) {
     });
     await Promise.all(loadTasks);
 
+    const profileStats = await getProfileStats(pool, s3Config, schemaName);
+
     // Verify the etl was successfull and the data matches what we expect.
     // We skip this when running locally, since the row counts will never match.
     if (!environment.isLocal) {
-      await certifyEtlComplete(pool, s3Config, schemaId, schemaName);
+      await certifyEtlComplete(pool, profileStats, schemaId, schemaName);
     }
 
     await transferSchema(pool, schemaName, schemaId);
@@ -490,15 +533,7 @@ export async function runLoad(pool, s3Config, s3Julian) {
   }
 }
 
-// Verify the data pulled in from the ETL matches the materialized views.
-export async function certifyEtlComplete(
-  pool,
-  s3Config,
-  logId,
-  schemaName,
-  retryCount = 0,
-) {
-  // get profile stats
+async function getProfileStats(pool, s3Config, schemaName, retryCount = 0) {
   const url = `${s3Config.services.materializedViews}/profile_stats`;
   const res = await axios.get(url, {
     headers: { 'API-key': process.env.MV_API_KEY },
@@ -514,15 +549,22 @@ export async function certifyEtlComplete(
     log.info('Non-200 response returned from profile_stats service, retrying');
     if (retryCount < s3Config.config.retryLimit) {
       await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
-      return await certifyEtlComplete(pool, s3Config, retryCount + 1);
+      return await getProfileStats(pool, s3Config, schemaName, retryCount + 1);
     } else {
       throw new Error('Retry count exceeded');
     }
   }
 
+  await cacheProfileStats(pool, schemaName, res.data.details);
+
+  return res.data.details;
+}
+
+// Verify the data pulled in from the ETL matches the materialized views.
+async function certifyEtlComplete(pool, profileStats, logId, schemaName) {
   // loop through and make sure the tables exist and the counts match
   let issuesMessage = '';
-  for (const profile of res.data.details) {
+  for (const profile of profileStats) {
     // check date
     if (profile.last_refresh_end_time <= profile.last_refresh_date) {
       issuesMessage += `${profile.name} issue: last_refresh_end_time (${profile.last_refresh_end_time}) is not after last_refresh_date (${profile.last_refresh_date}).\n`;
