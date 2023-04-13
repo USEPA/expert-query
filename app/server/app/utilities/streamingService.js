@@ -81,23 +81,25 @@ export default class StreamingService {
    * @param {function} preHook function for writing initial headers
    * @returns Transform object
    */
-  static getJsonTransform = (preHook) => {
+  static getJsonTransform = (preHook, next) => {
+    const start = '{ "data": [';
+    const end = ']' + (next ? `, "next": ${next}` : '') + '}';
     return new Transform({
       writableObjectMode: true,
       transform(data, encoding, callback) {
         // preHook on first data only
         if (!this.comma) preHook();
         // if first data && error then no open/close brackets
-        const prefix = this.comma || (data.error ? '' : '[');
-        const suffix = this.comma && data.error ? ']' : '';
+        const prefix = this.comma || (data.error ? '' : start);
+        const suffix = this.comma && data.error ? end : '';
         this.push(`${prefix}${JSON.stringify(data)}${suffix}`);
         // set comma for subsequent data
         if (!this.comma) this.comma = ',\n';
         callback();
       },
       final(callback) {
-        if (!this.comma) this.push('[');
-        this.push(']');
+        if (!this.comma) this.push(start);
+        this.push(end);
         callback();
       },
     });
@@ -151,7 +153,13 @@ export default class StreamingService {
    * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
    * @param {Object} excelDoc Excel workbook and worksheet objects
    */
-  static streamResponse = (outStream, inStream, format, excelDoc = null) => {
+  static streamResponse = (
+    outStream,
+    inStream,
+    format,
+    excelDoc = null,
+    nextOffset = null,
+  ) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,
       format,
@@ -163,7 +171,7 @@ export default class StreamingService {
       outStream.end();
     });
 
-    let transform = StreamingService.getJsonTransform(preHook);
+    let transform = StreamingService.getJsonTransform(preHook, nextOffset);
     if (format === 'csv' || format === 'tsv') {
       transform = StreamingService.getBasicTransform(preHook, format);
     }

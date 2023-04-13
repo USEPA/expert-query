@@ -31,6 +31,10 @@ function appendLatestToWhere(query, column, columnType, baseQuery) {
   return subQuery;
 }
 
+function isFileAttachmentFormat(format) {
+  return ['csv', 'tsv', 'xlsx'].includes(format);
+}
+
 /**
  * Append a range to the where clause of the provided query.
  * @param {Object} query KnexJS query object
@@ -179,10 +183,7 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 async function executeQuery(profile, req, res) {
   // output types csv, tab-separated, Excel, or JSON
   try {
-    const query = knex
-      .withSchema(req.activeSchema)
-      .from(profile.tableName)
-      .limit(parseInt(process.env.MAX_QUERY_SIZE));
+    const query = knex.withSchema(req.activeSchema).from(profile.tableName);
 
     const queryParams = getQueryParams(req);
 
@@ -190,16 +191,29 @@ async function executeQuery(profile, req, res) {
 
     parseCriteria(query, profile, queryParams);
 
-    // Check that the query doesn't exceed the MAX_QUERY_SIZE.
-    // This check can be bypassed by setting the 'count' option to false,
-    // but the query itself will still be limited by MAX_QUERY_SIZE.
-    if (queryParams.options.count !== false && !(await getQueryCount(query))) {
-      return res.status(200).json({
-        message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
-      });
+    const format = queryParams.options.format ?? queryParams.options.f;
+
+    let hasMore = false;
+    if (isFileAttachmentFormat(format)) {
+      // Check that the query doesn't exceed the MAX_QUERY_SIZE.
+      // This check can be bypassed by setting the 'count' option to false,
+      // but the query itself will still be limited by MAX_QUERY_SIZE.
+      if (
+        queryParams.options.count !== false &&
+        (await getQueryCount(query, format)) === null
+      ) {
+        return res.status(200).json({
+          message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
+        });
+      }
+      query.limit(parseInt(process.env.MAX_QUERY_SIZE));
+    } else {
+      hasMore = (await getQueryCount(query)) === null;
+      query.offset(queryParams.options.offset ?? 0);
+      query.limit(parseInt(process.env.JSON_PAGE_SIZE));
     }
 
-    const stream = await query.stream({
+    const stream = query.stream({
       batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
       highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
     });
@@ -207,7 +221,6 @@ async function executeQuery(profile, req, res) {
     // close the stream if the request is canceled
     stream.on('close', stream.end.bind(stream));
 
-    const format = queryParams.options.format ?? queryParams.options.f;
     switch (format) {
       case 'csv':
       case 'tsv':
@@ -236,15 +249,13 @@ async function executeQuery(profile, req, res) {
           worksheet,
         });
         break;
-      case 'json':
-        res.setHeader(
-          'Content-disposition',
-          `attachment; filename=${profile.tableName}.json`,
-        );
-        StreamingService.streamResponse(res, stream, format);
-        break;
+      // stream inline JSON response
       default:
-        StreamingService.streamResponse(res, stream, format);
+        const nextOffset = hasMore
+          ? (queryParams.options.offset ?? 0) +
+            parseInt(process.env.JSON_PAGE_SIZE)
+          : null;
+        StreamingService.streamResponse(res, stream, format, null, nextOffset);
         break;
     }
   } catch (error) {
@@ -282,22 +293,25 @@ function validateQueryParams(queryParams, profile) {
 
 /**
  * Counts the number of rows returned be a specified query without modifying
- * the query object. Limited by the MAX_QUERY_SIZE environment variable.
+ * the query object. Limited by a format-specific configuration
  * @param {Object} query KnexJS query object
  * @returns {Object | null} object with 'count' property or null
  */
-async function getQueryCount(query) {
+async function getQueryCount(query, format) {
+  const limit = isFileAttachmentFormat(format)
+    ? parseInt(process.env.MAX_QUERY_SIZE)
+    : parseInt(process.env.JSON_PAGE_SIZE);
   const count = await knex
     .from(
       query
         .clone()
-        .limit(parseInt(process.env.MAX_QUERY_SIZE) + 1)
+        .limit(limit + 1)
         .as('q'),
     )
     .count()
     .first();
 
-  if (parseInt(count.count) > parseInt(process.env.MAX_QUERY_SIZE)) return null;
+  if (parseInt(count.count) > limit) return null;
   return count;
 }
 
@@ -318,6 +332,7 @@ function executeQueryCountOnly(profile, req, res) {
 
     parseCriteria(query, profile, queryParams, true);
 
+    console.log(query.toString());
     getQueryCount(query).then((count) => {
       if (!count) {
         res.status(200).json({
