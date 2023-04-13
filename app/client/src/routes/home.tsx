@@ -1821,7 +1821,6 @@ type OptionInputHandler = (
 ) => void;
 
 type OptionQueryData = Partial<{
-  count: boolean;
   format: Format;
 }>;
 

@@ -57,7 +57,7 @@ export function DownloadModal<D extends PostData>({
       ...queryData,
       options: {
         ...queryData.options,
-        count: false,
+        skipCount: true,
       },
     };
 
@@ -186,7 +186,6 @@ type DownloadModalProps<D extends PostData> = {
   dataId?: string;
   downloadStatus: Status;
   filename: string | null;
-  maxCount?: number;
   onClose: () => void;
   queryData: D;
   queryUrl: string | null;
