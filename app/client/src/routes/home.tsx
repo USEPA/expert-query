@@ -16,7 +16,7 @@ import { Alert } from 'components/alert';
 import { Checkbox } from 'components/checkbox';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
-import { GlossaryPanel, GlossaryTerm } from 'components/glossaryPanel';
+import { GlossaryPanel } from 'components/glossaryPanel';
 import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
@@ -244,10 +244,7 @@ export function QueryBuilder() {
           </AccordionItem>
 
           <AccordionItem heading="Advanced API Queries">
-            <h4>
-              {/* TODO - Remove the glossary linkage before production deployment */}
-              <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-            </h4>
+            <h4>Current Query</h4>
             <CopyBox
               testId="current-query-copy-box-container"
               text={`${window.location.origin}${
