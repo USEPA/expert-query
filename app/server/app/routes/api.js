@@ -246,7 +246,7 @@ export default function (app, basePath) {
   });
 
   // create post requests
-  router.get('/:profile/values/:column', function (req, res) {
+  router.get('/profiles/:profile/columns/:column/values', function (req, res) {
     const profile = tableConfig[req.params.profile];
     if (!profile) {
       return res

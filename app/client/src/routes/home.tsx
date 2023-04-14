@@ -1165,7 +1165,7 @@ function filterDynamicOptions({
     inputValue: string,
     signal?: AbortSignal,
   ): Promise<Array<Option>> {
-    let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}&direction=${direction}`;
+    let url = `${serverUrl}/api/profiles/${profile}/columns/${fieldName}/values?text=${inputValue}&direction=${direction}`;
     if (isNotEmpty(limit)) url += `&limit=${limit}`;
     if (isNotEmpty(sourceField) && isNotEmpty(sourceValue)) {
       url += `&${sourceField}=${sourceValue}`;

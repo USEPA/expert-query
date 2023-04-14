@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import 'uswds/css/uswds.css';
 import 'bootstrap/dist/css/bootstrap-grid.min.css';
 // components
+import ApiDocs from 'routes/apiDocs';
 import { Home, QueryBuilder } from 'routes/home';
 import NationalDownloads from 'routes/nationalDownloads';
 import ErrorPage from 'routes/404';
@@ -110,7 +111,7 @@ function useDisclaimerBanner() {
 }
 
 // workaround to preserve the href in the url, without this
-// the ErrorPage will 
+// the ErrorPage will
 // redirect to http://localhost:9090/404.html?src=http://localhost:3000/404
 // instead of  http://localhost:9090/404.html?src=http://localhost:3000/some-url-doesnt-exist
 const href = window.location.href;
@@ -124,6 +125,7 @@ export function App() {
     <BrowserRouter basename={serverBasePath}>
       <Routes>
         <Route index element={<Navigate to="/attains" replace />} />
+        <Route path="/api-docs" element={<ApiDocs />} />
         <Route path="/attains" element={<Home />}>
           <Route path=":profile" element={<QueryBuilder />} />
         </Route>
