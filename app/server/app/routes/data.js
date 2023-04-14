@@ -7,6 +7,9 @@ import { appendToWhere, knex } from '../utilities/database.js';
 import { log } from '../utilities/logger.js';
 import StreamingService from '../utilities/streamingService.js';
 
+const jsonPageSize = parseInt(process.env.JSON_PAGE_SIZE);
+const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE);
+
 class DuplicateParameterException extends Error {
   constructor(parameter) {
     super();
@@ -29,7 +32,7 @@ class InvalidParameterException extends Error {
  * @param {Object} columnType data type of the "Latest" column
  * @returns {Object} a different KnexJS query object
  */
-function getLatestSubquery(query, columnName, columnType) {
+function createLatestSubquery(query, columnName, columnType) {
   if (columnType !== 'numeric' && columnType !== 'timestamptz') return;
 
   const subQuery = query.clone();
@@ -61,7 +64,7 @@ function createStream(query) {
  * @param {string} baseName the name of the file without the extension
  */
 async function streamFile(query, res, format, baseName) {
-  query.limit(parseInt(process.env.MAX_QUERY_SIZE));
+  query.limit(maxQuerySize);
 
   res.setHeader(
     'Content-disposition',
@@ -84,29 +87,35 @@ async function streamFile(query, res, format, baseName) {
   }
 }
 
+async function getNextId(query) {
+  const id = await knex
+    .select('objectId')
+    .from(query.clone().limit(maxQuerySize).as('q'))
+    .offset(jsonPageSize)
+    .limit(1)
+    .first();
+  return id?.objectId ?? null;
+}
+
 /**
  * Streams the results of a query as paginated JSON.
  * @param {Object} query KnexJS query object
  * @param {Express.Response} res
- * @param {number} offset record number from which rows are returned
+ * @param {number} startId current objectid to start returning results from
  */
-async function streamJson(query, res, offset) {
-  query.offset(offset);
-  query.limit(parseInt(process.env.JSON_PAGE_SIZE));
+async function streamJson(query, res, startId) {
+  if (startId) query.where('objectid', '>=', startId);
 
-  const hasMore = (await checkQueryCount(query)) === null;
-  const nextOffset = hasMore
-    ? offset + parseInt(process.env.JSON_PAGE_SIZE)
-    : null;
+  const nextId = await getNextId(query);
 
-  if (nextOffset > parseInt(process.env.MAX_QUERY_SIZE)) return;
+  query.limit(jsonPageSize);
 
   StreamingService.streamResponse(
     res,
     createStream(query),
     'json',
     null,
-    nextOffset,
+    nextId,
   );
 }
 
@@ -170,7 +179,7 @@ function getQueryParams(req) {
   }
 
   // organize GET parameters to follow what we expect from POST
-  const optionsParams = ['f', 'format', 'skipCount', 'offset'];
+  const optionsParams = ['f', 'format', 'skipCount', 'startId'];
   const parameters = {
     filters: {},
     options: {},
@@ -198,7 +207,7 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   // so that we can apply the same filters to the subquery
   const latestColumn = profile.columns.find((col) => col.default === 'latest');
   const subQuery = latestColumn
-    ? getLatestSubquery(query, latestColumn.name, latestColumn.type)
+    ? createLatestSubquery(query, latestColumn.name, latestColumn.type)
     : null;
 
   // build select statement of the query
@@ -206,7 +215,9 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
   if (!countOnly) {
     // filter down to requested columns, if the user provided that option
     const columnsToReturn = [];
-    queryParams.columns?.forEach((col) => {
+    const columns = queryParams.columns ?? [];
+    if (!columns.includes('objectId')) columns.push('objectId');
+    columns.forEach((col) => {
       const profileCol = profile.columns.find((pc) => pc.alias === col);
       if (profileCol) columnsToReturn.push(profileCol);
     });
@@ -218,7 +229,7 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
       col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
     );
   }
-  query.select(selectText);
+  query.select(selectText).orderBy('objectid', 'asc');
 
   // build where clause of the query
   profile.columns.forEach((col) => {
@@ -273,10 +284,10 @@ async function executeQuery(profile, req, res) {
     if (['csv', 'tsv', 'xlsx'].includes(format)) {
       await streamFile(query, res, format, profile.tableName);
     } else {
-      const offset = queryParams.options.offset
-        ? parseInt(queryParams.options.offset)
-        : 0;
-      await streamJson(query, res, offset);
+      const startId = queryParams.options.startId
+        ? parseInt(queryParams.options.startId)
+        : null;
+      await streamJson(query, res, startId);
     }
   } catch (error) {
     log.error(`Failed to get data from the "${profile.tableName}" table...`);
@@ -312,26 +323,23 @@ function validateQueryParams(queryParams, profile) {
 }
 
 /**
- * Counts the number of rows returned be a specified query without modifying
- * the query object. Limited by a format-specific configuration
+ * Counts the number of rows returned be a specified
+ * query without modifying the query object
  * @param {Object} query KnexJS query object
  * @returns {Object | null} object with 'count' property, or null if limit exceeded
  */
-async function checkQueryCount(query, singlePage = false) {
-  const limit = singlePage
-    ? parseInt(process.env.JSON_PAGE_SIZE)
-    : parseInt(process.env.MAX_QUERY_SIZE);
+async function checkQueryCount(query) {
   const count = await knex
     .from(
       query
         .clone()
-        .limit(limit + 1)
+        .limit(maxQuerySize + 1)
         .as('q'),
     )
     .count()
     .first();
 
-  if (parseInt(count.count) > limit) return null;
+  if (parseInt(count.count) > maxQuerySize) return null;
   return count;
 }
 

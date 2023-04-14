@@ -81,12 +81,12 @@ export default class StreamingService {
    * @param {function} preHook function for writing initial headers
    * @returns Transform object
    */
-  static getJsonTransform = (preHook, next) => {
+  static getJsonTransform = (preHook, nextId) => {
     const start = '{ "data": [';
-    const end = ']' + (next ? `, "next": ${next}` : '') + '}';
+    const end = ']' + (nextId ? `, "nextId": ${nextId}` : '') + '}';
     return new Transform({
       writableObjectMode: true,
-      transform(data, encoding, callback) {
+      transform(data, _encoding, callback) {
         // preHook on first data only
         if (!this.comma) preHook();
         // if first data && error then no open/close brackets
@@ -158,7 +158,7 @@ export default class StreamingService {
     inStream,
     format,
     excelDoc = null,
-    nextOffset = null,
+    nextId = null,
   ) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,
@@ -171,7 +171,7 @@ export default class StreamingService {
       outStream.end();
     });
 
-    let transform = StreamingService.getJsonTransform(preHook, nextOffset);
+    let transform = StreamingService.getJsonTransform(preHook, nextId);
     if (format === 'csv' || format === 'tsv') {
       transform = StreamingService.getBasicTransform(preHook, format);
     }
