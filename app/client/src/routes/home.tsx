@@ -1,11 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
+import { debounce } from 'lodash';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
   Outlet,
   useNavigate,
@@ -13,20 +7,21 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
-import AsyncSelect from 'react-select/async';
 import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
+import { ReactComponent as Folder } from 'uswds/img/usa-icons/folder.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
 import { Checkbox } from 'components/checkbox';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
-import { GlossaryPanel, GlossaryTerm } from 'components/glossaryPanel';
+import { GlossaryPanel } from 'components/glossaryPanel';
 import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
+import { NavButton } from 'components/navButton';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -41,10 +36,10 @@ import {
   profiles,
   serverUrl,
 } from 'config';
+// utils
+import { isAbort, useAbort } from 'utils';
 // types
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
-import type { GroupBase } from 'react-select';
-import type { AsyncProps } from 'react-select/async';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
 import type { Profile } from 'config/profiles';
 
@@ -55,6 +50,8 @@ import type { Profile } from 'config/profiles';
 export default Home;
 
 export function Home() {
+  const navigate = useNavigate();
+
   const { content } = useContentState();
 
   const staticOptions = useStaticOptions(content);
@@ -76,8 +73,7 @@ export function Home() {
     initializeFilters,
   });
 
-  const eqDataUrl =
-    content.data.services?.eqDataApi || `${serverUrl}/attains`;
+  const eqDataUrl = content.data.services?.eqDataApi || `${serverUrl}/attains`;
 
   if (content.status === 'pending') return <Loading />;
 
@@ -92,22 +88,20 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <button
-          title="Glossary"
-          className="js-glossary-toggle margin-bottom-2 bg-white border-2px border-transparent padding-1 radius-md width-auto hover:bg-white hover:border-primary"
-          style={{ cursor: 'pointer' }}
-          type="button"
-        >
-          <Book
-            aria-hidden="true"
-            className="height-2 margin-right-1 text-primary top-2px usa-icon width-2"
-            focusable="false"
-            role="img"
-          />
-          <span className="font-ui-md text-bold text-primary">Glossary</span>
-        </button>
+        <NavButton
+          label="Glossary"
+          icon={Book}
+          styles={['js-glossary-toggle', 'margin-right-05']}
+        />
+        <NavButton
+          label="National Downloads"
+          icon={Folder}
+          onClick={() => navigate('/national-downloads')}
+        />
         <GlossaryPanel path={getPageName()} />
         <div>
+          <h2>Query ATTAINS Data</h2>
+          <hr />
           <ParameterErrorAlert parameters={queryParamErrors} />
           <Intro />
           {staticOptions && (
@@ -129,6 +123,7 @@ export function Home() {
                     filterState,
                     format,
                     formatHandler,
+                    maxQuerySize: content.data.parameters.maxQuerySize,
                     profile,
                     queryParams,
                     queryUrl: eqDataUrl,
@@ -157,6 +152,7 @@ export function QueryBuilder() {
     filterState,
     format,
     formatHandler,
+    maxQuerySize,
     profile,
     resetFilters,
     sourceHandlers,
@@ -182,8 +178,10 @@ export function QueryBuilder() {
     <>
       {downloadConfirmationVisible && (
         <DownloadModal
+          dataId="attains"
           filename={profile && format ? `${profile}.${format.value}` : null}
           downloadStatus={downloadStatus}
+          maxCount={maxQuerySize}
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
           queryUrl={
@@ -221,7 +219,7 @@ export function QueryBuilder() {
               legend={
                 <>
                   <b className="margin-right-05">File Format</b>
-                  <InfoTooltip text="Choose a file format for the result set" />
+                  <InfoTooltip text="Choose a file format for the result set." />
                 </>
               }
               onChange={formatHandler}
@@ -249,10 +247,7 @@ export function QueryBuilder() {
           </AccordionItem>
 
           <AccordionItem heading="Advanced API Queries">
-            <h4>
-              {/* TODO - Remove the glossary linkage before production deployment */}
-              <GlossaryTerm term="Acidity">Current Query</GlossaryTerm>
-            </h4>
+            <h4>Current Query</h4>
             <CopyBox
               testId="current-query-copy-box-container"
               text={`${window.location.origin}${
@@ -269,6 +264,7 @@ export function QueryBuilder() {
               }?${buildUrlQueryString(
                 queryParams.filters,
                 queryParams.options,
+                queryParams.columns,
               )}`}
             />
             <h4>cURL</h4>
@@ -309,7 +305,7 @@ function FilterFields({
       switch (fieldConfig.type) {
         case 'multiselect':
         case 'select':
-          const defaultOptions = getInitialOptions(
+          const initialOptions = getInitialOptions(
             staticOptions,
             fieldConfig.key,
             sourceValue,
@@ -318,15 +314,15 @@ function FilterFields({
           if (
             !sourceFieldConfig &&
             fieldConfig.type === 'multiselect' &&
-            Array.isArray(defaultOptions) &&
-            defaultOptions.length <= 5
+            Array.isArray(initialOptions) &&
+            initialOptions.length <= 5
           ) {
             return [
               <Checkboxes
                 key={fieldConfig.key}
                 legend={<b>{fieldConfig.label}</b>}
                 onChange={filterHandlers[fieldConfig.key]}
-                options={defaultOptions}
+                options={initialOptions}
                 selected={filterState[fieldConfig.key] ?? []}
                 styles={['margin-top-3']}
               />,
@@ -336,7 +332,6 @@ function FilterFields({
           const selectProps = {
             defaultOption:
               'default' in fieldConfig ? fieldConfig.default : null,
-            defaultOptions,
             filterHandler: filterHandlers[fieldConfig.key],
             filterKey: fieldConfig.key,
             filterLabel: fieldConfig.label,
@@ -634,7 +629,6 @@ function SelectFilter<
   P extends SingleSelectFilterProps | MultiSelectFilterProps,
 >({
   defaultOption,
-  defaultOptions,
   filterHandler,
   filterKey,
   filterLabel,
@@ -645,16 +639,12 @@ function SelectFilter<
   sourceValue,
   staticOptions,
 }: P) {
-  const asyncSelectProps = {
-    'aria-Label': `${filterLabel} input`,
-    className: 'width-full',
-    inputId: `input-${filterKey}`,
-    isMulti: isMultiOptionField(filterKey),
-    // Re-renders default options when `sourceValue` changes
-    key: JSON.stringify(sourceValue?.value),
-    onChange: filterHandler,
-    defaultOptions: defaultOptions,
-    loadOptions: filterOptions({
+  const { content } = useContentState();
+  const { abort, getSignal } = useAbort();
+
+  // Create the filter function from the HOF
+  const filterFunc = useMemo(() => {
+    return filterOptions({
       defaultOption,
       profile,
       field: filterKey,
@@ -662,57 +652,109 @@ function SelectFilter<
       staticOptions,
       sourceField: sourceKey,
       sourceValue: sourceValue?.value,
-    }),
-    menuPortalTarget: document.body,
-    placeholder: `Select ${getArticle(
-      filterLabel.split(' ')[0],
-    )} ${filterLabel}...`,
-    styles: {
-      control: (base) => ({
-        ...base,
-        border: '1px solid #adadad',
-        borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
-      }),
-      loadingIndicator: () => ({
-        display: 'none',
-      }),
-      menuPortal: (base) => ({
-        ...base,
-        zIndex: 9999,
-      }),
-    },
-    value: filterValue,
-  } as AsyncProps<Option, boolean, GroupBase<Option>>;
+    });
+  }, [
+    defaultOption,
+    filterKey,
+    profile,
+    sortDirection,
+    sourceKey,
+    sourceValue,
+    staticOptions,
+  ]);
 
-  return <AsyncSelect {...asyncSelectProps} />;
+  const [options, setOptions] = useState<readonly Option[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchOptions = useCallback(
+    (inputValue: string) => {
+      abort();
+      setLoading(true);
+      return filterFunc(inputValue, getSignal())
+        .then((newOptions) => {
+          setLoading(false);
+          setOptions(newOptions);
+        })
+        .catch((err) => {
+          if (isAbort(err)) return;
+          setLoading(false);
+          console.error(err);
+        });
+    },
+    [abort, filterFunc, getSignal],
+  );
+
+  const debouncedFetchOptions = useMemo(() => {
+    if (content.status !== 'success') return null;
+    return debounce(
+      fetchOptions,
+      content.data.parameters.debounceMilliseconds,
+      {
+        leading: true,
+        trailing: true,
+      },
+    );
+  }, [content, fetchOptions]);
+
+  useEffect(() => {
+    return function cleanup() {
+      debouncedFetchOptions?.cancel();
+    };
+  }, [debouncedFetchOptions]);
+
+  const loadOptions = (inputValue: string | null = null) =>
+    inputValue === null || !debouncedFetchOptions
+      ? fetchOptions(inputValue ?? '')
+      : debouncedFetchOptions(inputValue);
+
+  // Reset default options when `sourceValue` changes
+  useEffect(() => {
+    if (!sourceValue) return;
+    setOptions(null);
+  }, [sourceValue]);
+
+  return (
+    <Select
+      aria-label={`${filterLabel} input`}
+      className="width-full"
+      inputId={`input-${filterKey}`}
+      isLoading={loading}
+      isMulti={isMultiOptionField(filterKey)}
+      menuPortalTarget={document.body}
+      onChange={filterHandler}
+      onInputChange={(inputValue, actionMeta) => {
+        if (actionMeta.action !== 'input-change') return;
+        loadOptions(inputValue);
+      }}
+      onMenuClose={() => {
+        abort();
+        setLoading(false);
+        setOptions(null);
+      }}
+      onMenuOpen={loadOptions}
+      options={options ?? undefined}
+      placeholder={`Select ${getArticle(
+        filterLabel.split(' ')[0],
+      )} ${filterLabel}...`}
+      styles={{
+        control: (base) => ({
+          ...base,
+          border: '1px solid #adadad',
+          borderRadius: sourceKey ? '0 4px 4px 0' : '4px',
+        }),
+        menuPortal: (base) => ({
+          ...base,
+          zIndex: 9999,
+        }),
+      }}
+      value={filterValue}
+    />
+  );
 }
 
 /*
 ## Hooks
 */
-
-function useAbortSignal() {
-  const abortController = useRef(new AbortController());
-  const getAbortController = useCallback(() => {
-    if (abortController.current.signal.aborted) {
-      abortController.current = new AbortController();
-    }
-    return abortController.current;
-  }, []);
-
-  useEffect(() => {
-    return function cleanup() {
-      abortController.current.abort();
-    };
-  }, [getAbortController]);
-
-  const getSignal = useCallback(
-    () => getAbortController().signal,
-    [getAbortController],
-  );
-
-  return getSignal;
-}
 
 function useClearConfirmationVisibility() {
   const [clearConfirmationVisible, setClearConfirmationVisible] =
@@ -799,11 +841,15 @@ function useFilterState() {
     const newHandlers: Partial<FilterFieldInputHandlers> = {};
     filterFields.forEach((field) => {
       if (isMultiOptionField(field)) {
-        newHandlers[field] = (ev: MultiOptionState) =>
+        newHandlers[field] = (ev: MultiOptionState | SingleOptionState) => {
+          if (!Array.isArray(ev)) return;
           filterDispatch({ type: field, payload: ev } as FilterFieldAction);
+        };
       } else if (isSingleOptionField(field)) {
-        newHandlers[field] = (ev: SingleOptionState) =>
+        newHandlers[field] = (ev: MultiOptionState | SingleOptionState) => {
+          if (Array.isArray(ev)) return;
           filterDispatch({ type: field, payload: ev } as FilterFieldAction);
+        };
       } else if (isSingleValueField(field)) {
         newHandlers[field] = (ev: ChangeEvent<HTMLInputElement>) => {
           filterDispatch({
@@ -882,15 +928,16 @@ function useQueryParams({
   initializeFilters: (state: FilterFieldState) => void;
   staticOptions: StaticOptions | null;
 }) {
-  const getAbortSignal = useAbortSignal();
+  const { getSignal } = useAbort();
 
   const [parameterErrors, setParameterErrors] =
     useState<ParameterErrors | null>(null);
   const [parametersLoaded, setParametersLoaded] = useState(false);
+
   // Populate the input fields with URL parameters, if any
   useEffect(() => {
     if (parametersLoaded || !profile || !staticOptions) return;
-    getUrlInputs(staticOptions, profile, getAbortSignal())
+    getUrlInputs(staticOptions, profile, getSignal())
       .then(({ filters, errors }) => {
         initializeFilters(filters);
         if (errors.invalid.size || errors.duplicate.size)
@@ -900,16 +947,11 @@ function useQueryParams({
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setParametersLoaded(true));
-  }, [
-    getAbortSignal,
-    initializeFilters,
-    parametersLoaded,
-    profile,
-    staticOptions,
-  ]);
+  }, [getSignal, initializeFilters, parametersLoaded, profile, staticOptions]);
 
   // Track non-empty values relevant to the current profile
   const [parameters, setParameters] = useState<QueryData>({
+    columns: [],
     filters: {},
     options: {},
   });
@@ -932,9 +974,7 @@ function useQueryParams({
             ? fromIsoDateString(flattenedValue)
             : flattenedValue;
 
-        const profileFields = profiles[profile].fields as readonly string[];
-
-        if (formattedValue && profileFields.includes(field)) {
+        if (formattedValue && isProfileField(field, profile)) {
           newFilterQueryParams[field as FilterField] = formattedValue;
         }
       },
@@ -944,7 +984,11 @@ function useQueryParams({
       window.location.hash = buildUrlQueryString(newFilterQueryParams);
     } else removeHash();
 
-    setParameters({ filters: newFilterQueryParams, options: { format } });
+    setParameters({
+      filters: newFilterQueryParams,
+      options: { format },
+      columns: getOrderedProfileColumns(profile),
+    });
   }, [filterState, format, parametersLoaded, profile]);
 
   return { queryParams: parameters, queryParamErrors: parameterErrors };
@@ -1014,9 +1058,7 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
     associatedActionStatus: values.assessmentUnitStatus,
     associatedActionType: values.actionType,
     parameter: values.parameterName,
-    parameterStateIrCategory: values.stateIrCategory,
     pollutant: values.parameterName,
-    useStateIrCategory: values.stateIrCategory,
   };
 }
 
@@ -1024,8 +1066,10 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
 function buildUrlQueryString(
   filters: FilterQueryData,
   options?: OptionQueryData,
+  columns?: string[],
 ) {
   const paramsList: UrlQueryParam[] = [];
+  columns?.forEach((column) => paramsList.push(['columns', column]));
   Object.entries({ ...filters, ...options }).forEach(([field, value]) => {
     // Duplicate the query parameter for an array of values
     if (Array.isArray(value)) value.forEach((v) => paramsList.push([field, v]));
@@ -1117,13 +1161,16 @@ function filterDynamicOptions({
   sourceField?: string | null;
   sourceValue?: Primitive | null;
 }) {
-  return async function (inputValue?: string): Promise<Array<Option>> {
+  return async function (
+    inputValue: string,
+    signal?: AbortSignal,
+  ): Promise<Array<Option>> {
     let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}&direction=${direction}`;
     if (isNotEmpty(limit)) url += `&limit=${limit}`;
     if (isNotEmpty(sourceField) && isNotEmpty(sourceValue)) {
       url += `&${sourceField}=${sourceValue}`;
     }
-    const values = await getData<Primitive[]>(url);
+    const values = await getData<Primitive[]>(url, signal);
     const options = values.map((value) => ({ label: value, value }));
     return defaultOption ? [defaultOption, ...options] : options;
   };
@@ -1276,8 +1323,7 @@ function getInitialOptions(
       ? sourceOptions.slice(0, staticOptionLimit)
       : sourceOptions;
   }
-  // Return true to trigger an immediate fetch from the database
-  return true;
+  return null;
 }
 
 // Extracts the value field from Option items, otherwise returns the item
@@ -1314,8 +1360,38 @@ function getOptions(
   if (options !== null) {
     return Promise.resolve(options);
   } else {
-    return filterDynamicOptions({ profile, fieldName: field })();
+    return filterDynamicOptions({ profile, fieldName: field })('');
   }
+}
+
+function getOrderedProfileColumns(profile: Profile) {
+  const columns = new Set<string>();
+  const filters = filterGroupsConfig[profile].reduce<string[]>(
+    (current, group) => {
+      return [...current, ...group.fields];
+    },
+    [],
+  );
+  filters.forEach((filter) => {
+    const fieldConfig = filterFieldsConfig.find(
+      (config) => config.key === filter,
+    );
+    if (!fieldConfig) return;
+    // Pair column with its "source" column, if applicable
+    if ('source' in fieldConfig) {
+      const sourceConfig = sourceFieldsConfig.find(
+        (config) => config.id === fieldConfig.source,
+      );
+      if (sourceConfig) columns.add(sourceConfig.key);
+    }
+    // If it's a range input, add the underlying column
+    if ('domain' in fieldConfig) columns.add(fieldConfig.domain);
+    // Otherwise, the key matches the field key
+    else columns.add(fieldConfig.key);
+  });
+  // Add unordered columns to the end
+  profiles[profile].columns.forEach((column) => columns.add(column));
+  return Array.from(columns);
 }
 
 function getPageName() {
@@ -1434,6 +1510,16 @@ function isOption(maybeOption: Option | Primitive): maybeOption is Option {
 // Type narrowing
 function isProfile(maybeProfile: string | Profile): maybeProfile is Profile {
   return maybeProfile in profiles;
+}
+
+function isProfileField(field: string, profile: Profile) {
+  const profileColumns = profiles[profile].columns;
+  const fieldConfig = filterFieldsConfig.find((config) => config.key === field);
+  if (!fieldConfig) return false;
+  if (profileColumns.has(fieldConfig.key)) return true;
+  if ('domain' in fieldConfig && profileColumns.has(fieldConfig.domain))
+    return true;
+  return false;
 }
 
 // Type narrowing
@@ -1558,8 +1644,7 @@ function parseInitialParams(
       if (value instanceof Set) value.add(newValue);
       else uniqueParams[field] = new Set([value, newValue]);
     } else {
-      const profileFields = profiles[profile].fields as readonly string[];
-      if (!profileFields.find((f) => f === field)) {
+      if (!isProfileField(field, profile)) {
         paramErrors.invalid.add(field);
         return;
       }
@@ -1678,9 +1763,9 @@ type FilterFieldActionHandlers = {
 type FilterField = typeof filterFields[number];
 
 type FilterFieldInputHandlers = {
-  [F in Extract<FilterField, MultiOptionField>]: MultiOptionInputHandler;
+  [F in Extract<FilterField, MultiOptionField>]: OptionInputHandler;
 } & {
-  [F in Extract<FilterField, SingleOptionField>]: SingleOptionInputHandler;
+  [F in Extract<FilterField, SingleOptionField>]: OptionInputHandler;
 } & {
   [F in Extract<FilterField, SingleValueField>]: SingleValueInputHandler;
 };
@@ -1715,6 +1800,7 @@ type HomeContext = {
   filterState: FilterFieldState;
   format: FormatOption;
   formatHandler: (format: Option) => void;
+  maxQuerySize: number;
   profile: Profile;
   queryParams: QueryData;
   queryUrl: string;
@@ -1730,11 +1816,13 @@ type MultiOptionField = typeof multiOptionFields[number];
 
 type MultiOptionState = ReadonlyArray<Option> | null;
 
-type MultiOptionInputHandler = (ev: MultiOptionState) => void;
-
 type MultiSelectFilterProps = SelectFilterProps<
   Extract<FilterField, MultiOptionField>
 >;
+
+type OptionInputHandler = (
+  option: SingleOptionState | MultiOptionState,
+) => void;
 
 type OptionQueryData = Partial<{
   format: Format;
@@ -1746,6 +1834,7 @@ type ParameterErrors = {
 };
 
 type QueryData = {
+  columns: string[];
   filters: FilterQueryData;
   options: OptionQueryData;
 };
@@ -1766,7 +1855,6 @@ type SelectFilterProps<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 > = {
   defaultOption?: Option | null;
-  defaultOptions: boolean | readonly Option[];
   filterHandler: FilterFieldInputHandlers[F];
   filterKey: F;
   filterLabel: string;

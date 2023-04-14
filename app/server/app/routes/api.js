@@ -1,6 +1,6 @@
 import axios from 'axios';
 import express from 'express';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
@@ -18,9 +18,26 @@ const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
 const s3Region = process.env.CF_S3_PUB_REGION;
 const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
+function logError(error, metadataObj) {
+  if (isLocal) {
+    log.error(error);
+    return;
+  }
+
+  if (typeof error.toJSON === 'function') {
+    log.debug(formatLogMsg(metadataObj, error.toJSON()));
+  }
+
+  const errorStatus = error.response?.status;
+  const errorMethod = error.response?.config?.method?.toUpperCase();
+  const errorUrl = error.response?.config?.url;
+  const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
+  log.error(formatLogMsg(metadataObj, message));
+}
+
 // local development: read files directly from disk
 // Cloud.gov: fetch files from the public s3 bucket
-function getFile(filename) {
+async function getFile(filename) {
   return isLocal
     ? readFile(resolve(__dirname, '../', filename), 'utf8')
     : axios({
@@ -28,6 +45,18 @@ function getFile(filename) {
         url: `${s3BucketUrl}/${filename}`,
         timeout: 10000,
       });
+}
+
+async function getFileSize(filename) {
+  return isLocal
+    ? stat(resolve(__dirname, '../', filename), 'utf8').then(
+        (stats) => stats.size,
+      )
+    : axios({
+        method: 'head',
+        url: `${s3BucketUrl}/${filename}`,
+        timeout: 10000,
+      }).then((res) => parseInt(res.headers['content-length']));
 }
 
 // local development: no further processing of strings needed
@@ -55,10 +84,29 @@ async function queryColumnValues(profile, column, params, schema) {
     else parsedParams.filters[name] = value;
   });
 
+  // get columns for where clause
+  const columnsForFilter = [];
+  profile.columns.forEach((col) => {
+    if (parsedParams.filters.hasOwnProperty(col.alias)) {
+      columnsForFilter.push(col.name);
+    }
+  });
+
+  // search through tableconfig.materializedViews to see if the column
+  // we need is in here
+  const materializedView = profile.materializedViews.find((mv) => {
+    for (const col of columnsForFilter.concat(column.name)) {
+      if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
+    }
+    return mv;
+  });
+
+  // query table directly if a suitable materialized view was not found
   const query = knex
     .withSchema(schema)
-    .from(profile.tableName)
+    .from(materializedView ? materializedView.name : profile.tableName)
     .column(column.name)
+    .whereNotNull(column.name)
     .distinctOn(column.name)
     .orderBy(column.name, parsedParams.direction ?? 'asc')
     .select();
@@ -98,6 +146,7 @@ export default function (app, basePath) {
       'content/config/services.json',
       'content/alerts/config.json',
       'content-etl/glossary.json',
+      'content/config/parameters.json',
     ];
 
     const filePromises = Promise.all(
@@ -113,6 +162,7 @@ export default function (app, basePath) {
           services: data[0],
           alertsConfig: data[1],
           glossary: data[2],
+          parameters: data[3],
         };
       });
 
@@ -146,15 +196,7 @@ export default function (app, basePath) {
     Promise.all([filePromises, directoryPromises])
       .then((data) => res.json({ ...data[0], ...data[1] }))
       .catch((error) => {
-        if (typeof error.toJSON === 'function') {
-          log.debug(formatLogMsg(metadataObj, error.toJSON()));
-        }
-
-        const errorStatus = error.response?.status;
-        const errorMethod = error.response?.config?.method?.toUpperCase();
-        const errorUrl = error.response?.config?.url;
-        const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
-        log.error(formatLogMsg(metadataObj, message));
+        logError(error, metadataObj);
 
         return res
           .status(error?.response?.status || 500)
@@ -231,6 +273,66 @@ export default function (app, basePath) {
         );
         res.status(500).send('Error! ' + error);
       });
+  });
+
+  router.get('/nationalDownloads', async (req, res) => {
+    const metadataObj = populateMetdataObjFromRequest(req);
+
+    const baseDir = 'national-downloads';
+
+    const [latestRes, profileStats] = await Promise.all([
+      getFile(`${baseDir}/latest.json`).catch((err) => {
+        logError(err, metadataObj);
+      }),
+
+      knex
+        .withSchema('logging')
+        .column({
+          profileName: 'profile_name',
+          numRows: 'num_rows',
+          timestamp: 'last_refresh_end_time',
+        })
+        .from('mv_profile_stats')
+        .where('schema_name', req.activeSchema)
+        .select()
+        .catch((err) => {
+          logError(err, metadataObj);
+        }),
+    ]);
+
+    if (!latestRes || !profileStats)
+      return res
+        .status(500)
+        .json({ message: 'Error getting national downloads data' });
+
+    const data = {};
+
+    const latest = parseInt(parseResponse(latestRes).julian);
+
+    await Promise.all([
+      ...Object.entries(tableConfig).map(async ([profile, config]) => {
+        const basename = config.tableName;
+        const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
+        try {
+          const filesize = await getFileSize(filename);
+          const stats = profileStats.find(
+            (p) => p.profileName === config.tableName,
+          );
+          if (!stats) return;
+
+          data[profile] = {
+            numRows: stats.numRows,
+            size: filesize,
+            timestamp: stats.timestamp,
+            url: `${s3BucketUrl}/${filename}`,
+          };
+        } catch (err) {
+          logError(err, metadataObj);
+        }
+      }),
+    ]);
+
+    res.status(200).json(data);
   });
 
   app.use(`${basePath}api`, router);

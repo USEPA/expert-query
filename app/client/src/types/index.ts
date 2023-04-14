@@ -14,9 +14,7 @@ export type AliasedField =
   | 'associatedActionStatus'
   | 'associatedActionType'
   | 'parameter'
-  | 'parameterStateIrCategory'
-  | 'pollutant'
-  | 'useStateIrCategory';
+  | 'pollutant';
 
 export type AliasedOptions = {
   [key in AliasedField]: Array<Option>;
@@ -48,6 +46,20 @@ type ConcreteOptions = {
 };
 
 export type DomainOptions = ConcreteOptions & Partial<AliasedOptions>;
+
+type EmptyStatus = Exclude<Status, 'success'>;
+
+type FetchEmptyState = {
+  status: EmptyStatus;
+  data: null;
+};
+
+export type FetchState<Type> = FetchEmptyState | FetchSuccessState<Type>;
+
+type FetchSuccessState<Type> = {
+  status: 'success';
+  data: Type;
+};
 
 export type Option = {
   context?: string;

@@ -2,11 +2,12 @@ export * as fields from './fields';
 export * as options from './options';
 export { profiles } from './profiles';
 
-const { NODE_ENV, REACT_APP_CLOUD_SPACE, REACT_APP_SERVER_BASE_PATH } = process.env;
+const { NODE_ENV, REACT_APP_CLOUD_SPACE, REACT_APP_SERVER_BASE_PATH } =
+  process.env;
 
 // allows the app to be accessed from a sub directory of a server (e.g. /expertquery)
 export const serverBasePath =
-  NODE_ENV === "local" ? "" : REACT_APP_SERVER_BASE_PATH || "";
+  NODE_ENV === 'local' ? '' : REACT_APP_SERVER_BASE_PATH || '';
 
 // NOTE: This app is configured to use [Create React App's proxy setup]
 // (https://create-react-app.dev/docs/proxying-api-requests-in-development/)
