@@ -1362,7 +1362,7 @@ function getOptions(
 }
 
 function getOrderedProfileColumns(profile: Profile) {
-  const columns = new Set<string>();
+  const columns = new Set<string>(['objectId']);
   const filters = filterGroupsConfig[profile].reduce<string[]>(
     (current, group) => {
       return [...current, ...group.fields];
