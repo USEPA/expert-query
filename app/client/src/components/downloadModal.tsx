@@ -53,16 +53,8 @@ export function DownloadModal<D extends PostData>({
     if (!queryUrl) return;
     if (!filename) return;
 
-    const queryDataNoCount = {
-      ...queryData,
-      options: {
-        ...queryData.options,
-        skipCount: true,
-      },
-    };
-
     setDownloadStatus('pending');
-    postData(queryUrl, queryDataNoCount, 'blob')
+    postData(queryUrl, queryData, 'blob')
       .then((res) => {
         const fileUrl = window.URL.createObjectURL(res);
         const trigger = document.createElement('a');
@@ -198,6 +190,6 @@ type PostData = {
     [field: string]: Primitive | Primitive[];
   };
   options: {
-    [field: string]: string | boolean;
+    [field: string]: string;
   };
 };
