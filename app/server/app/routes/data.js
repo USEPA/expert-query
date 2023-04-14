@@ -91,7 +91,7 @@ function getQueryParams(req) {
   }
 
   // organize GET parameters to follow what we expect from POST
-  const optionsParams = ['f', 'format', 'count'];
+  const optionsParams = ['f', 'format'];
   const parameters = {
     filters: {},
     options: {},
@@ -191,9 +191,7 @@ async function executeQuery(profile, req, res) {
     parseCriteria(query, profile, queryParams);
 
     // Check that the query doesn't exceed the MAX_QUERY_SIZE.
-    // This check can be bypassed by setting the 'count' option to false,
-    // but the query itself will still be limited by MAX_QUERY_SIZE.
-    if (queryParams.options.count !== false && !(await getQueryCount(query))) {
+    if ((await getQueryCount(query)) === null) {
       return res.status(200).json({
         message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
       });
