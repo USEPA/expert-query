@@ -87,16 +87,6 @@ async function streamFile(query, res, format, baseName) {
   }
 }
 
-async function getNextId(query) {
-  const id = await knex
-    .select('objectId')
-    .from(query.clone().limit(maxQuerySize).as('q'))
-    .offset(jsonPageSize)
-    .limit(1)
-    .first();
-  return id?.objectId ?? null;
-}
-
 /**
  * Streams the results of a query as paginated JSON.
  * @param {Object} query KnexJS query object
@@ -106,7 +96,15 @@ async function getNextId(query) {
 async function streamJson(query, res, startId) {
   if (startId) query.where('objectid', '>=', startId);
 
-  const nextId = await getNextId(query);
+  const nextId =
+    (
+      await knex
+        .select('objectId')
+        .from(query.clone().limit(maxQuerySize).as('q'))
+        .offset(jsonPageSize)
+        .limit(1)
+        .first()
+    )?.objectId ?? null;
 
   query.limit(jsonPageSize);
 
