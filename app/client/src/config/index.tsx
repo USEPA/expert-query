@@ -66,6 +66,7 @@ export function postData(
   url: string,
   data: object,
   responseType?: 'json' | 'blob',
+  signal?: AbortSignal,
 ) {
   return fetchData(
     url,
@@ -74,6 +75,7 @@ export function postData(
       credentials: 'include' as const,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
+      signal,
     },
     responseType,
   );

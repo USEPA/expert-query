@@ -71,18 +71,11 @@ function parseResponse(res) {
 
 async function queryColumnValues(profile, column, params, schema) {
   const parsedParams = {
-    text: '',
-    direction: null,
-    filters: {},
-    limit: null,
+    text: params.text ?? '',
+    direction: params.direction ?? null,
+    filters: params.filters ?? {},
+    limit: params.limit ?? null,
   };
-
-  Object.entries(params).forEach(([name, value]) => {
-    if (name === 'text') parsedParams.text = value;
-    else if (name === 'limit') parsedParams.limit = value;
-    else if (name === 'direction') parsedParams.direction = value;
-    else parsedParams.filters[name] = value;
-  });
 
   // get columns for where clause
   const columnsForFilter = [];
@@ -246,7 +239,7 @@ export default function (app, basePath) {
   });
 
   // create post requests
-  router.get('/:profile/values/:column', function (req, res) {
+  router.post('/:profile/values/:column', function (req, res) {
     const profile = tableConfig[req.params.profile];
     if (!profile) {
       return res
@@ -263,7 +256,7 @@ export default function (app, basePath) {
       });
     }
 
-    queryColumnValues(profile, column, req.query, req.activeSchema)
+    queryColumnValues(profile, column, req.body, req.activeSchema)
       .then((values) =>
         res.status(200).json(values.map((value) => value[column.name])),
       )
