@@ -1215,17 +1215,18 @@ function getContextFilters(
   filters: FilterQueryData,
 ) {
   const profileColumns = profiles[profile].columns;
-  const contextGroup = profileColumns.get(field)?.contextGroup;
-  if (!contextGroup) return;
+  const fieldContexts = profileColumns.get(field)?.contextColumns;
+  if (!fieldContexts) return;
 
   return Object.entries(filters).reduce<FilterQueryData>(
     (current, [key, value]) => {
-      if (profileColumns.get(key)?.contextGroup === contextGroup) {
+      if (fieldContexts.includes(key)) {
         return {
           ...current,
           [key]: value,
         };
-      } else return current;
+      }
+      return current;
     },
     {},
   );

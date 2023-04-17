@@ -2,19 +2,19 @@ export const profiles = {
   actions: {
     description:
       'Contains detailed information on plans to restore and protect water quality including Total Maximum Daily Loads (TMDLs), 4b Plans, 5R Plans, Protection Approaches, and other plans.',
-    columns: new Map<string, { contextGroup?: string }>([
+    columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
       ['actionAgency', {}],
       ['actionId', {}],
       ['actionName', {}],
       ['actionType', {}],
-      ['assessmentUnitId', { contextGroup: 'assessments' }],
-      ['assessmentUnitName', { contextGroup: 'assessments' }],
+      ['assessmentUnitId', { contextColumns: ['state'] }],
+      ['assessmentUnitName', {}],
       ['completionDate', {}],
       ['includeInMeasure', {}],
       ['inIndianCountry', {}],
       ['locationDescription', {}],
-      ['organizationId', {}],
+      ['organizationId', { contextColumns: ['organizationType'] }],
       ['organizationName', {}],
       ['organizationType', {}],
       ['parameter', {}],
@@ -30,15 +30,15 @@ export const profiles = {
   assessments: {
     description:
       'Contains detailed information on waters assessed under Section 305(b) of the Clean Water Act and waters listed as impaired under Section 303(d) of the Clean Water Act. This includes assessed uses and parameter attainments.',
-    columns: new Map<string, { contextGroup?: string }>([
+    columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
       ['alternateListingIdentifier', {}],
       ['assessmentBasis', {}],
       ['assessmentDate', {}],
       ['assessmentMethods', {}],
       ['assessmentTypes', {}],
-      ['assessmentUnitId', { contextGroup: 'assessments' }],
-      ['assessmentUnitName', { contextGroup: 'assessments' }],
+      ['assessmentUnitId', { contextColumns: ['state'] }],
+      ['assessmentUnitName', {}],
       ['assessmentUnitStatus', {}],
       ['associatedActionAgency', {}],
       ['associatedActionId', {}],
@@ -58,7 +58,7 @@ export const profiles = {
       ['locationDescription', {}],
       ['monitoringEndDate', {}],
       ['monitoringStartDate', {}],
-      ['organizationId', {}],
+      ['organizationId', { contextColumns: ['organizationType'] }],
       ['organizationName', {}],
       ['organizationType', {}],
       ['overallStatus', {}],
@@ -94,16 +94,16 @@ export const profiles = {
   assessmentUnits: {
     description:
       'Contains detailed information on assessment unit location and waterbody types. Please note, some waters may contain more than one water type.',
-    columns: new Map<string, { contextGroup?: string }>([
+    columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
-      ['assessmentUnitId', { contextGroup: 'assessments' }],
-      ['assessmentUnitName', { contextGroup: 'assessments' }],
+      ['assessmentUnitId', { contextColumns: ['state'] }],
+      ['assessmentUnitName', {}],
       ['assessmentUnitStatus', {}],
       ['cycleId', {}],
       ['locationDescription', {}],
       ['locationText', {}],
       ['locationTypeCode', {}],
-      ['organizationId', {}],
+      ['organizationId', { contextColumns: ['organizationType'] }],
       ['organizationName', {}],
       ['organizationType', {}],
       ['region', {}],
@@ -121,17 +121,17 @@ export const profiles = {
   assessmentUnitsMonitoringLocations: {
     description:
       'Contains information on the monitoring locations used to make assessment determinations at specific assessment units.',
-    columns: new Map<string, { contextGroup?: string }>([
+    columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
-      ['assessmentUnitId', { contextGroup: 'assessments' }],
-      ['assessmentUnitName', { contextGroup: 'assessments' }],
+      ['assessmentUnitId', { contextColumns: ['state'] }],
+      ['assessmentUnitName', {}],
       ['assessmentUnitStatus', {}],
       ['cycleId', {}],
       ['locationDescription', {}],
       ['monitoringLocationDataLink', {}],
       ['monitoringLocationId', {}],
       ['monitoringLocationOrgId', {}],
-      ['organizationId', {}],
+      ['organizationId', { contextColumns: ['organizationType'] }],
       ['organizationName', {}],
       ['organizationType', {}],
       ['region', {}],
@@ -150,13 +150,13 @@ export const profiles = {
   catchmentCorrespondence: {
     description:
       'Contains the association between assessment units and National Hydrography Dataset Plus (NHDPlus) high resolution catchments.',
-    columns: new Map<string, { contextGroup?: string }>([
+    columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
-      ['assessmentUnitId', { contextGroup: 'assessments' }],
-      ['assessmentUnitName', { contextGroup: 'assessments' }],
+      ['assessmentUnitId', { contextColumns: ['state'] }],
+      ['assessmentUnitName', {}],
       ['catchmentNhdPlusId', {}],
       ['cycleId', {}],
-      ['organizationId', {}],
+      ['organizationId', { contextColumns: ['organizationType'] }],
       ['organizationName', {}],
       ['organizationType', {}],
       ['region', {}],
@@ -168,16 +168,16 @@ export const profiles = {
   },
   sources: {
     description: 'Identifies sources of impairment for assessed waters.',
-    columns: new Map<string, { contextGroup?: string }>([
+    columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
-      ['assessmentUnitId', { contextGroup: 'assessments' }],
-      ['assessmentUnitName', { contextGroup: 'assessments' }],
+      ['assessmentUnitId', { contextColumns: ['state'] }],
+      ['assessmentUnitName', {}],
       ['causeName', {}],
       ['confirmed', {}],
       ['cycleId', {}],
       ['epaIrCategory', {}],
       ['locationDescription', {}],
-      ['organizationId', {}],
+      ['organizationId', { contextColumns: ['organizationType'] }],
       ['organizationName', {}],
       ['organizationType', {}],
       ['overallStatus', {}],
@@ -197,14 +197,14 @@ export const profiles = {
   tmdl: {
     description:
       'Contains detailed information on Total Maximum Daily Load (TMDL) plans.',
-    columns: new Map<string, { contextGroup?: string }>([
+    columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
       ['actionAgency', {}],
       ['actionId', {}],
       ['actionName', {}],
       ['addressedParameter', {}],
-      ['assessmentUnitId', { contextGroup: 'assessments' }],
-      ['assessmentUnitName', { contextGroup: 'assessments' }],
+      ['assessmentUnitId', { contextColumns: ['state'] }],
+      ['assessmentUnitName', {}],
       ['completionDate', {}],
       ['explicitMarginOfSafety', {}],
       ['fiscalYearEstablished', {}],
@@ -215,7 +215,7 @@ export const profiles = {
       ['loadAllocationUnits', {}],
       ['locationDescription', {}],
       ['npdesIdentifier', {}],
-      ['organizationId', {}],
+      ['organizationId', { contextColumns: ['organizationType'] }],
       ['organizationName', {}],
       ['organizationType', {}],
       ['otherIdentifier', {}],
