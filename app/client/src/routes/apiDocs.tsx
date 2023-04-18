@@ -18,6 +18,8 @@ export function ApiDocs() {
       <div>
         <SwaggerUI
           url={`${serverUrl}/api/getFile?filepath=swagger/attains.json`}
+          deepLinking={true}
+          defaultModelsExpandDepth={-1}
         />
       </div>
     </>

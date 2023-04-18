@@ -1,6 +1,7 @@
 {
   "actionAgency": {
     "domainName": "AgencyCode"
+    "valueField": "name"
   },
   "actionType": {
     "domainName": "ActionType",

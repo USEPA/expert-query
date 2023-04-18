@@ -37,7 +37,52 @@
     }
   },
   "paths": {
-    "/data/assessments": {},
+    "/data/actions": {
+      "summary": "Query Actions profile data",
+      "get": {
+        "tags": ["Actions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/objectIdParam" },
+          { "$ref": "#/components/parameters/actionAgencyParam" },
+          { "$ref": "#/components/parameters/actionIdParam" },
+          { "$ref": "#/components/parameters/actionNameParam" },
+          { "$ref": "#/components/parameters/actionTypeParam" },
+          { "$ref": "#/components/parameters/assessmentUnitIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitNameParam" },
+          { "$ref": "#/components/parameters/completionDateLoParam" },
+          { "$ref": "#/components/parameters/completionDateHiParam" },
+          { "$ref": "#/components/parameters/includeInMeasureParam" },
+          { "$ref": "#/components/parameters/inIndianCountryParam" },
+          { "$ref": "#/components/parameters/organizationIdParam" },
+          { "$ref": "#/components/parameters/organizationNameParam" },
+          { "$ref": "#/components/parameters/parameterParam" },
+          { "$ref": "#/components/parameters/regionParam" },
+          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/ActionsQuerySuccess" },
+          "400": { "$ref": "#components/responses/InvalidRequestError" },
+          "500": { "$ref": "#components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Actions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ActionsRequestBody" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/ActionsQuerySuccess" },
+          "400": { "$ref": "#components/responses/InvalidRequestError" },
+          "500": { "$ref": "#components/responses/ServerError" }
+        }
+      }
+    },
     "/v1/rfactor": {
       "get": {
         "tags": ["Rainfall Erosivity"],
@@ -110,6 +155,80 @@
   },
   "components": {
     "schemas": {
+      "ActionsRequestBody": {
+        "type": "object",
+        "properties": {
+          "filters": {
+            "type": "object",
+            "properties": {
+              "actionAgency": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ActionAgency" }
+              },
+              "actionId": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ActionId" }
+              },
+              "actionName": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ActionName" }
+              },
+              "actionType": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ActionType" }
+              },
+              "assessmentUnitId": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
+              },
+              "assessmentUnitName": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
+              },
+              "completionDate": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/Date" }
+              },
+              "includeInMeasure": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/YesOrNo" }
+              },
+              "inIndianCountry": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/YesOrNo" }
+              },
+              "objectId": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ObjectId" }
+              },
+              "organizationId": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/OrganizationId" }
+              },
+              "organizationName": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/OrganizationName" }
+              },
+              "parameter": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/Parameter" }
+              },
+              "region": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/Region" }
+              },
+              "state": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/State" }
+              },
+              "waterType": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/WaterType" }
+              }
+            }
+          }
+        }
+      },
       "RFactorInput": {
         "type": "object",
         "title": "RFactor Input",
@@ -161,18 +280,403 @@
           }
         },
         "required": ["factor"]
+      },
+      "ActionAgency": {
+        "type": "string",
+        "enum": ["EPA", "State", "Tribal"]
+      },
+      "ActionId": {
+        "type": "string",
+        "example": "64808"
+      },
+      "ActionName": {
+        "type": "string",
+        "example": "12-Mile Creek"
+      },
+      "ActionType": {
+        "type": "string",
+        "example": "Implementation Completed"
+      },
+      "AssessmentUnitId": {
+        "type": "string",
+        "example": "AZ150200001-010_00"
+      },
+      "AssessmentUnitName": {
+        "type": "string",
+        "example": "Abbott Branch"
+      },
+      "Date": {
+        "type": "string",
+        "format": "date",
+        "example": "04-28-2023"
+      },
+      "LocationDescription": {
+        "type": "string",
+        "example": "LAKE WATEREE NEAR END OF TAYLOR CREEK ARM"
+      },
+      "ObjectId": {
+        "type": "number",
+        "example": 42
+      },
+      "OrganizationId": {
+        "type": "string",
+        "example": "21AS"
+      },
+      "OrganizationName": {
+        "type": "string",
+        "example": "Georgia Environmental Protection Division"
+      },
+      "OrganizationType": {
+        "type": "string",
+        "enum": ["State", "Tribe"]
+      },
+      "Parameter": {
+        "type": "string",
+        "example": "EUTROPHICATION"
+      },
+      "Region": {
+        "type": "string",
+        "example": "08"
+      },
+      "State": {
+        "type": "string",
+        "example": "TX"
+      },
+      "WaterSize": {
+        "type": "number",
+        "format": "float",
+        "example": 4.4
+      },
+      "WaterSizeUnits": {
+        "type": "string",
+        "example": "Square Miles"
+      },
+      "WaterType": {
+        "type": "string",
+        "example": "ESTUARY"
+      },
+      "YesOrNo": {
+        "type": "string",
+        "enum": ["Y", "N"]
       }
     },
     "parameters": {
+      "actionAgencyParam": {
+        "name": "actionAgency",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/ActionAgency"
+          }
+        }
+      },
+      "actionIdParam": {
+        "name": "actionId",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/ActionId" }
+        }
+      },
+      "actionNameParam": {
+        "name": "actionName",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/ActionName" }
+        }
+      },
+      "actionTypeParam": {
+        "name": "actionType",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#components/schemas/ActionType" }
+        }
+      },
+      "assessmentUnitIdParam": {
+        "name": "assessmentUnitId",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#components/schemas/AssessmentUnitId" }
+        }
+      },
+      "assessmentUnitNameParam": {
+        "name": "assessmentUnitName",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#components/schemas/AssessmentUnitName" }
+        }
+      },
       "columnsParam": {
         "name": "columns",
-        "description": "The columns to return in the result set, and the order in which to return them",
+        "description": "The columns to return in the result set, and the order in which to return them.",
         "in": "query",
-        "required": false,
         "explode": true,
         "schema": {
           "type": "array",
           "example": ["assessmentUnitId", "assessmentUnitName"]
+        }
+      },
+      "completionDateLoParam": {
+        "name": "completionDateLo",
+        "in": "query",
+        "schema": { "$ref": "#components/schemas/Date" }
+      },
+      "completionDateHiParam": {
+        "name": "completionDateHi",
+        "in": "query",
+        "schema": { "$ref": "#components/schemas/Date" }
+      },
+      "formatParam": {
+        "name": "format",
+        "description": "The format in which data is returned. JSON data is returned inline, other types are returned as a file attachment.",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "default": "json",
+          "enum": ["json", "csv", "tsv", "xlsx"]
+        }
+      },
+      "includeInMeasureParam": {
+        "name": "includeInMeasure",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/YesOrNo" }
+        }
+      },
+      "inIndianCountryParam": {
+        "name": "inIndianCountry",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/YesOrNo" }
+        }
+      },
+      "objectIdParam": {
+        "name": "objectId",
+        "description": "The unique ID assigned to a data item under the current profile",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/ObjectId"
+          }
+        }
+      },
+      "organizationIdParam": {
+        "name": "organizationId",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/OrganizationId" }
+        }
+      },
+      "organizationNameParam": {
+        "name": "organizationName",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/OrganizationName" }
+        }
+      },
+      "parameterParam": {
+        "name": "parameter",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/Parameter" }
+        }
+      },
+      "regionParam": {
+        "name": "region",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/Region" }
+        }
+      },
+      "stateParam": {
+        "name": "state",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/State" }
+        }
+      },
+      "waterTypeParam": {
+        "name": "waterType",
+        "in": "query",
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/WaterType" }
+        }
+      }
+    },
+    "responses": {
+      "ActionsQuerySuccess": {
+        "description": "A successful query response",
+        "content": {
+          "application/octet-stream": {
+            "examples": {
+              "xlsx": {
+                "summary": "A binary encoded XLSX file",
+                "externalValue": ""
+              }
+            },
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "type": "string",
+              "format": "csv"
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "type": "string",
+              "format": "tsv"
+            }
+          },
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nextId": {
+                  "type": "integer",
+                  "example": 20
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "actionAgency": {
+                        "$ref": "#/components/schemas/ActionAgency"
+                      },
+                      "actionId": { "$ref": "#/components/schemas/ActionId" },
+                      "actionName": {
+                        "$ref": "#/components/schemas/ActionName"
+                      },
+                      "actionType": {
+                        "$ref": "#/components/schemas/ActionType"
+                      },
+                      "assessmentUnitId": {
+                        "$ref": "#/components/schemas/AssessmentUnitId"
+                      },
+                      "assessmentUnitName": {
+                        "$ref": "#/components/schemas/AssessmentUnitName"
+                      },
+                      "completionDate": { "$ref": "#/components/schemas/Date" },
+                      "includeInMeasure": {
+                        "$ref": "#/components/schemas/YesOrNo"
+                      },
+                      "inIndianCountry": {
+                        "$ref": "#/components/schemas/YesOrNo"
+                      },
+                      "locationDescription": {
+                        "$ref": "#/components/schemas/LocationDescription"
+                      },
+                      "objectId": {
+                        "$ref": "#/components/schemas/ObjectId"
+                      },
+                      "organizationId": {
+                        "$ref": "#/components/schemas/OrganizationId"
+                      },
+                      "organizationName": {
+                        "$ref": "#/components/schemas/OrganizationName"
+                      },
+                      "organizationType": {
+                        "$ref": "#/components/schemas/OrganizationType"
+                      },
+                      "parameter": {
+                        "$ref": "#/components/schemas/Parameter"
+                      },
+                      "region": {
+                        "$ref": "#/components/schemas/Region"
+                      },
+                      "state": {
+                        "$ref": "#/components/schemas/State"
+                      },
+                      "waterSize": {
+                        "$ref": "#/components/schemas/WaterSize"
+                      },
+                      "waterSizeUnits": {
+                        "$ref": "#/components/schemas/WaterSizeUnits"
+                      },
+                      "waterType": {
+                        "$ref": "#/components/schemas/WaterType"
+                      }
+                    }
+                  }
+                }
+              },
+              "required": ["data"]
+            }
+          }
+        }
+      },
+      "InvalidRequestError": {
+        "description": "The request was invalid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "number",
+                  "default": 400
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["code", "message"]
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "An internal server error occurred",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "number",
+                  "default": 500
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["code", "message"]
+            }
+            }
+          }
         }
       }
     }
