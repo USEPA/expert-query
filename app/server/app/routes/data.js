@@ -285,7 +285,6 @@ function executeQueryCountOnly(profile, req, res) {
 
     parseCriteria(query, profile, queryParams, true);
 
-    throw new Error('test');
     query
       .first()
       .then((count) => res.status(200).send(count))
@@ -301,7 +300,7 @@ function executeQueryCountOnly(profile, req, res) {
       `Failed to get count from the "${profile.tableName}" table:`,
       error,
     );
-    res.status(error.code ?? 500).send(error);
+    return res.status(error.code ?? 500).json(error);
   }
 }
 
