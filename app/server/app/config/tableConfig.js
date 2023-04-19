@@ -327,7 +327,7 @@ export const tableConfig = {
       },
       {
         name: 'assessments_usegroup',
-        columns: [{ name: 'usegroup' }],
+        columns: [{ name: 'usegroup' }, { name: 'usename' }],
       },
       {
         name: 'assessments_useircategory',

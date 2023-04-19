@@ -312,7 +312,6 @@ function FilterFields({
           const initialOptions = getInitialOptions(
             staticOptions,
             fieldConfig.key,
-            sourceValue?.value,
           );
 
           if (
@@ -354,6 +353,7 @@ function FilterFields({
                 : 'asc',
             sourceKey,
             sourceValue,
+            staticOptions,
           } as typeof fieldConfig.key extends MultiOptionField
             ? MultiSelectFilterProps
             : SingleSelectFilterProps;
@@ -379,7 +379,6 @@ function FilterFields({
                     sourceHandler={sourceHandlers[sourceFieldConfig.id]}
                     sourceKey={sourceFieldConfig.key}
                     sourceLabel={sourceFieldConfig.label}
-                    staticOptions={staticOptions}
                   />
                 ) : (
                   <SelectFilter {...selectProps} />
@@ -619,9 +618,8 @@ function SourceSelectFilter(
     MultiSelectFilterProps | SingleSelectFilterProps
   >,
 ) {
-  const { sourceLabel, sourceHandler, staticOptions, ...selectFilterProps } =
-    props;
-  const { profile, sourceKey, sourceValue } = selectFilterProps;
+  const { sourceLabel, sourceHandler, ...selectFilterProps } = props;
+  const { profile, sourceKey, sourceValue, staticOptions } = selectFilterProps;
 
   return (
     <SourceSelect
@@ -648,6 +646,7 @@ function SelectFilter<
   sortDirection,
   sourceKey,
   sourceValue,
+  staticOptions,
 }: P) {
   const { content } = useContentState();
   const { abort, getSignal } = useAbort();
@@ -660,9 +659,16 @@ function SelectFilter<
       profile,
       fieldName: filterKey,
       direction: sortDirection,
-      limit: dynamicOptionLimit,
+      staticOptions,
     });
-  }, [contextFilters, defaultOption, filterKey, profile, sortDirection]);
+  }, [
+    contextFilters,
+    defaultOption,
+    filterKey,
+    profile,
+    sortDirection,
+    staticOptions,
+  ]);
 
   const [options, setOptions] = useState<readonly Option[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -1144,19 +1150,17 @@ function createSourceReducer() {
 }
 
 // Filters options that require fetching values from the database
-function filterOptions({
+function filterDynamicOptions({
   defaultOption,
   direction = 'asc',
   fieldName,
   filters,
-  limit,
   profile,
 }: {
   defaultOption?: Option | null;
   direction?: SortDirection;
   fieldName: string;
   filters?: FilterQueryData;
-  limit?: number | null;
   profile: string;
 }) {
   return async function (
@@ -1167,7 +1171,7 @@ function filterOptions({
     const data = {
       text: inputValue,
       direction: direction ?? null,
-      limit: limit ?? null,
+      limit: dynamicOptionLimit,
       filters,
     };
     const values = await postData(url, data, 'json', signal);
@@ -1176,17 +1180,62 @@ function filterOptions({
   };
 }
 
-// Filters options by context value, if present
-function filterStaticOptionsBySource(
-  options: ReadonlyArray<Option>,
-  source?: Primitive | null,
-) {
-  if (isNotEmpty(source)) {
-    return options.filter((option) => {
-      if ('context' in option && option.context === source) return true;
-      return false;
+// Filters options by search input, returning a maximum number of options
+function filterOptions({
+  defaultOption,
+  fieldName,
+  filters = {},
+  profile,
+  direction = 'asc',
+  staticOptions,
+}: {
+  defaultOption?: Option | null;
+  fieldName: string;
+  filters?: FilterQueryData;
+  profile: string;
+  direction?: SortDirection;
+  staticOptions: StaticOptions;
+}) {
+  if (!Object.keys(filters).length && staticOptions.hasOwnProperty(fieldName)) {
+    return filterStaticOptions(
+      staticOptions[fieldName as keyof StaticOptions] ?? [],
+      defaultOption,
+    );
+  } else {
+    return filterDynamicOptions({
+      defaultOption,
+      direction,
+      fieldName,
+      filters,
+      profile,
     });
-  } else return options;
+  }
+}
+
+// Filters options that have values held in memory
+function filterStaticOptions(
+  options: ReadonlyArray<Option>,
+  defaultOption?: Option | null,
+) {
+  return function (inputValue: string) {
+    const value = inputValue.trim().toLowerCase();
+    const matches: Option[] = [];
+    options.every((option) => {
+      if (matches.length >= staticOptionLimit) return false;
+      if (
+        (typeof option.label === 'string' &&
+          option.label.toLowerCase().includes(value)) ||
+        (typeof option.value === 'string' &&
+          option.value.toLowerCase().includes(value))
+      ) {
+        matches.push(option);
+      }
+      return true;
+    });
+    return Promise.resolve(
+      defaultOption ? [defaultOption, ...matches] : matches,
+    );
+  };
 }
 
 // Convert `yyyy-mm-dd` date format to `mm-dd-yyyy`
@@ -1270,15 +1319,13 @@ function getDefaultValue(fieldName: string) {
 function getInitialOptions(
   staticOptions: StaticOptions,
   fieldName: FilterField,
-  source?: Primitive | null,
 ) {
   if (staticOptions.hasOwnProperty(fieldName)) {
     const fieldOptions = staticOptions[fieldName as keyof StaticOptions] ?? [];
-    const sourceOptions = filterStaticOptionsBySource(fieldOptions, source);
 
-    return sourceOptions.length > staticOptionLimit
-      ? sourceOptions.slice(0, staticOptionLimit)
-      : sourceOptions;
+    return fieldOptions.length > staticOptionLimit
+      ? fieldOptions.slice(0, staticOptionLimit)
+      : fieldOptions;
   }
   return null;
 }
@@ -1317,7 +1364,7 @@ function getOptions(
   if (options !== null) {
     return Promise.resolve(options);
   } else {
-    return filterOptions({ profile, fieldName: field })('');
+    return filterDynamicOptions({ profile, fieldName: field })('');
   }
 }
 
@@ -1822,6 +1869,7 @@ type SelectFilterProps<
   sortDirection?: SortDirection;
   sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
   sourceValue: SourceFieldState[SourceField] | null;
+  staticOptions: StaticOptions;
 };
 
 type SingleOptionField = typeof singleOptionFields[number];
@@ -1870,7 +1918,6 @@ type SourceSelectFilterProps<
   sourceHandler: SourceFieldInputHandlers[SourceField];
   sourceKey: typeof sourceFieldsConfig[number]['key'];
   sourceLabel: string;
-  staticOptions: StaticOptions;
 };
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
