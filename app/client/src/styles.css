@@ -149,3 +149,7 @@
   background-color: inherit;
   border: none;
 }
+
+.swagger-ui .info {
+  margin-top: 0;
+}
