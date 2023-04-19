@@ -287,7 +287,7 @@ function executeQueryCountOnly(profile, req, res) {
 
     query
       .first()
-      .then((count) => res.status(200).send(count))
+      .then((count) => res.status(200).json({ count: parseInt(count.count) }))
       .catch((error) => {
         log.error(
           `Failed to get count from the "${profile.tableName}" table: `,

@@ -153,3 +153,7 @@
 .swagger-ui .info {
   margin-top: 0;
 }
+
+hgroup.main a.link {
+  display: none;
+}

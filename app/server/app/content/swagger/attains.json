@@ -24,9 +24,9 @@
     }
   ],
   "info": {
-    "description": "Use this web service to calculate a rainfall erosivity factor (R factor) for small construction sites based on the construction start date, end date and location.\n  \n  If the small construction project is located in an area where EPA is the permitting authority and the R factor is less than five, then under EPA's stormwater regulation, NPDES permitting requirements can be waived for the stormwater discharges from the construction site. \n",
+    "description": "Use this web service to query **ATTAINS** (Assessment and Total Maximum Daily Load Tracking and Implementation System) data. The data is organized into seven top-level profiles, which can be described as follows:\n\n **Actions:** Contains detailed information on plans to restore and protect water quality including Total Maximum Daily Loads (TMDLs), 4b Plans, 5R Plans, Protection Approaches, and other plans.\n\n**Assessments:** Contains detailed information on waters assessed under Section 305(b) of the Clean Water Act and waters listed as impaired under Section 303(d) of the Clean Water Act. This includes assessed uses and parameter attainments.\n\n**Assessment Units:** Contains detailed information on assessment unit location and waterbody types. Please note, some waters may contain more than one water type.\n\n**Assessment Units with Monitoring Locations:** Contains information on the monitoring locations used to make assessment determinations at specific assessment units.\n\n**Catchment Correspondence:** Contains the association between assessment units and National Hydrography Dataset Plus (NHDPlus) high resolution catchments.\n\n**Sources:** Identifies sources of impairment for assessed waters.\n\n**TMDL:** Contains detailed information on Total Maximum Daily Load (TMDL) plans.",
     "version": "1.0.0",
-    "title": "Expert Query",
+    "title": "Expert Query - ATTAINS",
     "termsOfService": "https://edg.epa.gov/EPA_Data_License.html",
     "contact": {
       "email": "cgp@epa.gov"
@@ -70,16 +70,50 @@
       },
       "post": {
         "tags": ["Actions"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ActionsRequestBody" }
-            }
-          },
-          "required": true
-        },
+        "requestBody": { "$ref": "#/components/requestBodies/ActionsRequestBody" },
         "responses": {
           "200": { "$ref": "#/components/responses/ActionsQuerySuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/data/actions/count": {
+      "summary": "Evaluate the row count for the provided query against the Actions profile",
+      "get": {
+        "tags": ["Actions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/startIdParam" },
+          { "$ref": "#/components/parameters/columnsParam" },
+          { "$ref": "#/components/parameters/objectIdParam" },
+          { "$ref": "#/components/parameters/actionAgencyParam" },
+          { "$ref": "#/components/parameters/actionIdParam" },
+          { "$ref": "#/components/parameters/actionNameParam" },
+          { "$ref": "#/components/parameters/actionTypeParam" },
+          { "$ref": "#/components/parameters/assessmentUnitIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitNameParam" },
+          { "$ref": "#/components/parameters/completionDateLoParam" },
+          { "$ref": "#/components/parameters/completionDateHiParam" },
+          { "$ref": "#/components/parameters/includeInMeasureParam" },
+          { "$ref": "#/components/parameters/inIndianCountryParam" },
+          { "$ref": "#/components/parameters/organizationIdParam" },
+          { "$ref": "#/components/parameters/organizationNameParam" },
+          { "$ref": "#/components/parameters/parameterParam" },
+          { "$ref": "#/components/parameters/regionParam" },
+          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Actions"],
+        "requestBody": { "$ref": "#/components/requestBodies/ActionsRequestBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
           "400": { "$ref": "#/components/responses/InvalidRequestError" },
           "500": { "$ref": "#/components/responses/ServerError" }
         }
@@ -160,13 +194,90 @@
       },
       "post": {
         "tags": ["Assessments"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/AssessmentsRequestBody" }
-            }
-          }
-        },
+        "requestBody": { "$ref": "#/components/requestBodies/AssessmentsRequestBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssessmentsQuerySuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/data/assessments/count": {
+      "summary": "Evaluate the row count for the provided query against the Assessments profile",
+      "get": {
+        "tags": ["Assessments"],
+        "parameters": [
+          { "$ref": "#/components/parameters/startIdParam" },
+          { "$ref": "#/components/parameters/columnsParam" },
+          { "$ref": "#/components/parameters/objectIdParam" },
+          { "$ref": "#/components/parameters/alternateListingIdentifierParam" },
+          { "$ref": "#/components/parameters/assessmentBasisParam" },
+          { "$ref": "#/components/parameters/assessmentDateLoParam" },
+          { "$ref": "#/components/parameters/assessmentDateHiParam" },
+          { "$ref": "#/components/parameters/assessmentMethodsParam" },
+          { "$ref": "#/components/parameters/assessmentTypesParam" },
+          { "$ref": "#/components/parameters/assessmentUnitIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitNameParam" },
+          { "$ref": "#/components/parameters/assessmentUnitStatusParam" },
+          { "$ref": "#/components/parameters/associatedActionAgencyParam" },
+          { "$ref": "#/components/parameters/associatedActionIdParam" },
+          { "$ref": "#/components/parameters/associatedActionNameParam" },
+          { "$ref": "#/components/parameters/associatedActionStatusParam" },
+          { "$ref": "#/components/parameters/associatedActionTypeParam" },
+          { "$ref": "#/components/parameters/consentDecreeCycleLoParam" },
+          { "$ref": "#/components/parameters/consentDecreeCycleHiParam" },
+          { "$ref": "#/components/parameters/cwa303dPriorityRankingParam" },
+          { "$ref": "#/components/parameters/cycleExpectedToAttainLoParam" },
+          { "$ref": "#/components/parameters/cycleExpectedToAttainHiParam" },
+          { "$ref": "#/components/parameters/cycleFirstListedLoParam" },
+          { "$ref": "#/components/parameters/cycleFirstListedHiParam" },
+          { "$ref": "#/components/parameters/cycleIdParam" },
+          { "$ref": "#/components/parameters/cycleLastAssessedLoParam" },
+          { "$ref": "#/components/parameters/cycleLastAssessedHiParam" },
+          { "$ref": "#/components/parameters/cycleScheduledForTmdlLoParam" },
+          { "$ref": "#/components/parameters/cycleScheduledForTmdlHiParam" },
+          { "$ref": "#/components/parameters/delistedParam" },
+          { "$ref": "#/components/parameters/delistedReasonParam" },
+          { "$ref": "#/components/parameters/epaIrCategoryParam" },
+          { "$ref": "#/components/parameters/monitoringEndDateLoParam" },
+          { "$ref": "#/components/parameters/monitoringEndDateHiParam" },
+          { "$ref": "#/components/parameters/monitoringStartDateLoParam" },
+          { "$ref": "#/components/parameters/monitoringStartDateHiParam" },
+          { "$ref": "#/components/parameters/organizationIdParam" },
+          { "$ref": "#/components/parameters/organizationNameParam" },
+          { "$ref": "#/components/parameters/overallStatusParam" },
+          { "$ref": "#/components/parameters/parameterAttainmentParam" },
+          { "$ref": "#/components/parameters/parameterGroupParam" },
+          { "$ref": "#/components/parameters/parameterIrCategoryParam" },
+          { "$ref": "#/components/parameters/parameterStatusParam" },
+          { "$ref": "#/components/parameters/pollutantIndicatorParam" },
+          { "$ref": "#/components/parameters/regionParam" },
+          { "$ref": "#/components/parameters/reportingCycleLoParam" },
+          { "$ref": "#/components/parameters/reportingCycleHiParam" },
+          { "$ref": "#/components/parameters/seasonEndDateLoParam" },
+          { "$ref": "#/components/parameters/seasonEndDateHiParam" },
+          { "$ref": "#/components/parameters/seasonStartDateLoParam" },
+          { "$ref": "#/components/parameters/seasonStartDateHiParam" },
+          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/stateIrCategoryParam" },
+          { "$ref": "#/components/parameters/useClassNameParam" },
+          { "$ref": "#/components/parameters/useGroupParam" },
+          { "$ref": "#/components/parameters/useIrCategoryParam" },
+          { "$ref": "#/components/parameters/useNameParam" },
+          { "$ref": "#/components/parameters/useStateIrCategoryParam" },
+          { "$ref": "#/components/parameters/useSupportParam" },
+          { "$ref": "#/components/parameters/vision303dPriorityParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" },
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Assessments"],
+        "requestBody": { "$ref": "#/components/requestBodies/QueryCountSuccess" },
         "responses": {
           "200": { "$ref": "#/components/responses/AssessmentsQuerySuccess" },
           "400": { "$ref": "#/components/responses/InvalidRequestError" },
@@ -205,15 +316,48 @@
       },
       "post": {
         "tags": ["Assessment Units"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/AssessmentUnitsRequestBody" }
-            }
-          }
-        },
+        "requestBody": { "$ref": "#/components/requestBodies/AssessmentUnitsRequestBody" },
         "responses": {
           "200": { "$ref": "#/components/responses/AssessmentUnitsQuerySuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/data/assessmentUnits/count": {
+      "summary": "Evaluate the row count for the provided query against the Assessment Units profile",
+      "get": {
+        "tags": ["Assessment Units"],
+        "parameters": [
+          { "$ref": "#/components/parameters/startIdParam" },
+          { "$ref": "#/components/parameters/columnsParam" },
+          { "$ref": "#/components/parameters/objectIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitNameParam" },
+          { "$ref": "#/components/parameters/assessmentUnitStatusParam" },
+          { "$ref": "#/components/parameters/cycleIdParam" },
+          { "$ref": "#/components/parameters/locationTextParam" },
+          { "$ref": "#/components/parameters/locationTypeCodeParam" },
+          { "$ref": "#/components/parameters/organizationIdParam" },
+          { "$ref": "#/components/parameters/organizationNameParam" },
+          { "$ref": "#/components/parameters/regionParam" },
+          { "$ref": "#/components/parameters/reportingCycleLoParam" },
+          { "$ref": "#/components/parameters/reportingCycleHiParam" },
+          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/useClassNameParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" },
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Assessment Units"],
+        "requestBody": { "$ref": "#/components/requestBodies/AssessmentUnitsRequestBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
           "400": { "$ref": "#/components/responses/InvalidRequestError" },
           "500": { "$ref": "#/components/responses/ServerError" }
         }
@@ -250,15 +394,48 @@
       },
       "post": {
         "tags": ["Assessment Units with Monitoring Locations"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/AssessmentUnitsMonitoringLocationsRequestBody" }
-            }
-          }
-        },
+        "requestBody": { "$ref": "#/components/requestBodies/AssessmentUnitsMonitoringLocationsRequestBody" },
         "responses": {
           "200": { "$ref": "#/components/responses/AssessmentUnitsMonitoringLocationsQuerySuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/data/assessmentUnitsMonitoringLocations/count": {
+      "summary": "Evaluate the row count for the provided query against the Assessment Units with Monitoring Locations profile",
+      "get": {
+        "tags": ["Assessment Units with Monitoring Locations"],
+        "parameters": [
+          { "$ref": "#/components/parameters/startIdParam" },
+          { "$ref": "#/components/parameters/columnsParam" },
+          { "$ref": "#/components/parameters/objectIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitNameParam" },
+          { "$ref": "#/components/parameters/assessmentUnitStatusParam" },
+          { "$ref": "#/components/parameters/cycleIdParam" },
+          { "$ref": "#/components/parameters/monitoringLocationIdParam" },
+          { "$ref": "#/components/parameters/monitoringLocationOrgIdParam" },
+          { "$ref": "#/components/parameters/organizationIdParam" },
+          { "$ref": "#/components/parameters/organizationNameParam" },
+          { "$ref": "#/components/parameters/regionParam" },
+          { "$ref": "#/components/parameters/reportingCycleLoParam" },
+          { "$ref": "#/components/parameters/reportingCycleHiParam" },
+          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/useClassNameParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" },
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Assessment Units with Monitoring Locations"],
+        "requestBody": { "$ref": "#/components/requestBodies/AssessmentUnitsMonitoringLocationsRequestBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
           "400": { "$ref": "#/components/responses/InvalidRequestError" },
           "500": { "$ref": "#/components/responses/ServerError" }
         }
@@ -291,15 +468,44 @@
       },
       "post": {
         "tags": ["Catchment Correspondence"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CatchmentCorrespondenceRequestBody" }
-            }
-          }
-        },
+        "requestBody": { "$ref": "#/components/requestBodies/CatchmentCorrespondenceRequestBody" },
         "responses": {
           "200": { "$ref": "#/components/responses/CatchmentCorrespondenceQuerySuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/data/catchmentCorrespondence/count": {
+      "summary": "Evaluate the row count for the provided query against the Catchment Correspondence profile",
+      "get": {
+        "tags": ["Catchment Correspondence"],
+        "parameters": [
+          { "$ref": "#/components/parameters/startIdParam" },
+          { "$ref": "#/components/parameters/columnsParam" },
+          { "$ref": "#/components/parameters/objectIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitNameParam" },
+          { "$ref": "#/components/parameters/catchmentNhdPlusIdParam" },
+          { "$ref": "#/components/parameters/cycleIdParam" },
+          { "$ref": "#/components/parameters/organizationIdParam" },
+          { "$ref": "#/components/parameters/organizationNameParam" },
+          { "$ref": "#/components/parameters/regionParam" },
+          { "$ref": "#/components/parameters/reportingCycleLoParam" },
+          { "$ref": "#/components/parameters/reportingCycleHiParam" },
+          { "$ref": "#/components/parameters/stateParam" },
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Catchment Correspondence"],
+        "requestBody": { "$ref": "#/components/requestBodies/CatchmentCorrespondenceRequestBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
           "400": { "$ref": "#/components/responses/InvalidRequestError" },
           "500": { "$ref": "#/components/responses/ServerError" }
         }
@@ -339,15 +545,51 @@
       },
       "post": {
         "tags": ["Sources"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/SourcesRequestBody" }
-            }
-          }
-        },
+        "requestBody": { "$ref": "#/components/requestBodies/SourcesRequestBody" },
         "responses": {
           "200": { "$ref": "#/components/responses/SourcesQuerySuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/data/sources/count": {
+      "summary": "Evaluate the row count for the provided query against the Sources profile",
+      "get": {
+        "tags": ["Sources"],
+        "parameters": [
+          { "$ref": "#/components/parameters/startIdParam" },
+          { "$ref": "#/components/parameters/columnsParam" },
+          { "$ref": "#/components/parameters/objectIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitNameParam" },
+          { "$ref": "#/components/parameters/causeNameParam" },
+          { "$ref": "#/components/parameters/confirmedParm" },
+          { "$ref": "#/components/parameters/cycleIdParam" },
+          { "$ref": "#/components/parameters/epaIrCategoryParam" },
+          { "$ref": "#/components/parameters/organizationIdParam" },
+          { "$ref": "#/components/parameters/organizationNameParam" },
+          { "$ref": "#/components/parameters/overallStatusParam" },
+          { "$ref": "#/components/parameters/parameterGroupParam" },
+          { "$ref": "#/components/parameters/regionParam" },
+          { "$ref": "#/components/parameters/reportingCycleLoParam" },
+          { "$ref": "#/components/parameters/reportingCycleHiParam" },
+          { "$ref": "#/components/parameters/sourceNameParam" },
+          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/stateIrCategoryParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" },
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Sources"],
+        "requestBody": { "$ref": "#/components/requestBodies/SourcesRequestBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
           "400": { "$ref": "#/components/responses/InvalidRequestError" },
           "500": { "$ref": "#/components/responses/ServerError" }
         }
@@ -395,14 +637,7 @@
       },
       "post": {
         "tags": ["TMDL"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmdlRequestBody" }
-            }
-          },
-          "required": true
-        },
+        "requestBody": { "$ref": "#/components/requestBodies/TmdlRequestBody" },
         "responses": {
           "200": { "$ref": "#/components/responses/TmdlQuerySuccess" },
           "400": { "$ref": "#/components/responses/InvalidRequestError" },
@@ -410,98 +645,63 @@
         }
       }
     },
+    "/data/tmdl/count": {
+      "summary": "Evaluate the row count for the provided query against the TMDL profile",
+      "get": {
+        "tags": ["TMDL"],
+        "parameters": [
+          { "$ref": "#/components/parameters/startIdParam" },
+          { "$ref": "#/components/parameters/columnsParam" },
+          { "$ref": "#/components/parameters/objectIdParam" },
+          { "$ref": "#/components/parameters/actionAgencyParam" },
+          { "$ref": "#/components/parameters/actionIdParam" },
+          { "$ref": "#/components/parameters/actionNameParam" },
+          { "$ref": "#/components/parameters/addressedParameterParam" },
+          { "$ref": "#/components/parameters/assessmentUnitIdParam" },
+          { "$ref": "#/components/parameters/assessmentUnitNameParam" },
+          { "$ref": "#/components/parameters/completionDateLoParam" },
+          { "$ref": "#/components/parameters/completionDateHiParam" },
+          { "$ref": "#/components/parameters/explicitMarginOfSafetyParam" },
+          { "$ref": "#/components/parameters/fiscalYearEstablishedLoParam" },
+          { "$ref": "#/components/parameters/fiscalYearEstablishedHiParam" },
+          { "$ref": "#/components/parameters/implicitMarginOfSafetyParam" },
+          { "$ref": "#/components/parameters/includeInMeasureParam" },
+          { "$ref": "#/components/parameters/inIndianCountryParam" },
+          { "$ref": "#/components/parameters/npdesIdentifierParam" },
+          { "$ref": "#/components/parameters/organizationIdParam" },
+          { "$ref": "#/components/parameters/organizationNameParam" },
+          { "$ref": "#/components/parameters/otherIdentifierParam" },
+          { "$ref": "#/components/parameters/pollutantParam" },
+          { "$ref": "#/components/parameters/regionParam" },
+          { "$ref": "#/components/parameters/sourceTypeParam" },
+          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/tmdlDateLoParam" },
+          { "$ref": "#/components/parameters/tmdlDateHiParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "tags": ["TMDL"],
+        "requestBody": { "$ref": "#/components/requestBodies/TmdlRequestBody" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/QueryCountSuccess" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
   },
   "externalDocs": {
-    "description": "Find out more about LEW eligibility and exceptions.",
-    "url": "https://www.epa.gov/npdes/rainfall-erosivity-factor-calculator-small-construction-sites"
+    "description": "Find out more about the ATTAINS program",
+    "url": "https://www.epa.gov/waterdata/attains"
   },
   "components": {
     "schemas": {
-      "ActionsRequestBody": {
-        "type": "object",
-        "properties": {
-          "options": {
-            "type": "object",
-            "properties": {
-              "startId": {
-                "$ref": "#/components/schemas/StartId"
-              },
-            }
-          },
-          "columns": { "$ref": "#/components/schemas/Columns" },
-          "filters": {
-            "type": "object",
-            "properties": {
-              "actionAgency": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionAgency" }
-              },
-              "actionId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionId" }
-              },
-              "actionName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionName" }
-              },
-              "actionType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionType" }
-              },
-              "assessmentUnitId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
-              },
-              "assessmentUnitName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
-              },
-              "completionDateLo": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "completionDateHi": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "includeInMeasure": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/YesOrNo" }
-              },
-              "inIndianCountry": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/YesOrNo" }
-              },
-              "objectId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ObjectId" }
-              },
-              "organizationId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationId" }
-              },
-              "organizationName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationName" }
-              },
-              "parameter": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Parameter" }
-              },
-              "region": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Region" }
-              },
-              "state": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/State" }
-              },
-              "waterType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/WaterType" }
-              }
-            }
-          }
-        }
-      },
       "ActionAgency": {
         "type": "string",
         "enum": ["EPA", "State", "Tribal"]
@@ -534,247 +734,6 @@
         "type": "string",
         "example": "2002 Assessment Methodology"
       },
-      "AssessmentsRequestBody": {
-        "type": "object",
-        "properties": {
-          "options": {
-            "type": "object",
-            "properties": {
-              "startId": {
-                "$ref": "#/components/schemas/StartId"
-              },
-            }
-          },
-          "columns": { "$ref": "#/components/schemas/Columns" },
-          "filters": {
-            "type": "object",
-            "properties": {
-              "alternateListingIdentifier": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
-              },
-              "assessmentBasis": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentBasis" }
-              },
-              "assessmentDateLo": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "assessmentDateHi": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "assessmentMethods": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentMethods" }
-              },
-              "assessmentTypes": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentTypes" }
-              },
-              "assessmentUnitId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
-              },
-              "assessmentUnitName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
-              },
-              "assessmentUnitStatus": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitStatus" }
-              },
-              "associatedActionAgency": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionAgency" }
-              },
-              "associatedActionId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionId" }
-              },
-              "associatedActionName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionName" }
-              },
-              "associatedActionStatus": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionStatus" }
-              },
-              "associatedActionType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionType" }
-              },
-              "consentDecreeCycleLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "consentDecreeCycleHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "cwa303dPriorityRanking": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Cwa303dPriorityRanking" }
-              },
-              "cycleExpectedToAttainLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "cycleExpectedToAttainHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "cycleFirstListedLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "cycleFirstListedHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "cycleId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
-              },
-              "cycleLastAssessedLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "cycleLastAssessedHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "cycleScheduledForTmdlLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "cycleScheduledForTmdlHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "delisted": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/YesOrNo" }
-              },
-              "delistedReason": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/DelistedReason" }
-              },
-              "epaIrCategory": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/IrCategoryString" }
-              },
-              "monitoringEndDateLo": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "monitoringEndDateHi": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "monitoringStartDateLo": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "monitoringStartDateHi": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "objectId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ObjectId" }
-              },
-              "organizationId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationId" }
-              },
-              "organizationName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationName" }
-              },
-              "overallStatus": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Supporting" }
-              },
-              "parameterAttainment": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ParameterAttainment" }
-              },
-              "parameterGroup": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ParameterGroup" }
-              },
-              "parameterIrCategory": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/IrCategoryNumber" }
-              },
-              "parameterName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Parameter" }
-              },
-              "parameterStateIrCategory": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/IrCategoryNumber" }
-              },
-              "parameterStatus": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ParameterStatus" }
-              },
-              "pollutantIndicator": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/YesOrNo" }
-              },
-              "region": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Region" }
-              },
-              "reportingCycleLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "reportingCycleHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "seasonEndDateLo": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "seasonEndDateHi": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "seasonStartDateLo": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "seasonStartDateHi": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "state": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/State" }
-              },
-              "stateIrCategory": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/IrCategoryString" }
-              },
-              "useClassName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/UseClassName" }
-              },
-              "useGroup": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/UseGroup" }
-              },
-              "useIrCategory": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/IrCategoryNumber" }
-              },
-              "useName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/UseName" }
-              },
-              "useStateIrCategory": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/IrCategoryNumber" }
-              },
-              "useSupport": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Supporting" }
-              },
-              "vision303dPriority": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/YesOrNo" }
-              },
-              "waterType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/WaterType" }
-              }
-            }
-          }
-        }
-      },
       "AssessmentTypes": {
         "type": "string",
         "example": "PHYSICAL/CHEMICAL"
@@ -790,221 +749,6 @@
       "AssessmentUnitStatus": {
         "type": "string",
         "example": "A"
-      },
-      "AssessmentUnitsRequestBody": {
-        "type": "object",
-        "properties": {
-          "options": {
-            "type": "object",
-            "properties": {
-              "startId": {
-                "$ref": "#/components/schemas/StartId"
-              },
-            }
-          },
-          "columns": { "$ref": "#/components/schemas/Columns" },
-          "filters": {
-            "type": "object",
-            "properties": {
-              "assessmentUnitId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
-              },
-              "assessmentUnitName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
-              },
-              "assessmentUnitStatus": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitStatus" }
-              },
-              "cycleId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
-              },
-              "locationText": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/LocationText" }
-              },
-              "locationTypeCode": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/LocationTypeCode" }
-              },
-              "objectId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ObjectId" }
-              },
-              "organizationId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationId" }
-              },
-              "organizationName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationName" }
-              },
-              "region": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Region" }
-              },
-              "reportingCycleLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "reportingCycleHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "state": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/State" }
-              },
-              "useClassName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/UseClassName" }
-              },
-              "waterType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/WaterType" }
-              }
-            }
-          }
-        }
-      },
-      "AssessmentUnitsMonitoringLocationsRequestBody": {
-        "type": "object",
-        "properties": {
-          "options": {
-            "type": "object",
-            "properties": {
-              "startId": {
-                "$ref": "#/components/schemas/StartId"
-              },
-            }
-          },
-          "columns": { "$ref": "#/components/schemas/Columns" },
-          "filters": {
-            "type": "object",
-            "properties": {
-              "assessmentUnitId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
-              },
-              "assessmentUnitName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
-              },
-              "assessmentUnitStatus": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitStatus" }
-              },
-              "cycleId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
-              },
-              "monitoringLocationId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/MonitoringLocationId" }
-              },
-              "monitoringLocationOrgId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/MonitoringLocationOrgId" }
-              },
-              "objectId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ObjectId" }
-              },
-              "organizationId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationId" }
-              },
-              "organizationName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationName" }
-              },
-              "region": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Region" }
-              },
-              "reportingCycleLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "reportingCycleHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "state": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/State" }
-              },
-              "useClassName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/UseClassName" }
-              },
-              "waterType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/WaterType" }
-              }
-            }
-          }
-        }
-      },
-      "CatchmentCorrespondenceRequestBody": {
-        "type": "object",
-        "properties": {
-          "options": {
-            "type": "object",
-            "properties": {
-              "startId": {
-                "$ref": "#/components/schemas/StartId"
-              },
-            }
-          },
-          "columns": { "$ref": "#/components/schemas/Columns" },
-          "filters": {
-            "type": "object",
-            "properties": {
-              "assessmentUnitId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
-              },
-              "assessmentUnitName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
-              },
-              "catchmentNhdPlusId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/CatchmentNhdPlusId" }
-              },
-              "cycleId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
-              },
-              "objectId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ObjectId" }
-              },
-              "organizationId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationId" }
-              },
-              "organizationName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationName" }
-              },
-              "region": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Region" }
-              },
-              "reportingCycleLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "reportingCycleHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "state": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/State" }
-              },
-            }
-          }
-        }
       },
       "CatchmentNhdPlusId": {
         "type": "integer",
@@ -1089,7 +833,7 @@
       },
       "OrganizationId": {
         "type": "string",
-        "example": "21AS"
+        "example": "21AWIC"
       },
       "OrganizationName": {
         "type": "string",
@@ -1148,95 +892,6 @@
         "type": "string",
         "example": "Nonpoint source"
       },
-      "SourcesRequestBody": {
-        "type": "object",
-        "properties": {
-          "options": {
-            "type": "object",
-            "properties": {
-              "startId": {
-                "$ref": "#/components/schemas/StartId"
-              },
-            }
-          },
-          "columns": { "$ref": "#/components/schemas/Columns" },
-          "filters": {
-            "type": "object",
-            "properties": {
-              "assessmentUnitId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
-              },
-              "assessmentUnitName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
-              },
-              "causeName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Parameter" }
-              },
-              "confirmed": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/YesOrNo" }
-              },
-              "cycleId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
-              },
-              "epaIrCategory": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/IrCategoryString" }
-              },
-              "objectId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ObjectId" }
-              },
-              "organizationId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationId" }
-              },
-              "organizationName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationName" }
-              },
-              "overallStatus": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Supporting" }
-              },
-              "parameterGroup": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ParameterGroup" }
-              },
-              "region": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Region" }
-              },
-              "reportingCycleLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "reportingCycleHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "sourceName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/SourceName" }
-              },
-              "state": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/State" }
-              },
-              "stateIrCategory": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/IrCategoryString" }
-              },
-              "waterType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/WaterType" }
-              }
-            }
-          }
-        }
-      },
       "StartId": {
         "type": "integer",
         "example": 20
@@ -1248,123 +903,6 @@
       "Supporting": {
         "type": "string",
         "example": "Fully Supporting"
-      },
-      "TmdlRequestBody": {
-        "type": "object",
-        "properties": {
-          "options": {
-            "type": "object",
-            "properties": {
-              "startId": {
-                "$ref": "#/components/schemas/StartId"
-              },
-            }
-          },
-          "columns": { "$ref": "#/components/schemas/Columns" },
-          "filters": {
-            "type": "object",
-            "properties": {
-              "actionAgency": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionAgency" }
-              },
-              "actionId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionId" }
-              },
-              "actionName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ActionName" }
-              },
-              "addressedParameter": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Parameter" }
-              },
-              "assessmentUnitId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
-              },
-              "assessmentUnitName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
-              },
-              "completionDateLo": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "completionDateHi": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "explicitMarginOfSafety": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ExplicitMarginOfSafety" }
-              },
-              "fiscalYearEstablishedHi": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "fiscalYearEstablishedLo": {
-                "$ref": "#/components/schemas/Year"
-              },
-              "implicitMarginOfSafety": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ImplicitMarginOfSafety" }
-              },
-              "includeInMeasure": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/YesOrNo" }
-              },
-              "inIndianCountry": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/YesOrNo" }
-              },
-              "npdesIdentifier": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/NpdesIdentifier" }
-              },
-              "objectId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ObjectId" }
-              },
-              "organizationId": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationId" }
-              },
-              "organizationName": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OrganizationName" }
-              },
-              "otherIdentifier": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/OtherIdentifier" }
-              },
-              "pollutant": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Parameter" }
-              },
-              "region": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/Region" }
-              },
-              "sourceType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/SourceType" }
-              },
-              "state": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/State" }
-              },
-              "tmdlDateLo": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "tmdlDateHi": {
-                "$ref": "#/components/schemas/Date"
-              },
-              "waterType": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/WaterType" }
-              }
-            }
-          }
-        }
       },
       "UseClassName": {
         "type": "string",
@@ -2203,9 +1741,807 @@
         "required": true
       }
     },
+    "requestBodies": {
+      "ActionsRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "startId": {
+                      "$ref": "#/components/schemas/StartId"
+                    },
+                  }
+                },
+                "columns": { "$ref": "#/components/schemas/Columns" },
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "actionAgency": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionAgency" }
+                    },
+                    "actionId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionId" }
+                    },
+                    "actionName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionName" }
+                    },
+                    "actionType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionType" }
+                    },
+                    "assessmentUnitId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
+                    },
+                    "assessmentUnitName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
+                    },
+                    "completionDateLo": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "completionDateHi": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "includeInMeasure": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/YesOrNo" }
+                    },
+                    "inIndianCountry": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/YesOrNo" }
+                    },
+                    "objectId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ObjectId" }
+                    },
+                    "organizationId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationId" }
+                    },
+                    "organizationName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationName" }
+                    },
+                    "parameter": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Parameter" }
+                    },
+                    "region": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Region" }
+                    },
+                    "state": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/State" }
+                    },
+                    "waterType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WaterType" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentsRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "startId": {
+                      "$ref": "#/components/schemas/StartId"
+                    },
+                  }
+                },
+                "columns": { "$ref": "#/components/schemas/Columns" },
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "alternateListingIdentifier": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
+                    },
+                    "assessmentBasis": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentBasis" }
+                    },
+                    "assessmentDateLo": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "assessmentDateHi": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "assessmentMethods": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentMethods" }
+                    },
+                    "assessmentTypes": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentTypes" }
+                    },
+                    "assessmentUnitId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
+                    },
+                    "assessmentUnitName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
+                    },
+                    "assessmentUnitStatus": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitStatus" }
+                    },
+                    "associatedActionAgency": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionAgency" }
+                    },
+                    "associatedActionId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionId" }
+                    },
+                    "associatedActionName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionName" }
+                    },
+                    "associatedActionStatus": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionStatus" }
+                    },
+                    "associatedActionType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionType" }
+                    },
+                    "consentDecreeCycleLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "consentDecreeCycleHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "cwa303dPriorityRanking": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Cwa303dPriorityRanking" }
+                    },
+                    "cycleExpectedToAttainLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "cycleExpectedToAttainHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "cycleFirstListedLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "cycleFirstListedHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "cycleId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
+                    },
+                    "cycleLastAssessedLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "cycleLastAssessedHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "cycleScheduledForTmdlLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "cycleScheduledForTmdlHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "delisted": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/YesOrNo" }
+                    },
+                    "delistedReason": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/DelistedReason" }
+                    },
+                    "epaIrCategory": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/IrCategoryString" }
+                    },
+                    "monitoringEndDateLo": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "monitoringEndDateHi": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "monitoringStartDateLo": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "monitoringStartDateHi": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "objectId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ObjectId" }
+                    },
+                    "organizationId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationId" }
+                    },
+                    "organizationName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationName" }
+                    },
+                    "overallStatus": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Supporting" }
+                    },
+                    "parameterAttainment": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ParameterAttainment" }
+                    },
+                    "parameterGroup": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ParameterGroup" }
+                    },
+                    "parameterIrCategory": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/IrCategoryNumber" }
+                    },
+                    "parameterName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Parameter" }
+                    },
+                    "parameterStateIrCategory": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/IrCategoryNumber" }
+                    },
+                    "parameterStatus": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ParameterStatus" }
+                    },
+                    "pollutantIndicator": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/YesOrNo" }
+                    },
+                    "region": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Region" }
+                    },
+                    "reportingCycleLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "reportingCycleHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "seasonEndDateLo": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "seasonEndDateHi": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "seasonStartDateLo": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "seasonStartDateHi": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "state": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/State" }
+                    },
+                    "stateIrCategory": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/IrCategoryString" }
+                    },
+                    "useClassName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/UseClassName" }
+                    },
+                    "useGroup": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/UseGroup" }
+                    },
+                    "useIrCategory": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/IrCategoryNumber" }
+                    },
+                    "useName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/UseName" }
+                    },
+                    "useStateIrCategory": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/IrCategoryNumber" }
+                    },
+                    "useSupport": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Supporting" }
+                    },
+                    "vision303dPriority": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/YesOrNo" }
+                    },
+                    "waterType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WaterType" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentUnitsRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "startId": {
+                      "$ref": "#/components/schemas/StartId"
+                    },
+                  }
+                },
+                "columns": { "$ref": "#/components/schemas/Columns" },
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "assessmentUnitId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
+                    },
+                    "assessmentUnitName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
+                    },
+                    "assessmentUnitStatus": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitStatus" }
+                    },
+                    "cycleId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
+                    },
+                    "locationText": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/LocationText" }
+                    },
+                    "locationTypeCode": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/LocationTypeCode" }
+                    },
+                    "objectId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ObjectId" }
+                    },
+                    "organizationId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationId" }
+                    },
+                    "organizationName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationName" }
+                    },
+                    "region": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Region" }
+                    },
+                    "reportingCycleLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "reportingCycleHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "state": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/State" }
+                    },
+                    "useClassName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/UseClassName" }
+                    },
+                    "waterType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WaterType" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentUnitsMonitoringLocationsRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "startId": {
+                      "$ref": "#/components/schemas/StartId"
+                    },
+                  }
+                },
+                "columns": { "$ref": "#/components/schemas/Columns" },
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "assessmentUnitId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
+                    },
+                    "assessmentUnitName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
+                    },
+                    "assessmentUnitStatus": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitStatus" }
+                    },
+                    "cycleId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
+                    },
+                    "monitoringLocationId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/MonitoringLocationId" }
+                    },
+                    "monitoringLocationOrgId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationId" }
+                    },
+                    "objectId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ObjectId" }
+                    },
+                    "organizationId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationId" }
+                    },
+                    "organizationName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationName" }
+                    },
+                    "region": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Region" }
+                    },
+                    "reportingCycleLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "reportingCycleHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "state": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/State" }
+                    },
+                    "useClassName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/UseClassName" }
+                    },
+                    "waterType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WaterType" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "CatchmentCorrespondenceRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "startId": {
+                      "$ref": "#/components/schemas/StartId"
+                    },
+                  }
+                },
+                "columns": { "$ref": "#/components/schemas/Columns" },
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "assessmentUnitId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
+                    },
+                    "assessmentUnitName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
+                    },
+                    "catchmentNhdPlusId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/CatchmentNhdPlusId" }
+                    },
+                    "cycleId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
+                    },
+                    "objectId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ObjectId" }
+                    },
+                    "organizationId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationId" }
+                    },
+                    "organizationName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationName" }
+                    },
+                    "region": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Region" }
+                    },
+                    "reportingCycleLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "reportingCycleHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "state": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/State" }
+                    },
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "SourcesRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "startId": {
+                      "$ref": "#/components/schemas/StartId"
+                    },
+                  }
+                },
+                "columns": { "$ref": "#/components/schemas/Columns" },
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "assessmentUnitId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
+                    },
+                    "assessmentUnitName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
+                    },
+                    "causeName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Parameter" }
+                    },
+                    "confirmed": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/YesOrNo" }
+                    },
+                    "cycleId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AlternateListingIdentifier" }
+                    },
+                    "epaIrCategory": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/IrCategoryString" }
+                    },
+                    "objectId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ObjectId" }
+                    },
+                    "organizationId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationId" }
+                    },
+                    "organizationName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationName" }
+                    },
+                    "overallStatus": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Supporting" }
+                    },
+                    "parameterGroup": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ParameterGroup" }
+                    },
+                    "region": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Region" }
+                    },
+                    "reportingCycleLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "reportingCycleHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "sourceName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/SourceName" }
+                    },
+                    "state": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/State" }
+                    },
+                    "stateIrCategory": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/IrCategoryString" }
+                    },
+                    "waterType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WaterType" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "TmdlRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "startId": {
+                      "$ref": "#/components/schemas/StartId"
+                    },
+                  }
+                },
+                "columns": { "$ref": "#/components/schemas/Columns" },
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "actionAgency": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionAgency" }
+                    },
+                    "actionId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionId" }
+                    },
+                    "actionName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActionName" }
+                    },
+                    "addressedParameter": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Parameter" }
+                    },
+                    "assessmentUnitId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitId" }
+                    },
+                    "assessmentUnitName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AssessmentUnitName" }
+                    },
+                    "completionDateLo": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "completionDateHi": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "explicitMarginOfSafety": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ExplicitMarginOfSafety" }
+                    },
+                    "fiscalYearEstablishedHi": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "fiscalYearEstablishedLo": {
+                      "$ref": "#/components/schemas/Year"
+                    },
+                    "implicitMarginOfSafety": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ImplicitMarginOfSafety" }
+                    },
+                    "includeInMeasure": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/YesOrNo" }
+                    },
+                    "inIndianCountry": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/YesOrNo" }
+                    },
+                    "npdesIdentifier": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/NpdesIdentifier" }
+                    },
+                    "objectId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ObjectId" }
+                    },
+                    "organizationId": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationId" }
+                    },
+                    "organizationName": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrganizationName" }
+                    },
+                    "otherIdentifier": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OtherIdentifier" }
+                    },
+                    "pollutant": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Parameter" }
+                    },
+                    "region": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Region" }
+                    },
+                    "sourceType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/SourceType" }
+                    },
+                    "state": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/State" }
+                    },
+                    "tmdlDateLo": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "tmdlDateHi": {
+                      "$ref": "#/components/schemas/Date"
+                    },
+                    "waterType": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WaterType" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      }
+    },
     "responses": {
       "ActionsQuerySuccess": {
-        "description": "A successful query response",
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
         "content": {
           "application/json": {
             "schema": {
@@ -2294,7 +2630,7 @@
         }
       },
       "AssessmentsQuerySuccess": {
-        "description": "A successful query response",
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
         "content": {
           "application/json": {
             "schema": {
@@ -2491,7 +2827,7 @@
         }
       },
       "AssessmentUnitsQuerySuccess": {
-        "description": "A successful query response",
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
         "content": {
           "application/json": {
             "schema": {
@@ -2580,7 +2916,7 @@
         }
       },
       "AssessmentUnitsMonitoringLocationsQuerySuccess": {
-        "description": "A successful query response",
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
         "content": {
           "application/json": {
             "schema": {
@@ -2672,7 +3008,7 @@
         }
       },
       "CatchmentCorrespondenceQuerySuccess": {
-        "description": "A successful query response",
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
         "content": {
           "application/json": {
             "schema": {
@@ -2753,6 +3089,28 @@
           }
         }
       },
+      "QueryCountSuccess": {
+        "description": "The query evaluated successfully. The response contains the total count of the query or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "example": 148220
+                    }
+                  },
+                  "required": ["count"]
+                },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          }
+        }
+      },
       "ServerError": {
         "description": "An internal server error occurred",
         "content": {
@@ -2774,7 +3132,7 @@
         }
       },
       "SourcesQuerySuccess": {
-        "description": "A successful query response",
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
         "content": {
           "application/json": {
             "schema": {
@@ -2866,7 +3224,7 @@
         }
       },
       "TmdlQuerySuccess": {
-        "description": "A successful query response",
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
         "content": {
           "application/json": {
             "schema": {
