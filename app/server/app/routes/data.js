@@ -334,8 +334,9 @@ async function checkQueryCount(query) {
     .count()
     .first();
 
-  if (parseInt(count.count) > maxQuerySize) return null;
-  return count;
+  const countInt = parseInt(count.count);
+  if (countInt > maxQuerySize) return null;
+  return countInt;
 }
 
 /**
@@ -356,12 +357,12 @@ function executeQueryCountOnly(profile, req, res) {
     parseCriteria(query, profile, queryParams, true);
 
     checkQueryCount(query).then((count) => {
-      if (!count) {
+      if (count === null) {
         res.status(200).json({
           message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
         });
       } else {
-        res.status(200).send(count);
+        res.status(200).json({ count });
       }
     });
   } catch (error) {
