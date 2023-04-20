@@ -5,18 +5,51 @@ export const profiles = {
     columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
       ['actionAgency', {}],
-      ['actionId', {}],
-      ['actionName', {}],
+      [
+        'actionId',
+        {
+          contextColumns: [
+            'actionName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'actionName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['actionType', {}],
-      ['assessmentUnitId', { contextColumns: ['state'] }],
-      ['assessmentUnitName', { contextColumns: ['assessmentUnitId'] }],
+      [
+        'assessmentUnitId',
+        {
+          contextColumns: [
+            'assessmentUnitName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'assessmentUnitName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['completionDate', {}],
       ['includeInMeasure', {}],
       ['inIndianCountry', {}],
       ['locationDescription', {}],
       [
         'organizationId',
-        { contextColumns: ['organizationType', 'region', 'state'] },
+        {
+          contextColumns: [
+            'organizationName',
+            'organizationType',
+            'region',
+            'state',
+          ],
+        },
       ],
       ['organizationName', { contextColumns: ['region', 'state'] }],
       ['organizationType', {}],
@@ -40,8 +73,21 @@ export const profiles = {
       ['assessmentDate', {}],
       ['assessmentMethods', {}],
       ['assessmentTypes', {}],
-      ['assessmentUnitId', { contextColumns: ['state'] }],
-      ['assessmentUnitName', { contextColumns: ['assessmentUnitId'] }],
+      [
+        'assessmentUnitId',
+        {
+          contextColumns: [
+            'assessmentUnitName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'assessmentUnitName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['assessmentUnitStatus', {}],
       ['associatedActionAgency', {}],
       ['associatedActionId', {}],
@@ -63,7 +109,14 @@ export const profiles = {
       ['monitoringStartDate', {}],
       [
         'organizationId',
-        { contextColumns: ['organizationType', 'region', 'state'] },
+        {
+          contextColumns: [
+            'organizationName',
+            'organizationType',
+            'region',
+            'state',
+          ],
+        },
       ],
       ['organizationName', { contextColumns: ['region', 'state'] }],
       ['organizationType', {}],
@@ -71,7 +124,12 @@ export const profiles = {
       ['parameterAttainment', {}],
       ['parameterGroup', {}],
       ['parameterIrCategory', {}],
-      ['parameterName', {}],
+      [
+        'parameterName',
+        {
+          contextColumns: ['parameterGroup'],
+        },
+      ],
       ['parameterStateIrCategory', {}],
       ['parameterStatus', {}],
       ['pollutantIndicator', {}],
@@ -84,9 +142,22 @@ export const profiles = {
       ['state', { contextColumns: ['region'] }],
       ['stateIrCategory', {}],
       ['useClassName', {}],
-      ['useGroup', {}],
+      [
+        'useGroup',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['useIrCategory', {}],
-      ['useName', { contextColumns: ['useGroup'] }],
+      [
+        'useName',
+        {
+          contextColumns: [
+            'organizationId',
+            'organizationName',
+            'state',
+            'useGroup',
+          ],
+        },
+      ],
       ['useStateIrCategory', {}],
       ['useSupport', {}],
       ['vision303dPriority', {}],
@@ -102,16 +173,36 @@ export const profiles = {
       'Contains detailed information on assessment unit location and waterbody types. Please note, some waters may contain more than one water type.',
     columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
-      ['assessmentUnitId', { contextColumns: ['state'] }],
-      ['assessmentUnitName', { contextColumns: ['assessmentUnitId'] }],
+      [
+        'assessmentUnitId',
+        {
+          contextColumns: [
+            'assessmentUnitName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'assessmentUnitName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['assessmentUnitStatus', {}],
       ['cycleId', {}],
       ['locationDescription', {}],
-      ['locationText', {}],
+      ['locationText', { contextColumns: ['locationTypeCode'] }],
       ['locationTypeCode', {}],
       [
         'organizationId',
-        { contextColumns: ['organizationType', 'region', 'state'] },
+        {
+          contextColumns: [
+            'organizationName',
+            'organizationType',
+            'region',
+            'state',
+          ],
+        },
       ],
       ['organizationName', { contextColumns: ['region', 'state'] }],
       ['organizationType', {}],
@@ -132,8 +223,21 @@ export const profiles = {
       'Contains information on the monitoring locations used to make assessment determinations at specific assessment units.',
     columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
-      ['assessmentUnitId', { contextColumns: ['state'] }],
-      ['assessmentUnitName', { contextColumns: ['assessmentUnitId'] }],
+      [
+        'assessmentUnitId',
+        {
+          contextColumns: [
+            'assessmentUnitName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'assessmentUnitName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['assessmentUnitStatus', {}],
       ['cycleId', {}],
       ['locationDescription', {}],
@@ -142,7 +246,14 @@ export const profiles = {
       ['monitoringLocationOrgId', {}],
       [
         'organizationId',
-        { contextColumns: ['organizationType', 'region', 'state'] },
+        {
+          contextColumns: [
+            'organizationName',
+            'organizationType',
+            'region',
+            'state',
+          ],
+        },
       ],
       ['organizationName', { contextColumns: ['region', 'state'] }],
       ['organizationType', {}],
@@ -164,8 +275,21 @@ export const profiles = {
       'Contains the association between assessment units and National Hydrography Dataset Plus (NHDPlus) high resolution catchments.',
     columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
-      ['assessmentUnitId', { contextColumns: ['state'] }],
-      ['assessmentUnitName', { contextColumns: ['assessmentUnitId'] }],
+      [
+        'assessmentUnitId',
+        {
+          contextColumns: [
+            'assessmentUnitName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'assessmentUnitName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['catchmentNhdPlusId', {}],
       ['cycleId', {}],
       [
@@ -185,8 +309,21 @@ export const profiles = {
     description: 'Identifies sources of impairment for assessed waters.',
     columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
-      ['assessmentUnitId', { contextColumns: ['state'] }],
-      ['assessmentUnitName', { contextColumns: ['assessmentUnitId'] }],
+      [
+        'assessmentUnitId',
+        {
+          contextColumns: [
+            'assessmentUnitName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'assessmentUnitName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['causeName', {}],
       ['confirmed', {}],
       ['cycleId', {}],
@@ -194,7 +331,14 @@ export const profiles = {
       ['locationDescription', {}],
       [
         'organizationId',
-        { contextColumns: ['organizationType', 'region', 'state'] },
+        {
+          contextColumns: [
+            'organizationName',
+            'organizationType',
+            'region',
+            'state',
+          ],
+        },
       ],
       ['organizationName', { contextColumns: ['region', 'state'] }],
       ['organizationType', {}],
@@ -218,11 +362,37 @@ export const profiles = {
     columns: new Map<string, { contextColumns?: string[] }>([
       ['objectId', {}],
       ['actionAgency', {}],
-      ['actionId', {}],
-      ['actionName', {}],
+      [
+        'actionId',
+        {
+          contextColumns: [
+            'actionName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'actionName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['addressedParameter', {}],
-      ['assessmentUnitId', { contextColumns: ['state'] }],
-      ['assessmentUnitName', { contextColumns: ['assessmentUnitId'] }],
+      [
+        'assessmentUnitId',
+        {
+          contextColumns: [
+            'assessmentUnitName',
+            'organizationId',
+            'organizationName',
+            'state',
+          ],
+        },
+      ],
+      [
+        'assessmentUnitName',
+        { contextColumns: ['organizationId', 'organizationName', 'state'] },
+      ],
       ['completionDate', {}],
       ['explicitMarginOfSafety', {}],
       ['fiscalYearEstablished', {}],
@@ -235,7 +405,14 @@ export const profiles = {
       ['npdesIdentifier', {}],
       [
         'organizationId',
-        { contextColumns: ['organizationType', 'region', 'state'] },
+        {
+          contextColumns: [
+            'organizationName',
+            'organizationType',
+            'region',
+            'state',
+          ],
+        },
       ],
       ['organizationName', { contextColumns: ['region', 'state'] }],
       ['organizationType', {}],
