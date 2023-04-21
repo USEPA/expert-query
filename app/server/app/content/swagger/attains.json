@@ -26,10 +26,10 @@
   "info": {
     "description": "Use this web service to query **ATTAINS** (Assessment and Total Maximum Daily Load Tracking and Implementation System) data. The data is organized into seven top-level profiles, which can be described as follows:\n\n **Actions:** Contains detailed information on plans to restore and protect water quality including Total Maximum Daily Loads (TMDLs), 4b Plans, 5R Plans, Protection Approaches, and other plans.\n\n**Assessments:** Contains detailed information on waters assessed under Section 305(b) of the Clean Water Act and waters listed as impaired under Section 303(d) of the Clean Water Act. This includes assessed uses and parameter attainments.\n\n**Assessment Units:** Contains detailed information on assessment unit location and waterbody types. Please note, some waters may contain more than one water type.\n\n**Assessment Units with Monitoring Locations:** Contains information on the monitoring locations used to make assessment determinations at specific assessment units.\n\n**Catchment Correspondence:** Contains the association between assessment units and National Hydrography Dataset Plus (NHDPlus) high resolution catchments.\n\n**Sources:** Identifies sources of impairment for assessed waters.\n\n**TMDL:** Contains detailed information on Total Maximum Daily Load (TMDL) plans.",
     "version": "1.0.0",
-    "title": "Expert Query - ATTAINS",
+    "title": "US EPA Expert Query - ATTAINS",
     "termsOfService": "https://edg.epa.gov/EPA_Data_License.html",
     "contact": {
-      "email": "cgp@epa.gov"
+      "email": ""
     },
     "license": {
       "name": "Creative Commons Zero Public Domain Dedication",
@@ -43,6 +43,7 @@
         "tags": ["Actions"],
         "parameters": [
           { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/outputFormatParam" },
           { "$ref": "#/components/parameters/startIdParam" },
           { "$ref": "#/components/parameters/columnsParam" },
           { "$ref": "#/components/parameters/objectIdParam" },
@@ -133,6 +134,7 @@
         "tags": ["Assessments"],
         "parameters": [
           { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/outputFormatParam" },
           { "$ref": "#/components/parameters/startIdParam" },
           { "$ref": "#/components/parameters/columnsParam" },
           { "$ref": "#/components/parameters/objectIdParam" },
@@ -307,6 +309,7 @@
         "tags": ["Assessment Units"],
         "parameters": [
           { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/outputFormatParam" },
           { "$ref": "#/components/parameters/startIdParam" },
           { "$ref": "#/components/parameters/columnsParam" },
           { "$ref": "#/components/parameters/objectIdParam" },
@@ -393,6 +396,7 @@
         "tags": ["Assessment Units with Monitoring Locations"],
         "parameters": [
           { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/outputFormatParam" },
           { "$ref": "#/components/parameters/startIdParam" },
           { "$ref": "#/components/parameters/columnsParam" },
           { "$ref": "#/components/parameters/objectIdParam" },
@@ -479,6 +483,7 @@
         "tags": ["Catchment Correspondence"],
         "parameters": [
           { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/outputFormatParam" },
           { "$ref": "#/components/parameters/startIdParam" },
           { "$ref": "#/components/parameters/columnsParam" },
           { "$ref": "#/components/parameters/objectIdParam" },
@@ -557,6 +562,7 @@
         "tags": ["Sources"],
         "parameters": [
           { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/outputFormatParam" },
           { "$ref": "#/components/parameters/startIdParam" },
           { "$ref": "#/components/parameters/columnsParam" },
           { "$ref": "#/components/parameters/objectIdParam" },
@@ -649,6 +655,7 @@
         "tags": ["TMDL"],
         "parameters": [
           { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/outputFormatParam" },
           { "$ref": "#/components/parameters/startIdParam" },
           { "$ref": "#/components/parameters/columnsParam" },
           { "$ref": "#/components/parameters/objectIdParam" },
@@ -1319,6 +1326,19 @@
         "type": "string",
         "example": "4A"
       },
+      "FileAttachmentCsv": {
+        "type": "string",
+        "description": "Query output returned as a CSV (Comma-Separated Value) file attachment",
+      },
+      "FileAttachmentTsv": {
+        "type": "string",
+        "description": "Query output returned as a TSV (Tab-Separated Value) file attachment"
+      },
+      "FileAttachmentXlsx": {
+        "type": "string",
+        "format": "binary",
+        "description": "Query output returned as an XLSX (Microsoft Excel) file attachment"
+      },
       "LoadAllocation": {
         "type": "number",
         "format": "float",
@@ -1367,6 +1387,22 @@
       "OrganizationType": {
         "type": "string",
         "enum": ["State", "Tribe"]
+      },
+      "Options": {
+        "type": "object",
+        "properties": {
+          "startId": {
+            "$ref": "#/components/schemas/StartId"
+          },
+          "format": {
+            "$ref": "#/components/schemas/OutputFormat"
+          }
+        }
+      },
+      "OutputFormat": {
+        "type": "string",
+        "description": "This field is ignored in queries sent to '/count' endpoints",
+        "enum": ["json", "csv", "tsv", "xlsx"],
       },
       "OtherIdentifier": {
         "type": "string",
@@ -2163,6 +2199,11 @@
           "items": { "$ref": "#/components/schemas/OrganizationName" }
         }
       },
+      "outputFormatParam": {
+        "name": "format",
+        "in": "query",
+        "schema": { "$ref": "#/components/schemas/OutputFormat" }
+      },
       "otherIdentifierParam": {
         "name": "otherIdentifier",
         "in": "query",
@@ -2472,12 +2513,7 @@
               "type": "object",
               "properties": {
                 "options": {
-                  "type": "object",
-                  "properties": {
-                    "startId": {
-                      "$ref": "#/components/schemas/StartId"
-                    },
-                  }
+                  "$ref": "#/components/schemas/Options"
                 },
                 "columns": { "$ref": "#/components/schemas/Columns" },
                 "filters": {
@@ -2564,12 +2600,7 @@
               "type": "object",
               "properties": {
                 "options": {
-                  "type": "object",
-                  "properties": {
-                    "startId": {
-                      "$ref": "#/components/schemas/StartId"
-                    },
-                  }
+                  "$ref": "#/components/schemas/Options"
                 },
                 "columns": { "$ref": "#/components/schemas/Columns" },
                 "filters": {
@@ -2812,12 +2843,7 @@
               "type": "object",
               "properties": {
                 "options": {
-                  "type": "object",
-                  "properties": {
-                    "startId": {
-                      "$ref": "#/components/schemas/StartId"
-                    },
-                  }
+                  "$ref": "#/components/schemas/Options"
                 },
                 "columns": { "$ref": "#/components/schemas/Columns" },
                 "filters": {
@@ -2896,12 +2922,7 @@
               "type": "object",
               "properties": {
                 "options": {
-                  "type": "object",
-                  "properties": {
-                    "startId": {
-                      "$ref": "#/components/schemas/StartId"
-                    },
-                  }
+                  "$ref": "#/components/schemas/Options"
                 },
                 "columns": { "$ref": "#/components/schemas/Columns" },
                 "filters": {
@@ -2980,12 +3001,7 @@
               "type": "object",
               "properties": {
                 "options": {
-                  "type": "object",
-                  "properties": {
-                    "startId": {
-                      "$ref": "#/components/schemas/StartId"
-                    },
-                  }
+                  "$ref": "#/components/schemas/Options"
                 },
                 "columns": { "$ref": "#/components/schemas/Columns" },
                 "filters": {
@@ -3048,12 +3064,7 @@
               "type": "object",
               "properties": {
                 "options": {
-                  "type": "object",
-                  "properties": {
-                    "startId": {
-                      "$ref": "#/components/schemas/StartId"
-                    },
-                  }
+                  "$ref": "#/components/schemas/Options"
                 },
                 "columns": { "$ref": "#/components/schemas/Columns" },
                 "filters": {
@@ -3144,12 +3155,7 @@
               "type": "object",
               "properties": {
                 "options": {
-                  "type": "object",
-                  "properties": {
-                    "startId": {
-                      "$ref": "#/components/schemas/StartId"
-                    },
-                  }
+                  "$ref": "#/components/schemas/Options"
                 },
                 "columns": { "$ref": "#/components/schemas/Columns" },
                 "filters": {
@@ -3273,7 +3279,31 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentXlsx" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentCsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentTsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
         }
       },
       "AssessmentsQuerySuccess": {
@@ -3286,7 +3316,31 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentXlsx" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentCsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentTsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
         }
       },
       "AssessmentUnitsQuerySuccess": {
@@ -3299,7 +3353,31 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentXlsx" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentCsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentTsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
         }
       },
       "AssessmentUnitsMonitoringLocationsQuerySuccess": {
@@ -3312,7 +3390,31 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentXlsx" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentCsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentTsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
         }
       },
       "CatchmentCorrespondenceQuerySuccess": {
@@ -3325,13 +3427,37 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentXlsx" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentCsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentTsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
         }
       },
       "InvalidRequestError": {
         "description": "The request was invalid",
         "content": {
-          "*/*": {
+          "application/json": {
             "schema": {
               "type": "object",
               "properties": {
@@ -3351,7 +3477,7 @@
       "QueryCountSuccess": {
         "description": "The query evaluated successfully. The response contains the total count of the query or a message indicating that the maximum query size was exceeded.",
         "content": {
-          "*/*": {
+          "application/json": {
             "schema": {
               "oneOf": [
                 {
@@ -3373,7 +3499,7 @@
       "ServerError": {
         "description": "An internal server error occurred",
         "content": {
-          "*/*": {
+          "application/json": {
             "schema": {
               "type": "object",
               "properties": {
@@ -3400,7 +3526,31 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentXlsx" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentCsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentTsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
         }
       },
       "TmdlQuerySuccess": {
@@ -3413,7 +3563,31 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentXlsx" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentCsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/FileAttachmentTsv" },
+                { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
+              ]
+            }
+          },
         }
       },
     }
