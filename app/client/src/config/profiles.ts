@@ -209,6 +209,7 @@ export const profiles = {
       ['region', {}],
       ['reportingCycle', {}],
       ['sizeSource', {}],
+      ['sourceScale', {}],
       ['state', { contextColumns: ['region'] }],
       ['useClassName', {}],
       ['waterSize', {}],
