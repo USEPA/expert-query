@@ -285,7 +285,6 @@ function executeQueryCountOnly(profile, req, res) {
 
     parseCriteria(query, profile, queryParams, true);
 
-    console.log(query.toString());
     query
       .first()
       .then((count) => res.status(200).send(count))
