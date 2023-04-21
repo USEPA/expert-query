@@ -302,9 +302,6 @@ function FilterFields({
         'source' in fieldConfig
           ? sourceFieldsConfig.find((f) => f.id === fieldConfig.source)
           : null;
-      const sourceValue = sourceFieldConfig
-        ? sourceState[sourceFieldConfig.id]
-        : null;
 
       switch (fieldConfig.type) {
         case 'multiselect':
@@ -332,7 +329,11 @@ function FilterFields({
               fieldConfig.key,
             ];
           }
+
           const sourceKey = sourceFieldConfig?.key ?? null;
+          const sourceValue = sourceFieldConfig
+            ? sourceState[sourceFieldConfig.id]
+            : null;
           const selectProps = {
             contextFilters: getContextFilters(fieldConfig.key, profile, {
               ...queryParams.filters,
