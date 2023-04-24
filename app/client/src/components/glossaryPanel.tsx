@@ -1,6 +1,6 @@
 import Glossary from 'glossary-panel';
 import { useEffect, useState } from 'react';
-import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
+import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
 // components
 import { Alert } from 'components/alert';
 // contexts

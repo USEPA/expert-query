@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
-import 'uswds/css/uswds.css';
+import '@uswds/uswds/css/uswds.css';
 import 'bootstrap/dist/css/bootstrap-grid.min.css';
 // components
 import { Home, QueryBuilder } from 'routes/home';
@@ -110,7 +110,7 @@ function useDisclaimerBanner() {
 }
 
 // workaround to preserve the href in the url, without this
-// the ErrorPage will 
+// the ErrorPage will
 // redirect to http://localhost:9090/404.html?src=http://localhost:3000/404
 // instead of  http://localhost:9090/404.html?src=http://localhost:3000/some-url-doesnt-exist
 const href = window.location.href;
