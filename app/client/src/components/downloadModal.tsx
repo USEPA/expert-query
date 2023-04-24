@@ -19,13 +19,12 @@ export function DownloadModal<D extends PostData>({
   dataId,
   downloadStatus,
   filename,
-  maxCount = Infinity,
   onClose,
   queryData,
   queryUrl,
   setDownloadStatus,
 }: DownloadModalProps<D>) {
-  const [count, setCount] = useState<FetchState<number>>({
+  const [count, setCount] = useState<FetchState<number | null>>({
     status: 'idle',
     data: null,
   });
@@ -38,7 +37,10 @@ export function DownloadModal<D extends PostData>({
     setCount({ status: 'pending', data: null });
     postData(countUrl, queryData)
       .then((res) => {
-        setCount({ status: 'success', data: parseInt(res.count) });
+        setCount({
+          status: 'success',
+          data: 'count' in res ? res.count : null,
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -95,11 +97,11 @@ export function DownloadModal<D extends PostData>({
           )}
           {count.status === 'success' && (
             <>
-              {count.data > maxCount ? (
+              {count.data === null ? (
                 <Alert type="warning">
                   <p>The current query exceeds the maximum query size.</p>{' '}
                   <p>
-                    Please refine the search or visit the{' '}
+                    Please refine the search, or visit the{' '}
                     <a
                       href={`/national-downloads${dataId ? '#' + dataId : ''}`}
                     >
@@ -176,7 +178,6 @@ type DownloadModalProps<D extends PostData> = {
   dataId?: string;
   downloadStatus: Status;
   filename: string | null;
-  maxCount?: number;
   onClose: () => void;
   queryData: D;
   queryUrl: string | null;

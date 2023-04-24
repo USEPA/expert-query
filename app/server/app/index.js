@@ -85,7 +85,18 @@ if (!isLocal && !isDevelopment && !isStaging)
  Required Environment Variables
 ****************************************************************/
 // initialize to common variables
-const requiredEnvVars = ['DB_NAME', 'DB_USERNAME', 'DB_PASSWORD', 'SERVER_URL'];
+const requiredEnvVars = [
+  'DB_NAME',
+  'DB_USERNAME',
+  'DB_PASSWORD',
+  'SERVER_URL',
+  'DB_POOL_MIN',
+  'DB_POOL_MAX',
+  'STREAM_BATCH_SIZE',
+  'STREAM_HIGH_WATER_MARK',
+  'MAX_QUERY_SIZE',
+  'JSON_PAGE_SIZE',
+];
 
 if (isLocal) {
   requiredEnvVars.push('DB_HOST');
