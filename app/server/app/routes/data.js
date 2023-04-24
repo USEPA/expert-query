@@ -7,6 +7,9 @@ import { appendToWhere, knex } from '../utilities/database.js';
 import { log } from '../utilities/logger.js';
 import StreamingService from '../utilities/streamingService.js';
 
+const jsonPageSize = parseInt(process.env.JSON_PAGE_SIZE);
+const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE);
+
 class DuplicateParameterException extends Error {
   constructor(parameter) {
     super();
@@ -23,12 +26,95 @@ class InvalidParameterException extends Error {
   }
 }
 
-function appendLatestToWhere(query, column, columnType, baseQuery) {
+/** Get a subquery if "Latest" is used
+ * @param {Object} query KnexJS query object
+ * @param {Object} columnName name of the "Latest" column
+ * @param {Object} columnType data type of the "Latest" column
+ * @returns {Object} a different KnexJS query object
+ */
+function createLatestSubquery(query, columnName, columnType) {
   if (columnType !== 'numeric' && columnType !== 'timestamptz') return;
 
-  const subQuery = baseQuery.clone();
-  subQuery.select('organizationid').max(column).groupBy('organizationid');
+  const subQuery = query.clone();
+  subQuery.select('organizationid').max(columnName).groupBy('organizationid');
   return subQuery;
+}
+
+/**
+ * Creates a stream object from a query.
+ * @param {Object} query KnexJS query object
+ * @returns {Object} a readable stream
+ */
+function createStream(query) {
+  const stream = query.stream({
+    batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
+    highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
+  });
+
+  // close the stream if the request is canceled
+  stream.on('close', stream.end.bind(stream));
+  return stream;
+}
+
+/**
+ * Streams the results of a query as a file attachment.
+ * @param {Object} query KnexJS query object
+ * @param {Express.Response} res
+ * @param {string} format the format of the file attachment
+ * @param {string} baseName the name of the file without the extension
+ */
+async function streamFile(query, res, format, baseName) {
+  query.limit(maxQuerySize);
+
+  res.setHeader(
+    'Content-disposition',
+    `attachment; filename=${baseName}.${format}`,
+  );
+
+  if (format === 'xlsx') {
+    const workbook = new Excel.stream.xlsx.WorkbookWriter({
+      stream: res,
+      useStyles: true,
+    });
+    const worksheet = workbook.addWorksheet('data');
+
+    StreamingService.streamResponse(res, createStream(query), format, {
+      workbook,
+      worksheet,
+    });
+  } else {
+    StreamingService.streamResponse(res, createStream(query), format);
+  }
+}
+
+/**
+ * Streams the results of a query as paginated JSON.
+ * @param {Object} query KnexJS query object
+ * @param {Express.Response} res
+ * @param {number} startId current objectid to start returning results from
+ */
+async function streamJson(query, res, startId) {
+  if (startId) query.where('objectid', '>=', startId);
+
+  const nextId =
+    (
+      await knex
+        .select('objectId')
+        .from(query.clone().limit(maxQuerySize).as('q'))
+        .offset(jsonPageSize)
+        .limit(1)
+        .first()
+    )?.objectId ?? null;
+
+  query.limit(jsonPageSize);
+
+  StreamingService.streamResponse(
+    res,
+    createStream(query),
+    'json',
+    null,
+    nextId,
+  );
 }
 
 /**
@@ -91,7 +177,7 @@ function getQueryParams(req) {
   }
 
   // organize GET parameters to follow what we expect from POST
-  const optionsParams = ['f', 'format'];
+  const optionsParams = ['f', 'format', 'startId'];
   const parameters = {
     filters: {},
     options: {},
@@ -115,13 +201,21 @@ function getQueryParams(req) {
  * @param {boolean} countOnly (Optional) should query for count only
  */
 function parseCriteria(query, profile, queryParams, countOnly = false) {
-  const baseQuery = query.clone();
+  // get a subquery for when "Latest" is used,
+  // so that we can apply the same filters to the subquery
+  const latestColumn = profile.columns.find((col) => col.default === 'latest');
+  const subQuery = latestColumn
+    ? createLatestSubquery(query, latestColumn.name, latestColumn.type)
+    : null;
+
   // build select statement of the query
-  if (countOnly) query.count();
-  else {
+  let selectText = undefined;
+  if (!countOnly) {
     // filter down to requested columns, if the user provided that option
     const columnsToReturn = [];
-    queryParams.columns?.forEach((col) => {
+    const columns = queryParams.columns ?? [];
+    if (!columns.includes('objectId')) columns.push('objectId');
+    columns.forEach((col) => {
       const profileCol = profile.columns.find((pc) => pc.alias === col);
       if (profileCol) columnsToReturn.push(profileCol);
     });
@@ -129,24 +223,11 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
     // build the select query
     const selectColumns =
       columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
-    const selectText = selectColumns.map((col) =>
+    selectText = selectColumns.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
     );
-    query.select(selectText);
   }
-
-  // get a subquery for when "Latest" is used, so that we can apply the
-  // same filters to the subquery
-  const latestColumn = profile.columns.find((col) => col.default === 'latest');
-  let subQuery = null;
-  if (latestColumn) {
-    subQuery = appendLatestToWhere(
-      query,
-      latestColumn.name,
-      latestColumn.type,
-      baseQuery,
-    );
-  }
+  query.select(selectText).orderBy('objectid', 'asc');
 
   // build where clause of the query
   profile.columns.forEach((col) => {
@@ -163,7 +244,7 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
     }
   });
 
-  if (latestColumn && subQuery) {
+  if (subQuery) {
     // add the "latest" subquery to the where clause
     query.whereIn(['organizationid', latestColumn.name], subQuery);
   }
@@ -179,7 +260,10 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 async function executeQuery(profile, req, res) {
   // output types csv, tab-separated, Excel, or JSON
   try {
-    const query = knex.withSchema(req.activeSchema).from(profile.tableName);
+    const query = knex
+      .withSchema(req.activeSchema)
+      .from(profile.tableName)
+      .limit(parseInt(process.env.MAX_QUERY_SIZE));
 
     const queryParams = getQueryParams(req);
 
@@ -187,53 +271,21 @@ async function executeQuery(profile, req, res) {
 
     parseCriteria(query, profile, queryParams);
 
-    const stream = await query.stream({
-      batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
-      highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
-    });
-
-    // close the stream if the request is canceled
-    stream.on('close', stream.end.bind(stream));
+    // Check that the query doesn't exceed the MAX_QUERY_SIZE.
+    if ((await checkQueryCount(query)) === null) {
+      return res.status(200).json({
+        message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
+      });
+    }
 
     const format = queryParams.options.format ?? queryParams.options.f;
-    switch (format) {
-      case 'csv':
-      case 'tsv':
-        // output the data
-        res.setHeader(
-          'Content-disposition',
-          `attachment; filename=${profile.tableName}.${format}`,
-        );
-        StreamingService.streamResponse(res, stream, format);
-        break;
-      case 'xlsx':
-        res.setHeader(
-          'Content-Disposition',
-          `attachment; filename=${profile.tableName}.xlsx`,
-        );
-
-        const workbook = new Excel.stream.xlsx.WorkbookWriter({
-          stream: res,
-          useStyles: true,
-        });
-
-        const worksheet = workbook.addWorksheet('data');
-
-        StreamingService.streamResponse(res, stream, format, {
-          workbook,
-          worksheet,
-        });
-        break;
-      case 'json':
-        res.setHeader(
-          'Content-disposition',
-          `attachment; filename=${profile.tableName}.json`,
-        );
-        StreamingService.streamResponse(res, stream, format);
-        break;
-      default:
-        StreamingService.streamResponse(res, stream, format);
-        break;
+    if (['csv', 'tsv', 'xlsx'].includes(format)) {
+      await streamFile(query, res, format, profile.tableName);
+    } else {
+      const startId = queryParams.options.startId
+        ? parseInt(queryParams.options.startId)
+        : null;
+      await streamJson(query, res, startId);
     }
   } catch (error) {
     log.error(`Failed to get data from the "${profile.tableName}" table...`);
@@ -269,6 +321,28 @@ function validateQueryParams(queryParams, profile) {
 }
 
 /**
+ * Counts the number of rows returned be a specified
+ * query without modifying the query object
+ * @param {Object} query KnexJS query object
+ * @returns {Object | null} object with 'count' property, or null if limit exceeded
+ */
+async function checkQueryCount(query) {
+  const count = await knex
+    .from(
+      query
+        .clone()
+        .limit(maxQuerySize + 1)
+        .as('q'),
+    )
+    .count()
+    .first();
+
+  const countInt = parseInt(count.count);
+  if (countInt > maxQuerySize) return null;
+  return countInt;
+}
+
+/**
  * Runs a query against the provided profile name and returns the number of records.
  * @param {Object} profile definition of the profile being queried
  * @param {express.Request} req
@@ -285,16 +359,15 @@ function executeQueryCountOnly(profile, req, res) {
 
     parseCriteria(query, profile, queryParams, true);
 
-    query
-      .first()
-      .then((count) => res.status(200).json({ count: parseInt(count.count) }))
-      .catch((error) => {
-        log.error(
-          `Failed to get count from the "${profile.tableName}" table: `,
-          error,
-        );
-        res.status(500).json(error);
-      });
+    checkQueryCount(query).then((count) => {
+      if (count === null) {
+        res.status(200).json({
+          message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
+        });
+      } else {
+        res.status(200).json({ count });
+      }
+    });
   } catch (error) {
     log.error(
       `Failed to get count from the "${profile.tableName}" table:`,

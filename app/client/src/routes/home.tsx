@@ -123,7 +123,6 @@ export function Home() {
                     filterState,
                     format,
                     formatHandler,
-                    maxQuerySize: content.data.parameters.maxQuerySize,
                     profile,
                     queryParams,
                     queryUrl: eqDataUrl,
@@ -152,7 +151,6 @@ export function QueryBuilder() {
     filterState,
     format,
     formatHandler,
-    maxQuerySize,
     profile,
     resetFilters,
     sourceHandlers,
@@ -181,7 +179,6 @@ export function QueryBuilder() {
           dataId="attains"
           filename={profile && format ? `${profile}.${format.value}` : null}
           downloadStatus={downloadStatus}
-          maxCount={maxQuerySize}
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
           queryUrl={
@@ -1365,7 +1362,7 @@ function getOptions(
 }
 
 function getOrderedProfileColumns(profile: Profile) {
-  const columns = new Set<string>();
+  const columns = new Set<string>(['objectId']);
   const filters = filterGroupsConfig[profile].reduce<string[]>(
     (current, group) => {
       return [...current, ...group.fields];
@@ -1800,7 +1797,6 @@ type HomeContext = {
   filterState: FilterFieldState;
   format: FormatOption;
   formatHandler: (format: Option) => void;
-  maxQuerySize: number;
   profile: Profile;
   queryParams: QueryData;
   queryUrl: string;

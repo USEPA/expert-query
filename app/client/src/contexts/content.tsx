@@ -34,7 +34,6 @@ export type Content = {
   }>;
   parameters: {
     debounceMilliseconds: number;
-    maxQuerySize: number;
   };
 };
 
