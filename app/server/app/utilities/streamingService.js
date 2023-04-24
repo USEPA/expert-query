@@ -79,6 +79,7 @@ export default class StreamingService {
   /**
    * Transforms the streaming data to json.
    * @param {function} preHook function for writing initial headers
+   * @param {number} nextId starting objectid for the next page
    * @returns Transform object
    */
   static getJsonTransform = (preHook, nextId) => {
@@ -152,6 +153,7 @@ export default class StreamingService {
    * @param {Transform} inStream readable stream from database query
    * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
    * @param {Object} excelDoc Excel workbook and worksheet objects
+   * @param {number} nextId starting objectid for the next page
    */
   static streamResponse = (
     outStream,

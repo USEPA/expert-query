@@ -4,7 +4,7 @@ export const tableConfig = {
     tableName: 'actions',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectId', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', type: 'numeric' },
       { name: 'actionagency', alias: 'actionAgency' },
       { name: 'actionid', alias: 'actionId' },
       { name: 'actionname', alias: 'actionName' },
@@ -82,7 +82,7 @@ export const tableConfig = {
     tableName: 'assessments',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectId', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', type: 'numeric' },
       {
         name: 'alternatelistingidentifier',
         alias: 'alternateListingIdentifier',
@@ -343,7 +343,7 @@ export const tableConfig = {
     tableName: 'assessment_units',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectId', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', type: 'numeric' },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
@@ -418,7 +418,7 @@ export const tableConfig = {
     tableName: 'assessment_units_monitoring_locations',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectId', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', type: 'numeric' },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
@@ -507,7 +507,7 @@ export const tableConfig = {
     tableName: 'catchment_correspondence',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectId', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', type: 'numeric' },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
@@ -568,7 +568,7 @@ export const tableConfig = {
     tableName: 'sources',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectId', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', type: 'numeric' },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
@@ -652,7 +652,7 @@ export const tableConfig = {
     tableName: 'tmdl',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectId', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', type: 'numeric' },
       { name: 'actionagency', alias: 'actionAgency' },
       { name: 'actionid', alias: 'actionId' },
       { name: 'actionname', alias: 'actionName' },
