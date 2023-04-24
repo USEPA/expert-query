@@ -1154,12 +1154,14 @@ function filterDynamicOptions({
   fieldName,
   filters,
   profile,
+  staticOptions,
 }: {
   defaultOption?: Option | null;
   direction?: SortDirection;
   fieldName: string;
   filters?: FilterQueryData;
   profile: string;
+  staticOptions?: StaticOptions;
 }) {
   return async function (
     inputValue: string,
@@ -1173,7 +1175,17 @@ function filterDynamicOptions({
       filters,
     };
     const values = await postData(url, data, 'json', signal);
-    const options = values.map((value: Primitive) => ({ label: value, value }));
+    const options = values.map((value: Primitive) => {
+      if (staticOptions?.hasOwnProperty(fieldName)) {
+        return (
+          staticOptions[
+            fieldName as keyof StaticOptions
+          ] as ReadonlyArray<Option>
+        ).find((option) => option.value === value);
+      } else {
+        return { label: value, value };
+      }
+    });
     return defaultOption ? [defaultOption, ...options] : options;
   };
 }
@@ -1206,6 +1218,7 @@ function filterOptions({
       fieldName,
       filters,
       profile,
+      staticOptions,
     });
   }
 }
