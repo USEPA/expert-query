@@ -343,7 +343,7 @@ export const tableConfig = {
     tableName: 'assessment_units',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectid', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', skipIndex: true },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',

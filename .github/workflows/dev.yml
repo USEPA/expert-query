@@ -67,6 +67,7 @@ jobs:
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       DB_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
+      JSON_PAGE_SIZE: 1000
       MAX_QUERY_SIZE: 1000000
       SERVER_BASE_PATH: /expertquery
       SERVER_URL: https://owapps-dev.app.cloud.gov/expertquery
@@ -124,6 +125,7 @@ jobs:
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "JSON_PAGE_SIZE" "$JSON_PAGE_SIZE" > /dev/null
           cf set-env $APP_NAME "MAX_QUERY_SIZE" "$MAX_QUERY_SIZE" > /dev/null
           cf set-env $APP_NAME "PUBLIC_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null

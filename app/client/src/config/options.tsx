@@ -59,10 +59,6 @@ export const format = [
     label: 'Microsoft Excel (XLSX)',
     value: 'xlsx',
   },
-  {
-    label: 'JavaScript Object Notation (JSON)',
-    value: 'json',
-  },
 ] as const;
 
 export const includeInMeasure = yesNo;
