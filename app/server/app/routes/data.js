@@ -117,8 +117,8 @@ function getQueryParams(req) {
 function parseCriteria(query, profile, queryParams, countOnly = false) {
   const baseQuery = query.clone();
   // build select statement of the query
-  if (countOnly) query.count();
-  else {
+  let selectText = undefined;
+  if (!countOnly) {
     // filter down to requested columns, if the user provided that option
     const columnsToReturn = [];
     queryParams.columns?.forEach((col) => {
@@ -129,11 +129,11 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
     // build the select query
     const selectColumns =
       columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
-    const selectText = selectColumns.map((col) =>
+    selectText = selectColumns.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
     );
-    query.select(selectText);
   }
+  query.select(selectText);
 
   // get a subquery for when "Latest" is used, so that we can apply the
   // same filters to the subquery
@@ -179,13 +179,23 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 async function executeQuery(profile, req, res) {
   // output types csv, tab-separated, Excel, or JSON
   try {
-    const query = knex.withSchema(req.activeSchema).from(profile.tableName);
+    const query = knex
+      .withSchema(req.activeSchema)
+      .from(profile.tableName)
+      .limit(parseInt(process.env.MAX_QUERY_SIZE));
 
     const queryParams = getQueryParams(req);
 
     validateQueryParams(queryParams, profile);
 
     parseCriteria(query, profile, queryParams);
+
+    // Check that the query doesn't exceed the MAX_QUERY_SIZE.
+    if ((await getQueryCount(query)) === null) {
+      return res.status(200).json({
+        message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
+      });
+    }
 
     const stream = await query.stream({
       batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
@@ -269,6 +279,27 @@ function validateQueryParams(queryParams, profile) {
 }
 
 /**
+ * Counts the number of rows returned be a specified query without modifying
+ * the query object. Limited by the MAX_QUERY_SIZE environment variable.
+ * @param {Object} query KnexJS query object
+ * @returns {Object | null} object with 'count' property or null
+ */
+async function getQueryCount(query) {
+  const count = await knex
+    .from(
+      query
+        .clone()
+        .limit(parseInt(process.env.MAX_QUERY_SIZE) + 1)
+        .as('q'),
+    )
+    .count()
+    .first();
+
+  if (parseInt(count.count) > parseInt(process.env.MAX_QUERY_SIZE)) return null;
+  return count;
+}
+
+/**
  * Runs a query against the provided profile name and returns the number of records.
  * @param {Object} profile definition of the profile being queried
  * @param {express.Request} req
@@ -285,16 +316,15 @@ function executeQueryCountOnly(profile, req, res) {
 
     parseCriteria(query, profile, queryParams, true);
 
-    query
-      .first()
-      .then((count) => res.status(200).send(count))
-      .catch((error) => {
-        log.error(
-          `Failed to get count from the "${profile.tableName}" table: `,
-          error,
-        );
-        res.status(500).json(error);
-      });
+    getQueryCount(query).then((count) => {
+      if (!count) {
+        res.status(200).json({
+          message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
+        });
+      } else {
+        res.status(200).send(count);
+      }
+    });
   } catch (error) {
     log.error(
       `Failed to get count from the "${profile.tableName}" table:`,
