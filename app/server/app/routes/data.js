@@ -260,7 +260,10 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
 async function executeQuery(profile, req, res) {
   // output types csv, tab-separated, Excel, or JSON
   try {
-    const query = knex.withSchema(req.activeSchema).from(profile.tableName);
+    const query = knex
+      .withSchema(req.activeSchema)
+      .from(profile.tableName)
+      .limit(parseInt(process.env.MAX_QUERY_SIZE));
 
     const queryParams = getQueryParams(req);
 
