@@ -37,7 +37,8 @@ export const filterGroups: {
     },
     {
       key: 'actionsAssessmentUnit',
-      fields: ['assessmentUnitId', 'assessmentUnitName'],
+      // fields: ['assessmentUnitId', 'assessmentUnitName'],
+      fields: ['assessmentUnitDisplayName'],
     },
   ],
   assessments: [
@@ -59,8 +60,9 @@ export const filterGroups: {
     {
       key: 'assessmentUnit',
       fields: [
-        'assessmentUnitId',
-        'assessmentUnitName',
+        /* 'assessmentUnitId',
+        'assessmentUnitName', */
+        'assessmentUnitDisplayName',
         'assessmentUnitStatus',
       ],
     },
@@ -145,8 +147,9 @@ export const filterGroups: {
     {
       key: 'assessmentUnit',
       fields: [
-        'assessmentUnitId',
-        'assessmentUnitName',
+        /* 'assessmentUnitId',
+        'assessmentUnitName', */
+        'assessmentUnitDisplayName',
         'assessmentUnitStatus',
         'reportingCycle',
       ],
@@ -170,8 +173,9 @@ export const filterGroups: {
     {
       key: 'assessmentUnit',
       fields: [
-        'assessmentUnitId',
-        'assessmentUnitName',
+        /* 'assessmentUnitId',
+        'assessmentUnitName', */
+        'assessmentUnitDisplayName',
         'assessmentUnitStatus',
         'reportingCycle',
       ],
@@ -191,8 +195,9 @@ export const filterGroups: {
     {
       key: 'catchmentAssessmentUnit',
       fields: [
-        'assessmentUnitId',
-        'assessmentUnitName',
+        /* 'assessmentUnitId',
+        'assessmentUnitName', */
+        'assessmentUnitDisplayName',
         'catchmentNhdPlusId',
         'reportingCycle',
       ],
@@ -212,7 +217,8 @@ export const filterGroups: {
     },
     {
       key: 'assessmentUnit',
-      fields: ['assessmentUnitId', 'assessmentUnitName', 'reportingCycle'],
+      // fields: ['assessmentUnitId', 'assessmentUnitName', 'reportingCycle'],
+      fields: ['assessmentUnitDisplayName', 'reportingCycle'],
     },
     {
       key: 'overallStatus',
@@ -272,7 +278,8 @@ export const filterGroups: {
     },
     {
       key: 'actionsAssessmentUnit',
-      fields: ['assessmentUnitId', 'assessmentUnitName'],
+      // fields: ['assessmentUnitId', 'assessmentUnitName'],
+      fields: ['assessmentUnitDisplayName'],
     },
   ],
 };
@@ -358,15 +365,16 @@ export const filterFields = [
     type: 'multiselect',
   },
   {
-    key: 'assessmentUnitId',
+    key: 'assessmentUnitDisplayName',
     label: 'Assessment Unit ID',
     type: 'multiselect',
+    components: ['assessmentUnitId', 'assessmentUnitName'],
   },
-  {
+  /* {
     key: 'assessmentUnitName',
     label: 'Assessment Unit Name',
     type: 'multiselect',
-  },
+  }, */
   {
     key: 'assessmentUnitStatus',
     label: 'Assessment Unit Status',

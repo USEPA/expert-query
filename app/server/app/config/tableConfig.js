@@ -14,6 +14,10 @@ export const tableConfig = {
         alias: 'assessmentUnitId',
       },
       {
+        name: 'assessmentunitdisplayname',
+        alias: 'assessmentUnitDisplayName',
+      },
+      {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
       },
@@ -54,8 +58,7 @@ export const tableConfig = {
       {
         name: 'actions_assessments',
         columns: [
-          { name: 'assessmentunitid' },
-          { name: 'assessmentunitname' },
+          { name: 'assessmentunitdisplayname' },
           { name: 'organizationid' },
           { name: 'organizationname' },
           { name: 'organizationtype' },
@@ -107,6 +110,10 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
+      },
+      {
+        name: 'assessmentunitdisplayname',
+        alias: 'assessmentUnitDisplayName',
       },
       {
         name: 'assessmentunitname',
@@ -271,8 +278,7 @@ export const tableConfig = {
       {
         name: 'assessments_assessments',
         columns: [
-          { name: 'assessmentunitid' },
-          { name: 'assessmentunitname' },
+          { name: 'assessmentunitdisplayname' },
           { name: 'organizationid' },
           { name: 'organizationname' },
           { name: 'organizationtype' },
@@ -359,6 +365,10 @@ export const tableConfig = {
         alias: 'assessmentUnitId',
       },
       {
+        name: 'assessmentunitdisplayname',
+        alias: 'assessmentUnitDisplayName',
+      },
+      {
         name: 'assessmentunitname',
         alias: 'assessmentUnitName',
       },
@@ -406,8 +416,7 @@ export const tableConfig = {
       {
         name: 'assessmentunits_assessments',
         columns: [
-          { name: 'assessmentunitid' },
-          { name: 'assessmentunitname' },
+          { name: 'assessmentunitdisplayname' },
           { name: 'organizationid' },
           { name: 'organizationname' },
           { name: 'region' },
@@ -432,6 +441,10 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
+      },
+      {
+        name: 'assessmentunitdisplayname',
+        alias: 'assessmentUnitDisplayName',
       },
       {
         name: 'assessmentunitname',
@@ -492,8 +505,7 @@ export const tableConfig = {
       {
         name: 'assessmentunitsmonitoringlocations_assessments',
         columns: [
-          { name: 'assessmentunitid' },
-          { name: 'assessmentunitname' },
+          { name: 'assessmentunitdisplayname' },
           { name: 'organizationid' },
           { name: 'organizationname' },
           { name: 'region' },
@@ -521,6 +533,10 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
+      },
+      {
+        name: 'assessmentunitdisplayname',
+        alias: 'assessmentUnitDisplayName',
       },
       {
         name: 'assessmentunitname',
@@ -556,8 +572,7 @@ export const tableConfig = {
       {
         name: 'catchmentcorrespondence_assessments',
         columns: [
-          { name: 'assessmentunitid' },
-          { name: 'assessmentunitname' },
+          { name: 'assessmentunitdisplayname' },
           { name: 'organizationid' },
           { name: 'organizationname' },
           { name: 'region' },
@@ -582,6 +597,10 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
+      },
+      {
+        name: 'assessmentunitdisplayname',
+        alias: 'assessmentUnitDisplayName',
       },
       {
         name: 'assessmentunitname',
@@ -632,8 +651,7 @@ export const tableConfig = {
       {
         name: 'sources_assessments',
         columns: [
-          { name: 'assessmentunitid' },
-          { name: 'assessmentunitname' },
+          { name: 'assessmentunitdisplayname' },
           { name: 'organizationid' },
           { name: 'organizationname' },
           { name: 'region' },
@@ -673,6 +691,10 @@ export const tableConfig = {
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
+      },
+      {
+        name: 'assessmentunitdisplayname',
+        alias: 'assessmentUnitDisplayName',
       },
       {
         name: 'assessmentunitname',
@@ -764,8 +786,7 @@ export const tableConfig = {
       {
         name: 'tmdl_assessments',
         columns: [
-          { name: 'assessmentunitid' },
-          { name: 'assessmentunitname' },
+          { name: 'assessmentunitdisplayname' },
           { name: 'organizationid' },
           { name: 'organizationname' },
           { name: 'region' },

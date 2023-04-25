@@ -1401,6 +1401,8 @@ function getOrderedProfileColumns(profile: Profile) {
     }
     // If it's a range input, add the underlying column
     if ('domain' in fieldConfig) columns.add(fieldConfig.domain);
+    if ('components' in fieldConfig)
+      fieldConfig.components.forEach((c) => columns.add(c));
     // Otherwise, the key matches the field key
     else columns.add(fieldConfig.key);
   });
