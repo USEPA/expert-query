@@ -1,6 +1,7 @@
 {
   "actionAgency": {
-    "domainName": "AgencyCode"
+    "domainName": "AgencyCode",
+    "valueField": "name"
   },
   "actionType": {
     "domainName": "ActionType",
@@ -22,7 +23,6 @@
     "domainName": "OrgStateCode",
     "labelField": "context",
     "valueField": "context",
-    "contextField": "context2",
     "filters": [
       ["context2", ["EPA", "Test"]],
       ["context", "TEST_TRIBE_B"]

@@ -318,6 +318,10 @@ export const tableConfig = {
         columns: [{ name: 'parameterircategory', type: 'numeric' }],
       },
       {
+        name: 'assessments_parametername',
+        columns: [{ name: 'parametername' }, { name: 'parametergroup' }],
+      },
+      {
         name: 'assessments_parameterstateircategory',
         columns: [{ name: 'parameterstateircategory', type: 'numeric' }],
       },
@@ -327,7 +331,13 @@ export const tableConfig = {
       },
       {
         name: 'assessments_usegroup',
-        columns: [{ name: 'usegroup' }],
+        columns: [
+          { name: 'usegroup' },
+          { name: 'usename' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'state' },
+        ],
       },
       {
         name: 'assessments_useircategory',
@@ -406,7 +416,7 @@ export const tableConfig = {
       },
       {
         name: 'assessmentunits_locationtext',
-        columns: [{ name: 'locationtext' }],
+        columns: [{ name: 'locationtypecode' }, { name: 'locationtext' }],
       },
       {
         name: 'assessmentunits_reportingcycle',
@@ -768,6 +778,9 @@ export const tableConfig = {
           { name: 'actionid' },
           { name: 'actionname' },
           { name: 'actionagency' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'state' },
         ],
       },
       {

@@ -179,10 +179,6 @@ function fetchSingleDomain(name, mapping) {
           return {
             label: value[mapping.labelField ?? 'name'],
             value: value[mapping.valueField ?? 'code'],
-            // Optional context field
-            ...(mapping.contextField && {
-              context: value[mapping.contextField],
-            }),
           };
         })
         .filter((item) => {

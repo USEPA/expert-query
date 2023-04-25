@@ -33,6 +33,7 @@ import {
   fields,
   getData,
   options as listOptions,
+  postData,
   profiles,
   serverUrl,
 } from 'config';
@@ -205,6 +206,7 @@ export function QueryBuilder() {
               filterHandlers={filterHandlers}
               filterState={filterState}
               profile={profile}
+              queryParams={queryParams}
               sourceHandlers={sourceHandlers}
               sourceState={sourceState}
               staticOptions={staticOptions}
@@ -285,6 +287,7 @@ function FilterFields({
   filterHandlers,
   filterState,
   profile,
+  queryParams,
   sourceHandlers,
   sourceState,
   staticOptions,
@@ -296,8 +299,6 @@ function FilterFields({
         'source' in fieldConfig
           ? sourceFieldsConfig.find((f) => f.id === fieldConfig.source)
           : null;
-      const sourceValue =
-        sourceFieldConfig && sourceState[sourceFieldConfig.id]?.value;
 
       switch (fieldConfig.type) {
         case 'multiselect':
@@ -305,7 +306,6 @@ function FilterFields({
           const initialOptions = getInitialOptions(
             staticOptions,
             fieldConfig.key,
-            sourceValue,
           );
 
           if (
@@ -326,7 +326,18 @@ function FilterFields({
               fieldConfig.key,
             ];
           }
+
+          const sourceKey = sourceFieldConfig?.key ?? null;
+          const sourceValue = sourceFieldConfig
+            ? sourceState[sourceFieldConfig.id]
+            : null;
           const selectProps = {
+            contextFilters: getContextFilters(fieldConfig.key, profile, {
+              ...queryParams.filters,
+              ...(sourceKey && sourceValue
+                ? { [sourceKey]: sourceValue.value }
+                : {}),
+            }),
             defaultOption:
               'default' in fieldConfig ? fieldConfig.default : null,
             filterHandler: filterHandlers[fieldConfig.key],
@@ -338,10 +349,8 @@ function FilterFields({
               'direction' in fieldConfig
                 ? (fieldConfig.direction as SortDirection)
                 : 'asc',
-            sourceKey: sourceFieldConfig?.key ?? null,
-            sourceValue: sourceFieldConfig
-              ? sourceState[sourceFieldConfig.id]
-              : null,
+            sourceKey,
+            sourceValue,
             staticOptions,
           } as typeof fieldConfig.key extends MultiOptionField
             ? MultiSelectFilterProps
@@ -625,6 +634,7 @@ function SourceSelectFilter(
 function SelectFilter<
   P extends SingleSelectFilterProps | MultiSelectFilterProps,
 >({
+  contextFilters,
   defaultOption,
   filterHandler,
   filterKey,
@@ -643,20 +653,18 @@ function SelectFilter<
   const filterFunc = useMemo(() => {
     return filterOptions({
       defaultOption,
+      filters: contextFilters,
       profile,
-      field: filterKey,
-      sortDirection,
+      fieldName: filterKey,
+      direction: sortDirection,
       staticOptions,
-      sourceField: sourceKey,
-      sourceValue: sourceValue?.value,
     });
   }, [
+    contextFilters,
     defaultOption,
     filterKey,
     profile,
     sortDirection,
-    sourceKey,
-    sourceValue,
     staticOptions,
   ]);
 
@@ -664,19 +672,18 @@ function SelectFilter<
   const [loading, setLoading] = useState(false);
 
   const fetchOptions = useCallback(
-    (inputValue: string) => {
+    async (inputValue: string) => {
       abort();
       setLoading(true);
-      return filterFunc(inputValue, getSignal())
-        .then((newOptions) => {
-          setLoading(false);
-          setOptions(newOptions);
-        })
-        .catch((err) => {
-          if (isAbort(err)) return;
-          setLoading(false);
-          console.error(err);
-        });
+      try {
+        const newOptions = await filterFunc(inputValue, getSignal());
+        setLoading(false);
+        setOptions(newOptions);
+      } catch (err) {
+        if (isAbort(err)) return;
+        setLoading(false);
+        console.error(err);
+      }
     },
     [abort, filterFunc, getSignal],
   );
@@ -1145,30 +1152,40 @@ function filterDynamicOptions({
   defaultOption,
   direction = 'asc',
   fieldName,
-  limit,
+  filters,
   profile,
-  sourceField,
-  sourceValue,
+  staticOptions,
 }: {
   defaultOption?: Option | null;
   direction?: SortDirection;
   fieldName: string;
-  limit?: number | null;
+  filters?: FilterQueryData;
   profile: string;
-  sourceField?: string | null;
-  sourceValue?: Primitive | null;
+  staticOptions?: StaticOptions;
 }) {
   return async function (
     inputValue: string,
     signal?: AbortSignal,
   ): Promise<Array<Option>> {
-    let url = `${serverUrl}/api/${profile}/values/${fieldName}?text=${inputValue}&direction=${direction}`;
-    if (isNotEmpty(limit)) url += `&limit=${limit}`;
-    if (isNotEmpty(sourceField) && isNotEmpty(sourceValue)) {
-      url += `&${sourceField}=${sourceValue}`;
-    }
-    const values = await getData<Primitive[]>(url, signal);
-    const options = values.map((value) => ({ label: value, value }));
+    const url = `${serverUrl}/api/${profile}/values/${fieldName}`;
+    const data = {
+      text: inputValue,
+      direction: direction ?? null,
+      limit: dynamicOptionLimit,
+      filters,
+    };
+    const values = await postData(url, data, 'json', signal);
+    const options = values.map((value: Primitive) => {
+      if (staticOptions?.hasOwnProperty(fieldName)) {
+        return (
+          staticOptions[
+            fieldName as keyof StaticOptions
+          ] as ReadonlyArray<Option>
+        ).find((option) => option.value === value);
+      } else {
+        return { label: value, value };
+      }
+    });
     return defaultOption ? [defaultOption, ...options] : options;
   };
 }
@@ -1176,36 +1193,32 @@ function filterDynamicOptions({
 // Filters options by search input, returning a maximum number of options
 function filterOptions({
   defaultOption,
-  field,
+  fieldName,
+  filters = {},
   profile,
-  sortDirection,
-  sourceField,
-  sourceValue,
+  direction = 'asc',
   staticOptions,
 }: {
   defaultOption?: Option | null;
-  field: string;
+  fieldName: string;
+  filters?: FilterQueryData;
   profile: string;
-  sortDirection?: SortDirection;
-  sourceField?: string | null;
-  sourceValue?: Primitive | null;
+  direction?: SortDirection;
   staticOptions: StaticOptions;
 }) {
-  if (staticOptions.hasOwnProperty(field)) {
+  if (!Object.keys(filters).length && staticOptions.hasOwnProperty(fieldName)) {
     return filterStaticOptions(
-      staticOptions[field as keyof StaticOptions] ?? [],
-      sourceValue,
+      staticOptions[fieldName as keyof StaticOptions] ?? [],
       defaultOption,
     );
   } else {
     return filterDynamicOptions({
       defaultOption,
-      direction: sortDirection,
+      direction,
+      fieldName,
+      filters,
       profile,
-      fieldName: field,
-      sourceField,
-      sourceValue,
-      limit: dynamicOptionLimit,
+      staticOptions,
     });
   }
 }
@@ -1213,15 +1226,12 @@ function filterOptions({
 // Filters options that have values held in memory
 function filterStaticOptions(
   options: ReadonlyArray<Option>,
-  source?: Primitive | null,
   defaultOption?: Option | null,
 ) {
-  const sourceOptions = filterStaticOptionsBySource(options, source);
-
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     const matches: Option[] = [];
-    sourceOptions.every((option) => {
+    options.every((option) => {
       if (matches.length >= staticOptionLimit) return false;
       if (
         (typeof option.label === 'string' &&
@@ -1237,19 +1247,6 @@ function filterStaticOptions(
       defaultOption ? [defaultOption, ...matches] : matches,
     );
   };
-}
-
-// Filters options by context value, if present
-function filterStaticOptionsBySource(
-  options: ReadonlyArray<Option>,
-  source?: Primitive | null,
-) {
-  if (isNotEmpty(source)) {
-    return options.filter((option) => {
-      if ('context' in option && option.context === source) return true;
-      return false;
-    });
-  } else return options;
 }
 
 // Convert `yyyy-mm-dd` date format to `mm-dd-yyyy`
@@ -1270,6 +1267,29 @@ function getArticle(noun: string) {
     return 'an';
   }
   return 'a';
+}
+
+function getContextFilters(
+  field: FilterField,
+  profile: Profile,
+  filters: FilterQueryData,
+) {
+  const profileColumns = profiles[profile].columns;
+  const fieldContexts = profileColumns.get(field)?.contextColumns;
+  if (!fieldContexts) return;
+
+  return Object.entries(filters).reduce<FilterQueryData>(
+    (current, [key, value]) => {
+      if (fieldContexts.includes(key)) {
+        return {
+          ...current,
+          [key]: value,
+        };
+      }
+      return current;
+    },
+    {},
+  );
 }
 
 function getDateFields(fields: typeof allFieldsConfig) {
@@ -1310,15 +1330,13 @@ function getDefaultValue(fieldName: string) {
 function getInitialOptions(
   staticOptions: StaticOptions,
   fieldName: FilterField,
-  source?: Primitive | null,
 ) {
   if (staticOptions.hasOwnProperty(fieldName)) {
     const fieldOptions = staticOptions[fieldName as keyof StaticOptions] ?? [];
-    const sourceOptions = filterStaticOptionsBySource(fieldOptions, source);
 
-    return sourceOptions.length > staticOptionLimit
-      ? sourceOptions.slice(0, staticOptionLimit)
-      : sourceOptions;
+    return fieldOptions.length > staticOptionLimit
+      ? fieldOptions.slice(0, staticOptionLimit)
+      : fieldOptions;
   }
   return null;
 }
@@ -1387,7 +1405,7 @@ function getOrderedProfileColumns(profile: Profile) {
     else columns.add(fieldConfig.key);
   });
   // Add unordered columns to the end
-  profiles[profile].columns.forEach((column) => columns.add(column));
+  profiles[profile].columns.forEach((_, column) => columns.add(column));
   return Array.from(columns);
 }
 
@@ -1783,6 +1801,7 @@ type FilterGroupsProps = {
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
   profile: Profile;
+  queryParams: QueryData;
   sourceHandlers: SourceFieldInputHandlers;
   sourceState: SourceFieldState;
   staticOptions: StaticOptions;
@@ -1850,6 +1869,7 @@ type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
 type SelectFilterProps<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 > = {
+  contextFilters: FilterQueryData;
   defaultOption?: Option | null;
   filterHandler: FilterFieldInputHandlers[F];
   filterKey: F;
