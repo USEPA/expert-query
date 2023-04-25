@@ -15,6 +15,14 @@ import { cloudSpace, getData, serverBasePath, serverUrl } from '../config';
 // types
 import type { Content } from 'contexts/content';
 
+declare global {
+  interface Window {
+    ga: Function;
+    gaTarget: string;
+    logToGa: Function;
+  }
+}
+
 /** Custom hook to fetch static content */
 function useFetchedContent() {
   const contentDispatch = useContentDispatch();

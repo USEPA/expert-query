@@ -14,11 +14,6 @@ type Props = {
 export type Content = {
   services: {
     eqDataApi: string;
-    googleAnalyticsMapping: Array<{
-      urlLookup: string;
-      wildcardUrl: string;
-      name: string;
-    }>;
   };
   alertsConfig: {
     [page: string]: {
