@@ -1,7 +1,7 @@
 import { uniqueId } from 'lodash';
 import { Dialog } from '@reach/dialog';
 import { useCallback, useEffect, useState } from 'react';
-import { ReactComponent as Close } from 'uswds/img/usa-icons/close.svg';
+import { ReactComponent as Close } from '@uswds/uswds/img/usa-icons/close.svg';
 // components
 import { Alert } from 'components/alert';
 // utils

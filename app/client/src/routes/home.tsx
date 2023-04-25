@@ -7,9 +7,9 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
-import { ReactComponent as Book } from 'uswds/img/usa-icons/local_library.svg';
-import { ReactComponent as Download } from 'uswds/img/usa-icons/file_download.svg';
-import { ReactComponent as Folder } from 'uswds/img/usa-icons/folder.svg';
+import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
+import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
+import { ReactComponent as Folder } from '@uswds/uswds/img/usa-icons/folder.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
