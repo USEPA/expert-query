@@ -3,6 +3,10 @@
   max-width: 1400px;
 }
 
+.usa-alert:before {
+  display: none;
+}
+
 .usa-site-alert .usa-alert__body {
   display: block;
 }
