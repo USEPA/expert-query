@@ -6,6 +6,7 @@ export const tableConfig = {
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
       { name: 'actionagency', alias: 'actionAgency' },
+      { name: 'actiondisplayname', alias: 'actionDisplayName' },
       { name: 'actionid', alias: 'actionId' },
       { name: 'actionname', alias: 'actionName' },
       { name: 'actiontype', alias: 'actionType' },
@@ -36,6 +37,7 @@ export const tableConfig = {
         alias: 'locationDescription',
         skipIndex: true,
       },
+      { name: 'organizationdisplayname', alias: 'organizationDisplayName' },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
@@ -59,8 +61,7 @@ export const tableConfig = {
         name: 'actions_assessments',
         columns: [
           { name: 'assessmentunitdisplayname' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'organizationtype' },
           { name: 'region' },
           { name: 'state' },
@@ -69,11 +70,9 @@ export const tableConfig = {
       {
         name: 'actions_actions',
         columns: [
-          { name: 'actionid' },
-          { name: 'actionname' },
+          { name: 'actiondisplayname' },
           { name: 'actiontype' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'organizationtype' },
           { name: 'region' },
           { name: 'state' },
@@ -121,6 +120,10 @@ export const tableConfig = {
       },
       { name: 'assessmentunitstatus', alias: 'assessmentUnitStatus' },
       { name: 'associatedactionagency', alias: 'associatedActionAgency' },
+      {
+        name: 'associatedactiondisplayname',
+        alias: 'associatedActionDisplayName',
+      },
       {
         name: 'associatedactionid',
         alias: 'associatedActionId',
@@ -201,6 +204,7 @@ export const tableConfig = {
         type: 'timestamptz',
         indexOrder: 'desc',
       },
+      { name: 'organizationdisplayname', alias: 'organizationDisplayName' },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
@@ -279,8 +283,7 @@ export const tableConfig = {
         name: 'assessments_assessments',
         columns: [
           { name: 'assessmentunitdisplayname' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'organizationtype' },
           { name: 'region' },
           { name: 'state' },
@@ -301,8 +304,7 @@ export const tableConfig = {
       {
         name: 'assessments_associatedaction',
         columns: [
-          { name: 'associatedactionid' },
-          { name: 'associatedactionname' },
+          { name: 'associatedactiondisplayname' },
           { name: 'associatedactionstatus' },
           { name: 'associatedactiontype' },
         ],
@@ -340,8 +342,7 @@ export const tableConfig = {
         columns: [
           { name: 'usegroup' },
           { name: 'usename' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'state' },
         ],
       },
@@ -385,6 +386,7 @@ export const tableConfig = {
       },
       { name: 'locationtext', alias: 'locationText' },
       { name: 'locationtypecode', alias: 'locationTypeCode' },
+      { name: 'organizationdisplayname', alias: 'organizationDisplayName' },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
@@ -417,8 +419,7 @@ export const tableConfig = {
         name: 'assessmentunits_assessments',
         columns: [
           { name: 'assessmentunitdisplayname' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'region' },
           { name: 'state' },
         ],
@@ -474,6 +475,7 @@ export const tableConfig = {
         name: 'monitoringlocationorgid',
         alias: 'monitoringLocationOrgId',
       },
+      { name: 'organizationdisplayname', alias: 'organizationDisplayName' },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
@@ -506,8 +508,7 @@ export const tableConfig = {
         name: 'assessmentunitsmonitoringlocations_assessments',
         columns: [
           { name: 'assessmentunitdisplayname' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'region' },
           { name: 'state' },
         ],
@@ -552,6 +553,7 @@ export const tableConfig = {
         alias: 'cycleId',
         type: 'numeric',
       },
+      { name: 'organizationdisplayname', alias: 'organizationDisplayName' },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
@@ -573,8 +575,7 @@ export const tableConfig = {
         name: 'catchmentcorrespondence_assessments',
         columns: [
           { name: 'assessmentunitdisplayname' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'region' },
           { name: 'state' },
         ],
@@ -619,6 +620,7 @@ export const tableConfig = {
         alias: 'locationDescription',
         skipIndex: true,
       },
+      { name: 'organizationdisplayname', alias: 'organizationDisplayName' },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
@@ -652,8 +654,7 @@ export const tableConfig = {
         name: 'sources_assessments',
         columns: [
           { name: 'assessmentunitdisplayname' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'region' },
           { name: 'state' },
         ],
@@ -682,6 +683,7 @@ export const tableConfig = {
     columns: [
       { name: 'objectid', alias: 'objectId', skipIndex: true },
       { name: 'actionagency', alias: 'actionAgency' },
+      { name: 'actiondisplayname', alias: 'actionDisplayName' },
       { name: 'actionid', alias: 'actionId' },
       { name: 'actionname', alias: 'actionName' },
       {
@@ -745,6 +747,7 @@ export const tableConfig = {
         name: 'npdesidentifier',
         alias: 'npdesIdentifier',
       },
+      { name: 'organizationdisplayname', alias: 'organizationDisplayName' },
       { name: 'organizationid', alias: 'organizationId' },
       {
         name: 'organizationname',
@@ -787,8 +790,7 @@ export const tableConfig = {
         name: 'tmdl_assessments',
         columns: [
           { name: 'assessmentunitdisplayname' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'region' },
           { name: 'state' },
         ],
@@ -796,11 +798,9 @@ export const tableConfig = {
       {
         name: 'tmdl_actions',
         columns: [
-          { name: 'actionid' },
-          { name: 'actionname' },
+          { name: 'actiondisplayname' },
           { name: 'actionagency' },
-          { name: 'organizationid' },
-          { name: 'organizationname' },
+          { name: 'organizationdisplayname' },
           { name: 'state' },
         ],
       },

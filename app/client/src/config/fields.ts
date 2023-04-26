@@ -13,8 +13,7 @@ export const filterGroups: {
         'region',
         'state',
         'organizationType',
-        'organizationName',
-        'organizationId',
+        'organizationDisplayName',
         'waterType',
       ],
     },
@@ -26,8 +25,7 @@ export const filterGroups: {
       key: 'action',
       fields: [
         'actionType',
-        'actionId',
-        'actionName',
+        'actionDisplayName',
         'actionAgency',
         'inIndianCountry',
         'includeInMeasure',
@@ -48,8 +46,7 @@ export const filterGroups: {
         'region',
         'state',
         'organizationType',
-        'organizationName',
-        'organizationId',
+        'organizationDisplayName',
         'waterType',
       ],
     },
@@ -59,12 +56,7 @@ export const filterGroups: {
     },
     {
       key: 'assessmentUnit',
-      fields: [
-        /* 'assessmentUnitId',
-        'assessmentUnitName', */
-        'assessmentUnitDisplayName',
-        'assessmentUnitStatus',
-      ],
+      fields: ['assessmentUnitDisplayName', 'assessmentUnitStatus'],
     },
     {
       key: 'overallStatus',
@@ -122,8 +114,7 @@ export const filterGroups: {
     {
       key: 'associatedAction',
       fields: [
-        'associatedActionId',
-        'associatedActionName',
+        'associatedActionDisplayName',
         'associatedActionType',
         'associatedActionStatus',
         'associatedActionAgency',
@@ -137,8 +128,7 @@ export const filterGroups: {
         'region',
         'state',
         'organizationType',
-        'organizationName',
-        'organizationId',
+        'organizationDisplayName',
         'waterType',
         'locationText',
         'useClassName',
@@ -147,8 +137,6 @@ export const filterGroups: {
     {
       key: 'assessmentUnit',
       fields: [
-        /* 'assessmentUnitId',
-        'assessmentUnitName', */
         'assessmentUnitDisplayName',
         'assessmentUnitStatus',
         'reportingCycle',
@@ -162,8 +150,7 @@ export const filterGroups: {
         'region',
         'state',
         'organizationType',
-        'organizationName',
-        'organizationId',
+        'organizationDisplayName',
         'waterType',
         'useClassName',
         'monitoringLocationId',
@@ -173,8 +160,6 @@ export const filterGroups: {
     {
       key: 'assessmentUnit',
       fields: [
-        /* 'assessmentUnitId',
-        'assessmentUnitName', */
         'assessmentUnitDisplayName',
         'assessmentUnitStatus',
         'reportingCycle',
@@ -188,15 +173,12 @@ export const filterGroups: {
         'region',
         'state',
         'organizationType',
-        'organizationName',
-        'organizationId',
+        'organizationDisplayName',
       ],
     },
     {
       key: 'catchmentAssessmentUnit',
       fields: [
-        /* 'assessmentUnitId',
-        'assessmentUnitName', */
         'assessmentUnitDisplayName',
         'catchmentNhdPlusId',
         'reportingCycle',
@@ -210,8 +192,7 @@ export const filterGroups: {
         'region',
         'state',
         'organizationType',
-        'organizationName',
-        'organizationId',
+        'organizationDisplayName',
         'waterType',
       ],
     },
@@ -240,8 +221,7 @@ export const filterGroups: {
         'region',
         'state',
         'organizationType',
-        'organizationName',
-        'organizationId',
+        'organizationDisplayName',
         'waterType',
       ],
     },
@@ -256,7 +236,7 @@ export const filterGroups: {
     {
       key: 'tmdl',
       fields: [
-        'actionId',
+        'actionDisplayName',
         'actionName',
         'actionAgency',
         'inIndianCountry',
@@ -278,7 +258,6 @@ export const filterGroups: {
     },
     {
       key: 'actionsAssessmentUnit',
-      // fields: ['assessmentUnitId', 'assessmentUnitName'],
       fields: ['assessmentUnitDisplayName'],
     },
   ],
@@ -311,14 +290,11 @@ export const filterFields = [
     type: 'multiselect',
   },
   {
-    key: 'actionId',
+    key: 'actionDisplayName',
     label: 'Action ID',
     type: 'multiselect',
-  },
-  {
-    key: 'actionName',
-    label: 'Action Name',
-    type: 'multiselect',
+    contextColumns: ['organizationDisplayName', 'region', 'state'],
+    components: ['actionId', 'actionName'],
   },
   {
     key: 'actionType',
@@ -369,12 +345,8 @@ export const filterFields = [
     label: 'Assessment Unit ID',
     type: 'multiselect',
     components: ['assessmentUnitId', 'assessmentUnitName'],
+    contextColumns: ['organizationDisplayName', 'region', 'state'],
   },
-  /* {
-    key: 'assessmentUnitName',
-    label: 'Assessment Unit Name',
-    type: 'multiselect',
-  }, */
   {
     key: 'assessmentUnitStatus',
     label: 'Assessment Unit Status',
@@ -390,14 +362,10 @@ export const filterFields = [
     type: 'multiselect',
   },
   {
-    key: 'associatedActionId',
+    key: 'associatedActionDisplayName',
     label: 'Associated Action ID',
     type: 'multiselect',
-  },
-  {
-    key: 'associatedActionName',
-    label: 'Associated Action Name',
-    type: 'multiselect',
+    components: ['associatedActionId', 'associatedActionName'],
   },
   {
     key: 'associatedActionStatus',
@@ -567,6 +535,7 @@ export const filterFields = [
     label: 'Location Text',
     type: 'multiselect',
     source: 'locationText_locationTypeCode',
+    contextColumns: ['locationTypeCode'],
   },
   {
     key: 'monitoringEndDateLo',
@@ -612,15 +581,12 @@ export const filterFields = [
     type: 'multiselect',
   },
   {
-    key: 'organizationId',
+    key: 'organizationDisplayName',
     label: 'Organization ID',
     type: 'multiselect',
-    source: 'organizationId_organizationType',
-  },
-  {
-    key: 'organizationName',
-    label: 'Organization Name',
-    type: 'multiselect',
+    source: 'organizationDisplayName_organizationType',
+    components: ['organizationId', 'organizationName'],
+    contextColumns: ['organizationType', 'region', 'state'],
   },
   {
     key: 'otherIdentifier',
@@ -658,6 +624,7 @@ export const filterFields = [
     type: 'multiselect',
     tooltip:
       'The dropdown list contains only active (non-retired) parameter names.',
+    contextColumns: ['parameterGroup'],
   },
   {
     key: 'parameterStateIrCategory',
@@ -733,6 +700,7 @@ export const filterFields = [
     key: 'state',
     label: 'State',
     type: 'multiselect',
+    contextColumns: ['region'],
   },
   {
     key: 'stateIrCategory',
@@ -762,6 +730,7 @@ export const filterFields = [
     key: 'useGroup',
     label: 'Use Group',
     type: 'multiselect',
+    contextColumns: ['organizationDisplayName', 'region', 'state'],
   },
   {
     key: 'useIrCategory',
@@ -772,6 +741,7 @@ export const filterFields = [
     key: 'useName',
     label: 'Use Name',
     type: 'multiselect',
+    contextColumns: ['organizationDisplayName', 'region', 'state', 'useGroup'],
   },
   {
     key: 'useStateIrCategory',
@@ -803,7 +773,7 @@ export const sourceFields = [
     type: 'select',
   },
   {
-    id: 'organizationId_organizationType',
+    id: 'organizationDisplayName_organizationType',
     key: 'organizationType',
     label: 'Organization Type',
     type: 'select',

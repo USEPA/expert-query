@@ -332,7 +332,7 @@ function FilterFields({
             ? sourceState[sourceFieldConfig.id]
             : null;
           const selectProps = {
-            contextFilters: getContextFilters(fieldConfig.key, profile, {
+            contextFilters: getContextFilters(fieldConfig, profile, {
               ...queryParams.filters,
               ...(sourceKey && sourceValue
                 ? { [sourceKey]: sourceValue.value }
@@ -991,7 +991,7 @@ function useQueryParams({
     setParameters({
       filters: newFilterQueryParams,
       options: { format },
-      columns: getOrderedProfileColumns(profile),
+      columns: Array.from(profiles[profile].columns),
     });
   }, [filterState, format, parametersLoaded, profile]);
 
@@ -1270,17 +1270,18 @@ function getArticle(noun: string) {
 }
 
 function getContextFilters(
-  field: FilterField,
+  fieldConfig: typeof filterFieldsConfig[number],
   profile: Profile,
   filters: FilterQueryData,
 ) {
-  const profileColumns = profiles[profile].columns;
-  const fieldContexts = profileColumns.get(field)?.contextColumns;
-  if (!fieldContexts) return;
+  if (!('contextColumns' in fieldConfig)) return;
 
   return Object.entries(filters).reduce<FilterQueryData>(
     (current, [key, value]) => {
-      if (fieldContexts.includes(key)) {
+      if (
+        isProfileField(key, profile) &&
+        (fieldConfig.contextColumns as readonly string[]).includes(key)
+      ) {
         return {
           ...current,
           [key]: value,
@@ -1377,38 +1378,6 @@ function getOptions(
   } else {
     return filterDynamicOptions({ profile, fieldName: field })('');
   }
-}
-
-function getOrderedProfileColumns(profile: Profile) {
-  const columns = new Set<string>(['objectId']);
-  const filters = filterGroupsConfig[profile].reduce<string[]>(
-    (current, group) => {
-      return [...current, ...group.fields];
-    },
-    [],
-  );
-  filters.forEach((filter) => {
-    const fieldConfig = filterFieldsConfig.find(
-      (config) => config.key === filter,
-    );
-    if (!fieldConfig) return;
-    // Pair column with its "source" column, if applicable
-    if ('source' in fieldConfig) {
-      const sourceConfig = sourceFieldsConfig.find(
-        (config) => config.id === fieldConfig.source,
-      );
-      if (sourceConfig) columns.add(sourceConfig.key);
-    }
-    // If it's a range input, add the underlying column
-    if ('domain' in fieldConfig) columns.add(fieldConfig.domain);
-    if ('components' in fieldConfig)
-      fieldConfig.components.forEach((c) => columns.add(c));
-    // Otherwise, the key matches the field key
-    else columns.add(fieldConfig.key);
-  });
-  // Add unordered columns to the end
-  profiles[profile].columns.forEach((_, column) => columns.add(column));
-  return Array.from(columns);
 }
 
 function getPageName() {
@@ -1535,6 +1504,11 @@ function isProfileField(field: string, profile: Profile) {
   if (!fieldConfig) return false;
   if (profileColumns.has(fieldConfig.key)) return true;
   if ('domain' in fieldConfig && profileColumns.has(fieldConfig.domain))
+    return true;
+  if (
+    'components' in fieldConfig &&
+    fieldConfig.components.some((component) => profileColumns.has(component))
+  )
     return true;
   return false;
 }
