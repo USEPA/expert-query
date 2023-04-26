@@ -109,7 +109,6 @@ export function Home() {
         <NavButton
           label="User's Guide (PDF)"
           icon={FilePresent}
-          styles={['text-no-underline']}
           href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
         />
         <GlossaryPanel path={getPageName()} />

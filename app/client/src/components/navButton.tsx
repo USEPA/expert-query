@@ -50,7 +50,7 @@ export function NavButton({
         rel="noopener noreferrer"
         title={label}
         className={buttonStyles}
-        style={{ cursor: 'pointer', lineHeight: 1.15 }}
+        style={{ cursor: 'pointer', lineHeight: 1.15, textDecoration: 'none' }}
         type="button"
       >
         {innerContent}
