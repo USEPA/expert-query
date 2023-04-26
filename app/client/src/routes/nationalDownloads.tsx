@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ReactComponent as Exit } from '@uswds/uswds/img/usa-icons/launch.svg';
-import { ReactComponent as Home } from '@uswds/uswds/img/usa-icons/home.svg';
 // components
 import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
-import { NavButton } from 'components/navButton';
+import { NavBar } from 'components/navBar';
 import { Summary } from 'components/summary';
 // config
 import { getData, profiles, serverUrl } from 'config';
@@ -23,7 +21,6 @@ export default NationalDownloads;
 
 export function NationalDownloads() {
   const { getSignal } = useAbort();
-  const navigate = useNavigate();
 
   const [metadata, setMetadata] = useState<FetchState<Metadata>>({
     status: 'idle',
@@ -43,7 +40,7 @@ export function NationalDownloads() {
 
   return (
     <>
-      <NavButton label="Home" icon={Home} onClick={() => navigate('/')} />
+      <NavBar />
       <div>
         <h2>National Downloads</h2>
         <ul className="usa-list">

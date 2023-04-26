@@ -133,7 +133,7 @@ export function App() {
     <BrowserRouter basename={serverBasePath}>
       <Routes>
         <Route index element={<Navigate to="/attains" replace />} />
-        <Route path="/api-docs" element={<ApiDocs />} />
+        <Route path="/api-documentation" element={<ApiDocs />} />
         <Route path="/attains" element={<Home />}>
           <Route path=":profile" element={<QueryBuilder />} />
         </Route>
