@@ -35,6 +35,38 @@ function logError(error, metadataObj) {
   log.error(formatLogMsg(metadataObj, message));
 }
 
+/**
+ * Retrieves the domain values for a single table column.
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+function executeValuesQuery(req, res) {
+  const profile = tableConfig[req.params.profile];
+  if (!profile) {
+    return res
+      .status(404)
+      .json({ message: 'The requested profile does not exist' });
+  }
+
+  const column = profile.columns.find((col) => col.alias === req.params.column);
+  if (!column) {
+    return res.status(404).json({
+      message: 'The requested column does not exist on the selected profile',
+    });
+  }
+
+  queryColumnValues(profile, column, getQueryParams(req), req.activeSchema)
+    .then((values) =>
+      res.status(200).json(values.map((value) => value[column.name])),
+    )
+    .catch((error) => {
+      log.error(
+        `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table: ${error}`,
+      );
+      res.status(500).send('Error! ' + error);
+    });
+}
+
 // local development: read files directly from disk
 // Cloud.gov: fetch files from the public s3 bucket
 async function getFile(filename) {
@@ -59,6 +91,24 @@ async function getFileSize(filename) {
       }).then((res) => parseInt(res.headers['content-length']));
 }
 
+/**
+ * Gets the query parameters from the request.
+ * @param {express.Request} req
+ * @returns request query parameters
+ */
+function getQueryParams(req) {
+  return Object.entries(req.method === 'POST' ? req.body : req.query).reduce(
+    (current, [key, value]) => {
+      if (key in current) {
+        return { ...current, [key]: value };
+      } else if (req.method === 'GET') {
+        return { ...current, filters: { ...current.filters, [key]: value } };
+      } else return current;
+    },
+    { text: '', direction: null, filters: {}, limit: null },
+  );
+}
+
 // local development: no further processing of strings needed
 // Cloud.gov: get data from responses
 function parseResponse(res) {
@@ -70,17 +120,10 @@ function parseResponse(res) {
 }
 
 async function queryColumnValues(profile, column, params, schema) {
-  const parsedParams = {
-    text: params.text ?? '',
-    direction: params.direction ?? null,
-    filters: params.filters ?? {},
-    limit: params.limit ?? null,
-  };
-
   // get columns for where clause
   const columnsForFilter = [];
   profile.columns.forEach((col) => {
-    if (parsedParams.filters.hasOwnProperty(col.alias)) {
+    if (params.filters.hasOwnProperty(col.alias)) {
       columnsForFilter.push(col.name);
     }
   });
@@ -101,26 +144,26 @@ async function queryColumnValues(profile, column, params, schema) {
     .column(column.name)
     .whereNotNull(column.name)
     .distinctOn(column.name)
-    .orderBy(column.name, parsedParams.direction ?? 'asc')
+    .orderBy(column.name, params.direction ?? 'asc')
     .select();
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    appendToWhere(query, col.name, parsedParams.filters[col.alias]);
+    appendToWhere(query, col.name, params.filters[col.alias]);
   });
 
-  if (parsedParams.text) {
+  if (params.text) {
     if (column.type === 'numeric' || column.type === 'timestamptz') {
       query.whereRaw('CAST(?? as TEXT) ILIKE ?', [
         column.name,
-        `%${parsedParams.text}%`,
+        `%${params.text}%`,
       ]);
     } else {
-      query.whereILike(column.name, `%${parsedParams.text}%`);
+      query.whereILike(column.name, `%${params.text}%`);
     }
   }
 
-  if (parsedParams.limit) query.limit(parsedParams.limit);
+  if (params.limit) query.limit(params.limit);
 
   return await query;
 }
@@ -238,34 +281,13 @@ export default function (app, basePath) {
       });
   });
 
-  // create post requests
+  // get column domain values
+  router.get('/:profile/values/:column', function (req, res) {
+    executeValuesQuery(req, res);
+  });
+
   router.post('/:profile/values/:column', function (req, res) {
-    const profile = tableConfig[req.params.profile];
-    if (!profile) {
-      return res
-        .status(404)
-        .json({ message: 'The requested profile does not exist' });
-    }
-
-    const column = profile.columns.find(
-      (col) => col.alias === req.params.column,
-    );
-    if (!column) {
-      return res.status(404).json({
-        message: 'The requested column does not exist on the selected profile',
-      });
-    }
-
-    queryColumnValues(profile, column, req.body, req.activeSchema)
-      .then((values) =>
-        res.status(200).json(values.map((value) => value[column.name])),
-      )
-      .catch((error) => {
-        log.error(
-          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table: ${error}`,
-        );
-        res.status(500).send('Error! ' + error);
-      });
+    executeValuesQuery(req, res);
   });
 
   router.get('/nationalDownloads', async (req, res) => {

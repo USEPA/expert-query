@@ -1092,7 +1092,7 @@ async function checkColumnValue(
   fieldName: string,
   profile: string,
 ) {
-  let url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
+  const url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
   const res = await getData<Primitive[]>(url);
   if (res.length) return true;
   return false;
@@ -1500,7 +1500,7 @@ function isProfile(maybeProfile: string | Profile): maybeProfile is Profile {
 
 function isProfileField(field: string, profile: Profile) {
   const profileColumns = profiles[profile].columns;
-  const fieldConfig = filterFieldsConfig.find((config) => config.key === field);
+  const fieldConfig = allFieldsConfig.find((config) => config.key === field);
   if (!fieldConfig) return false;
   if (profileColumns.has(fieldConfig.key)) return true;
   if ('domain' in fieldConfig && profileColumns.has(fieldConfig.domain))
@@ -1525,7 +1525,7 @@ function isSingleValueField(field: string): field is SingleValueField {
 
 // Type narrowing
 function isYearField(field: string): field is YearField {
-  return (dateFields as string[]).includes(field);
+  return (yearFields as string[]).includes(field);
 }
 
 // Verify that a given string matches a parseable date format
