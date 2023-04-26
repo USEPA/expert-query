@@ -198,8 +198,9 @@ export default function (app, basePath) {
   });
 
   // --- get static content from S3
-  router.get('/getFile', (req, res) => {
-    const { filepath } = req.query;
+  router.get('/getFile/:path*', (req, res) => {
+    // get the filepath from the url and trim the leading forward slash
+    const filepath = req.params[0].slice(1);
     const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
     const s3Region = process.env.CF_S3_PUB_REGION;
     const metadataObj = populateMetdataObjFromRequest(req);
@@ -209,14 +210,23 @@ export default function (app, basePath) {
     // local development: read files directly from disk
     // Cloud.gov: fetch files from the public s3 bucket
     (isLocal
-      ? readFile(resolve(__dirname, '../content', filepath), 'utf8')
+      ? readFile(resolve(__dirname, '../content', filepath))
       : axios({
           method: 'get',
           url: `${s3BucketUrl}/content/${filepath}`,
           timeout: 10000,
+          responseType: 'arraybuffer',
         })
     )
       .then((stringsOrResponses) => {
+        // set the headers for the file
+        const filename = filepath.split('/').pop();
+        const format = filename.split('.').pop();
+        if (format) {
+          res.setHeader('Content-disposition', `inline; filename=${filename}`);
+          res.setHeader('Content-type', `application/${format}`);
+        }
+
         // local development: return root of response
         // Cloud.gov: return data value of response
         return res.send(isLocal ? stringsOrResponses : stringsOrResponses.data);

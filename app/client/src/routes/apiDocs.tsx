@@ -13,7 +13,7 @@ export function ApiDocs() {
       <NavBar />
       <div>
         <SwaggerUI
-          url={`${serverUrl}/api/getFile?filepath=swagger/attains.json`}
+          url={`${serverUrl}/api/getFile/path/swagger/attains.json`}
           deepLinking={true}
           defaultModelsExpandDepth={-1}
         />
