@@ -35,7 +35,6 @@ export const filterGroups: {
     },
     {
       key: 'actionsAssessmentUnit',
-      // fields: ['assessmentUnitId', 'assessmentUnitName'],
       fields: ['assessmentUnitDisplayName'],
     },
   ],
@@ -198,7 +197,6 @@ export const filterGroups: {
     },
     {
       key: 'assessmentUnit',
-      // fields: ['assessmentUnitId', 'assessmentUnitName', 'reportingCycle'],
       fields: ['assessmentUnitDisplayName', 'reportingCycle'],
     },
     {
