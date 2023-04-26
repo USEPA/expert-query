@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ReactComponent as Filter } from 'uswds/img/usa-icons/filter_list.svg';
+import { ReactComponent as Filter } from '@uswds/uswds/img/usa-icons/filter_list.svg';
 // types
 import type { MutableRefObject, ReactNode } from 'react';
 import type { Option } from 'types';

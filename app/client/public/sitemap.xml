@@ -1,7 +1,43 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
-        <loc>https://expertquery.epa.gov/</loc>
+        <loc>https://owapps.epa.gov/expertquery/api-documentation</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/attains</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/attains/actions</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/attains/assessmentUnits</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/attains/assessmentUnitsMonitoringLocations</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/attains/assessments</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/attains/catchmentCorrespondence</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/attains/sources</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/attains/tmdl</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://owapps.epa.gov/expertquery/national-downloads</loc>
         <changefreq>weekly</changefreq>
     </url>
 </urlset>

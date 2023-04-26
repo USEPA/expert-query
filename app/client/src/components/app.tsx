@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
-import 'uswds/css/uswds.css';
+import '@uswds/uswds/css/uswds.css';
 import 'bootstrap/dist/css/bootstrap-grid.min.css';
 // components
 import ApiDocs from 'routes/apiDocs';
@@ -15,6 +15,14 @@ import { useContentState, useContentDispatch } from 'contexts/content';
 import { cloudSpace, getData, serverBasePath, serverUrl } from '../config';
 // types
 import type { Content } from 'contexts/content';
+
+declare global {
+  interface Window {
+    ga: Function;
+    gaTarget: string;
+    logToGa: Function;
+  }
+}
 
 /** Custom hook to fetch static content */
 function useFetchedContent() {

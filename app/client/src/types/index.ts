@@ -62,7 +62,6 @@ type FetchSuccessState<Type> = {
 };
 
 export type Option = {
-  context?: string;
   description?: ReactNode;
   label: ReactNode;
   value: Primitive;

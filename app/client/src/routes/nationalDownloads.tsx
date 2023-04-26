@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ReactComponent as Exit } from 'uswds/img/usa-icons/launch.svg';
-import { ReactComponent as Home } from 'uswds/img/usa-icons/home.svg';
+import { ReactComponent as Exit } from '@uswds/uswds/img/usa-icons/launch.svg';
+import { ReactComponent as Home } from '@uswds/uswds/img/usa-icons/home.svg';
 // components
 import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
