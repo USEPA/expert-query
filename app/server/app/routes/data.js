@@ -359,7 +359,6 @@ function executeQueryCountOnly(profile, req, res) {
 
     parseCriteria(query, profile, queryParams, true);
 
-    console.log(query.toString());
     checkQueryCount(query).then((count) => {
       if (count === null) {
         res.status(200).json({
