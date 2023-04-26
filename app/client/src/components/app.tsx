@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import '@uswds/uswds/css/uswds.css';
 import 'bootstrap/dist/css/bootstrap-grid.min.css';
 // components
+import ApiDocs from 'routes/apiDocs';
 import { Home, QueryBuilder } from 'routes/home';
 import NationalDownloads from 'routes/nationalDownloads';
 import ErrorPage from 'routes/404';
@@ -132,6 +133,7 @@ export function App() {
     <BrowserRouter basename={serverBasePath}>
       <Routes>
         <Route index element={<Navigate to="/attains" replace />} />
+        <Route path="/api-documentation" element={<ApiDocs />} />
         <Route path="/attains" element={<Home />}>
           <Route path=":profile" element={<QueryBuilder />} />
         </Route>

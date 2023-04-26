@@ -146,3 +146,14 @@
 .glossary-term:hover svg {
   color: #1a4480;
 }
+
+/* --- SwaggerUI --- */
+.swagger-ui td,
+.swagger-ui th {
+  background-color: inherit;
+  border: none;
+}
+
+.swagger-ui .info {
+  margin-top: 0;
+}
