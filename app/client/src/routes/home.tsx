@@ -10,6 +10,7 @@ import Select from 'react-select';
 import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
 import { ReactComponent as Folder } from '@uswds/uswds/img/usa-icons/folder.svg';
+import { ReactComponent as FilePresent } from '@uswds/uswds/img/usa-icons/file_present.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -86,6 +87,11 @@ export function Home() {
     );
   }
 
+  const location = window.location;
+  const baseUrl = location.hostname === 'localhost' 
+    ? `${location.protocol}//${location.hostname}:9090`
+    : serverUrl;
+
   if (content.status === 'success') {
     return (
       <>
@@ -97,7 +103,13 @@ export function Home() {
         <NavButton
           label="National Downloads"
           icon={Folder}
+          styles={['margin-right-05']}
           onClick={() => navigate('/national-downloads')}
+        />
+        <NavButton
+          label="User's Guide (PDF)"
+          icon={FilePresent}
+          href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
         />
         <GlossaryPanel path={getPageName()} />
         <div>
