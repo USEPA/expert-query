@@ -1,3 +1,4 @@
+import { uniqueId } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { ReactComponent as Filter } from '@uswds/uswds/img/usa-icons/filter_list.svg';
 // types
@@ -15,6 +16,7 @@ export function SourceSelect({
   onChange,
   selected,
 }: SourceSelectProps) {
+  const [id] = useState(uniqueId());
   const sourceList = useRef<HTMLButtonElement | null>(null);
   const sourceDownPress = useKeyPress('ArrowDown', sourceList);
   const sourceUpPress = useKeyPress('ArrowUp', sourceList);
@@ -53,14 +55,14 @@ export function SourceSelect({
         const newIndex = prevState < allSources.length - 1 ? prevState + 1 : 0;
 
         // scroll to the suggestion
-        const elm = document.getElementById(`source-${newIndex}`);
-        const panel = document.getElementById('search-container-source-menu');
+        const elm = document.getElementById(`${id}-source-${newIndex}`);
+        const panel = document.getElementById(`${id}-source-menu`);
         if (elm && panel) panel.scrollTop = elm.offsetTop;
 
         return newIndex;
       });
     }
-  }, [allSources, sourceDownPress]);
+  }, [allSources, id, sourceDownPress]);
 
   // Handle arrow up key press (sources list)
   useEffect(() => {
@@ -69,14 +71,14 @@ export function SourceSelect({
         const newIndex = prevState > 0 ? prevState - 1 : allSources.length - 1;
 
         // scroll to the suggestion
-        const elm = document.getElementById(`source-${newIndex}`);
-        const panel = document.getElementById('search-container-source-menu');
+        const elm = document.getElementById(`${id}-source-${newIndex}`);
+        const panel = document.getElementById(`${id}-source-menu`);
         if (elm && panel) panel.scrollTop = elm.offsetTop;
 
         return newIndex;
       });
     }
-  }, [allSources, sourceUpPress]);
+  }, [allSources, id, sourceUpPress]);
 
   // Handle enter key press (sources list)
   useEffect(() => {
@@ -84,9 +86,8 @@ export function SourceSelect({
 
     // determine if the sources menu is visible
     const sourcesShown =
-      document
-        .getElementById('search-container-source-menu-div')
-        ?.getBoundingClientRect().height !== 0 ?? false;
+      document.getElementById(`${id}-source-menu-div`)?.getBoundingClientRect()
+        .height !== 0 ?? false;
 
     // determine whether or not the enter button is being used to open/close
     // the sources menu or select a source
@@ -109,7 +110,7 @@ export function SourceSelect({
       );
       setSourceCursor(-1);
     }
-  }, [allSources, onChange, sourceCursor, sourceEnterPress]);
+  }, [allSources, id, onChange, sourceCursor, sourceEnterPress]);
 
   return (
     <div
@@ -127,7 +128,7 @@ export function SourceSelect({
         <button
           data-node-ref="_sourceMenuButtonNode"
           aria-haspopup="true"
-          aria-controls="search-container-source-menu"
+          aria-controls={`${id}-source-menu`}
           className="bg-white border-gray-30 border-1px radius-left-md hover:bg-base-lightest"
           ref={sourceList}
           onClick={() => setSourcesVisible(!sourcesVisible)}
@@ -145,56 +146,56 @@ export function SourceSelect({
 
       {children}
 
-      {sourcesVisible && (
-        <div
-          id="search-container-source-menu-div"
-          tabIndex={-1}
-          className="bg-white position-absolute shadow-2 width-full z-top"
-          style={{ top: '100%' }}
+      <div
+        id={`${id}-source-menu-div`}
+        tabIndex={-1}
+        className={`bg-white position-absolute shadow-2 width-full z-top ${
+          sourcesVisible ? '' : 'display-none'
+        }`}
+        style={{ top: '100%' }}
+      >
+        <ul
+          id={`${id}-source-menu`}
+          role="menu"
+          data-node-ref="_sourceListNode"
+          className="maxh-mobile overflow-y-scroll padding-left-0"
+          style={{ marginBottom: 0 }}
         >
-          <ul
-            id="search-container-source-menu"
-            role="menu"
-            data-node-ref="_sourceListNode"
-            className="maxh-mobile overflow-y-scroll padding-left-0"
-            style={{ marginBottom: 0 }}
-          >
-            {allSources?.map((source, sourceIndex) => {
-              let bgClass = 'hover:bg-base-lightest';
-              if (selected === source) {
-                bgClass = 'bg-primary-lighter border-left-2px border-primary';
-              } else if (!selected && source.value === Infinity) {
-                bgClass = 'bg-primary-lighter border-left-2px border-primary';
-              } else if (sourceIndex === sourceCursor) {
-                bgClass = 'bg-primary-lighter';
-              }
-              const border =
-                sourceIndex === allSources.length - 1
-                  ? null
-                  : 'border-bottom-1px border-gray-10';
+          {allSources?.map((source, sourceIndex) => {
+            let bgClass = 'hover:bg-base-lightest';
+            if (selected === source) {
+              bgClass = 'bg-primary-lighter border-left-2px border-primary';
+            } else if (!selected && source.value === Infinity) {
+              bgClass = 'bg-primary-lighter border-left-2px border-primary';
+            } else if (sourceIndex === sourceCursor) {
+              bgClass = 'bg-primary-lighter';
+            }
+            const border =
+              sourceIndex === allSources.length - 1
+                ? null
+                : 'border-bottom-1px border-gray-10';
 
-              return (
-                <li
-                  id={`source-${source.value}`}
-                  role="menuitem"
-                  className={`add-list-reset ${bgClass}`}
-                  tabIndex={-1}
-                  key={`source-key-${source.value}`}
-                  onClick={() => {
-                    onChange?.(source.value === Infinity ? null : source);
-                    setSourcesVisible(false);
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={`margin-x-1 ${border} padding-y-1`}>
-                    {source.label}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
+            return (
+              <li
+                id={`${id}-source-${source.value}`}
+                role="menuitem"
+                className={`add-list-reset ${bgClass}`}
+                tabIndex={-1}
+                key={`source-key-${source.value}`}
+                onClick={() => {
+                  onChange?.(source.value === Infinity ? null : source);
+                  setSourcesVisible(false);
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className={`margin-x-1 ${border} padding-y-1`}>
+                  {source.label}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 }

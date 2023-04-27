@@ -14,11 +14,32 @@ export function NavBar() {
   const navigate = useNavigate();
 
   const location = window.location;
-  const baseUrl = location.hostname === 'localhost' 
-    ? `${location.protocol}//${location.hostname}:9090`
-    : serverUrl;
+  const baseUrl =
+    location.hostname === 'localhost'
+      ? `${location.protocol}//${location.hostname}:9090`
+      : serverUrl;
 
   const isAttains = window.location.pathname.match(/attains/);
+
+  // return (
+  //   <div class="tablet:grid-col-4 margin-bottom-4 tablet:margin-bottom-0">
+  //     <nav aria-label="Side navigation,">
+  //       <ul class="usa-sidenav">
+  //         <li class="usa-sidenav__item">
+  //           <a href="/" class="usa-current">
+  //             Home
+  //           </a>
+  //         </li>
+  //         <li class="usa-sidenav__item">
+  //           <a href="/national-downloads">National Downloads</a>
+  //         </li>
+  //         <li class="usa-sidenav__item">
+  //           <a href="/api-documentation">API Documentation</a>
+  //         </li>
+  //       </ul>
+  //     </nav>
+  //   </div>
+  // );
 
   return (
     <>
@@ -95,17 +116,16 @@ export function NavButton({
         focusable="false"
         role="img"
       />
-      <span className="font-ui-md text-bold text-primary">{label}</span>    
+      <span className="font-ui-md text-bold text-primary">{label}</span>
     </>
   );
 
   if (href) {
     return (
-      <a 
+      <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        title={label}
         className={buttonStyles}
         style={{ cursor: 'pointer', lineHeight: 1.15, textDecoration: 'none' }}
         type="button"
@@ -117,7 +137,6 @@ export function NavButton({
 
   return (
     <button
-      title={label}
       className={buttonStyles}
       onClick={onClick}
       style={{ cursor: 'pointer' }}

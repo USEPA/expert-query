@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
+import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -19,7 +20,7 @@ import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
-import { NavBar } from 'components/navBar';
+import { NavButton } from 'components/navBar';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -85,7 +86,11 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <NavBar />
+        <NavButton
+          label="Glossary"
+          icon={Book}
+          styles={['js-glossary-toggle']}
+        />
         <GlossaryPanel path={getPageName()} />
         <div>
           <h2>Query ATTAINS Data</h2>
@@ -411,8 +416,8 @@ function FilterFields({
 
   // Store each row as a tuple with its row key
   const rows: Array<[Array<[JSX.Element, string]>, string]> = [];
-  for (let i = 0; i < fieldsJsx.length; i += 3) {
-    const row = fieldsJsx.slice(i, i + 3);
+  for (let i = 0; i < fieldsJsx.length; i += 2) {
+    const row = fieldsJsx.slice(i, i + 2);
     const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
     rows.push([row, rowKey]);
   }
