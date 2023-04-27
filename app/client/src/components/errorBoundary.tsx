@@ -1,6 +1,6 @@
-import { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ErrorInfo, ReactNode } from 'react';
 // components
-import { Message } from "components/message";
+import { Message } from 'components/message';
 
 type Props = {
   children: ReactNode;
@@ -20,7 +20,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error('Uncaught error:', error, errorInfo);
+
+    if (!window.gaTarget) return;
+    window.logToGa('send', 'exception', {
+      exDescription: `${error}${errorInfo.componentStack}`,
+      exFatal: true,
+    });
   }
 
   public render() {
@@ -28,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     const { hasError } = this.state;
 
     if (hasError) {
-      return <Message type="error" text={"Something went wrong."} />;
+      return <Message type="error" text={'Something went wrong.'} />;
     }
 
     return children;

@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import '@uswds/uswds/css/uswds.css';
 import 'bootstrap/dist/css/bootstrap-grid.min.css';
 // components
+import ApiDocs from 'routes/apiDocs';
 import { Home, QueryBuilder } from 'routes/home';
 import NationalDownloads from 'routes/nationalDownloads';
 import ErrorPage from 'routes/404';
@@ -14,6 +15,14 @@ import { useContentState, useContentDispatch } from 'contexts/content';
 import { cloudSpace, getData, serverBasePath, serverUrl } from '../config';
 // types
 import type { Content } from 'contexts/content';
+
+declare global {
+  interface Window {
+    ga: Function;
+    gaTarget: string;
+    logToGa: Function;
+  }
+}
 
 /** Custom hook to fetch static content */
 function useFetchedContent() {
@@ -124,6 +133,7 @@ export function App() {
     <BrowserRouter basename={serverBasePath}>
       <Routes>
         <Route index element={<Navigate to="/attains" replace />} />
+        <Route path="/api-documentation" element={<ApiDocs />} />
         <Route path="/attains" element={<Home />}>
           <Route path=":profile" element={<QueryBuilder />} />
         </Route>

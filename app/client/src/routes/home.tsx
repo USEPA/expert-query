@@ -7,9 +7,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
-import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
-import { ReactComponent as Folder } from '@uswds/uswds/img/usa-icons/folder.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -21,7 +19,7 @@ import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
-import { NavButton } from 'components/navButton';
+import { NavBar } from 'components/navBar';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -51,8 +49,6 @@ import type { Profile } from 'config/profiles';
 export default Home;
 
 export function Home() {
-  const navigate = useNavigate();
-
   const { content } = useContentState();
 
   const staticOptions = useStaticOptions(content);
@@ -89,16 +85,7 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <NavButton
-          label="Glossary"
-          icon={Book}
-          styles={['js-glossary-toggle', 'margin-right-05']}
-        />
-        <NavButton
-          label="National Downloads"
-          icon={Folder}
-          onClick={() => navigate('/national-downloads')}
-        />
+        <NavBar />
         <GlossaryPanel path={getPageName()} />
         <div>
           <h2>Query ATTAINS Data</h2>
