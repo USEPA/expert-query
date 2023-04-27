@@ -16,13 +16,11 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
     objectid INTEGER PRIMARY KEY,
     state VARCHAR(4000),
     region VARCHAR(2),
-    organizationdisplayname VARCHAR(183) NOT NULL,
     organizationid VARCHAR(30) NOT NULL,
     organizationname VARCHAR(150) NOT NULL,
     organizationtype VARCHAR(30) NOT NULL,
     reportingcycle NUMERIC(4,0) NOT NULL,
     cycleid NUMERIC(38,0) NOT NULL,
-    assessmentunitdisplayname VARCHAR(308) NOT NULL,
     assessmentunitid VARCHAR(50) NOT NULL,
     assessmentunitname VARCHAR(255) NOT NULL,
     locationdescription VARCHAR(2000) NOT NULL,
@@ -40,7 +38,6 @@ export const createQuery = `CREATE TABLE IF NOT EXISTS ${tableName}
 
 const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'objectid' },
-  { name: 'assessmentunitdisplayname' },
   { name: 'assessmentunitid' },
   { name: 'assessmentunitname' },
   { name: 'assessmentunitstatus' },
@@ -49,7 +46,6 @@ const insertColumns = new pgp.helpers.ColumnSet([
   { name: 'monitoringlocationdatalink' },
   { name: 'monitoringlocationid' },
   { name: 'monitoringlocationorgid' },
-  { name: 'organizationdisplayname' },
   { name: 'organizationid' },
   { name: 'organizationname' },
   { name: 'organizationtype' },
@@ -80,7 +76,6 @@ export async function transform(data) {
   data.forEach((datum) => {
     rows.push({
       objectid: datum.objectid,
-      assessmentunitdisplayname: `${datum.assessmentunitid} - ${datum.assessmentunitname}`,
       assessmentunitid: datum.assessmentunitid,
       assessmentunitname: datum.assessmentunitname,
       assessmentunitstatus: datum.assessmentunitstatus,
@@ -89,7 +84,6 @@ export async function transform(data) {
       monitoringlocationdatalink: datum.monitoringlocationdatalink,
       monitoringlocationid: datum.monitoringlocationid,
       monitoringlocationorgid: datum.monitoringlocationorgid,
-      organizationdisplayname: `${datum.organizationid} - ${datum.organizationname}`,
       organizationid: datum.organizationid,
       organizationname: datum.organizationname,
       organizationtype: datum.organizationtype,

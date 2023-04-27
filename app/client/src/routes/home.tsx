@@ -332,6 +332,8 @@ function FilterFields({
             filterLabel: fieldConfig.label,
             filterValue: filterState[fieldConfig.key],
             profile,
+            secondaryFilterKey:
+              'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
             sortDirection:
               'direction' in fieldConfig
                 ? (fieldConfig.direction as SortDirection)
@@ -628,6 +630,7 @@ function SelectFilter<
   filterLabel,
   filterValue,
   profile,
+  secondaryFilterKey,
   sortDirection,
   sourceKey,
   sourceValue,
@@ -644,6 +647,7 @@ function SelectFilter<
       profile,
       fieldName: filterKey,
       direction: sortDirection,
+      secondaryFieldName: secondaryFilterKey,
       staticOptions,
     });
   }, [
@@ -651,6 +655,7 @@ function SelectFilter<
     defaultOption,
     filterKey,
     profile,
+    secondaryFilterKey,
     sortDirection,
     staticOptions,
   ]);
@@ -1141,6 +1146,7 @@ function filterDynamicOptions({
   fieldName,
   filters,
   profile,
+  secondaryFieldName,
   staticOptions,
 }: {
   defaultOption?: Option | null;
@@ -1148,6 +1154,7 @@ function filterDynamicOptions({
   fieldName: string;
   filters?: FilterQueryData;
   profile: string;
+  secondaryFieldName?: string | null;
   staticOptions?: StaticOptions;
 }) {
   return async function (
@@ -1160,17 +1167,24 @@ function filterDynamicOptions({
       direction: direction ?? null,
       limit: dynamicOptionLimit,
       filters,
+      additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
     };
     const values = await postData(url, data, 'json', signal);
-    const options = values.map((value: Primitive) => {
+    const options = values.map((item: Record<string, string>) => {
+      const value = item[fieldName];
       if (staticOptions?.hasOwnProperty(fieldName)) {
+        // Map labels to those retrieved from the ETL's domain values
         return (
           staticOptions[
             fieldName as keyof StaticOptions
           ] as ReadonlyArray<Option>
         ).find((option) => option.value === value);
       } else {
-        return { label: value, value };
+        // Concatenate primary column value with secondary, if present
+        const label = secondaryFieldName
+          ? `${value} - ${item[secondaryFieldName]}`
+          : value;
+        return { label, value };
       }
     });
     return defaultOption ? [defaultOption, ...options] : options;
@@ -1185,12 +1199,14 @@ function filterOptions({
   profile,
   direction = 'asc',
   staticOptions,
+  secondaryFieldName,
 }: {
   defaultOption?: Option | null;
   fieldName: string;
   filters?: FilterQueryData;
   profile: string;
   direction?: SortDirection;
+  secondaryFieldName?: string | null;
   staticOptions: StaticOptions;
 }) {
   if (!Object.keys(filters).length && staticOptions.hasOwnProperty(fieldName)) {
@@ -1205,6 +1221,7 @@ function filterOptions({
       fieldName,
       filters,
       profile,
+      secondaryFieldName,
       staticOptions,
     });
   }
@@ -1261,13 +1278,13 @@ function getContextFilters(
   profile: Profile,
   filters: FilterQueryData,
 ) {
-  if (!('contextColumns' in fieldConfig)) return;
+  if (!('contextFields' in fieldConfig)) return;
 
   return Object.entries(filters).reduce<FilterQueryData>(
     (current, [key, value]) => {
       if (
         isProfileField(key, profile) &&
-        (fieldConfig.contextColumns as readonly string[]).includes(key)
+        (fieldConfig.contextFields as readonly string[]).includes(key)
       ) {
         return {
           ...current,
@@ -1491,11 +1508,6 @@ function isProfileField(field: string, profile: Profile) {
   if (!fieldConfig) return false;
   if (profileColumns.has(fieldConfig.key)) return true;
   if ('domain' in fieldConfig && profileColumns.has(fieldConfig.domain))
-    return true;
-  if (
-    'components' in fieldConfig &&
-    fieldConfig.components.some((component) => profileColumns.has(component))
-  )
     return true;
   return false;
 }
@@ -1839,6 +1851,7 @@ type SelectFilterProps<
   filterLabel: string;
   filterValue: FilterFieldState[F];
   profile: Profile;
+  secondaryFilterKey: FilterField;
   sortDirection?: SortDirection;
   sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
   sourceValue: SourceFieldState[SourceField] | null;
