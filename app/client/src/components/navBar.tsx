@@ -42,14 +42,13 @@ export function NavBar() {
         label="User's Guide (PDF)"
         icon={FilePresent}
         href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
+        styles={['margin-right-05']}
       />
-      {window.location.pathname.match(/^\/attains/) && (
-        <NavButton
-          label="Glossary"
-          icon={Book}
-          styles={['js-glossary-toggle']}
-        />
-      )}
+      <NavButton
+        label="Glossary"
+        icon={Book}
+        styles={['js-glossary-toggle']}
+      />
     </>
   );
 }
