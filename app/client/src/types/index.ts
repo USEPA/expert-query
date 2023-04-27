@@ -28,7 +28,6 @@ export type ConcreteField =
   | 'assessmentUnitStatus'
   | 'delistedReason'
   | 'locationTypeCode'
-  | 'organizationId'
   | 'parameterGroup'
   | 'parameterName'
   | 'parameterStatus'

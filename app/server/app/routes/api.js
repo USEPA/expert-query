@@ -35,6 +35,47 @@ function logError(error, metadataObj) {
   log.error(formatLogMsg(metadataObj, message));
 }
 
+/**
+ * Retrieves the domain values for a single table column.
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+function executeValuesQuery(req, res) {
+  const profile = tableConfig[req.params.profile];
+  if (!profile) {
+    return res
+      .status(404)
+      .json({ message: 'The requested profile does not exist' });
+  }
+
+  const { additionalColumns, ...params } = getQueryParams(req);
+
+  const columnAliases = [
+    req.params.column,
+    ...(Array.isArray(additionalColumns) ? additionalColumns : []),
+  ];
+
+  const columns = [];
+  for (const alias of columnAliases) {
+    const column = profile.columns.find((col) => col.alias === alias);
+    if (!column) {
+      return res.status(404).json({
+        message: `The column ${alias} does not exist on the selected profile`,
+      });
+    }
+    columns.push(column);
+  }
+
+  queryColumnValues(profile, columns, params, req.activeSchema)
+    .then((values) => res.status(200).json(values))
+    .catch((error) => {
+      log.error(
+        `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
+      );
+      res.status(500).send('Error! ' + error);
+    });
+}
+
 // local development: read files directly from disk
 // Cloud.gov: fetch files from the public s3 bucket
 async function getFile(filename) {
@@ -59,6 +100,30 @@ async function getFileSize(filename) {
       }).then((res) => parseInt(res.headers['content-length']));
 }
 
+/**
+ * Gets the query parameters from the request.
+ * @param {express.Request} req
+ * @returns request query parameters
+ */
+function getQueryParams(req) {
+  return Object.entries(req.method === 'POST' ? req.body : req.query).reduce(
+    (current, [key, value]) => {
+      if (key in current) {
+        return { ...current, [key]: value };
+      } else if (req.method === 'GET') {
+        return { ...current, filters: { ...current.filters, [key]: value } };
+      } else return current;
+    },
+    {
+      text: '',
+      direction: null,
+      filters: {},
+      limit: null,
+      additionalColumns: [],
+    },
+  );
+}
+
 // local development: no further processing of strings needed
 // Cloud.gov: get data from responses
 function parseResponse(res) {
@@ -69,18 +134,20 @@ function parseResponse(res) {
   }
 }
 
-async function queryColumnValues(profile, column, params, schema) {
-  const parsedParams = {
-    text: params.text ?? '',
-    direction: params.direction ?? null,
-    filters: params.filters ?? {},
-    limit: params.limit ?? null,
-  };
+/**
+ * Craft the database query for distinct column values
+ * @param {Object} profile definition of the profile being queried
+ * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
+ * @param {Object} params parameters to apply to the query
+ * @param {string} schema the currently active database schema
+ */
+async function queryColumnValues(profile, columns, params, schema) {
+  const primaryColumn = columns[0];
 
   // get columns for where clause
   const columnsForFilter = [];
   profile.columns.forEach((col) => {
-    if (parsedParams.filters.hasOwnProperty(col.alias)) {
+    if (params.filters.hasOwnProperty(col.alias)) {
       columnsForFilter.push(col.name);
     }
   });
@@ -88,7 +155,7 @@ async function queryColumnValues(profile, column, params, schema) {
   // search through tableconfig.materializedViews to see if the column
   // we need is in here
   const materializedView = profile.materializedViews.find((mv) => {
-    for (const col of columnsForFilter.concat(column.name)) {
+    for (const col of columnsForFilter.concat(columns.map((c) => c.name))) {
       if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
     }
     return mv;
@@ -98,29 +165,45 @@ async function queryColumnValues(profile, column, params, schema) {
   const query = knex
     .withSchema(schema)
     .from(materializedView ? materializedView.name : profile.tableName)
-    .column(column.name)
-    .whereNotNull(column.name)
-    .distinctOn(column.name)
-    .orderBy(column.name, parsedParams.direction ?? 'asc')
+    .column(
+      columns.reduce(
+        (current, col) => ({ ...current, [col.alias]: col.name }),
+        {},
+      ),
+    )
+    .whereNotNull(primaryColumn.name)
+    .distinctOn(primaryColumn.name)
+    .orderBy(primaryColumn.name, params.direction ?? 'asc')
     .select();
 
   // build where clause of the query
   profile.columns.forEach((col) => {
-    appendToWhere(query, col.name, parsedParams.filters[col.alias]);
+    appendToWhere(query, col.name, params.filters[col.alias]);
   });
 
-  if (parsedParams.text) {
-    if (column.type === 'numeric' || column.type === 'timestamptz') {
-      query.whereRaw('CAST(?? as TEXT) ILIKE ?', [
-        column.name,
-        `%${parsedParams.text}%`,
-      ]);
-    } else {
-      query.whereILike(column.name, `%${parsedParams.text}%`);
-    }
+  if (params.text) {
+    query.andWhere((q) => {
+      columns.forEach((col, i) => {
+        if (col.type === 'numeric' || col.type === 'timestamptz') {
+          i === 0
+            ? q.whereRaw('CAST(?? as TEXT) ILIKE ?', [
+                col.name,
+                `%${params.text}%`,
+              ])
+            : q.orWhereRaw('CAST(?? as TEXT) ILIKE ?', [
+                col.name,
+                `%${params.text}%`,
+              ]);
+        } else {
+          i === 0
+            ? q.whereILike(col.name, `%${params.text}%`)
+            : q.orWhereILike(col.name, `%${params.text}%`);
+        }
+      });
+    });
   }
 
-  if (parsedParams.limit) query.limit(parsedParams.limit);
+  if (params.limit) query.limit(params.limit);
 
   return await query;
 }
@@ -248,34 +331,13 @@ export default function (app, basePath) {
       });
   });
 
-  // create post requests
+  // get column domain values
+  router.get('/:profile/values/:column', function (req, res) {
+    executeValuesQuery(req, res);
+  });
+
   router.post('/:profile/values/:column', function (req, res) {
-    const profile = tableConfig[req.params.profile];
-    if (!profile) {
-      return res
-        .status(404)
-        .json({ message: 'The requested profile does not exist' });
-    }
-
-    const column = profile.columns.find(
-      (col) => col.alias === req.params.column,
-    );
-    if (!column) {
-      return res.status(404).json({
-        message: 'The requested column does not exist on the selected profile',
-      });
-    }
-
-    queryColumnValues(profile, column, req.body, req.activeSchema)
-      .then((values) =>
-        res.status(200).json(values.map((value) => value[column.name])),
-      )
-      .catch((error) => {
-        log.error(
-          `Failed to get values for the "${column.name}" column from the "${profile.tableName}" table: ${error}`,
-        );
-        res.status(500).send('Error! ' + error);
-      });
+    executeValuesQuery(req, res);
   });
 
   router.get('/nationalDownloads', async (req, res) => {

@@ -319,7 +319,7 @@ function FilterFields({
             ? sourceState[sourceFieldConfig.id]
             : null;
           const selectProps = {
-            contextFilters: getContextFilters(fieldConfig.key, profile, {
+            contextFilters: getContextFilters(fieldConfig, profile, {
               ...queryParams.filters,
               ...(sourceKey && sourceValue
                 ? { [sourceKey]: sourceValue.value }
@@ -332,6 +332,8 @@ function FilterFields({
             filterLabel: fieldConfig.label,
             filterValue: filterState[fieldConfig.key],
             profile,
+            secondaryFilterKey:
+              'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
             sortDirection:
               'direction' in fieldConfig
                 ? (fieldConfig.direction as SortDirection)
@@ -628,6 +630,7 @@ function SelectFilter<
   filterLabel,
   filterValue,
   profile,
+  secondaryFilterKey,
   sortDirection,
   sourceKey,
   sourceValue,
@@ -644,6 +647,7 @@ function SelectFilter<
       profile,
       fieldName: filterKey,
       direction: sortDirection,
+      secondaryFieldName: secondaryFilterKey,
       staticOptions,
     });
   }, [
@@ -651,6 +655,7 @@ function SelectFilter<
     defaultOption,
     filterKey,
     profile,
+    secondaryFilterKey,
     sortDirection,
     staticOptions,
   ]);
@@ -978,7 +983,7 @@ function useQueryParams({
     setParameters({
       filters: newFilterQueryParams,
       options: { format },
-      columns: getOrderedProfileColumns(profile),
+      columns: Array.from(profiles[profile].columns),
     });
   }, [filterState, format, parametersLoaded, profile]);
 
@@ -1079,7 +1084,7 @@ async function checkColumnValue(
   fieldName: string,
   profile: string,
 ) {
-  let url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
+  const url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
   const res = await getData<Primitive[]>(url);
   if (res.length) return true;
   return false;
@@ -1141,6 +1146,7 @@ function filterDynamicOptions({
   fieldName,
   filters,
   profile,
+  secondaryFieldName,
   staticOptions,
 }: {
   defaultOption?: Option | null;
@@ -1148,6 +1154,7 @@ function filterDynamicOptions({
   fieldName: string;
   filters?: FilterQueryData;
   profile: string;
+  secondaryFieldName?: string | null;
   staticOptions?: StaticOptions;
 }) {
   return async function (
@@ -1160,17 +1167,24 @@ function filterDynamicOptions({
       direction: direction ?? null,
       limit: dynamicOptionLimit,
       filters,
+      additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
     };
     const values = await postData(url, data, 'json', signal);
-    const options = values.map((value: Primitive) => {
+    const options = values.map((item: Record<string, string>) => {
+      const value = item[fieldName];
       if (staticOptions?.hasOwnProperty(fieldName)) {
+        // Map labels to those retrieved from the ETL's domain values
         return (
           staticOptions[
             fieldName as keyof StaticOptions
           ] as ReadonlyArray<Option>
         ).find((option) => option.value === value);
       } else {
-        return { label: value, value };
+        // Concatenate primary column value with secondary, if present
+        const label = secondaryFieldName
+          ? `${value} - ${item[secondaryFieldName]}`
+          : value;
+        return { label, value };
       }
     });
     return defaultOption ? [defaultOption, ...options] : options;
@@ -1185,12 +1199,14 @@ function filterOptions({
   profile,
   direction = 'asc',
   staticOptions,
+  secondaryFieldName,
 }: {
   defaultOption?: Option | null;
   fieldName: string;
   filters?: FilterQueryData;
   profile: string;
   direction?: SortDirection;
+  secondaryFieldName?: string | null;
   staticOptions: StaticOptions;
 }) {
   if (!Object.keys(filters).length && staticOptions.hasOwnProperty(fieldName)) {
@@ -1205,6 +1221,7 @@ function filterOptions({
       fieldName,
       filters,
       profile,
+      secondaryFieldName,
       staticOptions,
     });
   }
@@ -1257,17 +1274,18 @@ function getArticle(noun: string) {
 }
 
 function getContextFilters(
-  field: FilterField,
+  fieldConfig: typeof filterFieldsConfig[number],
   profile: Profile,
   filters: FilterQueryData,
 ) {
-  const profileColumns = profiles[profile].columns;
-  const fieldContexts = profileColumns.get(field)?.contextColumns;
-  if (!fieldContexts) return;
+  if (!('contextFields' in fieldConfig)) return;
 
   return Object.entries(filters).reduce<FilterQueryData>(
     (current, [key, value]) => {
-      if (fieldContexts.includes(key)) {
+      if (
+        isProfileField(key, profile) &&
+        (fieldConfig.contextFields as readonly string[]).includes(key)
+      ) {
         return {
           ...current,
           [key]: value,
@@ -1364,36 +1382,6 @@ function getOptions(
   } else {
     return filterDynamicOptions({ profile, fieldName: field })('');
   }
-}
-
-function getOrderedProfileColumns(profile: Profile) {
-  const columns = new Set<string>(['objectId']);
-  const filters = filterGroupsConfig[profile].reduce<string[]>(
-    (current, group) => {
-      return [...current, ...group.fields];
-    },
-    [],
-  );
-  filters.forEach((filter) => {
-    const fieldConfig = filterFieldsConfig.find(
-      (config) => config.key === filter,
-    );
-    if (!fieldConfig) return;
-    // Pair column with its "source" column, if applicable
-    if ('source' in fieldConfig) {
-      const sourceConfig = sourceFieldsConfig.find(
-        (config) => config.id === fieldConfig.source,
-      );
-      if (sourceConfig) columns.add(sourceConfig.key);
-    }
-    // If it's a range input, add the underlying column
-    if ('domain' in fieldConfig) columns.add(fieldConfig.domain);
-    // Otherwise, the key matches the field key
-    else columns.add(fieldConfig.key);
-  });
-  // Add unordered columns to the end
-  profiles[profile].columns.forEach((_, column) => columns.add(column));
-  return Array.from(columns);
 }
 
 function getPageName() {
@@ -1516,7 +1504,7 @@ function isProfile(maybeProfile: string | Profile): maybeProfile is Profile {
 
 function isProfileField(field: string, profile: Profile) {
   const profileColumns = profiles[profile].columns;
-  const fieldConfig = filterFieldsConfig.find((config) => config.key === field);
+  const fieldConfig = allFieldsConfig.find((config) => config.key === field);
   if (!fieldConfig) return false;
   if (profileColumns.has(fieldConfig.key)) return true;
   if ('domain' in fieldConfig && profileColumns.has(fieldConfig.domain))
@@ -1536,7 +1524,7 @@ function isSingleValueField(field: string): field is SingleValueField {
 
 // Type narrowing
 function isYearField(field: string): field is YearField {
-  return (dateFields as string[]).includes(field);
+  return (yearFields as string[]).includes(field);
 }
 
 // Verify that a given string matches a parseable date format
@@ -1863,6 +1851,7 @@ type SelectFilterProps<
   filterLabel: string;
   filterValue: FilterFieldState[F];
   profile: Profile;
+  secondaryFilterKey: FilterField;
   sortDirection?: SortDirection;
   sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
   sourceValue: SourceFieldState[SourceField] | null;
