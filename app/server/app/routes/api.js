@@ -134,6 +134,13 @@ function parseResponse(res) {
   }
 }
 
+/**
+ * Craft the database query for distinct column values
+ * @param {Object} profile definition of the profile being queried
+ * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
+ * @param {Object} params parameters to apply to the query
+ * @param {string} schema the currently active database schema
+ */
 async function queryColumnValues(profile, columns, params, schema) {
   const primaryColumn = columns[0];
 
