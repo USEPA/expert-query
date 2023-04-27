@@ -18,6 +18,8 @@ export function NavBar() {
     ? `${location.protocol}//${location.hostname}:9090`
     : serverUrl;
 
+  const isAttains = window.location.pathname.match(/attains/);
+
   return (
     <>
       <NavButton
@@ -42,13 +44,15 @@ export function NavBar() {
         label="User's Guide (PDF)"
         icon={FilePresent}
         href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
-        styles={['margin-right-05']}
+        styles={isAttains ? ['margin-right-05'] : []}
       />
-      <NavButton
-        label="Glossary"
-        icon={Book}
-        styles={['js-glossary-toggle']}
-      />
+      {isAttains && (
+        <NavButton
+          label="Glossary"
+          icon={Book}
+          styles={['js-glossary-toggle']}
+        />
+      )}
     </>
   );
 }
