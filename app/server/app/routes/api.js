@@ -333,15 +333,6 @@ export default function (app, basePath) {
     executeValuesQuery(req, res);
   });
 
-  // get column domain values
-  router.get('/:profile/values/:column', function (req, res) {
-    executeValuesQuery(req, res);
-  });
-
-  router.post('/:profile/values/:column', function (req, res) {
-    executeValuesQuery(req, res);
-  });
-
   router.get('/nationalDownloads', async (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
