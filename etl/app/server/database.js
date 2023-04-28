@@ -1,26 +1,17 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import Excel from 'exceljs';
-import { createWriteStream, mkdirSync } from 'fs';
 import https from 'https';
-import path, { resolve } from 'path';
 import pg from 'pg';
-import QueryStream from 'pg-query-stream';
 import { setTimeout } from 'timers/promises';
-import { fileURLToPath } from 'url';
-import util from 'util';
-import zlib from 'zlib';
 // utils
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
-import StreamingService from './utilities/streamingService.js';
 import * as profiles from './profiles/index.js';
-import { createS3Stream, deleteDirectory, readS3File } from './s3.js';
+import { deleteDirectory, readS3File } from './s3.js';
 // config
 import { tableConfig } from '../config/tableConfig.js';
 
 const { Client, Pool } = pg;
-const setImmediatePromise = util.promisify(setImmediate);
 
 const environment = getEnvironment();
 
@@ -854,193 +845,6 @@ function getProfileEtl(
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
     }
-  };
-}
-
-function streamNationalDownloadSingleProfile(
-  pool,
-  activeSchema,
-  profile,
-  format,
-  inStream,
-) {
-  // output types csv, tab-separated, Excel, or JSON
-  try {
-    const tableName = profile.tableName;
-
-    const stream = inStream.stream;
-    const client = inStream.client;
-
-    const extension = `.${format}.gz`;
-
-    // create zip streams
-    const gzipStream = zlib.createGzip();
-
-    const isLocal = environment.isLocal;
-
-    // create output stream
-    let writeStream;
-    if (isLocal) {
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const subFolderPath = resolve(
-        __dirname,
-        `../../../app/server/app/content-etl/national-downloads/new`,
-      );
-
-      // create the sub folder if it doesn't already exist
-      mkdirSync(subFolderPath, { recursive: true });
-
-      writeStream = createWriteStream(
-        `${subFolderPath}/${tableName}${extension}`,
-      );
-
-      gzipStream.pipe(writeStream);
-    } else {
-      writeStream = createS3Stream({
-        contentType: 'application/gzip',
-        filePath: `national-downloads/new/${tableName}${extension}`,
-        stream: gzipStream,
-      });
-    }
-
-    // start streaming/transforming the data into the S3 bucket
-    if (format === 'xlsx') {
-      // create workbook
-      const workbook = new Excel.stream.xlsx.WorkbookWriter({
-        stream: gzipStream,
-        useStyles: true,
-      });
-
-      const worksheet = workbook.addWorksheet('data');
-
-      StreamingService.streamResponse(gzipStream, stream, 'xlsx', {
-        workbook,
-        worksheet,
-      });
-    } else {
-      StreamingService.streamResponse(gzipStream, stream, format);
-    }
-
-    // get the promises for verifying the streaming operation is complete
-    let promise = writeStream;
-    if (isLocal) {
-      promise = new Promise((resolve, reject) => {
-        writeStream.on('finish', () => {
-          log.info(
-            `Finished building national download for ${tableName}${extension}`,
-          );
-          resolve();
-        });
-        writeStream.on('error', reject);
-      });
-    }
-
-    // return a promise for all of the streams and the db connection client,
-    // so we can close the connection later
-    return {
-      promise,
-      client,
-    };
-  } catch (error) {
-    log.error(
-      `Failed to build national download from the "${profile.tableName}" table...`,
-      error,
-    );
-  }
-}
-
-export async function streamNationalDownloads(pool, activeSchema) {
-  const tables = Object.values(tableConfig);
-
-  const formats = ['csv'];
-
-  const shouldShareStreams =
-    !process.env.STREAM_SHARED || process.env.STREAM_SHARED === 'true';
-
-  // fire off the streams and keep track of the db connection clients
-  let promises = [];
-  let clients = [];
-  for (const table of tables) {
-    let inStream;
-
-    // go ahead and build the input stream if we are sharing the streams
-    if (shouldShareStreams) {
-      inStream = shouldShareStreams
-        ? await buildInputStream(activeSchema, pool, table)
-        : null;
-    }
-
-    // clear out promises and clients for next loop iteration
-    if (!shouldShareStreams && process.env.STREAM_SERIALLY === 'true') {
-      promises = [];
-      clients = [];
-    }
-
-    // fire off streams for each format
-    for (const format of formats) {
-      if (!inStream) {
-        inStream = await buildInputStream(activeSchema, pool, table);
-      }
-
-      const { promise, client } = streamNationalDownloadSingleProfile(
-        pool,
-        activeSchema,
-        table,
-        format,
-        inStream,
-      );
-
-      promises.push(promise);
-      clients.push(client);
-
-      // for concurrent streams, close connections as promises resolve
-      if (process.env.STREAM_SERIALLY !== 'true') {
-        promise.then(() => {
-          log.info(`Closing connection to ${table.tableName}`);
-          try {
-            client.release();
-          } catch (ex) {}
-        });
-      }
-    }
-
-    // for serial streaming, close streams after await completes
-    if (process.env.STREAM_SERIALLY === 'true') {
-      await Promise.all(promises);
-      try {
-        clients.forEach((client) => client.release());
-      } catch (ex) {}
-    }
-  }
-
-  // for concurrent streaming, wait for all promises to complete prior to exiting
-  if (process.env.STREAM_SERIALLY !== 'true') await Promise.all(promises);
-}
-
-async function buildInputStream(activeSchema, pool, profile) {
-  const tableName = profile.tableName;
-
-  const selectText = profile.columns
-    .map((col) =>
-      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
-    )
-    .join(', ');
-
-  // build the db query stream
-  const query = new QueryStream(
-    `SELECT ${selectText} FROM ${activeSchema}.${tableName}`,
-    null,
-    {
-      batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
-      highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
-    },
-  );
-  const client = await pool.connect();
-  const stream = client.query(query);
-
-  return {
-    client,
-    stream,
   };
 }
 
