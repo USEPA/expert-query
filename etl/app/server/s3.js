@@ -394,6 +394,7 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
       data.Contents.forEach(async (file) => {
         // skip file if in dirsToIgnore
         if (
+          fullPathDirsToIgnore.includes(file.Key) ||
           fullPathDirsToIgnore.includes(
             file.Key.substring(0, file.Key.lastIndexOf('/')),
           )
