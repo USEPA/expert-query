@@ -188,10 +188,6 @@ jobs:
       EQ_USERNAME: ${{ secrets.EQ_USER_STAGING }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
       MV_API_KEY: ${{ secrets.MV_API_KEY }}
-      STREAM_BATCH_SIZE: 2000
-      STREAM_HIGH_WATER_MARK: 10000
-      STREAM_SERIALLY: ${{ 'false' }}
-      STREAM_SHARED: ${{ 'false' }}
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -225,10 +221,6 @@ jobs:
           cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
           cf set-env $APP_NAME "MV_API_KEY" "$MV_API_KEY" > /dev/null
-          cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
-          cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
-          cf set-env $APP_NAME "STREAM_SERIALLY" "$STREAM_SERIALLY" > /dev/null
-          cf set-env $APP_NAME "STREAM_SHARED" "$STREAM_SHARED" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
 
       - name: Configure Private AWS Credentials

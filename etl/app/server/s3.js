@@ -4,7 +4,6 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
-  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -348,83 +347,6 @@ export async function syncGlossary(s3Config, retryCount = 0) {
   }
 }
 
-// Creates a stream for streaming data to s3
-export function createS3Stream({ contentType, filePath, stream }) {
-  // setup public s3 bucket
-  setAwsConfig();
-
-  const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
-
-  return s3
-    .upload({
-      Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-      Key: filePath,
-      ACL: 'public-read',
-      ContentType: contentType,
-      Body: stream,
-    })
-    .promise();
-}
-
-// Copies files between directories on s3
-export async function copyDirectory({ contentType, source, destination }) {
-  try {
-    if (environment.isLocal) {
-      const sourcePath = resolve(
-        __dirname,
-        `../../../app/server/app/content-etl/${source}`,
-      );
-      const destPath = resolve(
-        __dirname,
-        `../../../app/server/app/content-etl/${destination}`,
-      );
-
-      // exit early if the source path doesn't exist
-      if (!existsSync(sourcePath)) return;
-
-      renameSync(sourcePath, destPath);
-    } else {
-      // setup public s3 bucket
-      setAwsConfig();
-
-      const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
-
-      // get list of files in the source directory
-      const data = await s3
-        .listObjects({
-          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-          Prefix: source,
-        })
-        .promise();
-
-      for (const file of data.Contents) {
-        // copy the file from source to destination
-        await s3
-          .copyObject({
-            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-            CopySource: `${process.env.CF_S3_PUB_BUCKET_ID}/${file.Key}`,
-            Key: file.Key.replace(source, destination),
-            ACL: 'public-read',
-            ContentType: contentType,
-          })
-          .promise();
-
-        // delete the file from the source
-        await s3
-          .deleteObject({
-            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-            Key: file.Key,
-          })
-          .promise();
-      }
-    }
-  } catch (err) {
-    log.warn(
-      `Error copying directory from "${source}" to "${destination}": ${err}`,
-    );
-  }
-}
-
 // Delete directory on S3
 export async function deleteDirectory({ directory, dirsToIgnore }) {
   try {
@@ -491,32 +413,6 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
   } catch (err) {
     log.warn(`Error deleting directory from "${directory}": ${err}`);
   }
-}
-
-export async function archiveNationalDownloads(schemaName) {
-  if (schemaName) {
-    const subFolder = schemaName.replace('schema_', '');
-    log.info(`Start copying "latest" to "${subFolder}"`);
-    await copyDirectory({
-      contentType: 'application/gzip',
-      source: 'national-downloads/latest',
-      destination: `national-downloads/${subFolder}`,
-    });
-    log.info(`Finished copying "latest" to "${subFolder}"`);
-  } else {
-    deleteDirectory({
-      directory: 'national-downloads/latest',
-      dirsToIgnore: [],
-    });
-  }
-
-  log.info('Start copying "new" to "latest"');
-  await copyDirectory({
-    contentType: 'application/gzip',
-    source: 'national-downloads/new',
-    destination: `national-downloads/latest`,
-  });
-  log.info('Finished copying "new" to "latest"');
 }
 
 export async function readS3File({ bucketInfo, path }) {
