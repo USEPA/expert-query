@@ -84,7 +84,6 @@ export function CopyBox({
                 'hover:bg-base-lightest',
               ].join(' ')}
               onClick={(_ev) => copyToClipboard()}
-              title="Copy content"
             >
               <Copy
                 aria-hidden="true"

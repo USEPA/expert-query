@@ -29,6 +29,7 @@ export type Content = {
   }>;
   parameters: {
     debounceMilliseconds: number;
+    selectOptionsPageSize: number;
   };
 };
 

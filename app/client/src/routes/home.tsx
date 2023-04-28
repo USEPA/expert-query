@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
+import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -19,7 +20,7 @@ import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
-import { NavBar } from 'components/navBar';
+import { NavButton } from 'components/navButton';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -85,7 +86,11 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <NavBar />
+        <NavButton
+          label="Glossary"
+          icon={Book}
+          styles={['js-glossary-toggle']}
+        />
         <GlossaryPanel path={getPageName()} />
         <div>
           <h2>Query ATTAINS Data</h2>
@@ -409,23 +414,11 @@ function FilterFields({
     }),
   );
 
-  // Store each row as a tuple with its row key
-  const rows: Array<[Array<[JSX.Element, string]>, string]> = [];
-  for (let i = 0; i < fieldsJsx.length; i += 3) {
-    const row = fieldsJsx.slice(i, i + 3);
-    const rowKey = row.reduce((a, b) => a + '-' + b[1], 'row');
-    rows.push([row, rowKey]);
-  }
-
   return (
-    <div>
-      {rows.map(([row, rowKey]) => (
-        <div className="grid-gap grid-row" key={rowKey}>
-          {row.map(([field, fieldKey]) => (
-            <div className="tablet:grid-col" key={fieldKey}>
-              {field}
-            </div>
-          ))}
+    <div className="grid-gap grid-row">
+      {fieldsJsx.map(([field, key]) => (
+        <div className="desktop:grid-col-4 tablet:grid-col-6" key={key}>
+          {field}
         </div>
       ))}
     </div>
@@ -582,6 +575,7 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
         max={type === 'year' ? 2100 : undefined}
         onChange={lowHandler}
         placeholder={type === 'year' ? 'yyyy' : undefined}
+        title={`Start of "${label}" range`}
         type={type === 'date' ? 'date' : 'number'}
         value={lowValue}
       />
@@ -593,6 +587,7 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
         max={type === 'year' ? 2100 : undefined}
         onChange={highHandler}
         placeholder={type === 'year' ? 'yyyy' : undefined}
+        title={`End of "${label}" range`}
         type={type === 'date' ? 'date' : 'number'}
         value={highValue}
       />
@@ -606,12 +601,12 @@ function SourceSelectFilter(
   >,
 ) {
   const { sourceLabel, sourceHandler, ...selectFilterProps } = props;
-  const { profile, sourceKey, sourceValue, staticOptions } = selectFilterProps;
+  const { sourceKey, sourceValue, staticOptions } = selectFilterProps;
 
   return (
     <SourceSelect
       label={sourceLabel}
-      sources={getOptions(profile, sourceKey, staticOptions)}
+      sources={getStaticOptions(sourceKey, staticOptions)}
       onChange={sourceHandler}
       selected={sourceValue}
     >
@@ -647,10 +642,12 @@ function SelectFilter<
       profile,
       fieldName: filterKey,
       direction: sortDirection,
+      dynamicOptionLimit: content.data?.parameters.selectOptionsPageSize,
       secondaryFieldName: secondaryFilterKey,
       staticOptions,
     });
   }, [
+    content,
     contextFilters,
     defaultOption,
     filterKey,
@@ -1145,6 +1142,7 @@ function filterDynamicOptions({
   direction = 'asc',
   fieldName,
   filters,
+  limit = 20,
   profile,
   secondaryFieldName,
   staticOptions,
@@ -1153,6 +1151,7 @@ function filterDynamicOptions({
   direction?: SortDirection;
   fieldName: string;
   filters?: FilterQueryData;
+  limit?: number;
   profile: string;
   secondaryFieldName?: string | null;
   staticOptions?: StaticOptions;
@@ -1165,7 +1164,7 @@ function filterDynamicOptions({
     const data = {
       text: inputValue,
       direction: direction ?? null,
-      limit: dynamicOptionLimit,
+      limit,
       filters,
       additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
     };
@@ -1194,6 +1193,7 @@ function filterDynamicOptions({
 // Filters options by search input, returning a maximum number of options
 function filterOptions({
   defaultOption,
+  dynamicOptionLimit,
   fieldName,
   filters = {},
   profile,
@@ -1202,6 +1202,7 @@ function filterOptions({
   secondaryFieldName,
 }: {
   defaultOption?: Option | null;
+  dynamicOptionLimit?: number;
   fieldName: string;
   filters?: FilterQueryData;
   profile: string;
@@ -1220,6 +1221,7 @@ function filterOptions({
       direction,
       fieldName,
       filters,
+      limit: dynamicOptionLimit,
       profile,
       secondaryFieldName,
       staticOptions,
@@ -1368,20 +1370,6 @@ function getMultiOptionFields(fields: typeof allFieldsConfig) {
       return field.type === 'multiselect' ? field.key : null;
     }),
   );
-}
-
-// Retrieves all possible options for a given field
-function getOptions(
-  profile: string,
-  field: string,
-  staticOptions: StaticOptions,
-) {
-  const options = getStaticOptions(field, staticOptions);
-  if (options !== null) {
-    return Promise.resolve(options);
-  } else {
-    return filterDynamicOptions({ profile, fieldName: field })('');
-  }
 }
 
 function getPageName() {
@@ -1704,7 +1692,6 @@ function storageAvailable(
 ## Constants
 */
 
-const dynamicOptionLimit = 20;
 const staticOptionLimit = 100;
 
 const {

@@ -32,7 +32,7 @@ export function InfoTooltip({
           'hover:bg-white',
         ].join(' ')}
         ref={triggerRef}
-        style={{ background: 'inherit' }}
+        style={{ background: 'inherit', cursor: 'help' }}
         type="button"
       >
         <Info

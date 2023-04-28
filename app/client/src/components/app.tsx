@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
-import '@uswds/uswds/css/uswds.css';
-import 'bootstrap/dist/css/bootstrap-grid.min.css';
 // components
 import ApiDocs from 'routes/apiDocs';
 import { Home, QueryBuilder } from 'routes/home';
 import NationalDownloads from 'routes/nationalDownloads';
 import ErrorPage from 'routes/404';
 import { MarkdownContent } from 'components/markdownContent';
+import Page from 'components/page';
 // contexts
 import { useContentState, useContentDispatch } from 'contexts/content';
 // config
@@ -99,7 +98,7 @@ function useDisclaimerBanner() {
     const siteAlert = document.querySelector('.usa-site-alert');
     if (!siteAlert) return;
 
-    const banner = document.createElement('div');
+    const banner = document.createElement('aside');
     banner.setAttribute('id', 'eq-disclaimer-banner');
     banner.setAttribute(
       'class',
@@ -130,16 +129,18 @@ export function App() {
   useSiteAlertBanner();
 
   return (
-    <BrowserRouter basename={serverBasePath}>
-      <Routes>
-        <Route index element={<Navigate to="/attains" replace />} />
-        <Route path="/api-documentation" element={<ApiDocs />} />
-        <Route path="/attains" element={<Home />}>
-          <Route path=":profile" element={<QueryBuilder />} />
-        </Route>
-        <Route path="/national-downloads" element={<NationalDownloads />} />
-        <Route path="*" element={<ErrorPage src={href} />} />
-      </Routes>
-    </BrowserRouter>
+    <Page>
+      <BrowserRouter basename={serverBasePath}>
+        <Routes>
+          <Route index element={<Navigate to="/attains" replace />} />
+          <Route path="/api-documentation" element={<ApiDocs />} />
+          <Route path="/attains" element={<Home />}>
+            <Route path=":profile" element={<QueryBuilder />} />
+          </Route>
+          <Route path="/national-downloads" element={<NationalDownloads />} />
+          <Route path="*" element={<ErrorPage src={href} />} />
+        </Routes>
+      </BrowserRouter>
+    </Page>
   );
 }

@@ -3,7 +3,6 @@ import { ReactComponent as Exit } from '@uswds/uswds/img/usa-icons/launch.svg';
 // components
 import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
-import { NavBar } from 'components/navBar';
 import { Summary } from 'components/summary';
 // config
 import { getData, profiles, serverUrl } from 'config';
@@ -40,7 +39,6 @@ export function NationalDownloads() {
 
   return (
     <>
-      <NavBar />
       <div>
         <h2>National Downloads</h2>
         <ul className="usa-list">
