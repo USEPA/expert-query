@@ -667,7 +667,7 @@ export async function trimNationalDownloads(pool) {
 
   // build a list of directories (schemas) to leave on S3
   const dirsToIgnore = schemas.rows.map((schema) => schema.s3_julian);
-  dirsToIgnore.push('latest');
+  dirsToIgnore.push('latest.json');
 
   deleteDirectory({
     directory: 'national-downloads',
