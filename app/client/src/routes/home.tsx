@@ -575,6 +575,7 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
         max={type === 'year' ? 2100 : undefined}
         onChange={lowHandler}
         placeholder={type === 'year' ? 'yyyy' : undefined}
+        title={`Start of "${label}" range`}
         type={type === 'date' ? 'date' : 'number'}
         value={lowValue}
       />
@@ -586,6 +587,7 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
         max={type === 'year' ? 2100 : undefined}
         onChange={highHandler}
         placeholder={type === 'year' ? 'yyyy' : undefined}
+        title={`End of "${label}" range`}
         type={type === 'date' ? 'date' : 'number'}
         value={highValue}
       />
