@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+// config
+import { serverUrl } from 'config';
 
 export default Page;
 
@@ -7,14 +9,39 @@ type PageProps = {
 };
 
 export function Page({ children }: PageProps) {
+  const location = window.location;
+  const baseUrl =
+    location.hostname === 'localhost'
+      ? `${location.protocol}//${location.hostname}:9090`
+      : serverUrl;
+
+  const navItems = {
+    attains: { path: '/attains', label: 'Query ATTAINS Data' },
+    nationalDownloads: {
+      path: '/national-downloads',
+      label: 'National Downloads',
+    },
+    apiDocs: { path: '/api-documentation', label: 'API Documentation' },
+  };
+
   return (
     <div className="l-page has-footer">
-      <div className="l-constrain">
+      <div className="l-constrain maxw-widescreen">
         <div className="l-page__header">
-          <div className="l-page__header-first">
-            <h1 className="web-area-title">Expert Query</h1>
+          <div className="l-page__header-first usa-logo">
+            <h1 className="web-area-title usa-logo__text">
+              <a href="/">Expert Query</a>
+            </h1>
           </div>
           <div className="l-page__header-last">
+            <a
+              className="header-link margin-right-3"
+              href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              User's Guide (PDF)
+            </a>
             <a
               className="header-link"
               href="https://www.epa.gov/expertquery/forms/contact-us-about-expert-query"
@@ -26,26 +53,27 @@ export function Page({ children }: PageProps) {
           </div>
         </div>
 
-        <div className="l-sidebar">
-          <div className="l-sidebar__sidebar margin-left-0 margin-right-5">
-            <nav aria-label="Side navigation,">
-              <ul className="usa-sidenav">
-                <li className="usa-sidenav__item">
-                  <a href="/" className="usa-current">
-                    Home
-                  </a>
-                </li>
-                <li className="usa-sidenav__item">
-                  <a href="/national-downloads">National Downloads</a>
-                </li>
-                <li className="usa-sidenav__item">
-                  <a href="/api-documentation">API Documentation</a>
-                </li>
-              </ul>
-            </nav>
-          </div>
+        <div className="l-sidebar l-sidebar--reversed">
           <div className="l-sidebar__main">
             <article className="article">{children}</article>
+          </div>
+          <div className="l-sidebar__sidebar">
+            <nav aria-label="Side navigation,">
+              <ul className="usa-sidenav">
+                {Object.entries(navItems).map(([key, item]) => (
+                  <li key={key} className="usa-sidenav__item">
+                    <a
+                      href={item.path}
+                      className={
+                        location.pathname.match(item.path) ? 'usa-current' : ''
+                      }
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </div>
       </div>

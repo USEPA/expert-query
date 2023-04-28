@@ -1,5 +1,5 @@
 import { uniqueId } from 'lodash';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ReactComponent as Filter } from '@uswds/uswds/img/usa-icons/filter_list.svg';
 // types
 import type { MutableRefObject, ReactNode } from 'react';
@@ -24,24 +24,11 @@ export function SourceSelect({
   const [sourcesVisible, setSourcesVisible] = useState(false);
   const [sourceCursor, setSourceCursor] = useState(-1);
 
-  const [allSources, setAllSources] = useState<ReadonlyArray<Option> | null>(
-    null,
-  );
-
-  useEffect(() => {
-    if (sources) {
-      sources
-        .then((s) => {
-          const allSourcesLabel = label ? `All ${label}s` : 'All';
-          setAllSources([{ label: allSourcesLabel, value: Infinity }, ...s]);
-        })
-        .catch((err) => {
-          console.error(err);
-          setAllSources(null);
-        });
-    } else {
-      setAllSources(null);
-    }
+  const allSources = useMemo(() => {
+    const allSourcesLabel = label ? `All ${label}s` : 'All';
+    return sources
+      ? [{ label: allSourcesLabel, value: Infinity }, ...sources]
+      : null;
   }, [label, sources]);
 
   useEffect(() => {
@@ -247,7 +234,7 @@ function useKeyPress(
 
 type SourceSelectProps = {
   label?: string | null;
-  sources?: Promise<ReadonlyArray<Option>> | null;
+  sources?: ReadonlyArray<Option> | null;
   children: ReactNode;
   onChange?: ((selected: Option | null) => void) | null;
   selected?: Option | null;
