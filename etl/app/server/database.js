@@ -666,7 +666,9 @@ export async function trimSchema(pool, s3Config) {
 export async function trimNationalDownloads(pool) {
   // get list of currently stored schemas
   const schemas = await pool
-    .query('SELECT s3_julian FROM logging.etl_schemas')
+    .query(
+      'SELECT s3_julian FROM logging.etl_schemas WHERE s3_julian IS NOT NULL',
+    )
     .catch((err) => {
       log.warn(`Could not query schemas: ${err}`);
     });
