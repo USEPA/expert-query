@@ -468,6 +468,7 @@ export async function runJob(s3Config, checkIfReady = true) {
   try {
     await runLoad(pool, s3Config, s3Julian);
     await trimSchema(pool, s3Config);
+    if (!environment.isLocal) await trimNationalDownloads(pool);
     await updateEtlStatus(pool, 'database', 'success');
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
@@ -665,16 +666,16 @@ export async function trimSchema(pool, s3Config) {
 export async function trimNationalDownloads(pool) {
   // get list of currently stored schemas
   const schemas = await pool
-    .query('SELECT schema_name FROM logging.etl_schemas')
+    .query(
+      'SELECT s3_julian FROM logging.etl_schemas WHERE s3_julian IS NOT NULL',
+    )
     .catch((err) => {
       log.warn(`Could not query schemas: ${err}`);
     });
   if (!schemas?.rowCount) return;
 
   // build a list of directories (schemas) to leave on S3
-  const dirsToIgnore = schemas.rows.map((schema) => {
-    return schema.schema_name.replace('schema_', '');
-  });
+  const dirsToIgnore = schemas.rows.map((schema) => schema.s3_julian);
   dirsToIgnore.push('latest');
 
   deleteDirectory({
