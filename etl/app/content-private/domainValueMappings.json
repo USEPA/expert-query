@@ -32,7 +32,7 @@
   },
   "parameterName": {
     "domainName": "ParameterName",
-    "columns": ["parameter", "parameterName", "pollutant"]
+    "columns": ["parameterName", "pollutant"]
   },
   "parameterStatus": {
     "domainName": "ParameterStatus",

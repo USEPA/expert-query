@@ -1050,7 +1050,6 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
     associatedActionAgency: values.actionAgency,
     associatedActionStatus: values.assessmentUnitStatus,
     associatedActionType: values.actionType,
-    parameter: values.parameterName,
     pollutant: values.parameterName,
   };
 }
