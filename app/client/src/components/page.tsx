@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 // config
-import { serverUrl } from 'config';
+import { serverBasePath, serverUrl } from 'config';
 
 export default Page;
 
@@ -63,7 +63,7 @@ export function Page({ children }: PageProps) {
                 {Object.entries(navItems).map(([key, item]) => (
                   <li key={key} className="usa-sidenav__item">
                     <a
-                      href={item.path}
+                      href={serverBasePath + item.path}
                       className={
                         location.pathname.match(item.path) ? 'usa-current' : ''
                       }
