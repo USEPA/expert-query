@@ -14,7 +14,8 @@
     "domainName": "StatusIndicator"
   },
   "delistedReason": {
-    "domainName": "DelistingReasonCode"
+    "domainName": "DelistingReasonCode",
+    "valueField": "name"
   },
   "locationTypeCode": {
     "domainName": "LocationTypeCode"
