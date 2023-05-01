@@ -76,6 +76,10 @@ export const tableConfig = {
           { name: 'state' },
         ],
       },
+      {
+        name: 'actions_parameter',
+        columns: [{ name: 'parameter' }],
+      },
     ],
   },
   assessments: {
