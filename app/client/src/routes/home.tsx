@@ -189,7 +189,7 @@ export function QueryBuilder() {
       {profile && (
         <Accordion>
           <AccordionItem heading="Filters" initialExpand>
-            <div className="display-flex width-full justify-content-center">
+            <div className="display-flex width-full flex-justify-center">
               <Button onClick={openClearConfirmation} color="white">
                 Clear Search
               </Button>
@@ -1050,7 +1050,6 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
     associatedActionAgency: values.actionAgency,
     associatedActionStatus: values.assessmentUnitStatus,
     associatedActionType: values.actionType,
-    parameter: values.parameterName,
     pollutant: values.parameterName,
   };
 }

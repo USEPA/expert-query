@@ -13,7 +13,6 @@ export type AliasedField =
   | 'associatedActionAgency'
   | 'associatedActionStatus'
   | 'associatedActionType'
-  | 'parameter'
   | 'pollutant';
 
 export type AliasedOptions = {

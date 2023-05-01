@@ -13,8 +13,7 @@ export default async function etlJob() {
     return;
   }
 
-  s3.syncDomainValues(s3Config);
-
   // Create and load new schema
   await database.runJob(s3Config);
+  await s3.syncDomainValues(s3Config);
 }
