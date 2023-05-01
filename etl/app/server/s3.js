@@ -193,16 +193,18 @@ function fetchSingleDomain(name, mapping, pool) {
         });
 
       // Add any column values not represented by domain values service
-      const colValues = await queryColumnValues(pool, name);
-      colValues.forEach((value) => {
-        if (valuesAdded.has(value)) return;
-        // Warn about mismatch, since value added here may not have the desired label
-        log.warn(
-          `Column value missing from "${mapping.domainName}" domain service: ${value}`,
-        );
-        valuesAdded.add(value);
-        values.push({ label: value, value });
-      });
+      for (const colAlias of mapping.columns) {
+        const colValues = await queryColumnValues(pool, colAlias);
+        colValues.forEach((value) => {
+          if (valuesAdded.has(value)) return;
+          // Warn about mismatch, since value added here may not have the desired label
+          log.warn(
+            `Column value missing from "${mapping.domainName}" domain service: ${value}`,
+          );
+          valuesAdded.add(value);
+          values.push({ label: value, value });
+        });
+      }
 
       const output = {};
       output[name] = values;

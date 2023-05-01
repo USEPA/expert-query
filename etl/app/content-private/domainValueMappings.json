@@ -1,55 +1,71 @@
 {
   "actionAgency": {
     "domainName": "AgencyCode",
+    "columns": ["actionAgency", "associatedActionAgency"],
     "valueField": "name"
   },
   "actionType": {
     "domainName": "ActionType",
+    "columns": ["actionType", "associatedActionType"],
     "labelField": "code"
   },
   "assessmentTypes": {
-    "domainName": "AssessmentTypeCode"
+    "domainName": "AssessmentTypeCode",
+    "columns": ["assessmentTypes"]
   },
   "assessmentUnitStatus": {
-    "domainName": "StatusIndicator"
+    "domainName": "StatusIndicator",
+    "columns": ["assessmentUnitStatus"]
   },
   "delistedReason": {
     "domainName": "DelistingReasonCode",
+    "columns": ["delistedReason"],
     "valueField": "name"
   },
   "locationTypeCode": {
-    "domainName": "LocationTypeCode"
+    "domainName": "LocationTypeCode",
+    "columns": ["locationTypeCode"]
   },
   "parameterGroup": {
-    "domainName": "ParameterGroupCodeType"
+    "domainName": "ParameterGroupCodeType",
+    "columns": ["parameterGroup"]
   },
   "parameterName": {
-    "domainName": "ParameterName"
+    "domainName": "ParameterName",
+    "columns": ["parameter", "parameterName", "pollutant"]
   },
   "parameterStatus": {
-    "domainName": "ParameterStatus"
+    "domainName": "ParameterStatus",
+    "columns": ["parameterStatus"]
   },
   "sourceName": {
-    "domainName": "SourceName"
+    "domainName": "SourceName",
+    "columns": ["sourceName"]
   },
   "sourceType": {
-    "domainName": "PollutantSourceType"
+    "domainName": "PollutantSourceType",
+    "columns": ["sourceType"]
   },
   "stateIrCategory": {
-    "domainName": "StateIRCategoryCode"
+    "domainName": "StateIRCategoryCode",
+    "columns": ["stateIrCategory"]
   },
   "useClassName": {
     "domainName": "UseClassType",
+    "columns": ["useClassName"],
     "valueField": "name"
   },
   "useName": {
-    "domainName": "UseName"
+    "domainName": "UseName",
+    "columns": ["useName"]
   },
   "useSupport": {
-    "domainName": "UseAttainmentCode"
+    "domainName": "UseAttainmentCode",
+    "columns": ["useSupport"]
   },
   "waterType": {
     "domainName": "WaterTypeUnitsCode",
+    "columns": ["waterType"],
     "labelField": "context",
     "valueField": "context"
   }
