@@ -164,22 +164,8 @@ function fetchSingleDomain(name, mapping, pool) {
         );
       }
 
-      // Filter out specific values from the result
-      let filteredData = res.data;
-      if ('filters' in mapping) {
-        mapping.filters.forEach(([field, filter]) => {
-          filteredData = filteredData.filter((domainValue) => {
-            if (Array.isArray(filter)) {
-              return !filter.includes(domainValue[field]);
-            } else {
-              return filter !== domainValue[field];
-            }
-          });
-        });
-      }
-
       const valuesAdded = new Set();
-      let values = filteredData
+      let values = res.data
         .map((value) => {
           return {
             label: value[mapping.labelField ?? 'name'],
