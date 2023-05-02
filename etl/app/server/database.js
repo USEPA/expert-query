@@ -7,7 +7,7 @@ import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
 import * as profiles from './profiles/index.js';
-import { deleteDirectory, readS3File } from './s3.js';
+import { deleteDirectory, readS3File, syncDomainValues } from './s3.js';
 // config
 import { tableConfig } from '../config/tableConfig.js';
 
@@ -461,6 +461,7 @@ export async function runJob(s3Config, checkIfReady = true) {
     await trimSchema(pool, s3Config);
     if (!environment.isLocal) await trimNationalDownloads(pool);
     await updateEtlStatus(pool, 'database', 'success');
+    await syncDomainValues(s3Config, pool);
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
     await updateEtlStatus(pool, 'database', 'failed');

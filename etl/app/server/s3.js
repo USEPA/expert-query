@@ -215,8 +215,8 @@ function fetchSingleDomain(name, mapping, pool) {
   };
 }
 
-export async function syncDomainValues(s3Config) {
-  const pool = startConnPool();
+export async function syncDomainValues(s3Config, pool = null) {
+  if (!pool) pool = startConnPool();
   await updateEtlStatus(pool, 'domain_values', 'running');
 
   try {
@@ -245,7 +245,7 @@ export async function syncDomainValues(s3Config) {
     log.error(`Sync Domain Values failed! ${err}`);
     await updateEtlStatus(pool, 'domain_values', 'failed');
   } finally {
-    endConnPool(pool);
+    if (!pool) endConnPool(pool);
   }
 }
 

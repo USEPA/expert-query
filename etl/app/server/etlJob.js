@@ -15,5 +15,4 @@ export default async function etlJob() {
 
   // Create and load new schema
   await database.runJob(s3Config);
-  await s3.syncDomainValues(s3Config);
 }
