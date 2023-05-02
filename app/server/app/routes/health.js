@@ -80,7 +80,7 @@ export default function (app, basePath) {
       // check that glossary was updated in the last 25 hours
       res
         .status(200)
-        .json({ status: timeSinceLastUpdate >= 24.5 ? 'FAILED-FILE' : 'UP' });
+        .json({ status: timeSinceLastUpdate >= 24.5 ? 'FAILED-TIME' : 'UP' });
     } catch (err) {
       res.status(500).send('Error!' + err);
     }
