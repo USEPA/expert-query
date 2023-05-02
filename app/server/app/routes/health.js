@@ -3,7 +3,6 @@ import express from 'express';
 import { statSync } from 'node:fs';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
 import { knex } from '../utilities/database.js';
 import { getEnvironment } from '../utilities/environment.js';

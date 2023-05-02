@@ -673,17 +673,21 @@ export default function (app, basePath) {
     // ****************************** //
 
     // create get requests
-    router.get(`/${profileName}`, cors(corsOptions), function (req, res) {
-      executeQuery(profile, req, res);
+    router.get(`/${profileName}`, cors(corsOptions), async function (req, res) {
+      await executeQuery(profile, req, res);
     });
     router.get(`/${profileName}/count`, cors(corsOptions), function (req, res) {
       executeQueryCountOnly(profile, req, res);
     });
 
     // create post requests
-    router.post(`/${profileName}`, cors(corsOptions), function (req, res) {
-      executeQuery(profile, req, res);
-    });
+    router.post(
+      `/${profileName}`,
+      cors(corsOptions),
+      async function (req, res) {
+        await executeQuery(profile, req, res);
+      },
+    );
     router.post(
       `/${profileName}/count`,
       cors(corsOptions),
@@ -705,12 +709,12 @@ export default function (app, basePath) {
       executeValuesQuery(req, res);
     });
 
-    router.get('/health/etlDatabase', function (req, res) {
-      checkDatabaseHealth(req, res);
+    router.get('/health/etlDatabase', async function (req, res) {
+      await checkDatabaseHealth(req, res);
     });
 
     router.get('/health/etlDomainValues', async function (req, res) {
-      checkDomainValuesHealth(req, res);
+      await checkDomainValuesHealth(req, res);
     });
   });
 
