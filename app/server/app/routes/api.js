@@ -81,10 +81,12 @@ export default function (app, basePath) {
 
   router.get('/openapi', (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
-    getFile(`content/swagger/attains.json`, 'utf-8')
+
+    getFile('content/swagger/attains.json', 'utf-8')
       .then((stringsOrResponses) => {
         let responseJson = parseResponse(stringsOrResponses);
 
+        // Production: Only allow production in the servers selection in swagger
         if (environment.isProduction) {
           responseJson = {
             ...responseJson,
@@ -94,8 +96,6 @@ export default function (app, basePath) {
           };
         }
 
-        // local development: return root of response
-        // Cloud.gov: return data value of response
         return res.json(responseJson);
       })
       .catch((error) => {
