@@ -539,8 +539,8 @@ async function checkDatabaseHealth(req, res) {
       .from('etl_status')
       .select('database')
       .first();
-    let results = await query;
-    if (results.database === 'failed') {
+    const statusResults = await query;
+    if (statusResults.database === 'failed') {
       res.status(200).json({ status: 'FAILED-DB' });
       return;
     }
@@ -552,15 +552,24 @@ async function checkDatabaseHealth(req, res) {
       .select('active', 'creation_date')
       .orderBy('creation_date', 'desc')
       .first();
-    results = await query;
-    if (!results.active) {
+    const schemaResults = await query;
+    if (!schemaResults.active && statusResults.database !== 'running') {
       res.status(200).json({ status: 'FAILED-SCHEMA' });
       return;
     }
 
+    query = knex
+      .withSchema('logging')
+      .from('etl_schemas')
+      .select('active', 'creation_date')
+      .where('active', true)
+      .orderBy('creation_date', 'desc')
+      .first();
+    const activeSchemaResults = await query;
+
     // verify database updated in the last week, with 1 hour buffer
     const timeSinceLastUpdate =
-      (Date.now() - results.creation_date) / (1000 * 60 * 60);
+      (Date.now() - activeSchemaResults.creation_date) / (1000 * 60 * 60);
     if (timeSinceLastUpdate >= 169) {
       res.status(200).json({ status: 'FAILED-TIME' });
       return;
@@ -574,8 +583,8 @@ async function checkDatabaseHealth(req, res) {
         .select(profile.idColumn)
         .limit(1)
         .first();
-      results = await query;
-      if (!results[profile.idColumn]) {
+      const dataResults = await query;
+      if (!dataResults[profile.idColumn]) {
         res.status(200).json({ status: 'FAILED-QUERY' });
         return;
       }
