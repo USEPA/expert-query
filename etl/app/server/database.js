@@ -238,7 +238,7 @@ export async function checkForServerCrash() {
             !log.rows[0].end_time &&
             !log.rows[0].load_error
           ) {
-            logEtlLoadError(
+            await logEtlLoadError(
               client,
               id,
               'Server crashed. Check cloud.gov logs for more info.',
@@ -455,7 +455,7 @@ export async function runJob(s3Config, checkIfReady = true) {
     }
   }
 
-  updateEtlStatus(pool, 'database', 'running');
+  await updateEtlStatus(pool, 'database', 'running');
   try {
     await runLoad(pool, s3Config, s3Julian);
     await trimSchema(pool, s3Config);
@@ -670,7 +670,7 @@ export async function trimNationalDownloads(pool) {
   const dirsToIgnore = schemas.rows.map((schema) => schema.s3_julian);
   dirsToIgnore.push('latest.json');
 
-  deleteDirectory({
+  await deleteDirectory({
     directory: 'national-downloads',
     dirsToIgnore,
   });

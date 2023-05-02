@@ -245,7 +245,7 @@ export async function syncDomainValues(s3Config, poolParam = null) {
     log.error(`Sync Domain Values failed! ${err}`);
     await updateEtlStatus(pool, 'domain_values', 'failed');
   } finally {
-    if (!poolParam) endConnPool(pool);
+    if (!poolParam) await endConnPool(pool);
   }
 }
 
@@ -360,7 +360,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
       await updateEtlStatus(pool, 'glossary', 'failed');
     }
   } finally {
-    endConnPool(pool);
+    await endConnPool(pool);
   }
 }
 
