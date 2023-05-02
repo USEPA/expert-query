@@ -661,7 +661,7 @@ async function checkDomainValuesHealth(req, res) {
     // check that domain values was updated in the last week and 1 hour
     res
       .status(200)
-      .json({ status: timeSinceLastUpdate >= 169 ? 'FAILED-FILE' : 'UP' });
+      .json({ status: timeSinceLastUpdate >= 169 ? 'FAILED-TIME' : 'UP' });
   } catch (err) {
     res.status(500).send('Error!' + err);
   }
