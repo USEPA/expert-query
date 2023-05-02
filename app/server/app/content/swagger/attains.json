@@ -118,7 +118,7 @@
       "post": {
         "tags": ["Actions"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/ActionsRequestBody" },
         "responses": {
@@ -195,7 +195,7 @@
           { "$ref": "#/components/parameters/useStateIrCategoryParam" },
           { "$ref": "#/components/parameters/useSupportParam" },
           { "$ref": "#/components/parameters/vision303dPriorityParam" },
-          { "$ref": "#/components/parameters/waterTypeParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/AssessmentsQuerySuccess" },
@@ -206,7 +206,7 @@
       "post": {
         "tags": ["Assessments"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/AssessmentsRequestBody" },
         "responses": {
@@ -282,7 +282,7 @@
           { "$ref": "#/components/parameters/useStateIrCategoryParam" },
           { "$ref": "#/components/parameters/useSupportParam" },
           { "$ref": "#/components/parameters/vision303dPriorityParam" },
-          { "$ref": "#/components/parameters/waterTypeParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/QueryCountSuccess" },
@@ -293,7 +293,7 @@
       "post": {
         "tags": ["Assessments"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/QueryCountSuccess" },
         "responses": {
@@ -326,7 +326,7 @@
           { "$ref": "#/components/parameters/reportingCycleHiParam" },
           { "$ref": "#/components/parameters/stateParam" },
           { "$ref": "#/components/parameters/useClassNameParam" },
-          { "$ref": "#/components/parameters/waterTypeParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/AssessmentUnitsQuerySuccess" },
@@ -337,7 +337,7 @@
       "post": {
         "tags": ["Assessment Units"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/AssessmentUnitsRequestBody" },
         "responses": {
@@ -369,7 +369,7 @@
           { "$ref": "#/components/parameters/reportingCycleHiParam" },
           { "$ref": "#/components/parameters/stateParam" },
           { "$ref": "#/components/parameters/useClassNameParam" },
-          { "$ref": "#/components/parameters/waterTypeParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/QueryCountSuccess" },
@@ -380,7 +380,7 @@
       "post": {
         "tags": ["Assessment Units"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/AssessmentUnitsRequestBody" },
         "responses": {
@@ -413,7 +413,7 @@
           { "$ref": "#/components/parameters/reportingCycleHiParam" },
           { "$ref": "#/components/parameters/stateParam" },
           { "$ref": "#/components/parameters/useClassNameParam" },
-          { "$ref": "#/components/parameters/waterTypeParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/AssessmentUnitsMonitoringLocationsQuerySuccess" },
@@ -424,7 +424,7 @@
       "post": {
         "tags": ["Assessment Units with Monitoring Locations"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/AssessmentUnitsMonitoringLocationsRequestBody" },
         "responses": {
@@ -456,7 +456,7 @@
           { "$ref": "#/components/parameters/reportingCycleHiParam" },
           { "$ref": "#/components/parameters/stateParam" },
           { "$ref": "#/components/parameters/useClassNameParam" },
-          { "$ref": "#/components/parameters/waterTypeParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/QueryCountSuccess" },
@@ -467,7 +467,7 @@
       "post": {
         "tags": ["Assessment Units with Monitoring Locations"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/AssessmentUnitsMonitoringLocationsRequestBody" },
         "responses": {
@@ -496,7 +496,7 @@
           { "$ref": "#/components/parameters/regionParam" },
           { "$ref": "#/components/parameters/reportingCycleLoParam" },
           { "$ref": "#/components/parameters/reportingCycleHiParam" },
-          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/stateParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/CatchmentCorrespondenceQuerySuccess" },
@@ -507,7 +507,7 @@
       "post": {
         "tags": ["Catchment Correspondence"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/CatchmentCorrespondenceRequestBody" },
         "responses": {
@@ -535,7 +535,7 @@
           { "$ref": "#/components/parameters/regionParam" },
           { "$ref": "#/components/parameters/reportingCycleLoParam" },
           { "$ref": "#/components/parameters/reportingCycleHiParam" },
-          { "$ref": "#/components/parameters/stateParam" },
+          { "$ref": "#/components/parameters/stateParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/QueryCountSuccess" },
@@ -546,7 +546,7 @@
       "post": {
         "tags": ["Catchment Correspondence"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/CatchmentCorrespondenceRequestBody" },
         "responses": {
@@ -582,7 +582,7 @@
           { "$ref": "#/components/parameters/sourceNameParam" },
           { "$ref": "#/components/parameters/stateParam" },
           { "$ref": "#/components/parameters/stateIrCategoryParam" },
-          { "$ref": "#/components/parameters/waterTypeParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/SourcesQuerySuccess" },
@@ -593,7 +593,7 @@
       "post": {
         "tags": ["Sources"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/SourcesRequestBody" },
         "responses": {
@@ -628,7 +628,7 @@
           { "$ref": "#/components/parameters/sourceNameParam" },
           { "$ref": "#/components/parameters/stateParam" },
           { "$ref": "#/components/parameters/stateIrCategoryParam" },
-          { "$ref": "#/components/parameters/waterTypeParam" },
+          { "$ref": "#/components/parameters/waterTypeParam" }
         ],
         "responses": {
           "200": { "$ref": "#/components/responses/QueryCountSuccess" },
@@ -639,7 +639,7 @@
       "post": {
         "tags": ["Sources"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/SourcesRequestBody" },
         "responses": {
@@ -694,7 +694,7 @@
       "post": {
         "tags": ["TMDL"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/TmdlRequestBody" },
         "responses": {
@@ -748,7 +748,7 @@
       "post": {
         "tags": ["TMDL"],
         "parameters": [
-          { "$ref": "#/components/parameters/apiKeyHeader" },
+          { "$ref": "#/components/parameters/apiKeyHeader" }
         ],
         "requestBody": { "$ref": "#/components/requestBodies/TmdlRequestBody" },
         "responses": {
@@ -757,7 +757,7 @@
           "500": { "$ref": "#/components/responses/ServerError" }
         }
       }
-    },
+    }
   },
   "externalDocs": {
     "description": "Find out more about the ATTAINS program",
@@ -1275,7 +1275,7 @@
                 },
                 "state": {
                   "$ref": "#/components/schemas/State"
-                },
+                }
               }
             }
           }
@@ -1328,7 +1328,7 @@
       },
       "FileAttachmentCsv": {
         "type": "string",
-        "description": "Query output returned as a CSV (Comma-Separated Value) file attachment",
+        "description": "Query output returned as a CSV (Comma-Separated Value) file attachment"
       },
       "FileAttachmentTsv": {
         "type": "string",
@@ -1402,7 +1402,7 @@
       "OutputFormat": {
         "type": "string",
         "description": "This field is ignored in queries sent to '/count' endpoints",
-        "enum": ["json", "csv", "tsv", "xlsx"],
+        "enum": ["json", "csv", "tsv", "xlsx"]
       },
       "OtherIdentifier": {
         "type": "string",
@@ -2494,7 +2494,7 @@
           "items": { "$ref": "#/components/schemas/WaterType" }
         }
       },
-      {
+      "X-Api-Key": {
         "name": "X-Api-Key",
         "in": "header",
         "description": "API key used to access EPA web service resources. The below default value key is used for testing purposes only. Web service consumers should <a target=\"_blank\" href=\"..\\api_key_signup.html\">obtain their own API key</a>",
@@ -3048,7 +3048,7 @@
                     "state": {
                       "type": "array",
                       "items": { "$ref": "#/components/schemas/State" }
-                    },
+                    }
                   }
                 }
               }
@@ -3303,7 +3303,7 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          },
+          }
         }
       },
       "AssessmentsQuerySuccess": {
@@ -3340,7 +3340,7 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          },
+          }
         }
       },
       "AssessmentUnitsQuerySuccess": {
@@ -3377,7 +3377,7 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          },
+          }
         }
       },
       "AssessmentUnitsMonitoringLocationsQuerySuccess": {
@@ -3414,7 +3414,7 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          },
+          }
         }
       },
       "CatchmentCorrespondenceQuerySuccess": {
@@ -3451,7 +3451,7 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          },
+          }
         }
       },
       "InvalidRequestError": {
@@ -3550,7 +3550,7 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          },
+          }
         }
       },
       "TmdlQuerySuccess": {
@@ -3587,9 +3587,9 @@
                 { "$ref": "#/components/schemas/QuerySizeExceededMessage" }
               ]
             }
-          },
+          }
         }
-      },
+      }
     }
   }
 }
