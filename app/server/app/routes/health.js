@@ -14,9 +14,6 @@ function setAwsConfig({
   secretAccessKey = process.env.CF_S3_PUB_SECRET_KEY,
   region = process.env.CF_S3_PUB_REGION,
 } = {}) {
-  console.log('accessKeyId: ', accessKeyId);
-  console.log('secretAccessKey: ', secretAccessKey);
-  console.log('region: ', region);
   const config = new AWS.Config({
     accessKeyId,
     secretAccessKey,
