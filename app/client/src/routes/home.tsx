@@ -1080,7 +1080,7 @@ async function checkColumnValue(
   fieldName: string,
   profile: string,
 ) {
-  const url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
+  const url = `${serverUrl}/api/attains/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
   const res = await getData<Primitive[]>(url);
   if (res.length) return true;
   return false;
@@ -1159,7 +1159,7 @@ function filterDynamicOptions({
     inputValue: string,
     signal?: AbortSignal,
   ): Promise<Array<Option>> {
-    const url = `${serverUrl}/api/${profile}/values/${fieldName}`;
+    const url = `${serverUrl}/api/attains/${profile}/values/${fieldName}`;
     const data = {
       text: inputValue,
       direction: direction ?? null,
