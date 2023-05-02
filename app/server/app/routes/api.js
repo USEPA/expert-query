@@ -1,4 +1,5 @@
 import axios from 'axios';
+import cors from 'cors';
 import express from 'express';
 import { readFile, stat } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
@@ -79,7 +80,14 @@ export default function (app, basePath) {
 
   router.use(getActiveSchema);
 
-  router.get('/openapi', (req, res) => {
+  // ****************************** //
+  // Public / CORS Enabled          //
+  // ****************************** //
+  const corsOptions = {
+    methods: 'GET,HEAD,POST',
+  };
+
+  router.get('/openapi', cors(corsOptions), (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
     getFile('content/swagger/attains.json', 'utf-8')
@@ -114,6 +122,10 @@ export default function (app, basePath) {
           .json({ message: 'Error getting static content from S3 bucket' });
       });
   });
+
+  // ****************************** //
+  // Private / NOT CORS Enabled     //
+  // ****************************** //
 
   // --- get static content from S3
   router.get('/lookupFiles', (req, res) => {
