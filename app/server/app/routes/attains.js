@@ -704,7 +704,6 @@ export default function (app, basePath) {
     router.get('/:profile/values/:column', function (req, res) {
       executeValuesQuery(req, res);
     });
-
     router.post('/:profile/values/:column', function (req, res) {
       executeValuesQuery(req, res);
     });

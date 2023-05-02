@@ -3,19 +3,19 @@
   "servers": [
     {
       "description": "Production",
-      "url": "https://owapps.app.cloud.gov/expertquery/attains"
+      "url": "https://owapps.app.cloud.gov/expertquery/api/attains"
     },
     {
       "description": "Staging",
-      "url": "https://owapps-stage.app.cloud.gov/expertquery/attains"
+      "url": "https://owapps-stage.app.cloud.gov/expertquery/api/attains"
     },
     {
       "description": "Development",
-      "url": "https://owapps-dev.app.cloud.gov/expertquery/attains"
+      "url": "https://owapps-dev.app.cloud.gov/expertquery/api/attains"
     },
     {
       "description": "Developer",
-      "url": " http://localhost:{port}/attains",
+      "url": " http://localhost:{port}/api/attains",
       "variables": {
         "port": {
           "default": 9090
@@ -37,7 +37,7 @@
     }
   },
   "paths": {
-    "/data/actions": {
+    "/actions": {
       "summary": "Query Actions profile data",
       "get": {
         "tags": ["Actions"],
@@ -83,7 +83,7 @@
         }
       }
     },
-    "/data/actions/count": {
+    "/actions/count": {
       "summary": "Evaluate the row count for the provided query against the Actions profile",
       "get": {
         "tags": ["Actions"],
@@ -128,7 +128,7 @@
         }
       }
     },
-    "/data/assessments": {
+    "/assessments": {
       "summary": "Query Assessments profile data",
       "get": {
         "tags": ["Assessments"],
@@ -216,7 +216,7 @@
         }
       }
     },
-    "/data/assessments/count": {
+    "/assessments/count": {
       "summary": "Evaluate the row count for the provided query against the Assessments profile",
       "get": {
         "tags": ["Assessments"],
@@ -303,7 +303,7 @@
         }
       }
     },
-    "/data/assessmentUnits": {
+    "/assessmentUnits": {
       "summary": "Query Assessment Units profile data",
       "get": {
         "tags": ["Assessment Units"],
@@ -347,7 +347,7 @@
         }
       }
     },
-    "/data/assessmentUnits/count": {
+    "/assessmentUnits/count": {
       "summary": "Evaluate the row count for the provided query against the Assessment Units profile",
       "get": {
         "tags": ["Assessment Units"],
@@ -390,7 +390,7 @@
         }
       }
     },
-    "/data/assessmentUnitsMonitoringLocations": {
+    "/assessmentUnitsMonitoringLocations": {
       "summary": "Query Assessment Units with Monitoring Locations profile data",
       "get": {
         "tags": ["Assessment Units with Monitoring Locations"],
@@ -434,7 +434,7 @@
         }
       }
     },
-    "/data/assessmentUnitsMonitoringLocations/count": {
+    "/assessmentUnitsMonitoringLocations/count": {
       "summary": "Evaluate the row count for the provided query against the Assessment Units with Monitoring Locations profile",
       "get": {
         "tags": ["Assessment Units with Monitoring Locations"],
@@ -477,7 +477,7 @@
         }
       }
     },
-    "/data/catchmentCorrespondence": {
+    "/catchmentCorrespondence": {
       "summary": "Query Catchment Correspondence profile data",
       "get": {
         "tags": ["Catchment Correspondence"],
@@ -517,7 +517,7 @@
         }
       }
     },
-    "/data/catchmentCorrespondence/count": {
+    "/catchmentCorrespondence/count": {
       "summary": "Evaluate the row count for the provided query against the Catchment Correspondence profile",
       "get": {
         "tags": ["Catchment Correspondence"],
@@ -556,7 +556,7 @@
         }
       }
     },
-    "/data/sources": {
+    "/sources": {
       "summary": "Query Sources profile data",
       "get": {
         "tags": ["Sources"],
@@ -603,7 +603,7 @@
         }
       }
     },
-    "/data/sources/count": {
+    "/sources/count": {
       "summary": "Evaluate the row count for the provided query against the Sources profile",
       "get": {
         "tags": ["Sources"],
@@ -649,7 +649,7 @@
         }
       }
     },
-    "/data/tmdl": {
+    "/tmdl": {
       "summary": "Query TMDL profile data",
       "get": {
         "tags": ["TMDL"],
@@ -704,7 +704,7 @@
         }
       }
     },
-    "/data/tmdl/count": {
+    "/tmdl/count": {
       "summary": "Evaluate the row count for the provided query against the TMDL profile",
       "get": {
         "tags": ["TMDL"],
