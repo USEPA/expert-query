@@ -408,5 +408,5 @@ export default function (app, basePath) {
     );
   });
 
-  app.use(`${basePath}attains/data`, router);
+  app.use(`${basePath}api/attains`, router);
 }

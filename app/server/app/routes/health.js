@@ -218,5 +218,5 @@ export default function (app, basePath) {
     }
   });
 
-  app.use(`${basePath}health`, router);
+  app.use(`${basePath}api/health`, router);
 }
