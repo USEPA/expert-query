@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
 import { appendToWhere, knex } from '../utilities/database.js';
+import { getEnvironment } from '../utilities/environment.js';
 import { log } from '../utilities/logger.js';
 import StreamingService from '../utilities/streamingService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -17,15 +18,7 @@ const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE);
 const minDateTime = new Date(-8640000000000000);
 const maxDateTime = new Date(8640000000000000);
 
-let isLocal = false;
-let isDevelopment = false;
-let isStaging = false;
-
-if (process.env.NODE_ENV) {
-  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
-  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
-}
+const environment = getEnvironment();
 
 class DuplicateParameterException extends Error {
   constructor(parameter) {
@@ -618,7 +611,7 @@ async function checkDomainValuesHealth(req, res) {
     let timeSinceLastUpdate = minDateTime;
 
     // verify file update date is within the last week
-    if (isLocal) {
+    if (environment.isLocal) {
       const path = resolve(__dirname, `../content-etl/domainValues`);
 
       // get hours since file last modified

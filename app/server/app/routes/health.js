@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
 import { knex } from '../utilities/database.js';
+import { getEnvironment } from '../utilities/environment.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)
@@ -22,15 +23,7 @@ function setAwsConfig({
   AWS.config.update(config);
 }
 
-let isLocal = false;
-let isDevelopment = false;
-let isStaging = false;
-
-if (process.env.NODE_ENV) {
-  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
-  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
-}
+const environment = getEnvironment();
 
 const minDateTime = new Date(-8640000000000000);
 
@@ -61,7 +54,7 @@ export default function (app, basePath) {
       let timeSinceLastUpdate = minDateTime;
 
       // verify file update date is within the last 24 hours
-      if (isLocal) {
+      if (environment.isLocal) {
         const path = resolve(__dirname, `../content-etl/glossary.json`);
 
         // get hours since file last modified

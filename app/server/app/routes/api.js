@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
 import { knex } from '../utilities/database.js';
+import { getEnvironment } from '../utilities/environment.js';
 import {
   formatLogMsg,
   log,
@@ -13,13 +14,14 @@ import {
 } from '../utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const isLocal = process.env.NODE_ENV === 'local';
+const environment = getEnvironment();
+
 const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
 const s3Region = process.env.CF_S3_PUB_REGION;
 const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
 function logError(error, metadataObj) {
-  if (isLocal) {
+  if (environment.isLocal) {
     log.error(error);
     return;
   }
@@ -37,18 +39,19 @@ function logError(error, metadataObj) {
 
 // local development: read files directly from disk
 // Cloud.gov: fetch files from the public s3 bucket
-async function getFile(filename) {
-  return isLocal
-    ? readFile(resolve(__dirname, '../', filename), 'utf8')
+async function getFile(filename, encoding) {
+  return environment.isLocal
+    ? readFile(resolve(__dirname, '../', filename), encoding)
     : axios({
         method: 'get',
         url: `${s3BucketUrl}/${filename}`,
         timeout: 10000,
+        responseType: 'arraybuffer',
       });
 }
 
 async function getFileSize(filename) {
-  return isLocal
+  return environment.isLocal
     ? stat(resolve(__dirname, '../', filename), 'utf8').then(
         (stats) => stats.size,
       )
@@ -63,9 +66,11 @@ async function getFileSize(filename) {
 // Cloud.gov: get data from responses
 function parseResponse(res) {
   if (Array.isArray(res)) {
-    return isLocal ? res.map((r) => JSON.parse(r)) : res.map((r) => r.data);
+    return environment.isLocal
+      ? res.map((r) => JSON.parse(r))
+      : res.map((r) => r.data);
   } else {
-    return isLocal ? JSON.parse(res) : res.data;
+    return environment.isLocal ? JSON.parse(res) : res.data;
   }
 }
 
@@ -73,6 +78,42 @@ export default function (app, basePath) {
   const router = express.Router();
 
   router.use(getActiveSchema);
+
+  router.get('/openapi', (req, res) => {
+    const metadataObj = populateMetdataObjFromRequest(req);
+    getFile(`content/swagger/attains.json`, 'utf-8')
+      .then((stringsOrResponses) => {
+        let responseJson = parseResponse(stringsOrResponses);
+
+        if (environment.isProduction) {
+          responseJson = {
+            ...responseJson,
+            servers: responseJson.servers.filter(
+              (s) => s.description === 'Production',
+            ),
+          };
+        }
+
+        // local development: return root of response
+        // Cloud.gov: return data value of response
+        return res.json(responseJson);
+      })
+      .catch((error) => {
+        if (typeof error.toJSON === 'function') {
+          log.debug(formatLogMsg(metadataObj, error.toJSON()));
+        }
+
+        const errorStatus = error.response?.status;
+        const errorMethod = error.response?.config?.method?.toUpperCase();
+        const errorUrl = error.response?.config?.url;
+        const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
+        log.error(formatLogMsg(metadataObj, message));
+
+        return res
+          .status(error?.response?.status || 500)
+          .json({ message: 'Error getting static content from S3 bucket' });
+      });
+  });
 
   // --- get static content from S3
   router.get('/lookupFiles', (req, res) => {
@@ -107,22 +148,24 @@ export default function (app, basePath) {
 
     const directoryPromises = Promise.all(
       directories.map((directory) => {
-        return getFile(`${directory}/index.json`).then((stringOrResponse) => {
-          const dirFiles = parseResponse(stringOrResponse);
-          return Promise.all(
-            dirFiles.map((dirFile) => {
-              return getFile(`${directory}/${dirFile}`);
-            }),
-          )
-            .then((stringsOrResponses) => {
-              return parseResponse(stringsOrResponses);
-            })
-            .then((data) => {
-              return data.reduce((a, b) => {
-                return Object.assign(a, b);
-              }, {});
-            });
-        });
+        return getFile(`${directory}/index.json`, 'utf-8').then(
+          (stringOrResponse) => {
+            const dirFiles = parseResponse(stringOrResponse);
+            return Promise.all(
+              dirFiles.map((dirFile) => {
+                return getFile(`${directory}/${dirFile}`, 'utf-8');
+              }),
+            )
+              .then((stringsOrResponses) => {
+                return parseResponse(stringsOrResponses);
+              })
+              .then((data) => {
+                return data.reduce((a, b) => {
+                  return Object.assign(a, b);
+                }, {});
+              });
+          },
+        );
       }),
     ).then((data) => {
       return {
@@ -145,23 +188,9 @@ export default function (app, basePath) {
   router.get('/getFile/:path*', (req, res) => {
     // get the filepath from the url and trim the leading forward slash
     const filepath = req.params[0].slice(1);
-    const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
-    const s3Region = process.env.CF_S3_PUB_REGION;
     const metadataObj = populateMetdataObjFromRequest(req);
 
-    const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
-
-    // local development: read files directly from disk
-    // Cloud.gov: fetch files from the public s3 bucket
-    (isLocal
-      ? readFile(resolve(__dirname, '../content', filepath))
-      : axios({
-          method: 'get',
-          url: `${s3BucketUrl}/content/${filepath}`,
-          timeout: 10000,
-          responseType: 'arraybuffer',
-        })
-    )
+    getFile(`content/${filepath}`)
       .then((stringsOrResponses) => {
         // set the headers for the file
         const filename = filepath.split('/').pop();
@@ -173,7 +202,9 @@ export default function (app, basePath) {
 
         // local development: return root of response
         // Cloud.gov: return data value of response
-        return res.send(isLocal ? stringsOrResponses : stringsOrResponses.data);
+        return res.send(
+          environment.isLocal ? stringsOrResponses : stringsOrResponses.data,
+        );
       })
       .catch((error) => {
         if (typeof error.toJSON === 'function') {
@@ -198,7 +229,7 @@ export default function (app, basePath) {
     const baseDir = 'national-downloads';
 
     const [latestRes, profileStats] = await Promise.all([
-      getFile(`${baseDir}/latest.json`).catch((err) => {
+      getFile(`${baseDir}/latest.json`, 'utf-8').catch((err) => {
         logError(err, metadataObj);
       }),
 
