@@ -73,6 +73,10 @@ export function Home() {
 
   const eqDataUrl = content.data.services?.eqDataApi || `${serverUrl}/attains`;
 
+  const profileRefreshDate = profile
+    ? content.data.metadata?.[profile]?.timestamp
+    : null;
+
   if (content.status === 'pending') return <Loading />;
 
   if (content.status === 'failure') {
@@ -110,21 +114,33 @@ export function Home() {
               />
 
               {profile && (
-                <Outlet
-                  context={{
-                    filterHandlers,
-                    filterState,
-                    format,
-                    formatHandler,
-                    profile,
-                    queryParams,
-                    queryUrl: eqDataUrl,
-                    resetFilters,
-                    sourceHandlers,
-                    sourceState,
-                    staticOptions,
-                  }}
-                />
+                <>
+                  {profileRefreshDate && (
+                    <p className="text-bold">
+                      {profiles[profile].label} profile data last refreshed on{' '}
+                      <em>
+                        {new Date(profileRefreshDate).toLocaleDateString()}
+                      </em>
+                      .
+                    </p>
+                  )}
+
+                  <Outlet
+                    context={{
+                      filterHandlers,
+                      filterState,
+                      format,
+                      formatHandler,
+                      profile,
+                      queryParams,
+                      queryUrl: eqDataUrl,
+                      resetFilters,
+                      sourceHandlers,
+                      sourceState,
+                      staticOptions,
+                    }}
+                  />
+                </>
               )}
             </>
           )}

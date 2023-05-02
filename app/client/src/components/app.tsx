@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
+import '@uswds/uswds/css/uswds.css';
 // components
 import ApiDocs from 'routes/apiDocs';
 import { Home, QueryBuilder } from 'routes/home';
@@ -129,8 +130,8 @@ export function App() {
   useSiteAlertBanner();
 
   return (
-    <Page>
-      <BrowserRouter basename={serverBasePath}>
+    <BrowserRouter basename={serverBasePath}>
+      <Page>
         <Routes>
           <Route index element={<Navigate to="/attains" replace />} />
           <Route path="/api-documentation" element={<ApiDocs />} />
@@ -140,7 +141,7 @@ export function App() {
           <Route path="/national-downloads" element={<NationalDownloads />} />
           <Route path="*" element={<ErrorPage src={href} />} />
         </Routes>
-      </BrowserRouter>
-    </Page>
+      </Page>
+    </BrowserRouter>
   );
 }

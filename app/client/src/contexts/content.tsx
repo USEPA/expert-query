@@ -6,6 +6,7 @@ import {
   useReducer,
 } from 'react';
 import type { DomainOptions } from 'types';
+import type { Profile } from '../config/profiles';
 
 type Props = {
   children: ReactNode;
@@ -26,6 +27,14 @@ export type Content = {
     term: string;
     definition: string;
     definitionHtml: string;
+  }>;
+  metadata: Partial<{
+    [P in Profile]: {
+      url: string;
+      size: number;
+      numRows: number;
+      timestamp: string;
+    };
   }>;
   parameters: {
     debounceMilliseconds: number;

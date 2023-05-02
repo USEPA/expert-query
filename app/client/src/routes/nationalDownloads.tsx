@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
 import { ReactComponent as Exit } from '@uswds/uswds/img/usa-icons/launch.svg';
 // components
 import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
 import { Summary } from 'components/summary';
 // config
-import { getData, profiles, serverUrl } from 'config';
-// utils
-import { isAbort, useAbort } from 'utils';
+import { profiles } from 'config';
+// contexts
+import { useContentState } from 'contexts/content';
 // types
 import type { Profile } from 'config/profiles';
+import { Content } from 'contexts/content';
 import type { FetchState } from 'types';
 
 /*
@@ -19,23 +19,7 @@ import type { FetchState } from 'types';
 export default NationalDownloads;
 
 export function NationalDownloads() {
-  const { getSignal } = useAbort();
-
-  const [metadata, setMetadata] = useState<FetchState<Metadata>>({
-    status: 'idle',
-    data: null,
-  });
-
-  useEffect(() => {
-    setMetadata({ status: 'pending', data: null });
-    getData<Metadata>(`${serverUrl}/api/nationalDownloads`, getSignal())
-      .then((data) => setMetadata({ status: 'success', data }))
-      .catch((err) => {
-        if (isAbort(err)) return;
-        console.error(err);
-        setMetadata({ status: 'failure', data: null });
-      });
-  }, [getSignal]);
+  const { content } = useContentState();
 
   return (
     <>
@@ -54,26 +38,23 @@ export function NationalDownloads() {
             state-submitted data.
           </p>
         </Summary>
-        <section className="margin-top-6" id="attains">
-          <h3 className="text-primary">ATTAINS Data</h3>
-          <AttainsData metadata={metadata} />
-        </section>
+        <NationalDownloadsData content={content} />
       </div>
     </>
   );
 }
 
-type AttainsDataProps = {
-  metadata: FetchState<Metadata>;
+type NationalDownloadsDataProps = {
+  content: FetchState<Content>;
 };
 
-function AttainsData({ metadata }: AttainsDataProps) {
-  const status = metadata.status;
+function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
+  const status = content.status;
 
   if (status === 'failure')
     return (
       <Alert type="error">
-        There was an error retrieving ATTAINS national data, please try again
+        There was an error retrieving national downloads data, please try again
         later.
       </Alert>
     );
@@ -82,43 +63,46 @@ function AttainsData({ metadata }: AttainsDataProps) {
 
   if (status === 'success')
     return (
-      <table className="margin-x-auto usa-table usa-table--stacked width-full">
-        <thead>
-          <tr>
-            <th scope="col">Download link</th>
-            <th scope="col">Time last refreshed</th>
-            <th scope="col">Number of rows</th>
-            <th scope="col">File size</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(metadata.data)
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .map(([profile, fileInfo]) => (
-              <tr key={profile}>
-                <th scope="row" data-label="Download link">
-                  <a href={fileInfo.url}>
-                    {profiles[profile as Profile].label} Profile Data
-                    <Exit
-                      aria-hidden="true"
-                      className="height-2 margin-left-05 text-primary top-05 usa-icon width-2"
-                      focusable="false"
-                      role="img"
-                      title="Exit EPA's Website"
-                    />
-                  </a>
-                </th>
-                <td data-label="Time last refreshed">
-                  {formatDate(fileInfo.timestamp)}
-                </td>
-                <td data-label="Number of rows">
-                  {fileInfo.numRows.toLocaleString()}
-                </td>
-                <td data-label="File size">{formatBytes(fileInfo.size)}</td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      <section className="margin-top-6" id="attains">
+        <h3 className="text-primary">ATTAINS Data</h3>
+        <table className="margin-x-auto usa-table usa-table--stacked width-full">
+          <thead>
+            <tr>
+              <th scope="col">Download link</th>
+              <th scope="col">Time last refreshed</th>
+              <th scope="col">Number of rows</th>
+              <th scope="col">File size</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(content.data.metadata)
+              .sort((a, b) => a[0].localeCompare(b[0]))
+              .map(([profile, fileInfo]) => (
+                <tr key={profile}>
+                  <th scope="row" data-label="Download link">
+                    <a href={fileInfo.url}>
+                      {profiles[profile as Profile].label} Profile Data
+                      <Exit
+                        aria-hidden="true"
+                        className="height-2 margin-left-05 text-primary top-05 usa-icon width-2"
+                        focusable="false"
+                        role="img"
+                        title="Exit EPA's Website"
+                      />
+                    </a>
+                  </th>
+                  <td data-label="Time last refreshed">
+                    {formatDate(fileInfo.timestamp)}
+                  </td>
+                  <td data-label="Number of rows">
+                    {fileInfo.numRows.toLocaleString()}
+                  </td>
+                  <td data-label="File size">{formatBytes(fileInfo.size)}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </section>
     );
 
   return null;
@@ -152,16 +136,3 @@ function formatDate(isoTimestamp: string) {
     </div>
   );
 }
-
-/*
-## Types
-*/
-
-type Metadata = Partial<{
-  [P in Profile]: {
-    url: string;
-    size: number;
-    numRows: number;
-    timestamp: string;
-  };
-}>;
