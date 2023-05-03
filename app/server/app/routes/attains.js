@@ -1,3 +1,4 @@
+import AWS from 'aws-sdk';
 import cors from 'cors';
 import express from 'express';
 import Excel from 'exceljs';
