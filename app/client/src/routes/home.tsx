@@ -71,7 +71,7 @@ export function Home() {
     initializeFilters,
   });
 
-  const eqDataUrl = content.data.services?.eqDataApi || `${serverUrl}/attains`;
+  const eqDataUrl = content.data.services?.eqDataApi || `${serverUrl}/api/attains`;
 
   const profileRefreshDate = profile
     ? content.data.metadata?.[profile]?.timestamp
@@ -191,7 +191,7 @@ export function QueryBuilder() {
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
           queryUrl={
-            profile ? `${queryUrl}/data/${profiles[profile].resource}` : null
+            profile ? `${queryUrl}/${profiles[profile].resource}` : null
           }
           setDownloadStatus={setDownloadStatus}
         />
@@ -266,7 +266,7 @@ export function QueryBuilder() {
               testId="api-query-copy-box-container"
               lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
               maxLength={2048}
-              text={`${queryUrl}/data/${
+              text={`${queryUrl}/${
                 profiles[profile].resource
               }?${buildUrlQueryString(
                 queryParams.filters,
@@ -279,7 +279,7 @@ export function QueryBuilder() {
               testId="curl-copy-box-container"
               text={`curl -X POST --json "${JSON.stringify(
                 queryParams,
-              ).replaceAll('"', '\\"')}" ${queryUrl}/data/${
+              ).replaceAll('"', '\\"')}" ${queryUrl}/${
                 profiles[profile].resource
               }`}
             />
@@ -1096,7 +1096,7 @@ async function checkColumnValue(
   fieldName: string,
   profile: string,
 ) {
-  const url = `${serverUrl}/api/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
+  const url = `${serverUrl}/api/attains/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
   const res = await getData<Primitive[]>(url);
   if (res.length) return true;
   return false;
@@ -1175,7 +1175,7 @@ function filterDynamicOptions({
     inputValue: string,
     signal?: AbortSignal,
   ): Promise<Array<Option>> {
-    const url = `${serverUrl}/api/${profile}/values/${fieldName}`;
+    const url = `${serverUrl}/api/attains/${profile}/values/${fieldName}`;
     const data = {
       text: inputValue,
       direction: direction ?? null,

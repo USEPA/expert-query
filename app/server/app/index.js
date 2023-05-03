@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import routes from './routes/index.js';
+import { getEnvironment } from './utilities/environment.js';
 import {
   formatLogMsg,
   log,
@@ -62,15 +63,7 @@ app.use(function (req, res, next) {
 /****************************************************************
  Which environment
 ****************************************************************/
-var isLocal = false;
-var isDevelopment = false;
-var isStaging = false;
-
-if (process.env.NODE_ENV) {
-  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
-  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
-}
+const { isLocal, isDevelopment, isStaging } = getEnvironment();
 
 if (isLocal) {
   log.info('Environment = local');
