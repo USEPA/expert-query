@@ -40,14 +40,18 @@ function logError(error, metadataObj) {
 
 // local development: read files directly from disk
 // Cloud.gov: fetch files from the public s3 bucket
-async function getFile(filename, encoding) {
+async function getFile(
+  filename,
+  encoding = undefined,
+  responseType = undefined,
+) {
   return environment.isLocal
     ? readFile(resolve(__dirname, '../', filename), encoding)
     : axios({
         method: 'get',
         url: `${s3BucketUrl}/${filename}`,
         timeout: 10000,
-        responseType: 'arraybuffer',
+        responseType,
       });
 }
 
@@ -202,7 +206,7 @@ export default function (app, basePath) {
     const filepath = req.params[0].slice(1);
     const metadataObj = populateMetdataObjFromRequest(req);
 
-    getFile(`content/${filepath}`)
+    getFile(`content/${filepath}`, undefined, 'arraybuffer')
       .then((stringsOrResponses) => {
         // set the headers for the file
         const filename = filepath.split('/').pop();
