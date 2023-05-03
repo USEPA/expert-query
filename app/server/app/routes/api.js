@@ -57,7 +57,9 @@ function executeValuesQuery(req, res) {
 
   const columns = [];
   for (const alias of columnAliases) {
-    const column = profile.columns.find((col) => col.alias === alias);
+    const column = profile.columns
+      .concat(profile.mvColumns ?? [])
+      .find((col) => col.alias === alias);
     if (!column) {
       return res.status(404).json({
         message: `The column ${alias} does not exist on the selected profile`,
@@ -160,6 +162,8 @@ async function queryColumnValues(profile, columns, params, schema) {
     }
     return mv;
   });
+
+  // ensure columns exist on table or view
 
   // query table directly if a suitable materialized view was not found
   const query = knex

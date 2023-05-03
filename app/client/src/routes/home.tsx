@@ -330,15 +330,14 @@ function FilterFields({
                 ? { [sourceKey]: sourceValue.value }
                 : {}),
             }),
-            defaultOption:
-              'default' in fieldConfig ? fieldConfig.default : null,
+            defaultOption: optional(fieldConfig, 'default'),
             filterHandler: filterHandlers[fieldConfig.key],
             filterKey: fieldConfig.key,
             filterLabel: fieldConfig.label,
             filterValue: filterState[fieldConfig.key],
+            optionLabelFormat: optional(fieldConfig, 'optionLabelFormat'),
             profile,
-            secondaryFilterKey:
-              'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
+            secondaryFilterKey: optional(fieldConfig, 'secondaryKey'),
             sortDirection:
               'direction' in fieldConfig
                 ? (fieldConfig.direction as SortDirection)
@@ -350,7 +349,7 @@ function FilterFields({
             ? MultiSelectFilterProps
             : SingleSelectFilterProps;
 
-          const tooltip = 'tooltip' in fieldConfig ? fieldConfig.tooltip : null;
+          const tooltip = optional(fieldConfig, 'tooltip');
 
           return [
             <label
@@ -445,7 +444,7 @@ function FilterGroups(props: FilterGroupsProps) {
           <h4 className="text-primary">{filterGroupLabels[group.key]}</h4>
           <FilterFields
             {...props}
-            fields={group.fields as Array<typeof filterFieldsConfig[number]>}
+            fields={group.fields as Array<(typeof filterFieldsConfig)[number]>}
           />
         </section>
       ))}
@@ -624,6 +623,7 @@ function SelectFilter<
   filterKey,
   filterLabel,
   filterValue,
+  optionLabelFormat,
   profile,
   secondaryFilterKey,
   sortDirection,
@@ -643,6 +643,7 @@ function SelectFilter<
       fieldName: filterKey,
       direction: sortDirection,
       dynamicOptionLimit: content.data?.parameters.selectOptionsPageSize,
+      labelFormat: optionLabelFormat,
       secondaryFieldName: secondaryFilterKey,
       staticOptions,
     });
@@ -651,6 +652,7 @@ function SelectFilter<
     contextFilters,
     defaultOption,
     filterKey,
+    optionLabelFormat,
     profile,
     secondaryFilterKey,
     sortDirection,
@@ -877,7 +879,7 @@ function useProfile() {
   const { profile: profileArg } = useParams();
 
   const [profileOption, setProfileOption] = useState<
-    typeof listOptions.dataProfile[number] | null
+    (typeof listOptions.dataProfile)[number] | null
   >(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -1141,19 +1143,19 @@ function filterDynamicOptions({
   direction = 'asc',
   fieldName,
   filters,
+  labelFormat,
   limit = 20,
   profile,
   secondaryFieldName,
-  staticOptions,
 }: {
   defaultOption?: Option | null;
   direction?: SortDirection;
   fieldName: string;
   filters?: FilterQueryData;
+  labelFormat?: string | null;
   limit?: number;
   profile: string;
   secondaryFieldName?: string | null;
-  staticOptions?: StaticOptions;
 }) {
   return async function (
     inputValue: string,
@@ -1167,23 +1169,18 @@ function filterDynamicOptions({
       filters,
       additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
     };
+    const formatString = labelFormat ?? '{0} - {1}';
     const values = await postData(url, data, 'json', signal);
     const options = values.map((item: Record<string, string>) => {
       const value = item[fieldName];
-      if (staticOptions?.hasOwnProperty(fieldName)) {
-        // Map labels to those retrieved from the ETL's domain values
-        return (
-          staticOptions[
-            fieldName as keyof StaticOptions
-          ] as ReadonlyArray<Option>
-        ).find((option) => option.value === value);
-      } else {
-        // Concatenate primary column value with secondary, if present
-        const label = secondaryFieldName
-          ? `${value} - ${item[secondaryFieldName]}`
-          : value;
-        return { label, value };
-      }
+      // Concatenate primary column value with secondary, if present
+      const secondaryValue = secondaryFieldName
+        ? item[secondaryFieldName]
+        : null;
+      const label = secondaryValue
+        ? printf(formatString, value, secondaryValue)
+        : value;
+      return { label, value };
     });
     return defaultOption ? [defaultOption, ...options] : options;
   };
@@ -1195,6 +1192,7 @@ function filterOptions({
   dynamicOptionLimit,
   fieldName,
   filters = {},
+  labelFormat,
   profile,
   direction = 'asc',
   staticOptions,
@@ -1204,6 +1202,7 @@ function filterOptions({
   dynamicOptionLimit?: number;
   fieldName: string;
   filters?: FilterQueryData;
+  labelFormat?: string | null;
   profile: string;
   direction?: SortDirection;
   secondaryFieldName?: string | null;
@@ -1220,10 +1219,10 @@ function filterOptions({
       direction,
       fieldName,
       filters,
+      labelFormat,
       limit: dynamicOptionLimit,
       profile,
       secondaryFieldName,
-      staticOptions,
     });
   }
 }
@@ -1275,7 +1274,7 @@ function getArticle(noun: string) {
 }
 
 function getContextFilters(
-  fieldConfig: typeof filterFieldsConfig[number],
+  fieldConfig: (typeof filterFieldsConfig)[number],
   profile: Profile,
   filters: FilterQueryData,
 ) {
@@ -1595,6 +1594,10 @@ function matchYear(values: InputValue) {
   return matchDate(values, true);
 }
 
+function optional(object: Record<string, any>, key: string) {
+  return object.hasOwnProperty(key) ? object[key] : undefined;
+}
+
 // Parse parameters provided in the URL hash into a JSON object
 function parseInitialParams(
   profile: Profile,
@@ -1641,6 +1644,14 @@ function parseInitialParams(
   );
 
   return [params, paramErrors];
+}
+
+// C-style string formatting
+function printf(format: string, ...args: string[]) {
+  return format.replace(/{(\d+)}/g, (match, number) => {
+    const n = parseInt(number);
+    return n < args.length ? args[n] : match;
+  });
 }
 
 function removeHash() {
@@ -1712,10 +1723,10 @@ const singleValueFields = [...dateFields, ...yearFields];
 ## Types
 */
 
-type DateField = typeof dateFields[number];
+type DateField = (typeof dateFields)[number];
 
 type Format = FormatOption['value'];
-type FormatOption = typeof listOptions.format[number];
+type FormatOption = (typeof listOptions.format)[number];
 
 type FilterFieldsAction =
   | FilterFieldAction
@@ -1736,7 +1747,7 @@ type FilterFieldActionHandlers = {
   ) => FilterFieldState;
 };
 
-type FilterField = typeof filterFields[number];
+type FilterField = (typeof filterFields)[number];
 
 type FilterFieldInputHandlers = {
   [F in Extract<FilterField, MultiOptionField>]: OptionInputHandler;
@@ -1747,7 +1758,7 @@ type FilterFieldInputHandlers = {
 };
 
 type FilterFieldsProps = FilterGroupsProps & {
-  fields: Array<typeof filterFieldsConfig[number]>;
+  fields: Array<(typeof filterFieldsConfig)[number]>;
 };
 
 type FilterFieldState = {
@@ -1788,7 +1799,7 @@ type HomeContext = {
 
 type InputValue = Primitive | Primitive[] | null;
 
-type MultiOptionField = typeof multiOptionFields[number];
+type MultiOptionField = (typeof multiOptionFields)[number];
 
 type MultiOptionState = ReadonlyArray<Option> | null;
 
@@ -1836,15 +1847,16 @@ type SelectFilterProps<
   filterKey: F;
   filterLabel: string;
   filterValue: FilterFieldState[F];
+  optionLabelFormat: string | null;
   profile: Profile;
   secondaryFilterKey: FilterField;
   sortDirection?: SortDirection;
-  sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
+  sourceKey: (typeof sourceFieldsConfig)[number]['key'] | null;
   sourceValue: SourceFieldState[SourceField] | null;
   staticOptions: StaticOptions;
 };
 
-type SingleOptionField = typeof singleOptionFields[number];
+type SingleOptionField = (typeof singleOptionFields)[number];
 
 type SingleOptionInputHandler = (ev: SingleOptionState) => void;
 
@@ -1854,13 +1866,13 @@ type SingleSelectFilterProps = SelectFilterProps<
   Extract<FilterField, SingleOptionField>
 >;
 
-type SingleValueField = typeof singleValueFields[number];
+type SingleValueField = (typeof singleValueFields)[number];
 
 type SingleValueInputHandler = (ev: ChangeEvent<HTMLInputElement>) => void;
 
 type SortDirection = 'asc' | 'desc';
 
-type SourceField = typeof sourceFields[number];
+type SourceField = (typeof sourceFields)[number];
 
 type SourceFieldState = {
   [F in SourceField]: SingleOptionState;
@@ -1888,7 +1900,7 @@ type SourceSelectFilterProps<
   P extends SingleSelectFilterProps | MultiSelectFilterProps,
 > = P & {
   sourceHandler: SourceFieldInputHandlers[SourceField];
-  sourceKey: typeof sourceFieldsConfig[number]['key'];
+  sourceKey: (typeof sourceFieldsConfig)[number]['key'];
   sourceLabel: string;
 };
 
@@ -1896,4 +1908,4 @@ type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
 type UrlQueryParam = [string, Primitive];
 
-type YearField = typeof yearFields[number];
+type YearField = (typeof yearFields)[number];

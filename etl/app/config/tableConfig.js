@@ -50,6 +50,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    mvColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'actions_assessments',
@@ -61,7 +62,9 @@ export const tableConfig = {
           { name: 'organizationtype' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'utility.states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'actions_actions',
