@@ -118,8 +118,10 @@ jobs:
 
       - name: Set application-level variables
         run: |
+          cf set-env $APP_NAME "CF_S3_PUB_ACCESS_KEY" "$CF_S3_PUB_ACCESS_KEY" > /dev/null
           cf set-env $APP_NAME "CF_S3_PUB_BUCKET_ID" "$CF_S3_PUB_BUCKET_ID" > /dev/null
           cf set-env $APP_NAME "CF_S3_PUB_REGION" "$CF_S3_PUB_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_SECRET_KEY" "$CF_S3_PUB_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MAX" "$DB_POOL_MAX" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MIN" "$DB_POOL_MIN" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
