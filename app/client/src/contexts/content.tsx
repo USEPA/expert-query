@@ -31,7 +31,7 @@ export type Content = {
   metadata: Partial<{
     [P in Profile]: {
       url: string;
-      size: number;
+      size: number | null;
       numRows: number;
       timestamp: string;
     };

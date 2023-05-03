@@ -76,6 +76,7 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
           </thead>
           <tbody>
             {Object.entries(content.data.metadata)
+              .filter(([_profile, fileInfo]) => fileInfo.size !== null)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([profile, fileInfo]) => (
                 <tr key={profile}>
@@ -97,7 +98,7 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
                   <td data-label="Number of rows">
                     {fileInfo.numRows.toLocaleString()}
                   </td>
-                  <td data-label="File size">{formatBytes(fileInfo.size)}</td>
+                  <td data-label="File size">{formatBytes(fileInfo.size!)}</td>
                 </tr>
               ))}
           </tbody>

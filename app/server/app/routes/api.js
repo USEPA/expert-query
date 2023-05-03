@@ -74,22 +74,21 @@ async function fetchMetadata(req) {
     ...Object.entries(tableConfig).map(async ([profile, config]) => {
       const basename = config.tableName;
       const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
-      try {
-        const filesize = await getFileSize(filename);
-        const stats = profileStats.find(
-          (p) => p.profileName === config.tableName,
-        );
-        if (!stats) return;
-
-        data[profile] = {
-          numRows: stats.numRows,
-          size: filesize,
-          timestamp: stats.timestamp,
-          url: `${s3BucketUrl}/${filename}`,
-        };
-      } catch (err) {
+      const filesize = await getFileSize(filename).catch((err) => {
         logError(err, metadataObj);
-      }
+        return null;
+      });
+      const stats = profileStats.find(
+        (p) => p.profileName === config.tableName,
+      );
+      if (!stats) return;
+
+      data[profile] = {
+        numRows: stats.numRows,
+        size: filesize,
+        timestamp: stats.timestamp,
+        url: `${s3BucketUrl}/${filename}`,
+      };
     }),
   ]);
 
