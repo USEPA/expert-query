@@ -9,7 +9,7 @@ import { profiles } from 'config';
 import { useContentState } from 'contexts/content';
 // types
 import type { Profile } from 'config/profiles';
-import { Content } from 'contexts/content';
+import type { Content } from 'contexts/content';
 import type { FetchState } from 'types';
 
 /*
