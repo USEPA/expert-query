@@ -1,11 +1,13 @@
 import axios from 'axios';
+import cors from 'cors';
 import express from 'express';
 import { readFile, stat } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
-import { appendToWhere, knex } from '../utilities/database.js';
+import { knex } from '../utilities/database.js';
+import { getEnvironment } from '../utilities/environment.js';
 import {
   formatLogMsg,
   log,
@@ -13,13 +15,14 @@ import {
 } from '../utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const isLocal = process.env.NODE_ENV === 'local';
+const environment = getEnvironment();
+
 const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
 const s3Region = process.env.CF_S3_PUB_REGION;
 const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
 function logError(error, metadataObj) {
-  if (isLocal) {
+  if (environment.isLocal) {
     log.error(error);
     return;
   }
@@ -35,61 +38,21 @@ function logError(error, metadataObj) {
   log.error(formatLogMsg(metadataObj, message));
 }
 
-/**
- * Retrieves the domain values for a single table column.
- * @param {express.Request} req
- * @param {express.Response} res
- */
-function executeValuesQuery(req, res) {
-  const profile = tableConfig[req.params.profile];
-  if (!profile) {
-    return res
-      .status(404)
-      .json({ message: 'The requested profile does not exist' });
-  }
-
-  const { additionalColumns, ...params } = getQueryParams(req);
-
-  const columnAliases = [
-    req.params.column,
-    ...(Array.isArray(additionalColumns) ? additionalColumns : []),
-  ];
-
-  const columns = [];
-  for (const alias of columnAliases) {
-    const column = profile.columns.find((col) => col.alias === alias);
-    if (!column) {
-      return res.status(404).json({
-        message: `The column ${alias} does not exist on the selected profile`,
-      });
-    }
-    columns.push(column);
-  }
-
-  queryColumnValues(profile, columns, params, req.activeSchema)
-    .then((values) => res.status(200).json(values))
-    .catch((error) => {
-      log.error(
-        `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
-      );
-      res.status(500).send('Error! ' + error);
-    });
-}
-
 // local development: read files directly from disk
 // Cloud.gov: fetch files from the public s3 bucket
-async function getFile(filename) {
-  return isLocal
-    ? readFile(resolve(__dirname, '../', filename), 'utf8')
+async function getFile(filename, encoding) {
+  return environment.isLocal
+    ? readFile(resolve(__dirname, '../', filename), encoding)
     : axios({
         method: 'get',
         url: `${s3BucketUrl}/${filename}`,
         timeout: 10000,
+        responseType: 'arraybuffer',
       });
 }
 
 async function getFileSize(filename) {
-  return isLocal
+  return environment.isLocal
     ? stat(resolve(__dirname, '../', filename), 'utf8').then(
         (stats) => stats.size,
       )
@@ -100,118 +63,69 @@ async function getFileSize(filename) {
       }).then((res) => parseInt(res.headers['content-length']));
 }
 
-/**
- * Gets the query parameters from the request.
- * @param {express.Request} req
- * @returns request query parameters
- */
-function getQueryParams(req) {
-  return Object.entries(req.method === 'POST' ? req.body : req.query).reduce(
-    (current, [key, value]) => {
-      if (key in current) {
-        return { ...current, [key]: value };
-      } else if (req.method === 'GET') {
-        return { ...current, filters: { ...current.filters, [key]: value } };
-      } else return current;
-    },
-    {
-      text: '',
-      direction: null,
-      filters: {},
-      limit: null,
-      additionalColumns: [],
-    },
-  );
-}
-
 // local development: no further processing of strings needed
 // Cloud.gov: get data from responses
 function parseResponse(res) {
   if (Array.isArray(res)) {
-    return isLocal ? res.map((r) => JSON.parse(r)) : res.map((r) => r.data);
+    return environment.isLocal
+      ? res.map((r) => JSON.parse(r))
+      : res.map((r) => r.data);
   } else {
-    return isLocal ? JSON.parse(res) : res.data;
+    return environment.isLocal ? JSON.parse(res) : res.data;
   }
-}
-
-/**
- * Craft the database query for distinct column values
- * @param {Object} profile definition of the profile being queried
- * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
- * @param {Object} params parameters to apply to the query
- * @param {string} schema the currently active database schema
- */
-async function queryColumnValues(profile, columns, params, schema) {
-  const primaryColumn = columns[0];
-
-  // get columns for where clause
-  const columnsForFilter = [];
-  profile.columns.forEach((col) => {
-    if (params.filters.hasOwnProperty(col.alias)) {
-      columnsForFilter.push(col.name);
-    }
-  });
-
-  // search through tableconfig.materializedViews to see if the column
-  // we need is in here
-  const materializedView = profile.materializedViews.find((mv) => {
-    for (const col of columnsForFilter.concat(columns.map((c) => c.name))) {
-      if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
-    }
-    return mv;
-  });
-
-  // query table directly if a suitable materialized view was not found
-  const query = knex
-    .withSchema(schema)
-    .from(materializedView ? materializedView.name : profile.tableName)
-    .column(
-      columns.reduce(
-        (current, col) => ({ ...current, [col.alias]: col.name }),
-        {},
-      ),
-    )
-    .whereNotNull(primaryColumn.name)
-    .distinctOn(primaryColumn.name)
-    .orderBy(primaryColumn.name, params.direction ?? 'asc')
-    .select();
-
-  // build where clause of the query
-  profile.columns.forEach((col) => {
-    appendToWhere(query, col.name, params.filters[col.alias]);
-  });
-
-  if (params.text) {
-    query.andWhere((q) => {
-      columns.forEach((col, i) => {
-        if (col.type === 'numeric' || col.type === 'timestamptz') {
-          i === 0
-            ? q.whereRaw('CAST(?? as TEXT) ILIKE ?', [
-                col.name,
-                `%${params.text}%`,
-              ])
-            : q.orWhereRaw('CAST(?? as TEXT) ILIKE ?', [
-                col.name,
-                `%${params.text}%`,
-              ]);
-        } else {
-          i === 0
-            ? q.whereILike(col.name, `%${params.text}%`)
-            : q.orWhereILike(col.name, `%${params.text}%`);
-        }
-      });
-    });
-  }
-
-  if (params.limit) query.limit(params.limit);
-
-  return await query;
 }
 
 export default function (app, basePath) {
   const router = express.Router();
 
   router.use(getActiveSchema);
+
+  // ****************************** //
+  // Public / CORS Enabled          //
+  // ****************************** //
+  const corsOptions = {
+    methods: 'GET,HEAD,POST',
+  };
+
+  router.get('/openapi', cors(corsOptions), (req, res) => {
+    const metadataObj = populateMetdataObjFromRequest(req);
+
+    getFile('content/swagger/attains.json', 'utf-8')
+      .then((stringsOrResponses) => {
+        let responseJson = parseResponse(stringsOrResponses);
+
+        // Production: Only allow production in the servers selection in swagger
+        if (environment.isProduction) {
+          responseJson = {
+            ...responseJson,
+            servers: responseJson.servers.filter(
+              (s) => s.description === 'Production',
+            ),
+          };
+        }
+
+        return res.json(responseJson);
+      })
+      .catch((error) => {
+        if (typeof error.toJSON === 'function') {
+          log.debug(formatLogMsg(metadataObj, error.toJSON()));
+        }
+
+        const errorStatus = error.response?.status;
+        const errorMethod = error.response?.config?.method?.toUpperCase();
+        const errorUrl = error.response?.config?.url;
+        const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
+        log.error(formatLogMsg(metadataObj, message));
+
+        return res
+          .status(error?.response?.status || 500)
+          .json({ message: 'Error getting static content from S3 bucket' });
+      });
+  });
+
+  // ****************************** //
+  // Private / NOT CORS Enabled     //
+  // ****************************** //
 
   // --- get static content from S3
   router.get('/lookupFiles', (req, res) => {
@@ -246,22 +160,24 @@ export default function (app, basePath) {
 
     const directoryPromises = Promise.all(
       directories.map((directory) => {
-        return getFile(`${directory}/index.json`).then((stringOrResponse) => {
-          const dirFiles = parseResponse(stringOrResponse);
-          return Promise.all(
-            dirFiles.map((dirFile) => {
-              return getFile(`${directory}/${dirFile}`);
-            }),
-          )
-            .then((stringsOrResponses) => {
-              return parseResponse(stringsOrResponses);
-            })
-            .then((data) => {
-              return data.reduce((a, b) => {
-                return Object.assign(a, b);
-              }, {});
-            });
-        });
+        return getFile(`${directory}/index.json`, 'utf-8').then(
+          (stringOrResponse) => {
+            const dirFiles = parseResponse(stringOrResponse);
+            return Promise.all(
+              dirFiles.map((dirFile) => {
+                return getFile(`${directory}/${dirFile}`, 'utf-8');
+              }),
+            )
+              .then((stringsOrResponses) => {
+                return parseResponse(stringsOrResponses);
+              })
+              .then((data) => {
+                return data.reduce((a, b) => {
+                  return Object.assign(a, b);
+                }, {});
+              });
+          },
+        );
       }),
     ).then((data) => {
       return {
@@ -284,23 +200,9 @@ export default function (app, basePath) {
   router.get('/getFile/:path*', (req, res) => {
     // get the filepath from the url and trim the leading forward slash
     const filepath = req.params[0].slice(1);
-    const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
-    const s3Region = process.env.CF_S3_PUB_REGION;
     const metadataObj = populateMetdataObjFromRequest(req);
 
-    const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
-
-    // local development: read files directly from disk
-    // Cloud.gov: fetch files from the public s3 bucket
-    (isLocal
-      ? readFile(resolve(__dirname, '../content', filepath))
-      : axios({
-          method: 'get',
-          url: `${s3BucketUrl}/content/${filepath}`,
-          timeout: 10000,
-          responseType: 'arraybuffer',
-        })
-    )
+    getFile(`content/${filepath}`)
       .then((stringsOrResponses) => {
         // set the headers for the file
         const filename = filepath.split('/').pop();
@@ -312,7 +214,9 @@ export default function (app, basePath) {
 
         // local development: return root of response
         // Cloud.gov: return data value of response
-        return res.send(isLocal ? stringsOrResponses : stringsOrResponses.data);
+        return res.send(
+          environment.isLocal ? stringsOrResponses : stringsOrResponses.data,
+        );
       })
       .catch((error) => {
         if (typeof error.toJSON === 'function') {
@@ -331,22 +235,13 @@ export default function (app, basePath) {
       });
   });
 
-  // get column domain values
-  router.get('/:profile/values/:column', function (req, res) {
-    executeValuesQuery(req, res);
-  });
-
-  router.post('/:profile/values/:column', function (req, res) {
-    executeValuesQuery(req, res);
-  });
-
   router.get('/nationalDownloads', async (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
     const baseDir = 'national-downloads';
 
     const [latestRes, profileStats] = await Promise.all([
-      getFile(`${baseDir}/latest.json`).catch((err) => {
+      getFile(`${baseDir}/latest.json`, 'utf-8').catch((err) => {
         logError(err, metadataObj);
       }),
 

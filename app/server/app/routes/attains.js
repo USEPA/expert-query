@@ -1,14 +1,24 @@
 import cors from 'cors';
 import express from 'express';
 import Excel from 'exceljs';
+import { readdirSync, statSync } from 'node:fs';
+import path, { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
 import { appendToWhere, knex } from '../utilities/database.js';
+import { getEnvironment } from '../utilities/environment.js';
 import { log } from '../utilities/logger.js';
 import StreamingService from '../utilities/streamingService.js';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const jsonPageSize = parseInt(process.env.JSON_PAGE_SIZE);
 const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE);
+
+const minDateTime = new Date(-8640000000000000);
+const maxDateTime = new Date(8640000000000000);
+
+const environment = getEnvironment();
 
 class DuplicateParameterException extends Error {
   constructor(parameter) {
@@ -377,6 +387,286 @@ function executeQueryCountOnly(profile, req, res) {
   }
 }
 
+/**
+ * Retrieves the domain values for a single table column.
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+function executeValuesQuery(req, res) {
+  const profile = tableConfig[req.params.profile];
+  if (!profile) {
+    return res
+      .status(404)
+      .json({ message: 'The requested profile does not exist' });
+  }
+
+  const { additionalColumns, ...params } = getQueryParamsValues(req);
+
+  const columnAliases = [
+    req.params.column,
+    ...(Array.isArray(additionalColumns) ? additionalColumns : []),
+  ];
+
+  const columns = [];
+  for (const alias of columnAliases) {
+    const column = profile.columns.find((col) => col.alias === alias);
+    if (!column) {
+      return res.status(404).json({
+        message: `The column ${alias} does not exist on the selected profile`,
+      });
+    }
+    columns.push(column);
+  }
+
+  queryColumnValues(profile, columns, params, req.activeSchema)
+    .then((values) => res.status(200).json(values))
+    .catch((error) => {
+      log.error(
+        `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
+      );
+      res.status(500).send('Error! ' + error);
+    });
+}
+
+/**
+ * Gets the query parameters from the request.
+ * @param {express.Request} req
+ * @returns request query parameters
+ */
+function getQueryParamsValues(req) {
+  return Object.entries(req.method === 'POST' ? req.body : req.query).reduce(
+    (current, [key, value]) => {
+      if (key in current) {
+        return { ...current, [key]: value };
+      } else if (req.method === 'GET') {
+        return { ...current, filters: { ...current.filters, [key]: value } };
+      } else return current;
+    },
+    {
+      text: '',
+      direction: null,
+      filters: {},
+      limit: null,
+      additionalColumns: [],
+    },
+  );
+}
+
+/**
+ * Craft the database query for distinct column values
+ * @param {Object} profile definition of the profile being queried
+ * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
+ * @param {Object} params parameters to apply to the query
+ * @param {string} schema the currently active database schema
+ */
+async function queryColumnValues(profile, columns, params, schema) {
+  const primaryColumn = columns[0];
+
+  // get columns for where clause
+  const columnsForFilter = [];
+  profile.columns.forEach((col) => {
+    if (params.filters.hasOwnProperty(col.alias)) {
+      columnsForFilter.push(col.name);
+    }
+  });
+
+  // search through tableconfig.materializedViews to see if the column
+  // we need is in here
+  const materializedView = profile.materializedViews.find((mv) => {
+    for (const col of columnsForFilter.concat(columns.map((c) => c.name))) {
+      if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
+    }
+    return mv;
+  });
+
+  // query table directly if a suitable materialized view was not found
+  const query = knex
+    .withSchema(schema)
+    .from(materializedView ? materializedView.name : profile.tableName)
+    .column(
+      columns.reduce(
+        (current, col) => ({ ...current, [col.alias]: col.name }),
+        {},
+      ),
+    )
+    .whereNotNull(primaryColumn.name)
+    .distinctOn(primaryColumn.name)
+    .orderBy(primaryColumn.name, params.direction ?? 'asc')
+    .select();
+
+  // build where clause of the query
+  profile.columns.forEach((col) => {
+    appendToWhere(query, col.name, params.filters[col.alias]);
+  });
+
+  if (params.text) {
+    query.andWhere((q) => {
+      columns.forEach((col, i) => {
+        if (col.type === 'numeric' || col.type === 'timestamptz') {
+          i === 0
+            ? q.whereRaw('CAST(?? as TEXT) ILIKE ?', [
+                col.name,
+                `%${params.text}%`,
+              ])
+            : q.orWhereRaw('CAST(?? as TEXT) ILIKE ?', [
+                col.name,
+                `%${params.text}%`,
+              ]);
+        } else {
+          i === 0
+            ? q.whereILike(col.name, `%${params.text}%`)
+            : q.orWhereILike(col.name, `%${params.text}%`);
+        }
+      });
+    });
+  }
+
+  if (params.limit) query.limit(params.limit);
+
+  return await query;
+}
+
+/**
+ * Checks if the etl for the database ran successfully.
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+async function checkDatabaseHealth(req, res) {
+  try {
+    // check etl status in db
+    let query = knex
+      .withSchema('logging')
+      .from('etl_status')
+      .select('database')
+      .first();
+    const statusResults = await query;
+    if (statusResults.database === 'failed') {
+      res.status(200).json({ status: 'FAILED-DB' });
+      return;
+    }
+
+    // verify the latest entry in the schema table is active
+    query = knex
+      .withSchema('logging')
+      .from('etl_schemas')
+      .select('active', 'creation_date')
+      .orderBy('creation_date', 'desc')
+      .first();
+    const schemaResults = await query;
+    if (!schemaResults.active && statusResults.database !== 'running') {
+      res.status(200).json({ status: 'FAILED-SCHEMA' });
+      return;
+    }
+
+    query = knex
+      .withSchema('logging')
+      .from('etl_schemas')
+      .select('active', 'creation_date')
+      .where('active', true)
+      .orderBy('creation_date', 'desc')
+      .first();
+    const activeSchemaResults = await query;
+
+    // verify database updated in the last week, with 1 hour buffer
+    const timeSinceLastUpdate =
+      (Date.now() - activeSchemaResults.creation_date) / (1000 * 60 * 60);
+    if (timeSinceLastUpdate >= 169) {
+      res.status(200).json({ status: 'FAILED-TIME' });
+      return;
+    }
+
+    // verify a query can be ran against each table in the active db
+    for (const profile of Object.values(tableConfig)) {
+      query = knex
+        .withSchema(req.activeSchema)
+        .from(profile.tableName)
+        .select(profile.idColumn)
+        .limit(1)
+        .first();
+      const dataResults = await query;
+      if (!dataResults[profile.idColumn]) {
+        res.status(200).json({ status: 'FAILED-QUERY' });
+        return;
+      }
+    }
+
+    // everything passed
+    res.status(200).json({ status: 'UP' });
+  } catch (err) {
+    res.status(500).send('Error!' + err);
+  }
+}
+
+/**
+ * Checks if the etl for the domain values ran successfully.
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+async function checkDomainValuesHealth(req, res) {
+  try {
+    // check etl status in db
+    const query = knex
+      .withSchema('logging')
+      .from('etl_status')
+      .select('domain_values')
+      .first();
+    const results = await query;
+    if (results.domain_values === 'failed') {
+      res.status(200).json({ status: 'FAILED-DB' });
+      return;
+    }
+
+    // initialize timeSinceLastUpdate to the minimum time node allows
+    let timeSinceLastUpdate = minDateTime;
+
+    // verify file update date is within the last week
+    if (environment.isLocal) {
+      const path = resolve(__dirname, `../content-etl/domainValues`);
+
+      // get hours since file last modified
+      const files = readdirSync(path);
+
+      let oldestModifiedDate = maxDateTime;
+      files.forEach((file) => {
+        const stats = statSync(`${path}/${file}`);
+        if (stats.mtime < oldestModifiedDate) oldestModifiedDate = stats.mtime;
+      });
+
+      timeSinceLastUpdate =
+        (Date.now() - oldestModifiedDate) / (1000 * 60 * 60);
+    } else {
+      // setup public s3 bucket
+      setAwsConfig();
+
+      const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+
+      // get a list of files in the directory
+      const data = await s3
+        .listObjects({
+          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+          Prefix: 'content-etl/domainValues',
+        })
+        .promise();
+
+      let oldestModifiedDate = maxDateTime;
+      data.Contents.forEach((file) => {
+        if (file.LastModified < oldestModifiedDate)
+          oldestModifiedDate = file.LastModified;
+      });
+
+      timeSinceLastUpdate =
+        (Date.now() - oldestModifiedDate) / (1000 * 60 * 60);
+    }
+
+    // check that domain values was updated in the last week and 1 hour
+    res
+      .status(200)
+      .json({ status: timeSinceLastUpdate >= 169 ? 'FAILED-TIME' : 'UP' });
+  } catch (err) {
+    res.status(500).send('Error!' + err);
+  }
+}
+
 export default function (app, basePath) {
   const router = express.Router();
 
@@ -387,18 +677,26 @@ export default function (app, basePath) {
   };
 
   Object.entries(tableConfig).forEach(([profileName, profile]) => {
+    // ****************************** //
+    // Public / CORS Enabled          //
+    // ****************************** //
+
     // create get requests
-    router.get(`/${profileName}`, cors(corsOptions), function (req, res) {
-      executeQuery(profile, req, res);
+    router.get(`/${profileName}`, cors(corsOptions), async function (req, res) {
+      await executeQuery(profile, req, res);
     });
     router.get(`/${profileName}/count`, cors(corsOptions), function (req, res) {
       executeQueryCountOnly(profile, req, res);
     });
 
     // create post requests
-    router.post(`/${profileName}`, cors(corsOptions), function (req, res) {
-      executeQuery(profile, req, res);
-    });
+    router.post(
+      `/${profileName}`,
+      cors(corsOptions),
+      async function (req, res) {
+        await executeQuery(profile, req, res);
+      },
+    );
     router.post(
       `/${profileName}/count`,
       cors(corsOptions),
@@ -406,7 +704,27 @@ export default function (app, basePath) {
         executeQueryCountOnly(profile, req, res);
       },
     );
+
+    // ****************************** //
+    // Private / NOT CORS Enabled     //
+    // ****************************** //
+
+    // get column domain values
+    router.get('/:profile/values/:column', function (req, res) {
+      executeValuesQuery(req, res);
+    });
+    router.post('/:profile/values/:column', function (req, res) {
+      executeValuesQuery(req, res);
+    });
+
+    router.get('/health/etlDatabase', async function (req, res) {
+      await checkDatabaseHealth(req, res);
+    });
+
+    router.get('/health/etlDomainValues', async function (req, res) {
+      await checkDomainValuesHealth(req, res);
+    });
   });
 
-  app.use(`${basePath}attains/data`, router);
+  app.use(`${basePath}api/attains`, router);
 }

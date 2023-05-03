@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
+import '@uswds/uswds/css/uswds.css';
 // components
 import ApiDocs from 'routes/apiDocs';
 import { Home, QueryBuilder } from 'routes/home';
