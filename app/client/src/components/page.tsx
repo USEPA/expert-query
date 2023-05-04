@@ -64,7 +64,7 @@ export function Page({ children }: PageProps) {
                 {Object.entries(navItems).map(([key, item]) => (
                   <li key={key} className="usa-sidenav__item">
                     <NavLink
-                      to={serverBasePath + item.path}
+                      to={item.path}
                       className={({ isActive }) =>
                         isActive ? 'usa-current' : ''
                       }
