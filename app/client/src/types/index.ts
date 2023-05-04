@@ -49,7 +49,7 @@ type EmptyStatus = Exclude<Status, 'success'>;
 
 type FetchEmptyState = {
   status: EmptyStatus;
-  data: null;
+  data: null | Record<string, never>;
 };
 
 export type FetchState<Type> = FetchEmptyState | FetchSuccessState<Type>;

@@ -130,8 +130,8 @@ export function App() {
   useSiteAlertBanner();
 
   return (
-    <Page>
-      <BrowserRouter basename={serverBasePath}>
+    <BrowserRouter basename={serverBasePath}>
+      <Page>
         <Routes>
           <Route index element={<Navigate to="/attains" replace />} />
           <Route path="/api-documentation" element={<ApiDocs />} />
@@ -141,7 +141,7 @@ export function App() {
           <Route path="/national-downloads" element={<NationalDownloads />} />
           <Route path="*" element={<ErrorPage src={href} />} />
         </Routes>
-      </BrowserRouter>
-    </Page>
+      </Page>
+    </BrowserRouter>
   );
 }
