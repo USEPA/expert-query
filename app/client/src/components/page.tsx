@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import type { ReactNode } from 'react';
 // config
-import { serverBasePath, serverUrl } from 'config';
+import { serverUrl } from 'config';
 
 export default Page;
 
