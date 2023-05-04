@@ -71,7 +71,12 @@ export function Home() {
     initializeFilters,
   });
 
-  const eqDataUrl = content.data.services?.eqDataApi || `${serverUrl}/api/attains`;
+  const eqDataUrl =
+    content.data.services?.eqDataApi || `${serverUrl}/api/attains`;
+
+  const profileRefreshDate = profile
+    ? content.data.metadata?.[profile]?.timestamp
+    : null;
 
   if (content.status === 'pending') return <Loading />;
 
@@ -110,21 +115,33 @@ export function Home() {
               />
 
               {profile && (
-                <Outlet
-                  context={{
-                    filterHandlers,
-                    filterState,
-                    format,
-                    formatHandler,
-                    profile,
-                    queryParams,
-                    queryUrl: eqDataUrl,
-                    resetFilters,
-                    sourceHandlers,
-                    sourceState,
-                    staticOptions,
-                  }}
-                />
+                <>
+                  {profileRefreshDate && (
+                    <p>
+                      {profiles[profile].label} profile data last refreshed{' '}
+                      <strong>
+                        {new Date(profileRefreshDate).toLocaleString()}
+                      </strong>
+                      .
+                    </p>
+                  )}
+
+                  <Outlet
+                    context={{
+                      filterHandlers,
+                      filterState,
+                      format,
+                      formatHandler,
+                      profile,
+                      queryParams,
+                      queryUrl: eqDataUrl,
+                      resetFilters,
+                      sourceHandlers,
+                      sourceState,
+                      staticOptions,
+                    }}
+                  />
+                </>
               )}
             </>
           )}
@@ -445,7 +462,7 @@ function FilterGroups(props: FilterGroupsProps) {
           <h4 className="text-primary">{filterGroupLabels[group.key]}</h4>
           <FilterFields
             {...props}
-            fields={group.fields as Array<typeof filterFieldsConfig[number]>}
+            fields={group.fields as Array<(typeof filterFieldsConfig)[number]>}
           />
         </section>
       ))}
@@ -877,7 +894,7 @@ function useProfile() {
   const { profile: profileArg } = useParams();
 
   const [profileOption, setProfileOption] = useState<
-    typeof listOptions.dataProfile[number] | null
+    (typeof listOptions.dataProfile)[number] | null
   >(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -1275,7 +1292,7 @@ function getArticle(noun: string) {
 }
 
 function getContextFilters(
-  fieldConfig: typeof filterFieldsConfig[number],
+  fieldConfig: (typeof filterFieldsConfig)[number],
   profile: Profile,
   filters: FilterQueryData,
 ) {
@@ -1712,10 +1729,10 @@ const singleValueFields = [...dateFields, ...yearFields];
 ## Types
 */
 
-type DateField = typeof dateFields[number];
+type DateField = (typeof dateFields)[number];
 
 type Format = FormatOption['value'];
-type FormatOption = typeof listOptions.format[number];
+type FormatOption = (typeof listOptions.format)[number];
 
 type FilterFieldsAction =
   | FilterFieldAction
@@ -1736,7 +1753,7 @@ type FilterFieldActionHandlers = {
   ) => FilterFieldState;
 };
 
-type FilterField = typeof filterFields[number];
+type FilterField = (typeof filterFields)[number];
 
 type FilterFieldInputHandlers = {
   [F in Extract<FilterField, MultiOptionField>]: OptionInputHandler;
@@ -1747,7 +1764,7 @@ type FilterFieldInputHandlers = {
 };
 
 type FilterFieldsProps = FilterGroupsProps & {
-  fields: Array<typeof filterFieldsConfig[number]>;
+  fields: Array<(typeof filterFieldsConfig)[number]>;
 };
 
 type FilterFieldState = {
@@ -1788,7 +1805,7 @@ type HomeContext = {
 
 type InputValue = Primitive | Primitive[] | null;
 
-type MultiOptionField = typeof multiOptionFields[number];
+type MultiOptionField = (typeof multiOptionFields)[number];
 
 type MultiOptionState = ReadonlyArray<Option> | null;
 
@@ -1839,12 +1856,12 @@ type SelectFilterProps<
   profile: Profile;
   secondaryFilterKey: FilterField;
   sortDirection?: SortDirection;
-  sourceKey: typeof sourceFieldsConfig[number]['key'] | null;
+  sourceKey: (typeof sourceFieldsConfig)[number]['key'] | null;
   sourceValue: SourceFieldState[SourceField] | null;
   staticOptions: StaticOptions;
 };
 
-type SingleOptionField = typeof singleOptionFields[number];
+type SingleOptionField = (typeof singleOptionFields)[number];
 
 type SingleOptionInputHandler = (ev: SingleOptionState) => void;
 
@@ -1854,13 +1871,13 @@ type SingleSelectFilterProps = SelectFilterProps<
   Extract<FilterField, SingleOptionField>
 >;
 
-type SingleValueField = typeof singleValueFields[number];
+type SingleValueField = (typeof singleValueFields)[number];
 
 type SingleValueInputHandler = (ev: ChangeEvent<HTMLInputElement>) => void;
 
 type SortDirection = 'asc' | 'desc';
 
-type SourceField = typeof sourceFields[number];
+type SourceField = (typeof sourceFields)[number];
 
 type SourceFieldState = {
   [F in SourceField]: SingleOptionState;
@@ -1888,7 +1905,7 @@ type SourceSelectFilterProps<
   P extends SingleSelectFilterProps | MultiSelectFilterProps,
 > = P & {
   sourceHandler: SourceFieldInputHandlers[SourceField];
-  sourceKey: typeof sourceFieldsConfig[number]['key'];
+  sourceKey: (typeof sourceFieldsConfig)[number]['key'];
   sourceLabel: string;
 };
 
@@ -1896,4 +1913,4 @@ type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
 type UrlQueryParam = [string, Primitive];
 
-type YearField = typeof yearFields[number];
+type YearField = (typeof yearFields)[number];
