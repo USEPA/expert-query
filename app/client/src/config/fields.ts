@@ -687,7 +687,6 @@ export const filterFields = [
     type: 'multiselect',
     contextFields: ['region'],
     secondaryKey: 'stateName',
-    optionLabelFormat: '{1}',
   },
   {
     key: 'stateIrCategory',

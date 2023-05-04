@@ -7,7 +7,12 @@ import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
 import * as profiles from './profiles/index.js';
-import { deleteDirectory, readS3File, syncDomainValues } from './s3.js';
+import {
+  deleteDirectory,
+  fetchStateValues,
+  readS3File,
+  syncDomainValues,
+} from './s3.js';
 // config
 import { tableConfig } from '../config/tableConfig.js';
 
@@ -457,11 +462,11 @@ export async function runJob(s3Config, checkIfReady = true) {
 
   await updateEtlStatus(pool, 'database', 'running');
   try {
-    await syncDomainValues(s3Config, pool);
     await runLoad(pool, s3Config, s3Julian);
     await trimSchema(pool, s3Config);
     if (!environment.isLocal) await trimNationalDownloads(pool);
     await updateEtlStatus(pool, 'database', 'success');
+    await syncDomainValues(s3Config, pool);
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
     await updateEtlStatus(pool, 'database', 'failed');
@@ -484,35 +489,33 @@ export async function getActiveSchema(pool) {
   return schemas.rows[0].schema_name;
 }
 
-async function updateStatesTable(pool) {
+async function loadStatesTable(pool, s3Config, schemaName) {
   const client = await pool.connect();
   try {
-    const states = (
-      await readS3File({
-        bucketInfo: {
-          accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
-          bucketId: process.env.CF_S3_PUB_BUCKET_ID,
-          region: process.env.CF_S3_PUB_REGION,
-          secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
-        },
-        path: `content-etl/domainValues/state.json`,
-      })
-    )['state'];
+    const uniqueCodes = new Set();
+    const states = (await fetchStateValues(s3Config, fetchStateValues)).filter(
+      (state) => {
+        return uniqueCodes.has(state.code)
+          ? false
+          : uniqueCodes.add(state.code);
+      },
+    );
 
     await client.query('BEGIN');
-    await client.query('DROP TABLE IF EXISTS utility.states');
+    await client.query(`SET search_path TO ${schemaName}`);
+    await client.query('DROP TABLE IF EXISTS states');
     await client.query(
-      `CREATE TABLE utility.states
+      `CREATE TABLE states
         (
           id SERIAL PRIMARY KEY,
           statecode VARCHAR(2),
-          statename VARCHAR(30)
+          statename VARCHAR(100)
         )`,
     );
     for (const state of states) {
       await client.query(
-        'INSERT INTO utility.states(statecode, statename) VALUES ($1, $2)',
-        [state.value, state.label],
+        'INSERT INTO states(statecode, statename) VALUES ($1, $2)',
+        [state.code, state.name],
       );
     }
     await client.query('COMMIT');
@@ -524,10 +527,9 @@ async function updateStatesTable(pool) {
   }
 }
 
-async function updateUtilityTables(pool) {
+async function loadUtilityTables(pool, s3Config, schemaName) {
   try {
-    await pool.query('CREATE SCHEMA IF NOT EXISTS utility');
-    await updateStatesTable(pool);
+    await loadStatesTable(pool, s3Config, schemaName);
     log.info('Utility tables finished updating');
   } catch (err) {
     log.warn(`Failed to update utility tables: ${err}`);
@@ -539,13 +541,13 @@ export async function runLoad(pool, s3Config, s3Julian) {
 
   const logId = await logEtlLoadStart(pool);
 
-  await updateUtilityTables(pool);
-
   const now = new Date();
   const schemaName = `schema_${now.valueOf()}`;
 
   try {
     const schemaId = await createNewSchema(pool, schemaName, s3Julian);
+
+    await loadUtilityTables(pool, s3Config, schemaName);
 
     // Add tables to schema and import new data
     const loadTasks = Object.values(profiles).map((profile) => {

@@ -330,14 +330,15 @@ function FilterFields({
                 ? { [sourceKey]: sourceValue.value }
                 : {}),
             }),
-            defaultOption: optional(fieldConfig, 'default'),
+            defaultOption:
+              'default' in fieldConfig ? fieldConfig.default : null,
             filterHandler: filterHandlers[fieldConfig.key],
             filterKey: fieldConfig.key,
             filterLabel: fieldConfig.label,
             filterValue: filterState[fieldConfig.key],
-            optionLabelFormat: optional(fieldConfig, 'optionLabelFormat'),
             profile,
-            secondaryFilterKey: optional(fieldConfig, 'secondaryKey'),
+            secondaryFilterKey:
+              'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
             sortDirection:
               'direction' in fieldConfig
                 ? (fieldConfig.direction as SortDirection)
@@ -349,7 +350,7 @@ function FilterFields({
             ? MultiSelectFilterProps
             : SingleSelectFilterProps;
 
-          const tooltip = optional(fieldConfig, 'tooltip');
+          const tooltip = 'tooltip' in fieldConfig ? fieldConfig.tooltip : null;
 
           return [
             <label
@@ -623,7 +624,6 @@ function SelectFilter<
   filterKey,
   filterLabel,
   filterValue,
-  optionLabelFormat,
   profile,
   secondaryFilterKey,
   sortDirection,
@@ -643,7 +643,6 @@ function SelectFilter<
       fieldName: filterKey,
       direction: sortDirection,
       dynamicOptionLimit: content.data?.parameters.selectOptionsPageSize,
-      labelFormat: optionLabelFormat,
       secondaryFieldName: secondaryFilterKey,
       staticOptions,
     });
@@ -652,7 +651,6 @@ function SelectFilter<
     contextFilters,
     defaultOption,
     filterKey,
-    optionLabelFormat,
     profile,
     secondaryFilterKey,
     sortDirection,
@@ -1143,7 +1141,6 @@ function filterDynamicOptions({
   direction = 'asc',
   fieldName,
   filters,
-  labelFormat,
   limit = 20,
   profile,
   secondaryFieldName,
@@ -1152,7 +1149,6 @@ function filterDynamicOptions({
   direction?: SortDirection;
   fieldName: string;
   filters?: FilterQueryData;
-  labelFormat?: string | null;
   limit?: number;
   profile: string;
   secondaryFieldName?: string | null;
@@ -1169,7 +1165,6 @@ function filterDynamicOptions({
       filters,
       additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
     };
-    const formatString = labelFormat ?? '{0} - {1}';
     const values = await postData(url, data, 'json', signal);
     const options = values.map((item: Record<string, string>) => {
       const value = item[fieldName];
@@ -1177,9 +1172,7 @@ function filterDynamicOptions({
       const secondaryValue = secondaryFieldName
         ? item[secondaryFieldName]
         : null;
-      const label = secondaryValue
-        ? printf(formatString, value, secondaryValue)
-        : value;
+      const label = secondaryValue ? `${value} - ${secondaryValue}` : value;
       return { label, value };
     });
     return defaultOption ? [defaultOption, ...options] : options;
@@ -1192,7 +1185,6 @@ function filterOptions({
   dynamicOptionLimit,
   fieldName,
   filters = {},
-  labelFormat,
   profile,
   direction = 'asc',
   staticOptions,
@@ -1202,7 +1194,6 @@ function filterOptions({
   dynamicOptionLimit?: number;
   fieldName: string;
   filters?: FilterQueryData;
-  labelFormat?: string | null;
   profile: string;
   direction?: SortDirection;
   secondaryFieldName?: string | null;
@@ -1219,7 +1210,6 @@ function filterOptions({
       direction,
       fieldName,
       filters,
-      labelFormat,
       limit: dynamicOptionLimit,
       profile,
       secondaryFieldName,
@@ -1594,10 +1584,6 @@ function matchYear(values: InputValue) {
   return matchDate(values, true);
 }
 
-function optional(object: Record<string, any>, key: string) {
-  return object.hasOwnProperty(key) ? object[key] : undefined;
-}
-
 // Parse parameters provided in the URL hash into a JSON object
 function parseInitialParams(
   profile: Profile,
@@ -1644,14 +1630,6 @@ function parseInitialParams(
   );
 
   return [params, paramErrors];
-}
-
-// C-style string formatting
-function printf(format: string, ...args: string[]) {
-  return format.replace(/{(\d+)}/g, (match, number) => {
-    const n = parseInt(number);
-    return n < args.length ? args[n] : match;
-  });
 }
 
 function removeHash() {
@@ -1847,7 +1825,6 @@ type SelectFilterProps<
   filterKey: F;
   filterLabel: string;
   filterValue: FilterFieldState[F];
-  optionLabelFormat: string | null;
   profile: Profile;
   secondaryFilterKey: FilterField;
   sortDirection?: SortDirection;

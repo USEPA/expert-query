@@ -136,18 +136,18 @@ export async function uploadFilePublic(
 }
 
 // Retries an HTTP request in response to a failure
-async function retryRequest(serviceName, count, s3Config, callback) {
+export async function retryRequest(serviceName, count, s3Config, callback) {
   log.info(`Non-200 response returned from ${serviceName} service, retrying`);
   if (count < s3Config.config.retryLimit) {
     await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
     return callback(s3Config, count + 1);
   } else {
-    throw new Error(`Sync ${serviceName} retry count exceeded`);
+    throw new Error(`${serviceName} request retry count exceeded`);
   }
 }
 
 // Sync the domain values corresponding to a single domain name
-function fetchSingleDomain(name, mapping, pool) {
+function syncSingleDomain(name, mapping, pool) {
   return async function (s3Config, retryCount = 0) {
     try {
       const res = await axios.get(
@@ -160,7 +160,7 @@ function fetchSingleDomain(name, mapping, pool) {
           `Domain Values (${mapping.domainName})`,
           retryCount,
           s3Config,
-          fetchSingleDomain(name, mapping, pool),
+          syncSingleDomain(name, mapping, pool),
         );
       }
 
@@ -205,7 +205,7 @@ function fetchSingleDomain(name, mapping, pool) {
           `Domain Values (${mapping.domainName})`,
           retryCount,
           s3Config,
-          fetchSingleDomain(name, mapping, pool),
+          syncSingleDomain(name, mapping, pool),
         );
       } catch (err) {
         log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
@@ -221,10 +221,10 @@ export async function syncDomainValues(s3Config, poolParam = null) {
 
   try {
     const fetchPromises = [];
-    fetchPromises.push(fetchStateValues(pool)(s3Config));
+    fetchPromises.push(syncStateValues(pool)(s3Config));
 
     Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
-      fetchPromises.push(fetchSingleDomain(name, mapping, pool)(s3Config));
+      fetchPromises.push(syncSingleDomain(name, mapping, pool)(s3Config));
     });
 
     await Promise.all(fetchPromises);
@@ -249,31 +249,34 @@ export async function syncDomainValues(s3Config, poolParam = null) {
   }
 }
 
+export async function fetchStateValues(s3Config, callback, retryCount = 0) {
+  const res = await axios.get(s3Config.services.stateCodes, {
+    timeout: s3Config.config.webServiceTimeout,
+  });
+
+  if (res.status !== 200) {
+    return retryRequest('States', retryCount, s3Config, callback);
+  }
+
+  return res.data.data;
+}
+
 // Sync state codes and labels from the states service
-function fetchStateValues(pool) {
+function syncStateValues(pool) {
   return async function (s3Config, retryCount = 0) {
     try {
-      const res = await axios.get(s3Config.services.stateCodes, {
-        timeout: s3Config.config.webServiceTimeout,
-      });
-
-      if (res.status !== 200) {
-        return await retryRequest(
-          'States',
-          retryCount,
-          s3Config,
-          fetchStateValues(pool),
-        );
-      }
+      const statesRes = await fetchStateValues(
+        s3Config,
+        syncStateValues(pool),
+        retryCount,
+      );
 
       const valuesAdded = new Set();
-      const states = res.data.data
-        .map((state) => {
-          return {
-            label: state.name,
-            value: state.code,
-          };
-        })
+      const states = statesRes
+        .map((state) => ({
+          label: `${state.code} - ${state.name}`,
+          value: state.code,
+        }))
         .filter((item) => {
           return valuesAdded.has(item.value)
             ? false
@@ -302,7 +305,7 @@ function fetchStateValues(pool) {
           'States',
           retryCount,
           s3Config,
-          fetchStateValues(pool),
+          syncStateValues(pool),
         );
       } catch (err) {
         log.warn(`Sync States failed! ${err}`);

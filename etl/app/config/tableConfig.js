@@ -50,7 +50,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
-    mvColumns: [{ name: 'statename', alias: 'stateName' }],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'actions_assessments',
@@ -64,7 +64,7 @@ export const tableConfig = {
           { name: 'state' },
           { name: 'statename' },
         ],
-        joins: [{ table: 'utility.states', joinKey: ['state', 'statecode'] }],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'actions_actions',
@@ -274,6 +274,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'assessments_assessments',
@@ -285,7 +286,9 @@ export const tableConfig = {
           { name: 'organizationtype' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'assessments_alternatelistingidentifier',
@@ -409,6 +412,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'assessmentunits_assessments',
@@ -419,7 +423,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'assessmentunits_locationtext',
@@ -495,6 +501,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'assessmentunitsmonitoringlocations_assessments',
@@ -505,7 +512,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'assessmentunitsmonitoringlocations_locationtext',
@@ -559,6 +568,7 @@ export const tableConfig = {
       },
       { name: 'state', alias: 'state' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'catchmentcorrespondence_assessments',
@@ -569,7 +579,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'catchmentcorrespondence_catchmentnhdplusid',
@@ -635,6 +647,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'sources_assessments',
@@ -645,7 +658,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'sources_causename',
@@ -767,6 +782,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'tmdl_assessments',
@@ -777,7 +793,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'tmdl_actions',
