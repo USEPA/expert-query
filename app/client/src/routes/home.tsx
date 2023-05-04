@@ -107,6 +107,7 @@ export function Home() {
               <h3>Data Profile</h3>
               <Select
                 id="select-data-profile"
+                instanceId="instance-select-data-profile"
                 aria-label="Select a data profile"
                 onChange={handleProfileChange}
                 options={staticOptions.dataProfile}
@@ -728,6 +729,7 @@ function SelectFilter<
       aria-label={`${filterLabel} input`}
       className="width-full"
       inputId={`input-${filterKey}`}
+      instanceId={`instance-${filterKey}`}
       isLoading={loading}
       isMulti={isMultiOptionField(filterKey)}
       menuPortalTarget={document.body}

@@ -62,11 +62,16 @@ Cypress.Commands.add("selectProfile", (profile: string) => {
  */
 
 Cypress.Commands.add("selectOption", (id: string, option: string) => {
-  cy.get(`#${id}`).type(`${option}{enter}`, {
-    force: true,
-    delay: 500,
-    timeout: 150000,
-  });
+  cy.get(`#${id}`).type(option);
+
+  cy.wait(500);
+  cy.findByText('Loading...').should('not.exist');
+
+  cy.get(`#react-select-instance-${id.replace('input-', '')}-listbox`)
+    .children()
+    .children()
+    .first()
+    .click({force: true});
 });
 
 /**
