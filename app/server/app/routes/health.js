@@ -8,20 +8,6 @@ import { knex } from '../utilities/database.js';
 import { getEnvironment } from '../utilities/environment.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Setups the config for the s3 bucket (default config is public S3 bucket)
-function setAwsConfig({
-  accessKeyId = process.env.CF_S3_PUB_ACCESS_KEY,
-  secretAccessKey = process.env.CF_S3_PUB_SECRET_KEY,
-  region = process.env.CF_S3_PUB_REGION,
-} = {}) {
-  const config = new AWS.Config({
-    accessKeyId,
-    secretAccessKey,
-    region,
-  });
-  AWS.config.update(config);
-}
-
 const environment = getEnvironment();
 
 const minDateTime = new Date(-8640000000000000);
@@ -61,8 +47,12 @@ export default function (app, basePath) {
         timeSinceLastUpdate = (Date.now() - stats.mtime) / (1000 * 60 * 60);
       } else {
         // setup public s3 bucket
-        setAwsConfig();
-
+        const config = new AWS.Config({
+          accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+          secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
+          region: process.env.CF_S3_PUB_REGION,
+        });
+        AWS.config.update(config);
         const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
         // get a list of files in the directory
