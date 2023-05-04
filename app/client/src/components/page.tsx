@@ -1,6 +1,7 @@
+import { NavLink } from 'react-router-dom';
 import type { ReactNode } from 'react';
 // config
-import { serverBasePath, serverUrl } from 'config';
+import { serverUrl } from 'config';
 
 export default Page;
 
@@ -30,7 +31,7 @@ export function Page({ children }: PageProps) {
         <div className="l-page__header">
           <div className="l-page__header-first usa-logo">
             <h1 className="web-area-title usa-logo__text">
-              <a href="/">Expert Query</a>
+              <NavLink to="/">Expert Query</NavLink>
             </h1>
           </div>
           <div className="l-page__header-last">
@@ -62,14 +63,14 @@ export function Page({ children }: PageProps) {
               <ul className="usa-sidenav">
                 {Object.entries(navItems).map(([key, item]) => (
                   <li key={key} className="usa-sidenav__item">
-                    <a
-                      href={serverBasePath + item.path}
-                      className={
-                        location.pathname.match(item.path) ? 'usa-current' : ''
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) =>
+                        isActive ? 'usa-current' : ''
                       }
                     >
                       {item.label}
-                    </a>
+                    </NavLink>
                   </li>
                 ))}
               </ul>
