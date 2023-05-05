@@ -5,6 +5,9 @@ describe('Data Profile Action', () => {
     cy.findByRole('button', { name: 'Advanced API Queries' }).click();
   });
 
+  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
+  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"parameter\",\"actionType\",\"actionId\",\"actionName\",\"actionAgency\",\"inIndianCountry\",\"includeInMeasure\",\"completionDate\",\"assessmentUnitId\",\"assessmentUnitName\",\"locationDescription\",\"waterSize\",\"waterSizeUnits\"]';
+
   const location = window.location;
   const origin =
     location.hostname === 'localhost'
@@ -18,13 +21,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/actions?format=csv`,
+      `${origin}/api/attains/actions?${columnsValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{},"options":{"format":"csv"}}',
-      )} ${origin}/attains/data/actions`,
+        `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/actions`,
     );
   });
 
@@ -36,7 +39,7 @@ describe('Data Profile Action', () => {
     cy.selectOption('input-actionId', '10081');
     cy.selectOption('input-actionId', '56325');
 
-    const queryValue = 'actionAgency=S&actionId=10081&actionId=56325';
+    const queryValue = 'actionAgency=State&actionId=10081&actionId=56325';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -44,13 +47,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/actions?${queryValue}&format=csv`,
+      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionAgency":["S"],"actionId":["10081","56325"]},"options":{"format":"csv"}}',
-      )} ${origin}/attains/data/actions`,
+        `{"filters":{"actionAgency":["State"],"actionId":["10081","56325"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/actions`,
     );
   });
 
@@ -65,7 +68,7 @@ describe('Data Profile Action', () => {
     //File Format
     cy.findByText('Tab-separated (TSV)').click();
 
-    const queryValue = 'actionAgency=E&region=06&region=09';
+    const queryValue = 'actionAgency=EPA&region=06&region=09';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -73,13 +76,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/actions?${queryValue}&format=tsv`,
+      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=tsv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionAgency":["E"],"region":["06","09"]},"options":{"format":"tsv"}}',
-      )} ${origin}/attains/data/actions`,
+        `{"filters":{"actionAgency":["EPA"],"region":["06","09"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/actions`,
     );
   });
 
@@ -99,7 +102,7 @@ describe('Data Profile Action', () => {
     cy.findByText('Microsoft Excel (XLSX)').click();
 
     const queryValue =
-      'actionAgency=T&assessmentUnitId=AS-10S&assessmentUnitId=AS-05S&waterType=WASH&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS';
+      'actionAgency=Tribal&assessmentUnitId=AS-10S&assessmentUnitId=AS-05S&waterType=WASH&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -107,13 +110,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/actions?${queryValue}&format=xlsx`,
+      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=xlsx`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionAgency":["T"],"assessmentUnitId":["AS-10S","AS-05S"],"waterType":["WASH","GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"xlsx"}}',
-      )} ${origin}/attains/data/actions`,
+        `{"filters":{"actionAgency":["Tribal"],"assessmentUnitId":["AS-10S","AS-05S"],"waterType":["WASH","GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/actions`,
     );
   });
 
@@ -125,21 +128,17 @@ describe('Data Profile Action', () => {
     //Action ID
     cy.selectOption('input-actionId', '10081');
     cy.selectOption('input-actionId', '10817');
-
-    //Action Name
-    cy.selectOption('input-actionName', 'alder creek');
-    cy.selectOption('input-actionName', 'nelson creek');
+    cy.selectOption('input-actionId', 'alder gulch');
+    cy.selectOption('input-actionId', 'nelson creek');
 
     //Assessment Unit ID
     cy.selectOption('input-assessmentUnitId', 'as-03O');
     cy.selectOption('input-assessmentUnitId', 'as-04s');
 
-    //Organization Name
-    cy.selectOption('input-organizationName', 'california');
-    cy.selectOption('input-organizationName', 'montana');
-
     //Organization ID
-    cy.selectOption('input-organizationId', '21mswq');
+    cy.selectOption('input-organizationId', 'california');
+    cy.selectOption('input-organizationId', 'montana');
+    cy.selectOption('input-organizationId', '21ky');
 
     //Water Type
     cy.selectOption('input-waterType', 'gulf');
@@ -148,7 +147,7 @@ describe('Data Profile Action', () => {
     cy.findByText('Microsoft Excel (XLSX)').click();
 
     const queryValue =
-      'actionAgency=T&actionAgency=E&actionId=10081&actionId=10817&actionName=ALDER%20CREEK-%20RUBY%20RIVER%20WATERSHED%20TMDL%20%20&actionName=%20NELSON%20CREEK%20(HEADWATERS%20TO%20THE%20MOUTH%20-%20BIG%20DRY%20CREEK%20ARM%20OF%20FORT%20PECK%20RES)%20-%20REDWATER%20RIVER%20TPA&assessmentUnitId=AS-03O&assessmentUnitId=AS-04S&organizationId=21MSWQ&organizationName=California&organizationName=Montana&waterType=GULF';
+      'actionAgency=Tribal&actionAgency=EPA&actionId=10081&actionId=10817&actionId=41897&actionId=39736&assessmentUnitId=AS-03O&assessmentUnitId=AS-04S&organizationId=CA_SWRCB&organizationId=MTDEQ&organizationId=21KY&waterType=GULF';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -156,13 +155,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/actions?${queryValue}&format=xlsx`,
+      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=xlsx`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionAgency":["T","E"],"actionId":["10081","10817"],"actionName":["ALDER CREEK- RUBY RIVER WATERSHED TMDL  "," NELSON CREEK (HEADWATERS TO THE MOUTH - BIG DRY CREEK ARM OF FORT PECK RES) - REDWATER RIVER TPA"],"assessmentUnitId":["AS-03O","AS-04S"],"organizationId":["21MSWQ"],"organizationName":["California","Montana"],"waterType":["GULF"]},"options":{"format":"xlsx"}}',
-      )} ${origin}/attains/data/actions`,
+        `{"filters":{"actionAgency":["Tribal","EPA"],"actionId":["10081","10817","41897","39736"],"assessmentUnitId":["AS-03O","AS-04S"],"organizationId":["CA_SWRCB","MTDEQ","21KY"],"waterType":["GULF"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/actions`,
     );
   });
 });
