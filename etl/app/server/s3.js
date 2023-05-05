@@ -269,7 +269,7 @@ function fetchStateValues(pool) {
       const valuesAdded = new Set();
       const states = res.data.data
         .map((state) => ({
-          label: `${state.code} - ${state.name}`,
+          label: state.name,
           value: state.code,
         }))
         .filter((item) => {

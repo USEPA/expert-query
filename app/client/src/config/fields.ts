@@ -271,7 +271,8 @@ export const filterFields = [
   },
   {
     key: 'actionId',
-    label: 'Action ID',
+    label: 'Action ID (Action Name)',
+    placeholder: 'Select an Action',
     type: 'multiselect',
     contextFields: ['organizationId', 'region', 'state'],
     secondaryKey: 'actionName',
@@ -322,7 +323,8 @@ export const filterFields = [
   },
   {
     key: 'assessmentUnitId',
-    label: 'Assessment Unit ID',
+    label: 'Assessment Unit ID (Assessment Unit Name)',
+    placeholder: 'Select an Assessment Unit',
     type: 'multiselect',
     contextFields: ['organizationId', 'region', 'state'],
     secondaryKey: 'assessmentUnitName',
@@ -343,7 +345,8 @@ export const filterFields = [
   },
   {
     key: 'associatedActionId',
-    label: 'Associated Action ID',
+    label: 'Associated Action ID (Associated Action Name)',
+    placeholder: 'Select an Associated Action',
     type: 'multiselect',
     secondaryKey: 'associatedActionName',
   },
@@ -562,7 +565,8 @@ export const filterFields = [
   },
   {
     key: 'organizationId',
-    label: 'Organization ID',
+    label: 'Organization ID (Organization Name)',
+    placeholder: 'Select an Organization',
     type: 'multiselect',
     source: 'organizationId_organizationType',
     secondaryKey: 'organizationName',
