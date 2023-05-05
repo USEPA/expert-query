@@ -389,6 +389,61 @@ function executeQueryCountOnly(profile, req, res) {
 }
 
 /**
+ * Runs a query against the provided profile name and returns the number of records.
+ * @param {Object} profile definition of the profile being queried
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+async function executeQueryCountPerOrgCycle(profile, req, res) {
+  // always return json with the count
+  try {
+    const groupByColumns = [];
+    const hasOrgId = profile.columns.find((c) => c.name === 'organizationid');
+    const hasReportingCycleId = profile.columns.find(
+      (c) => c.name === 'reportingcycle',
+    );
+    const hasCycleId = profile.columns.find((c) => c.name === 'cycleid');
+
+    const orderByArray = [];
+    if (hasOrgId) {
+      groupByColumns.push('organizationid');
+      orderByArray.push({ column: 'organizationid', order: 'ASC' });
+    }
+    if (hasReportingCycleId) {
+      groupByColumns.push('reportingcycle');
+      orderByArray.push({ column: 'reportingcycle', order: 'DESC' });
+    }
+    if (hasCycleId) {
+      groupByColumns.push('cycleid');
+      orderByArray.push({ column: 'cycleid', order: 'ASC' });
+    }
+
+    if (groupByColumns.length === 0) {
+      res.status(200).json({
+        message:
+          'This table does not include any of the required columns (organizationid, reportingcycle, or cycleid).',
+      });
+    }
+
+    const results = await knex
+      .withSchema(req.activeSchema)
+      .select(groupByColumns)
+      .count()
+      .from(profile.tableName)
+      .groupBy(groupByColumns)
+      .orderBy(orderByArray);
+
+    res.status(200).json(results);
+  } catch (error) {
+    log.error(
+      `Failed to get count from the "${profile.tableName}" table:`,
+      error,
+    );
+    return res.status(error.code ?? 500).json(error);
+  }
+}
+
+/**
  * Retrieves the domain values for a single table column.
  * @param {express.Request} req
  * @param {express.Response} res
@@ -706,6 +761,13 @@ export default function (app, basePath) {
     router.get(`/${profileName}/count`, cors(corsOptions), function (req, res) {
       executeQueryCountOnly(profile, req, res);
     });
+    router.get(
+      `/${profileName}/countPerOrgCycle`,
+      cors(corsOptions),
+      async function (req, res) {
+        await executeQueryCountPerOrgCycle(profile, req, res);
+      },
+    );
 
     // create post requests
     router.post(
@@ -720,6 +782,13 @@ export default function (app, basePath) {
       cors(corsOptions),
       function (req, res) {
         executeQueryCountOnly(profile, req, res);
+      },
+    );
+    router.post(
+      `/${profileName}/countPerOrgCycle`,
+      cors(corsOptions),
+      async function (req, res) {
+        await executeQueryCountPerOrgCycle(profile, req, res);
       },
     );
 
