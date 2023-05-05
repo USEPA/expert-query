@@ -410,7 +410,9 @@ function executeValuesQuery(req, res) {
 
   const columns = [];
   for (const alias of columnAliases) {
-    const column = profile.columns.find((col) => col.alias === alias);
+    const column = profile.columns
+      .concat(profile.materializedViewColumns ?? [])
+      .find((col) => col.alias === alias);
     if (!column) {
       return res.status(404).json({
         message: `The column ${alias} does not exist on the selected profile`,
@@ -425,7 +427,7 @@ function executeValuesQuery(req, res) {
       log.error(
         `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
       );
-      res.status(500).send('Error! ' + error);
+      res.status(500).json({ message: 'Error! ' + error });
     });
 }
 
@@ -479,6 +481,17 @@ async function queryColumnValues(profile, columns, params, schema) {
     }
     return mv;
   });
+
+  // ensure no mv-only columns exist if no mv was found
+  if (!materializedView) {
+    for (const col of columns) {
+      if (!profile.columns.find((c) => c.name === col.name)) {
+        return res.status(404).json({
+          message: `The column ${col.alias} is not available with the current query`,
+        });
+      }
+    }
+  }
 
   // query table directly if a suitable materialized view was not found
   const query = knex

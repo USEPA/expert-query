@@ -7,7 +7,12 @@ import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
 import * as profiles from './profiles/index.js';
-import { deleteDirectory, readS3File, syncDomainValues } from './s3.js';
+import {
+  deleteDirectory,
+  readS3File,
+  retryRequest,
+  syncDomainValues,
+} from './s3.js';
 // config
 import { tableConfig } from '../config/tableConfig.js';
 
@@ -484,6 +489,58 @@ export async function getActiveSchema(pool) {
   return schemas.rows[0].schema_name;
 }
 
+async function fetchStateValues(s3Config, retryCount = 0) {
+  const res = await axios.get(s3Config.services.stateCodes, {
+    timeout: s3Config.config.webServiceTimeout,
+  });
+
+  if (res.status !== 200) {
+    return retryRequest('States', retryCount, s3Config, fetchStateValues);
+  }
+
+  return res.data.data;
+}
+
+async function loadStatesTable(pool, s3Config, schemaName) {
+  const client = await pool.connect();
+  try {
+    const uniqueCodes = new Set();
+    const states = (await fetchStateValues(s3Config)).filter((state) => {
+      return uniqueCodes.has(state.code) ? false : uniqueCodes.add(state.code);
+    });
+
+    await client.query('BEGIN');
+    await client.query(`SET search_path TO ${schemaName}`);
+    await client.query('DROP TABLE IF EXISTS states');
+    await client.query(
+      `CREATE TABLE states
+        (
+          id SERIAL PRIMARY KEY,
+          statecode VARCHAR(2),
+          statename VARCHAR(100)
+        )`,
+    );
+    for (const state of states) {
+      await client.query(
+        'INSERT INTO states(statecode, statename) VALUES ($1, $2)',
+        [state.code, state.name],
+      );
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    log.warn(`Failed to load states table: ${err}`);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function loadUtilityTables(pool, s3Config, schemaName) {
+  await loadStatesTable(pool, s3Config, schemaName);
+  log.info('Utility tables finished updating');
+}
+
 export async function runLoad(pool, s3Config, s3Julian) {
   log.info('Running ETL process!');
 
@@ -494,6 +551,9 @@ export async function runLoad(pool, s3Config, s3Julian) {
 
   try {
     const schemaId = await createNewSchema(pool, schemaName, s3Julian);
+
+    // Load tables first that will be used when creating profile materialized views
+    await loadUtilityTables(pool, s3Config, schemaName);
 
     // Add tables to schema and import new data
     const loadTasks = Object.values(profiles).map((profile) => {
@@ -736,11 +796,14 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
   // create materialized views for the table
   count = 0;
   for (const mv of table.materializedViews) {
+    // optionally join columns from other tables
+    const joinClause = (join) =>
+      `LEFT JOIN ${join.table} ON ${join.joinKey[0]} = ${join.joinKey[1]}`;
     await client.query(`
       CREATE MATERIALIZED VIEW IF NOT EXISTS ${mv.name}
       AS
       SELECT DISTINCT ${mv.columns.map((col) => col.name).join(', ')}
-      FROM ${tableName} 
+      FROM ${tableName} ${mv.joins ? mv.joins.map(joinClause).join(' ') : ''}
 
       WITH DATA;
     `);

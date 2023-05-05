@@ -136,13 +136,13 @@ export async function uploadFilePublic(
 }
 
 // Retries an HTTP request in response to a failure
-async function retryRequest(serviceName, count, s3Config, callback) {
-  log.info(`Non-200 response returned from ${serviceName} service, retrying`);
+export async function retryRequest(serviceName, count, s3Config, callback) {
   if (count < s3Config.config.retryLimit) {
+    log.info(`Non-200 response returned from ${serviceName} service, retrying`);
     await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
     return callback(s3Config, count + 1);
   } else {
-    throw new Error(`Sync ${serviceName} retry count exceeded`);
+    throw new Error(`${serviceName} request retry count exceeded`);
   }
 }
 
@@ -268,12 +268,10 @@ function fetchStateValues(pool) {
 
       const valuesAdded = new Set();
       const states = res.data.data
-        .map((state) => {
-          return {
-            label: state.name,
-            value: state.code,
-          };
-        })
+        .map((state) => ({
+          label: `${state.code} - ${state.name}`,
+          value: state.code,
+        }))
         .filter((item) => {
           return valuesAdded.has(item.value)
             ? false

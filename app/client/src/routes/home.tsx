@@ -1161,7 +1161,6 @@ function filterDynamicOptions({
   limit = 20,
   profile,
   secondaryFieldName,
-  staticOptions,
 }: {
   defaultOption?: Option | null;
   direction?: SortDirection;
@@ -1170,7 +1169,6 @@ function filterDynamicOptions({
   limit?: number;
   profile: string;
   secondaryFieldName?: string | null;
-  staticOptions?: StaticOptions;
 }) {
   return async function (
     inputValue: string,
@@ -1187,20 +1185,12 @@ function filterDynamicOptions({
     const values = await postData(url, data, 'json', signal);
     const options = values.map((item: Record<string, string>) => {
       const value = item[fieldName];
-      if (staticOptions?.hasOwnProperty(fieldName)) {
-        // Map labels to those retrieved from the ETL's domain values
-        return (
-          staticOptions[
-            fieldName as keyof StaticOptions
-          ] as ReadonlyArray<Option>
-        ).find((option) => option.value === value);
-      } else {
-        // Concatenate primary column value with secondary, if present
-        const label = secondaryFieldName
-          ? `${value} - ${item[secondaryFieldName]}`
-          : value;
-        return { label, value };
-      }
+      // Concatenate primary column value with secondary, if present
+      const secondaryValue = secondaryFieldName
+        ? item[secondaryFieldName]
+        : null;
+      const label = secondaryValue ? `${value} - ${secondaryValue}` : value;
+      return { label, value };
     });
     return defaultOption ? [defaultOption, ...options] : options;
   };
@@ -1240,7 +1230,6 @@ function filterOptions({
       limit: dynamicOptionLimit,
       profile,
       secondaryFieldName,
-      staticOptions,
     });
   }
 }
