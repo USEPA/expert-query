@@ -734,7 +734,8 @@ function SelectFilter<
       formatOptionLabel={(option) =>
         secondaryFilterKey ? (
           <div>
-            {option.value} <b>({option.label})</b>
+            {option.value}{' '}
+            <span style={{ fontWeight: 600 }}>({option.label})</span>
           </div>
         ) : (
           option.label
