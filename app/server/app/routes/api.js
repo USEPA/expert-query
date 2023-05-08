@@ -191,9 +191,17 @@ export default function (app, basePath) {
   router.get('/lookupFiles', (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
+    const servicesFilename = environment.isLocal
+      ? 'services-local.json'
+      : environment.isDevelopment
+      ? 'services-dev.json'
+      : environment.isStaging
+      ? 'services-stage.json'
+      : 'services-production.json';
+
     // NOTE: static content files found in `app/server/app/content/` directory
     const filenames = [
-      'content/config/services.json',
+      `content/config/${servicesFilename}`,
       'content/alerts/config.json',
       'content-etl/glossary.json',
       'content/config/parameters.json',

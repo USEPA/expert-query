@@ -64,7 +64,7 @@ export function Home() {
   const { sourceState, sourceHandlers } = useSourceState();
 
   const apiKey = content.data.services?.eqApiKey || '';
-  const apiUrl = content.data.services?.eqDataApi || `${serverUrl}/api/attains`;
+  const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
 
   const { queryParams, queryParamErrors } = useQueryParams({
     apiKey,
@@ -188,7 +188,7 @@ export function QueryBuilder() {
   const { content } = useContentState();
 
   const apiKey = content.data.services?.eqApiKey || '';
-  const apiUrl = content.data.services?.eqDataApi || `${serverUrl}/api/attains`;
+  const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
 
   return (
     <>
