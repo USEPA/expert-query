@@ -45,7 +45,7 @@ async function getActiveSchema(req, res, next) {
  * @param {express.NextFunction} next
  */
 function protectRoutes(req, res, next) {
-  if (!environment.isLocal) {
+  if (environment.isLocal) {
     next();
     return;
   }
