@@ -16,6 +16,8 @@ const environment = getEnvironment();
  * @param {express.NextFunction} next
  */
 async function getActiveSchema(req, res, next) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
   try {
     // query the logging schema to get the active schema
     const schema = await knex
@@ -31,8 +33,10 @@ async function getActiveSchema(req, res, next) {
 
     next();
   } catch (error) {
-    log.error('Failed to get active schema: ', error);
-    res.status(500).send('Error !' + error);
+    log.error(
+      formatLogMsg(metadataObj, 'Failed to get active schema: ', error),
+    );
+    res.status(500).json({ message: 'Error !' + error });
   }
 }
 
