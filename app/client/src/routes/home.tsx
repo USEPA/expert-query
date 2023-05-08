@@ -731,16 +731,12 @@ function SelectFilter<
     <Select
       aria-label={`${filterLabel} input`}
       className="width-full"
-      formatOptionLabel={(option) =>
-        secondaryFilterKey ? (
-          <div>
-            {option.value}{' '}
-            <span style={{ fontWeight: 600 }}>({option.label})</span>
-          </div>
-        ) : (
-          option.label
-        )
-      }
+      formatOptionLabel={(option) => (
+        <SelectOptionLabel
+          option={option}
+          concatenate={isNotEmpty(secondaryFilterKey)}
+        />
+      )}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
@@ -775,6 +771,16 @@ function SelectFilter<
       }}
       value={filterValue}
     />
+  );
+}
+
+function SelectOptionLabel({ concatenate, option }: SelectOptionLabelProps) {
+  return concatenate ? (
+    <>
+      {option.value} <span style={{ fontWeight: 600 }}>({option.label})</span>
+    </>
+  ) : (
+    <>{option.label}</>
   );
 }
 
@@ -1865,6 +1871,11 @@ type SelectFilterProps<
   sourceKey: (typeof sourceFieldsConfig)[number]['key'] | null;
   sourceValue: SourceFieldState[SourceField] | null;
   staticOptions: StaticOptions;
+};
+
+type SelectOptionLabelProps = {
+  concatenate: boolean;
+  option: Option;
 };
 
 type SingleOptionField = (typeof singleOptionFields)[number];
