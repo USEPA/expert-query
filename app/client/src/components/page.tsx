@@ -23,6 +23,7 @@ export function Page({ children }: PageProps) {
       label: 'National Downloads',
     },
     apiDocs: { path: '/api-documentation', label: 'API Documentation' },
+    apiKeySignup: { path: '/api-key-signup', label: 'API Key Signup' },
   };
 
   return (
