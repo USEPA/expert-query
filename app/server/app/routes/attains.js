@@ -6,7 +6,7 @@ import { readdirSync, statSync } from 'node:fs';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
-import { getActiveSchema } from '../middleware.js';
+import { getActiveSchema, protectRoutes } from '../middleware.js';
 import { appendToWhere, knex } from '../utilities/database.js';
 import { getEnvironment } from '../utilities/environment.js';
 import { log } from '../utilities/logger.js';
@@ -688,6 +688,7 @@ async function checkDomainValuesHealth(req, res) {
 export default function (app, basePath) {
   const router = express.Router();
 
+  router.use(protectRoutes);
   router.use(getActiveSchema);
 
   const corsOptions = {
