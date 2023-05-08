@@ -39,9 +39,7 @@
   "paths": {
     "/lookupFiles": {
       "get": {
-        "tags": [
-          "S3"
-        ],
+        "tags": ["S3"],
         "summary": "Fetch Expert Query UI content",
         "responses": {
           "200": {
@@ -55,9 +53,7 @@
     },
     "/getFile/{path}": {
       "get": {
-        "tags": [
-          "S3"
-        ],
+        "tags": ["S3"],
         "summary": "Fetch a file from S3",
         "parameters": [
           {
@@ -82,11 +78,50 @@
         }
       }
     },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "description": "Check the status of the web server.",
+        "summary": "Web server health check",
+        "responses": {
+          "200": {
+            "description": "The web server is up.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/etlGlossary": {
+      "get": {
+        "tags": ["Health"],
+        "description": "Check if the last run of the ETL glossary task completed successfully.",
+        "summary": "ETL glossary task health check",
+        "responses": {
+          "200": {
+            "description": "Returns the last status of the ETL glossary task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorString"
+          }
+        }
+      }
+    },
     "/attains/health/etlDatabase": {
       "get": {
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "description": "Check if the last run of the ETL database task completed successfully.",
         "summary": "ETL database task health check",
         "responses": {
@@ -108,9 +143,7 @@
     },
     "/attains/health/etlDomainValues": {
       "get": {
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "description": "Check if the last run of the ETL domain values task completed successfully.",
         "summary": "ETL domain values task health check",
         "responses": {
@@ -132,9 +165,7 @@
     },
     "/attains/{profile}/values/{column}": {
       "get": {
-        "tags": [
-          "ATTAINS - Values"
-        ],
+        "tags": ["ATTAINS - Values"],
         "summary": "Query distinct column values",
         "parameters": [
           {
@@ -388,9 +419,7 @@
         }
       },
       "post": {
-        "tags": [
-          "ATTAINS - Values"
-        ],
+        "tags": ["ATTAINS - Values"],
         "summary": "Query distinct column values",
         "parameters": [
           {
@@ -431,9 +460,7 @@
             "example": "UP"
           }
         },
-        "required": [
-          "status"
-        ]
+        "required": ["status"]
       },
       "ProfileMetadata": {
         "type": "object",
@@ -459,9 +486,7 @@
       "actionAgencyParam": {
         "name": "actionAgency",
         "in": "query",
-        "example": [
-          "State"
-        ],
+        "example": ["State"],
         "explode": true,
         "schema": {
           "type": "array",
@@ -474,9 +499,7 @@
         "name": "actionId",
         "in": "query",
         "explode": true,
-        "example": [
-          "64808"
-        ],
+        "example": ["64808"],
         "schema": {
           "type": "array",
           "items": {
@@ -488,9 +511,7 @@
         "name": "actionName",
         "in": "query",
         "explode": true,
-        "example": [
-          "12-Mile Creek"
-        ],
+        "example": ["12-Mile Creek"],
         "schema": {
           "type": "array",
           "items": {
@@ -502,9 +523,7 @@
         "name": "actionType",
         "in": "query",
         "explode": true,
-        "example": [
-          "Implementation Completed"
-        ],
+        "example": ["Implementation Completed"],
         "schema": {
           "type": "array",
           "items": {
@@ -516,9 +535,7 @@
         "name": "addressedParameter",
         "in": "query",
         "explode": true,
-        "example": [
-          "AMMONIA"
-        ],
+        "example": ["AMMONIA"],
         "schema": {
           "type": "array",
           "items": {
@@ -530,9 +547,7 @@
         "name": "alternateListingIdentifier",
         "in": "query",
         "explode": true,
-        "example": [
-          "SD-CH-L-SHERIDAN_01"
-        ],
+        "example": ["SD-CH-L-SHERIDAN_01"],
         "schema": {
           "type": "array",
           "items": {
@@ -566,9 +581,7 @@
         "name": "assessmentBasis",
         "in": "query",
         "explode": true,
-        "example": [
-          "Monitored Data"
-        ],
+        "example": ["Monitored Data"],
         "schema": {
           "type": "array",
           "items": {
@@ -589,9 +602,7 @@
         "name": "assessmentMethods",
         "in": "query",
         "explode": true,
-        "example": [
-          "2002 Assessment Methodology"
-        ],
+        "example": ["2002 Assessment Methodology"],
         "schema": {
           "type": "array",
           "items": {
@@ -603,9 +614,7 @@
         "name": "assessmentTypes",
         "in": "query",
         "explode": true,
-        "example": [
-          "PHYSICAL/CHEMICAL"
-        ],
+        "example": ["PHYSICAL/CHEMICAL"],
         "schema": {
           "type": "array",
           "items": {
@@ -617,9 +626,7 @@
         "name": "assessmentUnitId",
         "in": "query",
         "explode": true,
-        "example": [
-          "AZ150200001-010_00"
-        ],
+        "example": ["AZ150200001-010_00"],
         "schema": {
           "type": "array",
           "items": {
@@ -631,9 +638,7 @@
         "name": "assessmentUnitName",
         "in": "query",
         "explode": true,
-        "example": [
-          "Abbott Branch"
-        ],
+        "example": ["Abbott Branch"],
         "schema": {
           "type": "array",
           "items": {
@@ -645,9 +650,7 @@
         "name": "assessmentUnitStatus",
         "in": "query",
         "explode": true,
-        "example": [
-          "A"
-        ],
+        "example": ["A"],
         "schema": {
           "type": "array",
           "items": {
@@ -659,9 +662,7 @@
         "name": "associatedActionAgency",
         "in": "query",
         "explode": true,
-        "example": [
-          "State"
-        ],
+        "example": ["State"],
         "schema": {
           "type": "array",
           "items": {
@@ -673,9 +674,7 @@
         "name": "associatedActionId",
         "in": "query",
         "explode": true,
-        "example": [
-          "64808"
-        ],
+        "example": ["64808"],
         "schema": {
           "type": "array",
           "items": {
@@ -687,9 +686,7 @@
         "name": "associatedActionName",
         "in": "query",
         "explode": true,
-        "example": [
-          "12-Mile Creek"
-        ],
+        "example": ["12-Mile Creek"],
         "schema": {
           "type": "array",
           "items": {
@@ -701,9 +698,7 @@
         "name": "associatedActionStatus",
         "in": "query",
         "explode": true,
-        "example": [
-          "EPA Final Action"
-        ],
+        "example": ["EPA Final Action"],
         "schema": {
           "type": "array",
           "items": {
@@ -715,9 +710,7 @@
         "name": "associatedActionType",
         "in": "query",
         "explode": true,
-        "example": [
-          "Implementation Completed"
-        ],
+        "example": ["Implementation Completed"],
         "schema": {
           "type": "array",
           "items": {
@@ -729,9 +722,7 @@
         "name": "causeName",
         "in": "query",
         "explode": true,
-        "example": [
-          "EUTROPHICATION"
-        ],
+        "example": ["EUTROPHICATION"],
         "schema": {
           "type": "array",
           "items": {
@@ -762,9 +753,7 @@
         "name": "confirmed",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -784,9 +773,7 @@
         "name": "cwa303dPriorityRanking",
         "in": "query",
         "explode": true,
-        "example": [
-          "High"
-        ],
+        "example": ["High"],
         "schema": {
           "type": "array",
           "items": {
@@ -814,9 +801,7 @@
         "name": "catchmentNhdPlusId",
         "in": "query",
         "explode": true,
-        "example": [
-          "-504164"
-        ],
+        "example": ["-504164"],
         "schema": {
           "type": "array",
           "items": {
@@ -828,9 +813,7 @@
         "name": "cycleId",
         "in": "query",
         "explode": true,
-        "example": [
-          2346
-        ],
+        "example": [2346],
         "schema": {
           "type": "array",
           "items": {
@@ -858,9 +841,7 @@
         "name": "delisted",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -872,9 +853,7 @@
         "name": "delistedReason",
         "in": "query",
         "explode": true,
-        "example": [
-          "Not specified"
-        ],
+        "example": ["Not specified"],
         "schema": {
           "type": "array",
           "items": {
@@ -894,9 +873,7 @@
         "name": "epaIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          "4A"
-        ],
+        "example": ["4A"],
         "schema": {
           "type": "array",
           "items": {
@@ -908,9 +885,7 @@
         "name": "explicitMarginOfSafety",
         "in": "query",
         "explode": true,
-        "example": [
-          "10%"
-        ],
+        "example": ["10%"],
         "schema": {
           "type": "array",
           "items": {
@@ -930,9 +905,7 @@
         "name": "implicitMarginOfSafety",
         "in": "query",
         "explode": true,
-        "example": [
-          "conservative assumptions"
-        ],
+        "example": ["conservative assumptions"],
         "schema": {
           "type": "array",
           "items": {
@@ -944,9 +917,7 @@
         "name": "includeInMeasure",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -958,9 +929,7 @@
         "name": "inIndianCountry",
         "in": "query",
         "explode": true,
-        "example": [
-          "N"
-        ],
+        "example": ["N"],
         "schema": {
           "type": "array",
           "items": {
@@ -980,9 +949,7 @@
         "name": "locationText",
         "in": "query",
         "explode": true,
-        "example": [
-          "01010001"
-        ],
+        "example": ["01010001"],
         "schema": {
           "type": "array",
           "items": {
@@ -994,9 +961,7 @@
         "name": "locationTypeCode",
         "in": "query",
         "explode": true,
-        "example": [
-          "Basin"
-        ],
+        "example": ["Basin"],
         "schema": {
           "type": "array",
           "items": {
@@ -1032,9 +997,7 @@
         "name": "monitoringLocationId",
         "in": "query",
         "explode": true,
-        "example": [
-          "1083"
-        ],
+        "example": ["1083"],
         "schema": {
           "type": "array",
           "items": {
@@ -1046,9 +1009,7 @@
         "name": "monitoringLocationOrgId",
         "in": "query",
         "explode": true,
-        "example": [
-          "21AWIC"
-        ],
+        "example": ["21AWIC"],
         "schema": {
           "type": "array",
           "items": {
@@ -1060,9 +1021,7 @@
         "name": "npdesIdentifier",
         "in": "query",
         "explode": true,
-        "example": [
-          "KS0099571"
-        ],
+        "example": ["KS0099571"],
         "schema": {
           "type": "array",
           "items": {
@@ -1075,9 +1034,7 @@
         "description": "The unique ID assigned to a data item under the current profile",
         "in": "query",
         "explode": true,
-        "example": [
-          42
-        ],
+        "example": [42],
         "schema": {
           "type": "array",
           "items": {
@@ -1089,9 +1046,7 @@
         "name": "organizationId",
         "in": "query",
         "explode": true,
-        "example": [
-          "21AWIC"
-        ],
+        "example": ["21AWIC"],
         "schema": {
           "type": "array",
           "items": {
@@ -1103,9 +1058,7 @@
         "name": "organizationName",
         "in": "query",
         "explode": true,
-        "example": [
-          "Georgia Environmental Protection Division"
-        ],
+        "example": ["Georgia Environmental Protection Division"],
         "schema": {
           "type": "array",
           "items": {
@@ -1117,9 +1070,7 @@
         "name": "otherIdentifier",
         "in": "query",
         "explode": true,
-        "example": [
-          "City of  Wellington"
-        ],
+        "example": ["City of  Wellington"],
         "schema": {
           "type": "array",
           "items": {
@@ -1131,9 +1082,7 @@
         "name": "overallStatus",
         "in": "query",
         "explode": true,
-        "example": [
-          "Fully Supporting"
-        ],
+        "example": ["Fully Supporting"],
         "schema": {
           "type": "array",
           "items": {
@@ -1145,9 +1094,7 @@
         "name": "parameterAttainment",
         "in": "query",
         "explode": true,
-        "example": [
-          "1,2-DICHLOROBENZENE"
-        ],
+        "example": ["1,2-DICHLOROBENZENE"],
         "schema": {
           "type": "array",
           "items": {
@@ -1159,9 +1106,7 @@
         "name": "parameterGroup",
         "in": "query",
         "explode": true,
-        "example": [
-          "BIOTOXINS"
-        ],
+        "example": ["BIOTOXINS"],
         "schema": {
           "type": "array",
           "items": {
@@ -1173,9 +1118,7 @@
         "name": "parameterIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          23
-        ],
+        "example": [23],
         "schema": {
           "type": "array",
           "items": {
@@ -1187,9 +1130,7 @@
         "name": "parameterName",
         "in": "query",
         "explode": true,
-        "example": [
-          "EUTROPHICATION"
-        ],
+        "example": ["EUTROPHICATION"],
         "schema": {
           "type": "array",
           "items": {
@@ -1201,9 +1142,7 @@
         "name": "parameter",
         "in": "query",
         "explode": true,
-        "example": [
-          "EUTROPHICATION"
-        ],
+        "example": ["EUTROPHICATION"],
         "schema": {
           "type": "array",
           "items": {
@@ -1215,9 +1154,7 @@
         "name": "parameterStateIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          23
-        ],
+        "example": [23],
         "schema": {
           "type": "array",
           "items": {
@@ -1229,9 +1166,7 @@
         "name": "parameterStatus",
         "in": "query",
         "explode": true,
-        "example": [
-          "Observed effect"
-        ],
+        "example": ["Observed effect"],
         "schema": {
           "type": "array",
           "items": {
@@ -1251,9 +1186,7 @@
         "name": "pollutant",
         "in": "query",
         "explode": true,
-        "example": [
-          "ACID"
-        ],
+        "example": ["ACID"],
         "schema": {
           "type": "array",
           "items": {
@@ -1265,9 +1198,7 @@
         "name": "pollutantIndicator",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -1287,9 +1218,7 @@
         "name": "region",
         "in": "query",
         "explode": true,
-        "example": [
-          "01"
-        ],
+        "example": ["01"],
         "schema": {
           "type": "array",
           "items": {
@@ -1328,9 +1257,7 @@
         "name": "sourceName",
         "in": "query",
         "explode": true,
-        "example": [
-          "ACID MINE DRAINAGE"
-        ],
+        "example": ["ACID MINE DRAINAGE"],
         "schema": {
           "type": "array",
           "items": {
@@ -1342,9 +1269,7 @@
         "name": "sourceType",
         "in": "query",
         "explode": true,
-        "example": [
-          "Nonpoint source"
-        ],
+        "example": ["Nonpoint source"],
         "schema": {
           "type": "array",
           "items": {
@@ -1364,9 +1289,7 @@
         "name": "stateIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          "4A"
-        ],
+        "example": ["4A"],
         "schema": {
           "type": "array",
           "items": {
@@ -1378,9 +1301,7 @@
         "name": "state",
         "in": "query",
         "explode": true,
-        "example": [
-          "OH"
-        ],
+        "example": ["OH"],
         "schema": {
           "type": "array",
           "items": {
@@ -1409,9 +1330,7 @@
         "name": "useClassName",
         "in": "query",
         "explode": true,
-        "example": [
-          "CLASS B"
-        ],
+        "example": ["CLASS B"],
         "schema": {
           "type": "array",
           "items": {
@@ -1423,9 +1342,7 @@
         "name": "useGroup",
         "in": "query",
         "explode": true,
-        "example": [
-          "AGRICULTURAL"
-        ],
+        "example": ["AGRICULTURAL"],
         "schema": {
           "type": "array",
           "items": {
@@ -1437,9 +1354,7 @@
         "name": "useIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          23
-        ],
+        "example": [23],
         "schema": {
           "type": "array",
           "items": {
@@ -1451,9 +1366,7 @@
         "name": "useName",
         "in": "query",
         "explode": true,
-        "example": [
-          "Aquaculture"
-        ],
+        "example": ["Aquaculture"],
         "schema": {
           "type": "array",
           "items": {
@@ -1465,9 +1378,7 @@
         "name": "useStateIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          23
-        ],
+        "example": [23],
         "schema": {
           "type": "array",
           "items": {
@@ -1479,9 +1390,7 @@
         "name": "useSupport",
         "in": "query",
         "explode": true,
-        "example": [
-          "Fully Supporting"
-        ],
+        "example": ["Fully Supporting"],
         "schema": {
           "type": "array",
           "items": {
@@ -1493,9 +1402,7 @@
         "name": "vision303dPriority",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -1507,9 +1414,7 @@
         "name": "wasteLoadAllocation",
         "in": "query",
         "explode": true,
-        "example": [
-          7.09
-        ],
+        "example": [7.09],
         "schema": {
           "type": "array",
           "items": {
@@ -1522,9 +1427,7 @@
         "name": "waterType",
         "in": "query",
         "explode": true,
-        "example": [
-          "ESTUARY"
-        ],
+        "example": ["ESTUARY"],
         "schema": {
           "type": "array",
           "items": {
@@ -1657,9 +1560,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "message"
-              ]
+              "required": ["message"]
             }
           }
         }
@@ -1679,10 +1580,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "code",
-                "message"
-              ]
+              "required": ["code", "message"]
             }
           }
         }
