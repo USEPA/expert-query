@@ -3,19 +3,19 @@
   "servers": [
     {
       "description": "Production",
-      "url": "https://owapps.app.cloud.gov/expertquery/api/attains"
+      "url": "https://owapps.app.cloud.gov/expertquery/api"
     },
     {
       "description": "Staging",
-      "url": "https://owapps-stage.app.cloud.gov/expertquery/api/attains"
+      "url": "https://owapps-stage.app.cloud.gov/expertquery/api"
     },
     {
       "description": "Development",
-      "url": "https://owapps-dev.app.cloud.gov/expertquery/api/attains"
+      "url": "https://owapps-dev.app.cloud.gov/expertquery/api"
     },
     {
       "description": "Developer",
-      "url": " http://localhost:{port}/api/attains",
+      "url": " http://localhost:{port}/api",
       "variables": {
         "port": {
           "default": 9090
@@ -24,9 +24,9 @@
     }
   ],
   "info": {
-    "description": "Use this web service to query **ATTAINS** (Assessment and Total Maximum Daily Load Tracking and Implementation System) data. The data is organized into seven top-level profiles, which can be described as follows:\n\n **Actions:** Contains detailed information on plans to restore and protect water quality including Total Maximum Daily Loads (TMDLs), 4b Plans, 5R Plans, Protection Approaches, and other plans.\n\n**Assessments:** Contains detailed information on waters assessed under Section 305(b) of the Clean Water Act and waters listed as impaired under Section 303(d) of the Clean Water Act. This includes assessed uses and parameter attainments.\n\n**Assessment Units:** Contains detailed information on assessment unit location and waterbody types. Please note, some waters may contain more than one water type.\n\n**Assessment Units with Monitoring Locations:** Contains information on the monitoring locations used to make assessment determinations at specific assessment units.\n\n**Catchment Correspondence:** Contains the association between assessment units and National Hydrography Dataset Plus (NHDPlus) high resolution catchments.\n\n**Sources:** Identifies sources of impairment for assessed waters.\n\n**TMDL:** Contains detailed information on Total Maximum Daily Load (TMDL) plans.",
+    "description": "",
     "version": "1.0.0",
-    "title": "US EPA Expert Query - ATTAINS",
+    "title": "US EPA Expert Query",
     "termsOfService": "https://edg.epa.gov/EPA_Data_License.html",
     "contact": {
       "email": ""
@@ -37,12 +37,10 @@
     }
   },
   "paths": {
-    "/actions": {
-      "summary": "Query Actions profile data",
+    "/attains/actions": {
       "get": {
-        "tags": [
-          "Actions"
-        ],
+        "tags": ["ATTAINS - Actions"],
+        "summary": "Query Actions profile data",
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -121,9 +119,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Actions"
-        ],
+        "tags": ["ATTAINS - Actions"],
+        "summary": "Query Actions profile data",
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -145,12 +142,10 @@
         }
       }
     },
-    "/actions/count": {
-      "summary": "Evaluate the row count for the provided query against the Actions profile",
+    "/attains/actions/count": {
       "get": {
-        "tags": [
-          "Actions"
-        ],
+        "summary": "Row count of Actions profile query",
+        "tags": ["ATTAINS - Actions"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -226,9 +221,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Actions"
-        ],
+        "summary": "Row count of Actions profile query",
+        "tags": ["ATTAINS - Actions"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -250,12 +244,10 @@
         }
       }
     },
-    "/assessments": {
-      "summary": "Query Assessments profile data",
+    "/attains/assessments": {
       "get": {
-        "tags": [
-          "Assessments"
-        ],
+        "summary": "Query Assessments profile data",
+        "tags": ["ATTAINS - Assessments"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -460,9 +452,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Assessments"
-        ],
+        "summary": "Query Assessments profile data",
+        "tags": ["ATTAINS - Assessments"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -484,12 +475,10 @@
         }
       }
     },
-    "/assessments/count": {
-      "summary": "Evaluate the row count for the provided query against the Assessments profile",
+    "/attains/assessments/count": {
       "get": {
-        "tags": [
-          "Assessments"
-        ],
+        "summary": "Row count of Assessments profile query",
+        "tags": ["ATTAINS - Assessments"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -691,9 +680,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Assessments"
-        ],
+        "summary": "Row count of Assessments profile query",
+        "tags": ["ATTAINS - Assessments"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -715,12 +703,10 @@
         }
       }
     },
-    "/assessmentUnits": {
-      "summary": "Query Assessment Units profile data",
+    "/attains/assessmentUnits": {
       "get": {
-        "tags": [
-          "Assessment Units"
-        ],
+        "summary": "Query Assessment Units profile data",
+        "tags": ["ATTAINS - Assessment Units"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -793,9 +779,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Assessment Units"
-        ],
+        "summary": "Query Assessment Units profile data",
+        "tags": ["ATTAINS - Assessment Units"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -817,12 +802,10 @@
         }
       }
     },
-    "/assessmentUnits/count": {
-      "summary": "Evaluate the row count for the provided query against the Assessment Units profile",
+    "/attains/assessmentUnits/count": {
       "get": {
-        "tags": [
-          "Assessment Units"
-        ],
+        "summary": "Row count of Assessment Units profile query",
+        "tags": ["ATTAINS - Assessment Units"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -892,9 +875,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Assessment Units"
-        ],
+        "summary": "Row count of Assessment Units profile query",
+        "tags": ["ATTAINS - Assessment Units"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -916,12 +898,10 @@
         }
       }
     },
-    "/assessmentUnitsMonitoringLocations": {
-      "summary": "Query Assessment Units with Monitoring Locations profile data",
+    "/attains/assessmentUnitsMonitoringLocations": {
       "get": {
-        "tags": [
-          "Assessment Units with Monitoring Locations"
-        ],
+        "summary": "Query Assessment Units with Monitoring Locations profile data",
+        "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -994,9 +974,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Assessment Units with Monitoring Locations"
-        ],
+        "summary": "Query Assessment Units with Monitoring Locations profile data",
+        "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1018,12 +997,10 @@
         }
       }
     },
-    "/assessmentUnitsMonitoringLocations/count": {
-      "summary": "Evaluate the row count for the provided query against the Assessment Units with Monitoring Locations profile",
+    "/attains/assessmentUnitsMonitoringLocations/count": {
       "get": {
-        "tags": [
-          "Assessment Units with Monitoring Locations"
-        ],
+        "summary": "Row count of Assessment Units with Monitoring Locations profile query",
+        "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1093,9 +1070,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Assessment Units with Monitoring Locations"
-        ],
+        "summary": "Row count of Assessment Units with Monitoring Locations profile query",
+        "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1117,12 +1093,10 @@
         }
       }
     },
-    "/catchmentCorrespondence": {
-      "summary": "Query Catchment Correspondence profile data",
+    "/attains/catchmentCorrespondence": {
       "get": {
-        "tags": [
-          "Catchment Correspondence"
-        ],
+        "summary": "Query Catchment Correspondence profile data",
+        "tags": ["ATTAINS - Catchment Correspondence"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1183,9 +1157,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Catchment Correspondence"
-        ],
+        "summary": "Query Catchment Correspondence profile data",
+        "tags": ["ATTAINS - Catchment Correspondence"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1207,12 +1180,10 @@
         }
       }
     },
-    "/catchmentCorrespondence/count": {
-      "summary": "Evaluate the row count for the provided query against the Catchment Correspondence profile",
+    "/attains/catchmentCorrespondence/count": {
       "get": {
-        "tags": [
-          "Catchment Correspondence"
-        ],
+        "summary": "Row count of Catchment Correspondence profile query",
+        "tags": ["ATTAINS - Catchment Correspondence"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1270,9 +1241,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Catchment Correspondence"
-        ],
+        "summary": "Row count of Catchment Correspondence profile query",
+        "tags": ["ATTAINS - Catchment Correspondence"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1294,12 +1264,10 @@
         }
       }
     },
-    "/sources": {
-      "summary": "Query Sources profile data",
+    "/attains/sources": {
       "get": {
-        "tags": [
-          "Sources"
-        ],
+        "summary": "Query Sources profile data",
+        "tags": ["ATTAINS - Sources"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1381,9 +1349,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Sources"
-        ],
+        "summary": "Query Sources profile data",
+        "tags": ["ATTAINS - Sources"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1405,12 +1372,10 @@
         }
       }
     },
-    "/sources/count": {
-      "summary": "Evaluate the row count for the provided query against the Sources profile",
+    "/attains/sources/count": {
       "get": {
-        "tags": [
-          "Sources"
-        ],
+        "summary": "Row count of Sources profile query",
+        "tags": ["ATTAINS - Sources"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1489,9 +1454,8 @@
         }
       },
       "post": {
-        "tags": [
-          "Sources"
-        ],
+        "summary": "Row count of Sources profile query",
+        "tags": ["ATTAINS - Sources"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1513,12 +1477,10 @@
         }
       }
     },
-    "/tmdl": {
-      "summary": "Query TMDL profile data",
+    "/attains/tmdl": {
       "get": {
-        "tags": [
-          "TMDL"
-        ],
+        "summary": "Query TMDL profile data",
+        "tags": ["ATTAINS - TMDL"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1624,9 +1586,8 @@
         }
       },
       "post": {
-        "tags": [
-          "TMDL"
-        ],
+        "summary": "Query TMDL profile data",
+        "tags": ["ATTAINS - TMDL"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1648,12 +1609,10 @@
         }
       }
     },
-    "/tmdl/count": {
-      "summary": "Evaluate the row count for the provided query against the TMDL profile",
+    "/attains/tmdl/count": {
       "get": {
-        "tags": [
-          "TMDL"
-        ],
+        "summary": "Row count of TMDL profile query",
+        "tags": ["ATTAINS - TMDL"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1756,9 +1715,8 @@
         }
       },
       "post": {
-        "tags": [
-          "TMDL"
-        ],
+        "summary": "Row count of TMDL profile query",
+        "tags": ["ATTAINS - TMDL"],
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -1779,11 +1737,32 @@
           }
         }
       }
+    },
+    "/openapi": {
+      "get": {
+        "summary": "Retrieve this OpenAPI JSON specification",
+        "tags": ["OpenAPI"],
+        "responses": {
+          "200": {
+            "description": "A success response. A JSON response containing Expert Query's OpenAPI specification is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
     }
   },
   "externalDocs": {
-    "description": "Find out more about the ATTAINS program",
-    "url": "https://www.epa.gov/waterdata/attains"
+    "description": "Find out more about Expert Query",
+    "url": ""
   },
   "components": {
     "schemas": {
@@ -1967,9 +1946,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "AssessmentsFilters": {
         "type": "object",
@@ -2473,9 +2450,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "AssessmentUnitsFilters": {
         "type": "object",
@@ -2731,9 +2706,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "AssessmentUnitsMonitoringLocationsQueryOutput": {
         "type": "object",
@@ -2814,9 +2787,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "CatchmentCorrespondenceFilters": {
         "type": "object",
@@ -2931,9 +2902,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "FileAttachmentCsv": {
         "type": "string",
@@ -2962,12 +2931,7 @@
       "OutputFormat": {
         "type": "string",
         "description": "This field is ignored in queries sent to '/count' endpoints",
-        "enum": [
-          "json",
-          "csv",
-          "tsv",
-          "xlsx"
-        ]
+        "enum": ["json", "csv", "tsv", "xlsx"]
       },
       "QuerySizeExceededMessage": {
         "type": "object",
@@ -2977,9 +2941,7 @@
             "default": "The current query exceeds the maximum query size. Please refine the search or visit the National Downloads page to download a compressed dataset."
           }
         },
-        "required": [
-          "message"
-        ]
+        "required": ["message"]
       },
       "SourcesFilters": {
         "type": "object",
@@ -3167,9 +3129,7 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       },
       "TmdlFilters": {
         "type": "object",
@@ -3427,18 +3387,14 @@
             }
           }
         },
-        "required": [
-          "data"
-        ]
+        "required": ["data"]
       }
     },
     "parameters": {
       "actionAgencyParam": {
         "name": "actionAgency",
         "in": "query",
-        "example": [
-          "State"
-        ],
+        "example": ["State"],
         "explode": true,
         "schema": {
           "type": "array",
@@ -3451,9 +3407,7 @@
         "name": "actionId",
         "in": "query",
         "explode": true,
-        "example": [
-          "64808"
-        ],
+        "example": ["64808"],
         "schema": {
           "type": "array",
           "items": {
@@ -3465,9 +3419,7 @@
         "name": "actionName",
         "in": "query",
         "explode": true,
-        "example": [
-          "12-Mile Creek"
-        ],
+        "example": ["12-Mile Creek"],
         "schema": {
           "type": "array",
           "items": {
@@ -3479,9 +3431,7 @@
         "name": "actionType",
         "in": "query",
         "explode": true,
-        "example": [
-          "Implementation Completed"
-        ],
+        "example": ["Implementation Completed"],
         "schema": {
           "type": "array",
           "items": {
@@ -3493,9 +3443,7 @@
         "name": "addressedParameter",
         "in": "query",
         "explode": true,
-        "example": [
-          "AMMONIA"
-        ],
+        "example": ["AMMONIA"],
         "schema": {
           "type": "array",
           "items": {
@@ -3507,9 +3455,7 @@
         "name": "alternateListingIdentifier",
         "in": "query",
         "explode": true,
-        "example": [
-          "SD-CH-L-SHERIDAN_01"
-        ],
+        "example": ["SD-CH-L-SHERIDAN_01"],
         "schema": {
           "type": "array",
           "items": {
@@ -3523,7 +3469,7 @@
         "description": "The API key used to access EPA web service resources. The below default value key is used for testing purposes only. Web service consumers should <a target=\"_blank\" rel=\"noreferrer\" href=\"/api-key-signup\">obtain their own API key</a>.",
         "schema": {
           "type": "string",
-          "default": "ycm9dkrlta4gtgovk2nasvodo5iudbct7faj3cf5"
+          "default": "53BVce47MQ3KXKibjx35g4ojaDQGh8qWfbdO8cE0"
         },
         "required": true
       },
@@ -3531,9 +3477,7 @@
         "name": "assessmentBasis",
         "in": "query",
         "explode": true,
-        "example": [
-          "Monitored Data"
-        ],
+        "example": ["Monitored Data"],
         "schema": {
           "type": "array",
           "items": {
@@ -3563,9 +3507,7 @@
         "name": "assessmentMethods",
         "in": "query",
         "explode": true,
-        "example": [
-          "2002 Assessment Methodology"
-        ],
+        "example": ["2002 Assessment Methodology"],
         "schema": {
           "type": "array",
           "items": {
@@ -3577,9 +3519,7 @@
         "name": "assessmentTypes",
         "in": "query",
         "explode": true,
-        "example": [
-          "PHYSICAL/CHEMICAL"
-        ],
+        "example": ["PHYSICAL/CHEMICAL"],
         "schema": {
           "type": "array",
           "items": {
@@ -3591,9 +3531,7 @@
         "name": "assessmentUnitId",
         "in": "query",
         "explode": true,
-        "example": [
-          "AZ150200001-010_00"
-        ],
+        "example": ["AZ150200001-010_00"],
         "schema": {
           "type": "array",
           "items": {
@@ -3605,9 +3543,7 @@
         "name": "assessmentUnitName",
         "in": "query",
         "explode": true,
-        "example": [
-          "Abbott Branch"
-        ],
+        "example": ["Abbott Branch"],
         "schema": {
           "type": "array",
           "items": {
@@ -3619,9 +3555,7 @@
         "name": "assessmentUnitStatus",
         "in": "query",
         "explode": true,
-        "example": [
-          "A"
-        ],
+        "example": ["A"],
         "schema": {
           "type": "array",
           "items": {
@@ -3633,9 +3567,7 @@
         "name": "associatedActionAgency",
         "in": "query",
         "explode": true,
-        "example": [
-          "State"
-        ],
+        "example": ["State"],
         "schema": {
           "type": "array",
           "items": {
@@ -3647,9 +3579,7 @@
         "name": "associatedActionId",
         "in": "query",
         "explode": true,
-        "example": [
-          "64808"
-        ],
+        "example": ["64808"],
         "schema": {
           "type": "array",
           "items": {
@@ -3661,9 +3591,7 @@
         "name": "associatedActionName",
         "in": "query",
         "explode": true,
-        "example": [
-          "12-Mile Creek"
-        ],
+        "example": ["12-Mile Creek"],
         "schema": {
           "type": "array",
           "items": {
@@ -3675,9 +3603,7 @@
         "name": "associatedActionStatus",
         "in": "query",
         "explode": true,
-        "example": [
-          "EPA Final Action"
-        ],
+        "example": ["EPA Final Action"],
         "schema": {
           "type": "array",
           "items": {
@@ -3689,9 +3615,7 @@
         "name": "associatedActionType",
         "in": "query",
         "explode": true,
-        "example": [
-          "Implementation Completed"
-        ],
+        "example": ["Implementation Completed"],
         "schema": {
           "type": "array",
           "items": {
@@ -3703,9 +3627,7 @@
         "name": "causeName",
         "in": "query",
         "explode": true,
-        "example": [
-          "EUTROPHICATION"
-        ],
+        "example": ["EUTROPHICATION"],
         "schema": {
           "type": "array",
           "items": {
@@ -3718,10 +3640,7 @@
         "description": "The columns to return in the result set, and the order in which to return them.",
         "in": "query",
         "explode": true,
-        "example": [
-          "assessmentUnitId",
-          "assessmentUnitName"
-        ],
+        "example": ["assessmentUnitId", "assessmentUnitName"],
         "schema": {
           "type": "array",
           "items": {
@@ -3751,9 +3670,7 @@
         "name": "confirmed",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -3781,9 +3698,7 @@
         "name": "cwa303dPriorityRanking",
         "in": "query",
         "explode": true,
-        "example": [
-          "High"
-        ],
+        "example": ["High"],
         "schema": {
           "type": "array",
           "items": {
@@ -3827,9 +3742,7 @@
         "name": "catchmentNhdPlusId",
         "in": "query",
         "explode": true,
-        "example": [
-          "-504164"
-        ],
+        "example": ["-504164"],
         "schema": {
           "type": "array",
           "items": {
@@ -3841,9 +3754,7 @@
         "name": "cycleId",
         "in": "query",
         "explode": true,
-        "example": [
-          2346
-        ],
+        "example": [2346],
         "schema": {
           "type": "array",
           "items": {
@@ -3887,9 +3798,7 @@
         "name": "delisted",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -3901,9 +3810,7 @@
         "name": "delistedReason",
         "in": "query",
         "explode": true,
-        "example": [
-          "Not specified"
-        ],
+        "example": ["Not specified"],
         "schema": {
           "type": "array",
           "items": {
@@ -3915,9 +3822,7 @@
         "name": "epaIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          "4A"
-        ],
+        "example": ["4A"],
         "schema": {
           "type": "array",
           "items": {
@@ -3929,9 +3834,7 @@
         "name": "explicitMarginOfSafety",
         "in": "query",
         "explode": true,
-        "example": [
-          "10%"
-        ],
+        "example": ["10%"],
         "schema": {
           "type": "array",
           "items": {
@@ -3959,9 +3862,7 @@
         "name": "implicitMarginOfSafety",
         "in": "query",
         "explode": true,
-        "example": [
-          "conservative assumptions"
-        ],
+        "example": ["conservative assumptions"],
         "schema": {
           "type": "array",
           "items": {
@@ -3973,9 +3874,7 @@
         "name": "includeInMeasure",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -3987,9 +3886,7 @@
         "name": "inIndianCountry",
         "in": "query",
         "explode": true,
-        "example": [
-          "N"
-        ],
+        "example": ["N"],
         "schema": {
           "type": "array",
           "items": {
@@ -4001,9 +3898,7 @@
         "name": "locationText",
         "in": "query",
         "explode": true,
-        "example": [
-          "01010001"
-        ],
+        "example": ["01010001"],
         "schema": {
           "type": "array",
           "items": {
@@ -4015,9 +3910,7 @@
         "name": "locationTypeCode",
         "in": "query",
         "explode": true,
-        "example": [
-          "Basin"
-        ],
+        "example": ["Basin"],
         "schema": {
           "type": "array",
           "items": {
@@ -4077,9 +3970,7 @@
         "name": "monitoringLocationId",
         "in": "query",
         "explode": true,
-        "example": [
-          "1083"
-        ],
+        "example": ["1083"],
         "schema": {
           "type": "array",
           "items": {
@@ -4091,9 +3982,7 @@
         "name": "monitoringLocationOrgId",
         "in": "query",
         "explode": true,
-        "example": [
-          "21AWIC"
-        ],
+        "example": ["21AWIC"],
         "schema": {
           "type": "array",
           "items": {
@@ -4105,9 +3994,7 @@
         "name": "npdesIdentifier",
         "in": "query",
         "explode": true,
-        "example": [
-          "KS0099571"
-        ],
+        "example": ["KS0099571"],
         "schema": {
           "type": "array",
           "items": {
@@ -4120,9 +4007,7 @@
         "description": "The unique ID assigned to a data item under the current profile",
         "in": "query",
         "explode": true,
-        "example": [
-          42
-        ],
+        "example": [42],
         "schema": {
           "type": "array",
           "items": {
@@ -4134,9 +4019,7 @@
         "name": "organizationId",
         "in": "query",
         "explode": true,
-        "example": [
-          "21AWIC"
-        ],
+        "example": ["21AWIC"],
         "schema": {
           "type": "array",
           "items": {
@@ -4148,9 +4031,7 @@
         "name": "organizationName",
         "in": "query",
         "explode": true,
-        "example": [
-          "Georgia Environmental Protection Division"
-        ],
+        "example": ["Georgia Environmental Protection Division"],
         "schema": {
           "type": "array",
           "items": {
@@ -4165,21 +4046,14 @@
         "schema": {
           "type": "string",
           "default": "json",
-          "enum": [
-            "json",
-            "csv",
-            "tsv",
-            "xlsx"
-          ]
+          "enum": ["json", "csv", "tsv", "xlsx"]
         }
       },
       "otherIdentifierParam": {
         "name": "otherIdentifier",
         "in": "query",
         "explode": true,
-        "example": [
-          "City of  Wellington"
-        ],
+        "example": ["City of  Wellington"],
         "schema": {
           "type": "array",
           "items": {
@@ -4191,9 +4065,7 @@
         "name": "overallStatus",
         "in": "query",
         "explode": true,
-        "example": [
-          "Fully Supporting"
-        ],
+        "example": ["Fully Supporting"],
         "schema": {
           "type": "array",
           "items": {
@@ -4205,9 +4077,7 @@
         "name": "parameterAttainment",
         "in": "query",
         "explode": true,
-        "example": [
-          "1,2-DICHLOROBENZENE"
-        ],
+        "example": ["1,2-DICHLOROBENZENE"],
         "schema": {
           "type": "array",
           "items": {
@@ -4219,9 +4089,7 @@
         "name": "parameterGroup",
         "in": "query",
         "explode": true,
-        "example": [
-          "BIOTOXINS"
-        ],
+        "example": ["BIOTOXINS"],
         "schema": {
           "type": "array",
           "items": {
@@ -4233,9 +4101,7 @@
         "name": "parameterIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          23
-        ],
+        "example": [23],
         "schema": {
           "type": "array",
           "items": {
@@ -4247,9 +4113,7 @@
         "name": "parameterName",
         "in": "query",
         "explode": true,
-        "example": [
-          "EUTROPHICATION"
-        ],
+        "example": ["EUTROPHICATION"],
         "schema": {
           "type": "array",
           "items": {
@@ -4261,9 +4125,7 @@
         "name": "parameter",
         "in": "query",
         "explode": true,
-        "example": [
-          "EUTROPHICATION"
-        ],
+        "example": ["EUTROPHICATION"],
         "schema": {
           "type": "array",
           "items": {
@@ -4275,9 +4137,7 @@
         "name": "parameterStateIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          23
-        ],
+        "example": [23],
         "schema": {
           "type": "array",
           "items": {
@@ -4289,9 +4149,7 @@
         "name": "parameterStatus",
         "in": "query",
         "explode": true,
-        "example": [
-          "Observed effect"
-        ],
+        "example": ["Observed effect"],
         "schema": {
           "type": "array",
           "items": {
@@ -4303,9 +4161,7 @@
         "name": "pollutant",
         "in": "query",
         "explode": true,
-        "example": [
-          "ACID"
-        ],
+        "example": ["ACID"],
         "schema": {
           "type": "array",
           "items": {
@@ -4317,9 +4173,7 @@
         "name": "pollutantIndicator",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -4331,9 +4185,7 @@
         "name": "region",
         "in": "query",
         "explode": true,
-        "example": [
-          "01"
-        ],
+        "example": ["01"],
         "schema": {
           "type": "array",
           "items": {
@@ -4399,9 +4251,7 @@
         "name": "sourceName",
         "in": "query",
         "explode": true,
-        "example": [
-          "ACID MINE DRAINAGE"
-        ],
+        "example": ["ACID MINE DRAINAGE"],
         "schema": {
           "type": "array",
           "items": {
@@ -4413,9 +4263,7 @@
         "name": "sourceType",
         "in": "query",
         "explode": true,
-        "example": [
-          "Nonpoint source"
-        ],
+        "example": ["Nonpoint source"],
         "schema": {
           "type": "array",
           "items": {
@@ -4435,9 +4283,7 @@
         "name": "stateIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          "4A"
-        ],
+        "example": ["4A"],
         "schema": {
           "type": "array",
           "items": {
@@ -4449,9 +4295,7 @@
         "name": "state",
         "in": "query",
         "explode": true,
-        "example": [
-          "OH"
-        ],
+        "example": ["OH"],
         "schema": {
           "type": "array",
           "items": {
@@ -4481,9 +4325,7 @@
         "name": "useClassName",
         "in": "query",
         "explode": true,
-        "example": [
-          "CLASS B"
-        ],
+        "example": ["CLASS B"],
         "schema": {
           "type": "array",
           "items": {
@@ -4495,9 +4337,7 @@
         "name": "useGroup",
         "in": "query",
         "explode": true,
-        "example": [
-          "AGRICULTURAL"
-        ],
+        "example": ["AGRICULTURAL"],
         "schema": {
           "type": "array",
           "items": {
@@ -4509,9 +4349,7 @@
         "name": "useIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          23
-        ],
+        "example": [23],
         "schema": {
           "type": "array",
           "items": {
@@ -4523,9 +4361,7 @@
         "name": "useName",
         "in": "query",
         "explode": true,
-        "example": [
-          "Aquaculture"
-        ],
+        "example": ["Aquaculture"],
         "schema": {
           "type": "array",
           "items": {
@@ -4537,9 +4373,7 @@
         "name": "useStateIrCategory",
         "in": "query",
         "explode": true,
-        "example": [
-          23
-        ],
+        "example": [23],
         "schema": {
           "type": "array",
           "items": {
@@ -4551,9 +4385,7 @@
         "name": "useSupport",
         "in": "query",
         "explode": true,
-        "example": [
-          "Fully Supporting"
-        ],
+        "example": ["Fully Supporting"],
         "schema": {
           "type": "array",
           "items": {
@@ -4565,9 +4397,7 @@
         "name": "vision303dPriority",
         "in": "query",
         "explode": true,
-        "example": [
-          "Y"
-        ],
+        "example": ["Y"],
         "schema": {
           "type": "array",
           "items": {
@@ -4579,9 +4409,7 @@
         "name": "wasteLoadAllocation",
         "in": "query",
         "explode": true,
-        "example": [
-          7.09
-        ],
+        "example": [7.09],
         "schema": {
           "type": "array",
           "items": {
@@ -4594,9 +4422,7 @@
         "name": "waterType",
         "in": "query",
         "explode": true,
-        "example": [
-          "ESTUARY"
-        ],
+        "example": ["ESTUARY"],
         "schema": {
           "type": "array",
           "items": {
@@ -5147,7 +4973,7 @@
         }
       },
       "InvalidRequestError": {
-        "description": "The request was invalid",
+        "description": "The request was invalid.",
         "content": {
           "application/json": {
             "schema": {
@@ -5161,10 +4987,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "code",
-                "message"
-              ]
+              "required": ["code", "message"]
             }
           }
         }
@@ -5183,9 +5006,7 @@
                       "example": 148220
                     }
                   },
-                  "required": [
-                    "count"
-                  ]
+                  "required": ["count"]
                 },
                 {
                   "$ref": "#/components/schemas/QuerySizeExceededMessage"
@@ -5196,7 +5017,7 @@
         }
       },
       "ServerError": {
-        "description": "An internal server error occurred",
+        "description": "An internal server error occurred.",
         "content": {
           "application/json": {
             "schema": {
@@ -5210,10 +5031,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "code",
-                "message"
-              ]
+              "required": ["code", "message"]
             }
           }
         }
