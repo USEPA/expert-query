@@ -191,6 +191,9 @@ export default function (app, basePath) {
   router.get('/lookupFiles', (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
+    // Note: If we ever add services that are shared across all environments
+    //       we can create a services.json file and merge that in with one
+    //       of these environment specific files.
     const servicesFilename = environment.isLocal
       ? 'services-local.json'
       : environment.isDevelopment
