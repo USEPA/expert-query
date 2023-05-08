@@ -151,12 +151,6 @@
             "$ref": "#/components/parameters/apiKeyHeader"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
-          },
-          {
-            "$ref": "#/components/parameters/columnsParam"
-          },
-          {
             "$ref": "#/components/parameters/objectIdParam"
           },
           {
@@ -229,7 +223,7 @@
           }
         ],
         "requestBody": {
-          "$ref": "#/components/requestBodies/ActionsRequestBody"
+          "$ref": "#/components/requestBodies/ActionsCountRequestBody"
         },
         "responses": {
           "200": {
@@ -482,12 +476,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
-          },
-          {
-            "$ref": "#/components/parameters/startIdParam"
-          },
-          {
-            "$ref": "#/components/parameters/columnsParam"
           },
           {
             "$ref": "#/components/parameters/objectIdParam"
@@ -811,12 +799,6 @@
             "$ref": "#/components/parameters/apiKeyHeader"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
-          },
-          {
-            "$ref": "#/components/parameters/columnsParam"
-          },
-          {
             "$ref": "#/components/parameters/objectIdParam"
           },
           {
@@ -1006,12 +988,6 @@
             "$ref": "#/components/parameters/apiKeyHeader"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
-          },
-          {
-            "$ref": "#/components/parameters/columnsParam"
-          },
-          {
             "$ref": "#/components/parameters/objectIdParam"
           },
           {
@@ -1187,12 +1163,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
-          },
-          {
-            "$ref": "#/components/parameters/startIdParam"
-          },
-          {
-            "$ref": "#/components/parameters/columnsParam"
           },
           {
             "$ref": "#/components/parameters/objectIdParam"
@@ -1379,12 +1349,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
-          },
-          {
-            "$ref": "#/components/parameters/startIdParam"
-          },
-          {
-            "$ref": "#/components/parameters/columnsParam"
           },
           {
             "$ref": "#/components/parameters/objectIdParam"
@@ -1616,12 +1580,6 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
-          },
-          {
-            "$ref": "#/components/parameters/startIdParam"
-          },
-          {
-            "$ref": "#/components/parameters/columnsParam"
           },
           {
             "$ref": "#/components/parameters/objectIdParam"
