@@ -727,20 +727,25 @@ function SelectFilter<
     setOptions(null);
   }, [sourceValue]);
 
+  const formatOptionLabel = useCallback(
+    (option: Option) => {
+      return secondaryFilterKey ? (
+        <div>
+          <span style={{ fontWeight: 600 }}>{option.value}</span> (
+          {option.label})
+        </div>
+      ) : (
+        option.label
+      );
+    },
+    [secondaryFilterKey],
+  );
+
   return (
     <Select
       aria-label={`${filterLabel} input`}
       className="width-full"
-      formatOptionLabel={(option) =>
-        secondaryFilterKey ? (
-          <div>
-            {option.value}{' '}
-            <span style={{ fontWeight: 600 }}>({option.label})</span>
-          </div>
-        ) : (
-          option.label
-        )
-      }
+      formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
