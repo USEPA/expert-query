@@ -21,13 +21,13 @@ describe('Data Profile Catchment Correspondence', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&format=csv`,
+      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence`,
+      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -46,13 +46,13 @@ describe('Data Profile Catchment Correspondence', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=csv`,
+      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AS-04O"],"organizationId":["21HI"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence`,
+      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -75,13 +75,13 @@ describe('Data Profile Catchment Correspondence', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=tsv`,
+      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AL03150106-0503-101"],"organizationId":["CA_SWRCB"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence`,
+      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -107,13 +107,13 @@ describe('Data Profile Catchment Correspondence', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=xlsx`,
+      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AS-04O"],"organizationId":["MTDEQ"],"reportingCycle":"2016"},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence`,
+      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -147,13 +147,13 @@ describe('Data Profile Catchment Correspondence', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=tsv`,
+      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AS-01O","AS-07O"],"organizationId":["21PA","CA_SWRCB"],"region":["06"],"reportingCycle":"2016","state":["TX"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence`,
+      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 });
