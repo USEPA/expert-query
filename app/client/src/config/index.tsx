@@ -93,7 +93,6 @@ export function postData({
     url,
     {
       method: 'POST',
-      credentials: 'include' as const,
       headers,
       body: JSON.stringify(data),
       signal,
