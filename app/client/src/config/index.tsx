@@ -50,22 +50,10 @@ async function fetchData(
  * Fetches data and returns a promise containing JSON fetched from a provided
  * web service URL or handles any other OK response returned from the server
  */
-export function getData<T>({
-  url,
-  apiKey,
-  signal,
-}: {
-  url: string;
-  apiKey?: string;
-  signal?: AbortSignal;
-}): Promise<T> {
-  const headers: HeadersInit = {};
-  if (apiKey) headers['X-Api-Key'] = apiKey;
-
+export function getData<T>(url: string, signal?: AbortSignal): Promise<T> {
   return fetchData(url, {
     method: 'GET',
     credentials: 'include' as const,
-    headers,
     signal,
   });
 }
@@ -74,28 +62,18 @@ export function getData<T>({
  * Posts JSON data and returns a promise containing JSON fetched from a provided
  * web service URL or handles any other OK response returned from the server
  */
-export function postData({
-  url,
-  apiKey,
-  data,
-  responseType,
-  signal,
-}: {
-  url: string;
-  apiKey: string;
-  data: object;
-  responseType?: 'json' | 'blob';
-  signal?: AbortSignal;
-}) {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['X-Api-Key'] = apiKey;
-
+export function postData(
+  url: string,
+  data: object,
+  responseType?: 'json' | 'blob',
+  signal?: AbortSignal,
+) {
   return fetchData(
     url,
     {
       method: 'POST',
       credentials: 'include' as const,
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
       signal,
     },

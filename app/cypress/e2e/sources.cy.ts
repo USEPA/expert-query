@@ -21,13 +21,13 @@ describe('Data Profile Sources', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/sources?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/sources?${columnsValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/sources -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/sources`,
     );
   });
 
@@ -46,13 +46,13 @@ describe('Data Profile Sources', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/sources?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/sources?${columnsValue}&${queryValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["SD-BA-L-FREEMAN_01"],"confirmed":["N"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/sources -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/sources`,
     );
   });
 
@@ -94,13 +94,13 @@ describe('Data Profile Sources', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/sources?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/sources?${columnsValue}&${queryValue}&format=xlsx`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["TN06020002001_0100"],"confirmed":["N"],"organizationId":["PUEBLOOFTESUQUE","DOEE"],"overallStatus":["Fully Supporting"],"parameterGroup":["PESTICIDES"],"reportingCycle":"2017","sourceName":["BASEFLOW DEPLETION FROM GROUNDWATER WITHDRAWALS"],"waterType":["WETLANDS, TIDAL"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/sources -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/sources`,
     );
   });
 
@@ -116,7 +116,7 @@ describe('Data Profile Sources', () => {
     cy.selectOption('input-organizationId', 'wisconsin');
 
     //Overall Status
-    cy.selectOption('input-overallStatus', 'not supporting');
+    cy.selectOption('input-overallStatus', 'not');
 
     //Parameter Group
     cy.selectOption('input-parameterGroup', 'nutrients');
@@ -145,13 +145,13 @@ describe('Data Profile Sources', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/sources?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/sources?${columnsValue}&${queryValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["MT40Q001_011","AL03130004-0405-100"],"confirmed":["N"],"organizationId":["WIDNR"],"overallStatus":["Not Supporting"],"parameterGroup":["NUTRIENTS"],"reportingCycle":"2018","sourceName":["MANURE LAGOONS"],"state":["HI"],"waterType":["WASH"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/sources -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/sources`,
     );
   });
 
@@ -209,13 +209,13 @@ describe('Data Profile Sources', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/sources?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/sources?${columnsValue}&${queryValue}&format=tsv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2","MT40A002_120"],"causeName":["AMMONIA"],"confirmed":["Y"],"epaIrCategory":["4A"],"organizationId":["21PA","SDDENR"],"overallStatus":["Fully Supporting"],"parameterGroup":["TRASH"],"region":["06"],"reportingCycle":"2016","sourceName":["PIPELINE BREAKS"],"state":["FL"],"stateIrCategory":["5b-t"],"waterType":["INLAND BEACH"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/sources -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/sources`,
     );
   });
 });

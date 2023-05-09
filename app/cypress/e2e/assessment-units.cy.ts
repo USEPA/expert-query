@@ -23,13 +23,13 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["A"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessmentUnits`,
     );
   });
 
@@ -53,13 +53,13 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2"],"assessmentUnitStatus":["R"],"locationText":["Buffalo County"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessmentUnits`,
     );
   });
 
@@ -86,13 +86,13 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=tsv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["R"],"organizationId":["WIDNR"],"waterType":["OCEAN"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessmentUnits`,
     );
   });
 
@@ -123,13 +123,13 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["H","A"],"organizationId":["MTDEQ"],"useClassName":["A-1"],"waterType":["LAKE/RESERVOIR/POND"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessmentUnits`,
     );
   });
 
@@ -173,13 +173,13 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2","WI10000917"],"assessmentUnitStatus":["A","R","H"],"locationText":["Green County"],"organizationId":["OKDEQ","TDECWR"],"region":["05"],"state":["CO"],"useClassName":["SE3"],"waterType":["FLOWAGE"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessmentUnits`,
     );
   });
 });

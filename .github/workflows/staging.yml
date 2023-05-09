@@ -67,7 +67,6 @@ jobs:
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
       DB_USERNAME: ${{ secrets.EQ_USER_STAGING }}
-      EQ_SECRET: ${{ secrets.EQ_SECRET_STAGING }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
       JSON_PAGE_SIZE: 1000
       MAX_QUERY_SIZE: 1000000
@@ -128,7 +127,6 @@ jobs:
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
-          cf set-env $APP_NAME "EQ_SECRET" "$EQ_SECRET" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
           cf set-env $APP_NAME "JSON_PAGE_SIZE" "$JSON_PAGE_SIZE" > /dev/null
           cf set-env $APP_NAME "MAX_QUERY_SIZE" "$MAX_QUERY_SIZE" > /dev/null

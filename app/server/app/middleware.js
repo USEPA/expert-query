@@ -1,12 +1,5 @@
 import { knex } from './utilities/database.js';
-import { getEnvironment } from './utilities/environment.js';
-import {
-  formatLogMsg,
-  log,
-  populateMetdataObjFromRequest,
-} from './utilities/logger.js';
-
-const environment = getEnvironment();
+import { log } from './utilities/logger.js';
 
 /**
  * Middleware to get/set the active schema and add it to the original request
@@ -16,8 +9,6 @@ const environment = getEnvironment();
  * @param {express.NextFunction} next
  */
 async function getActiveSchema(req, res, next) {
-  const metadataObj = populateMetdataObjFromRequest(req);
-
   try {
     // query the logging schema to get the active schema
     const schema = await knex
@@ -33,40 +24,9 @@ async function getActiveSchema(req, res, next) {
 
     next();
   } catch (error) {
-    log.error(
-      formatLogMsg(metadataObj, 'Failed to get active schema: ', error),
-    );
-    res.status(500).json({ message: 'Error !' + error });
+    log.error('Failed to get active schema: ', error);
+    res.status(500).send('Error !' + error);
   }
 }
 
-/**
- * Middleware to protect routes by checking that a secret key was provided and
- * matches the environment.
- *
- * @param {express.Request} req
- * @param {express.Response} res
- * @param {express.NextFunction} next
- */
-function protectRoutes(req, res, next) {
-  if (environment.isLocal) {
-    next();
-    return;
-  }
-
-  const eqSecret = req.header('EQ-SECRET');
-
-  const metadataObj = populateMetdataObjFromRequest(req);
-
-  if (!eqSecret || eqSecret !== process.env.EQ_SECRET) {
-    const errJson = {
-      message: 'Unauthorized',
-    };
-    log.warn(formatLogMsg(metadataObj, errJson));
-    return res.status(401).json(errJson);
-  }
-
-  next();
-}
-
-export { getActiveSchema, protectRoutes };
+export { getActiveSchema };

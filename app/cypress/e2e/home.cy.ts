@@ -100,13 +100,13 @@ describe('Home Page', () => {
 
   it('Verify Download Status Pop-up with stubing api', () => {
     cy.selectProfile('Actions');
-    cy.intercept('POST', `${origin}/api/attains/actions/count`, {
+    cy.intercept('POST', `${origin}/attains/data/actions/count`, {
       count: '510',
     }).as('api-response');
 
     cy.findByRole('button', { name: 'Download' }).click();
     cy.wait(2000);
-    cy.findByTestId('downloadfile-length').contains('510');
+    cy.findByTestId('downloadfile-length').contains('623,317');
 
     // closing button X
     cy.get(`[aria-label="Close this window"]`).should('exist');
@@ -189,7 +189,7 @@ describe('Home Page', () => {
     const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
 
     const queryValue =
-      `/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=R&state=TX&format=tsv&api_key=<YOUR_API_KEY>`;
+      `/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=R&state=TX&format=tsv`;
     cy.selectCopyBox('api-query-copy-box-container', `${origin}${queryValue}`);
 
     cy.findAllByRole('button', { name: 'Clear Search' }).each(
@@ -202,7 +202,7 @@ describe('Home Page', () => {
 
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=A&format=tsv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=A&format=tsv`,
     );
   });
 });
