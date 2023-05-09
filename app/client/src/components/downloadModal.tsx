@@ -1,11 +1,13 @@
 import { uniqueId } from 'lodash';
 import { Dialog } from '@reach/dialog';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReactComponent as Close } from '@uswds/uswds/img/usa-icons/close.svg';
 // components
 import { Alert } from 'components/alert';
+import { Loading, LoadingButtonIcon } from 'components/loading';
 // utils
 import { postData } from 'config';
+import { isAbort, useAbort } from 'utils';
 // styles
 import '@reach/dialog/styles.css';
 // types
@@ -24,6 +26,15 @@ export function DownloadModal<D extends PostData>({
   queryUrl,
   setDownloadStatus,
 }: DownloadModalProps<D>) {
+  const { abort, getSignal } = useAbort();
+
+  const closeModal = useCallback(() => {
+    abort();
+    onClose();
+  }, [abort, onClose]);
+
+  const focusRef = useRef<HTMLButtonElement>(null);
+
   const [count, setCount] = useState<FetchState<number | null>>({
     status: 'idle',
     data: null,
@@ -35,7 +46,7 @@ export function DownloadModal<D extends PostData>({
 
     const countUrl = `${queryUrl}/count`;
     setCount({ status: 'pending', data: null });
-    postData(countUrl, queryData)
+    postData(countUrl, queryData, 'json', getSignal())
       .then((res) => {
         setCount({
           status: 'success',
@@ -43,10 +54,17 @@ export function DownloadModal<D extends PostData>({
         });
       })
       .catch((err) => {
+        if (isAbort(err)) return;
         console.error(err);
         setCount({ status: 'failure', data: null });
       });
-  }, [queryData, queryUrl]);
+  }, [getSignal, queryData, queryUrl]);
+
+  useEffect(() => {
+    if (count.status !== 'success') return;
+
+    focusRef.current?.focus();
+  }, [count]);
 
   // Retrieve the requested data in the specified format
   const executeQuery = useCallback(() => {
@@ -54,7 +72,7 @@ export function DownloadModal<D extends PostData>({
     if (!filename) return;
 
     setDownloadStatus('pending');
-    postData(queryUrl, queryData, 'blob')
+    postData(queryUrl, queryData, 'blob', getSignal())
       .then((res) => {
         const fileUrl = window.URL.createObjectURL(res);
         const trigger = document.createElement('a');
@@ -66,18 +84,22 @@ export function DownloadModal<D extends PostData>({
         setDownloadStatus('success');
       })
       .catch((err) => {
+        if (isAbort(err)) {
+          setDownloadStatus('idle');
+          return;
+        }
         console.error(err);
         setDownloadStatus('failure');
       })
-      .finally(() => onClose());
-  }, [queryUrl, filename, setDownloadStatus, queryData, onClose]);
+      .finally(() => closeModal());
+  }, [closeModal, getSignal, queryUrl, filename, setDownloadStatus, queryData]);
 
   const [id] = useState(uniqueId('modal-'));
 
   return (
     <Dialog
       isOpen
-      onDismiss={onClose}
+      onDismiss={closeModal}
       className="usa-modal"
       aria-labelledby={`${id}-heading`}
       aria-describedby={`${id}-description`}
@@ -124,26 +146,39 @@ export function DownloadModal<D extends PostData>({
                   </div>
                   <div className="usa-modal__footer">
                     <ul className="flex-justify-center usa-button-group">
-                      <li className="usa-button-group__item">
+                      <li className="margin-right-4 margin-y-auto usa-button-group__item">
                         <button
                           type="button"
-                          className="usa-button"
-                          onClick={onClose}
+                          className="height-5 usa-button"
+                          onClick={closeModal}
+                          ref={focusRef}
                         >
                           Cancel
                         </button>
                       </li>
-                      <li className="usa-button-group__item">
-                        <button
-                          className="usa-button"
-                          disabled={count.data === 0}
-                          onClick={executeQuery}
-                          type="button"
-                        >
-                          {downloadStatus === 'pending'
-                            ? 'Working...'
-                            : 'Continue'}
-                        </button>
+                      <li className="margin-y-auto usa-button-group__item">
+                        {downloadStatus === 'pending' ? (
+                          <button
+                            className="height-5 usa-button hover:bg-primary"
+                            disabled={count.data === 0}
+                            onClick={undefined}
+                            style={{ cursor: 'initial' }}
+                            type="button"
+                          >
+                            <span className="display-flex">
+                              Working <LoadingButtonIcon />
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            className="height-5 usa-button"
+                            disabled={count.data === 0}
+                            onClick={executeQuery}
+                            type="button"
+                          >
+                            Continue
+                          </button>
+                        )}
                       </li>
                     </ul>
                   </div>
@@ -155,7 +190,7 @@ export function DownloadModal<D extends PostData>({
         <button
           aria-label="Close this window"
           className="usa-button usa-modal__close"
-          onClick={onClose}
+          onClick={closeModal}
           type="button"
         >
           <Close

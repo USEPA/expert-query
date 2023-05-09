@@ -39,7 +39,7 @@ import {
 // utils
 import { isAbort, useAbort } from 'utils';
 // types
-import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import type { ChangeEvent } from 'react';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
 import type { Profile } from 'config/profiles';
 
@@ -181,7 +181,7 @@ export function QueryBuilder() {
     openDownloadConfirmation,
   } = useDownloadConfirmationVisibility();
 
-  const [downloadStatus, setDownloadStatus] = useDownloadStatus();
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
 
   return (
     <>
@@ -245,7 +245,10 @@ export function QueryBuilder() {
               Download
             </button>
             {downloadStatus === 'success' && (
-              <Alert type="success">Query executed successfully.</Alert>
+              <Alert type="success">
+                Query executed successfully, please check your downloads folder
+                for the results file.
+              </Alert>
             )}
             {downloadStatus === 'failure' && (
               <Alert type="error">
@@ -804,25 +807,6 @@ function useDownloadConfirmationVisibility() {
     downloadConfirmationVisible,
     openDownloadConfirmation,
   };
-}
-
-function useDownloadStatus() {
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
-
-  useEffect(() => {
-    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
-
-    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
-
-    return function cleanup() {
-      clearTimeout(messageTimeout);
-    };
-  }, [downloadStatus]);
-
-  return [downloadStatus, setDownloadStatus] as [
-    Status,
-    Dispatch<SetStateAction<Status>>,
-  ];
 }
 
 function useFormat() {
