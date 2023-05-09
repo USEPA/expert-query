@@ -63,18 +63,16 @@ export function Home() {
 
   const { sourceState, sourceHandlers } = useSourceState();
 
-  const apiKey = content.data.services?.eqApiKey || '';
-  const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
-
   const { queryParams, queryParamErrors } = useQueryParams({
-    apiKey,
-    apiUrl,
     format: format.value,
     profile,
     staticOptions,
     filterState,
     initializeFilters,
   });
+
+  const eqDataUrl =
+    content.data.services?.eqDataApi || `${serverUrl}/api/attains`;
 
   const profileRefreshDate = profile
     ? content.data.metadata?.[profile]?.timestamp
@@ -137,7 +135,7 @@ export function Home() {
                       formatHandler,
                       profile,
                       queryParams,
-                      queryUrl: apiUrl,
+                      queryUrl: eqDataUrl,
                       resetFilters,
                       sourceHandlers,
                       sourceState,
@@ -185,16 +183,10 @@ export function QueryBuilder() {
 
   const [downloadStatus, setDownloadStatus] = useDownloadStatus();
 
-  const { content } = useContentState();
-
-  const apiKey = content.data.services?.eqApiKey || '';
-  const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
-
   return (
     <>
       {downloadConfirmationVisible && (
         <DownloadModal
-          apiKey={apiKey}
           dataId="attains"
           filename={profile && format ? `${profile}.${format.value}` : null}
           downloadStatus={downloadStatus}
@@ -221,8 +213,6 @@ export function QueryBuilder() {
               </Button>
             </div>
             <FilterGroups
-              apiKey={apiKey}
-              apiUrl={apiUrl}
               filterHandlers={filterHandlers}
               filterState={filterState}
               profile={profile}
@@ -284,7 +274,7 @@ export function QueryBuilder() {
                 queryParams.filters,
                 queryParams.options,
                 queryParams.columns,
-              )}&api_key=<YOUR_API_KEY>`}
+              )}`}
             />
             <h4>cURL</h4>
             <CopyBox
@@ -293,7 +283,7 @@ export function QueryBuilder() {
                 queryParams,
               ).replaceAll('"', '\\"')}" ${queryUrl}/${
                 profiles[profile].resource
-              } -H "X-Api-Key: <YOUR_API_KEY>"`}
+              }`}
             />
           </AccordionItem>
         </Accordion>
@@ -303,8 +293,6 @@ export function QueryBuilder() {
 }
 
 function FilterFields({
-  apiKey,
-  apiUrl,
   fields,
   filterHandlers,
   filterState,
@@ -354,8 +342,6 @@ function FilterFields({
             ? sourceState[sourceFieldConfig.id]
             : null;
           const selectProps = {
-            apiKey,
-            apiUrl,
             contextFilters: getContextFilters(fieldConfig, profile, {
               ...queryParams.filters,
               ...(sourceKey && sourceValue
@@ -650,8 +636,6 @@ function SourceSelectFilter(
 function SelectFilter<
   P extends SingleSelectFilterProps | MultiSelectFilterProps,
 >({
-  apiKey,
-  apiUrl,
   contextFilters,
   defaultOption,
   filterHandler,
@@ -671,8 +655,6 @@ function SelectFilter<
   // Create the filter function from the HOF
   const filterFunc = useMemo(() => {
     return filterOptions({
-      apiKey,
-      apiUrl,
       defaultOption,
       filters: contextFilters,
       profile,
@@ -683,8 +665,6 @@ function SelectFilter<
       staticOptions,
     });
   }, [
-    apiKey,
-    apiUrl,
     content,
     contextFilters,
     defaultOption,
@@ -948,16 +928,12 @@ function useProfile() {
 }
 
 function useQueryParams({
-  apiKey,
-  apiUrl,
   profile,
   filterState,
   format,
   initializeFilters,
   staticOptions,
 }: {
-  apiKey: string;
-  apiUrl: string;
   profile: Profile | null;
   filterState: FilterFieldState;
   format: Format;
@@ -973,7 +949,7 @@ function useQueryParams({
   // Populate the input fields with URL parameters, if any
   useEffect(() => {
     if (parametersLoaded || !profile || !staticOptions) return;
-    getUrlInputs(apiKey, apiUrl, staticOptions, profile, getSignal())
+    getUrlInputs(staticOptions, profile, getSignal())
       .then(({ filters, errors }) => {
         initializeFilters(filters);
         if (errors.invalid.size || errors.duplicate.size)
@@ -983,15 +959,7 @@ function useQueryParams({
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setParametersLoaded(true));
-  }, [
-    apiKey,
-    apiUrl,
-    getSignal,
-    initializeFilters,
-    parametersLoaded,
-    profile,
-    staticOptions,
-  ]);
+  }, [getSignal, initializeFilters, parametersLoaded, profile, staticOptions]);
 
   // Track non-empty values relevant to the current profile
   const [parameters, setParameters] = useState<QueryData>({
@@ -1127,14 +1095,12 @@ function buildUrlQueryString(
 // Returns a boolean, specifying if a value is found in the
 // specified table and column of the database
 async function checkColumnValue(
-  apiKey: string,
-  apiUrl: string,
   value: Primitive,
   fieldName: string,
   profile: string,
 ) {
-  const url = `${apiUrl}/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
-  const res = await getData<Primitive[]>({ url, apiKey });
+  const url = `${serverUrl}/api/attains/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
+  const res = await getData<Primitive[]>(url);
   if (res.length) return true;
   return false;
 }
@@ -1190,8 +1156,6 @@ function createSourceReducer() {
 
 // Filters options that require fetching values from the database
 function filterDynamicOptions({
-  apiKey,
-  apiUrl,
   defaultOption,
   direction = 'asc',
   fieldName,
@@ -1200,8 +1164,6 @@ function filterDynamicOptions({
   profile,
   secondaryFieldName,
 }: {
-  apiKey: string;
-  apiUrl: string;
   defaultOption?: Option | null;
   direction?: SortDirection;
   fieldName: string;
@@ -1214,7 +1176,7 @@ function filterDynamicOptions({
     inputValue: string,
     signal?: AbortSignal,
   ): Promise<Array<Option>> {
-    const url = `${apiUrl}/${profile}/values/${fieldName}`;
+    const url = `${serverUrl}/api/attains/${profile}/values/${fieldName}`;
     const data = {
       text: inputValue,
       direction: direction ?? null,
@@ -1222,13 +1184,7 @@ function filterDynamicOptions({
       filters,
       additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
     };
-    const values = await postData({
-      url,
-      apiKey,
-      data,
-      responseType: 'json',
-      signal,
-    });
+    const values = await postData(url, data, 'json', signal);
     const options = values.map((item: Record<string, string>) => {
       const value = item[fieldName];
       // Concatenate primary column value with secondary, if present
@@ -1244,8 +1200,6 @@ function filterDynamicOptions({
 
 // Filters options by search input, returning a maximum number of options
 function filterOptions({
-  apiKey,
-  apiUrl,
   defaultOption,
   dynamicOptionLimit,
   fieldName,
@@ -1255,8 +1209,6 @@ function filterOptions({
   staticOptions,
   secondaryFieldName,
 }: {
-  apiKey: string;
-  apiUrl: string;
   defaultOption?: Option | null;
   dynamicOptionLimit?: number;
   fieldName: string;
@@ -1273,8 +1225,6 @@ function filterOptions({
     );
   } else {
     return filterDynamicOptions({
-      apiKey,
-      apiUrl,
       defaultOption,
       direction,
       fieldName,
@@ -1465,8 +1415,6 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
 
 // Uses URL route/query parameters or default values for initial state
 async function getUrlInputs(
-  apiKey: string,
-  apiUrl: string,
   staticOptions: StaticOptions,
   profile: Profile,
   _signal: AbortSignal,
@@ -1481,8 +1429,6 @@ async function getUrlInputs(
       if (!isFilterField(key)) return;
       if (isMultiOptionField(key)) {
         newState[key] = await matchMultipleOptions(
-          apiKey,
-          apiUrl,
           params[key] ?? null,
           key,
           getStaticOptions(key, staticOptions),
@@ -1490,8 +1436,6 @@ async function getUrlInputs(
         );
       } else if (isSingleOptionField(key)) {
         newState[key] = await matchSingleOption(
-          apiKey,
-          apiUrl,
           params[key] ?? null,
           key,
           getStaticOptions(key, staticOptions),
@@ -1591,16 +1535,12 @@ function matchDate(values: InputValue, yearOnly = false) {
 
 // Wrapper function to add type assertion
 async function matchMultipleOptions(
-  apiKey: string,
-  apiUrl: string,
   values: InputValue,
   fieldName: MultiOptionField,
   options: ReadonlyArray<Option> | null = null,
   profile: string | null = null,
 ) {
   return (await matchOptions(
-    apiKey,
-    apiUrl,
     values,
     fieldName,
     options,
@@ -1611,16 +1551,12 @@ async function matchMultipleOptions(
 
 // Wrapper function to add type assertion
 async function matchSingleOption(
-  apiKey: string,
-  apiUrl: string,
   values: InputValue,
   fieldName: SingleOptionField,
   options: ReadonlyArray<Option> | null = null,
   profile: string | null = null,
 ) {
   return (await matchOptions(
-    apiKey,
-    apiUrl,
     values,
     fieldName,
     options,
@@ -1630,8 +1566,6 @@ async function matchSingleOption(
 
 // Produce the option/s corresponding to a particular value
 async function matchOptions(
-  apiKey: string,
-  apiUrl: string,
   values: InputValue,
   fieldName: MultiOptionField | SingleOptionField,
   options: ReadonlyArray<Option> | null = null,
@@ -1650,13 +1584,7 @@ async function matchOptions(
         const match = options.find((option) => option.value === value);
         if (match) matches.add(match);
       } else if (profile) {
-        const isValid = await checkColumnValue(
-          apiKey,
-          apiUrl,
-          value,
-          fieldName,
-          profile,
-        );
+        const isValid = await checkColumnValue(value, fieldName, profile);
         if (isValid) matches.add({ label: value, value });
       }
     }),
@@ -1839,8 +1767,6 @@ type FilterFieldState = {
 };
 
 type FilterGroupsProps = {
-  apiKey: string;
-  apiUrl: string;
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
   profile: Profile;
@@ -1912,8 +1838,6 @@ type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
 type SelectFilterProps<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 > = {
-  apiKey: string;
-  apiUrl: string;
   contextFilters: FilterQueryData;
   defaultOption?: Option | null;
   filterHandler: FilterFieldInputHandlers[F];

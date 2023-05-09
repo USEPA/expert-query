@@ -21,13 +21,13 @@ describe('Data Profile Assessments', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessments?${columnsValue}&assessmentUnitStatus=A&format=csv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessments?${columnsValue}&assessmentUnitStatus=A&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["A"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessments`,
     );
   });
 
@@ -47,13 +47,13 @@ describe('Data Profile Assessments', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessments?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessments?${columnsValue}&${queryValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"alternateListingIdentifier":["806226"],"assessmentUnitStatus":["A"],"associatedActionAgency":["State"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessments`,
     );
   });
 
@@ -82,13 +82,13 @@ describe('Data Profile Assessments', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessments?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessments?${columnsValue}&${queryValue}&format=csv`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentDateLo":"12-31-1999","assessmentDateHi":"01-16-2023","assessmentUnitStatus":["A"],"associatedActionId":["51180"],"associatedActionStatus":["A"],"cwa303dPriorityRanking":["Low"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessments`,
     );
   });
 
@@ -118,13 +118,13 @@ describe('Data Profile Assessments', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessments?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
+      `${origin}/api/attains/assessments?${columnsValue}&${queryValue}&format=xlsx`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["A"],"cycleExpectedToAttainLo":"2008","cycleExpectedToAttainHi":"2022","state":["IN"],"stateIrCategory":["3x"],"useStateIrCategory":["61"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessments`,
     );
   });
 
@@ -303,7 +303,7 @@ describe('Data Profile Assessments', () => {
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A01R_PIA01A00","AK-20401-004_00"],"assessmentUnitStatus":["A","H"],"associatedActionAgency":["EPA"],"associatedActionId":["1024","257"],"associatedActionStatus":["A"],"associatedActionType":["Implementation Completed"],"cwa303dPriorityRanking":["Medium"],"cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","delisted":["Y"],"delistedReason":["Not specified"],"epaIrCategory":["4A"],"monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","organizationId":["21PA","21IOWA"],"overallStatus":["Not Assessed"],"parameterAttainment":["ALGAE"],"parameterGroup":["METALS (OTHER THAN MERCURY)"],"parameterIrCategory":["19"],"parameterName":["RADIUM"],"parameterStateIrCategory":["29"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["AGRICULTURAL"],"useName":["Scenic Value"],"useStateIrCategory":["61"],"vision303dPriority":["N"],"waterType":["WASH"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${origin}/api/attains/assessments`,
     );
   });
 });

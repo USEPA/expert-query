@@ -61,18 +61,6 @@ function populateMetdataObjFromRequest(request) {
     request.header('x_b3_parentspanid') === undefined
       ? null
       : request.header('x_b3_parentspanid');
-  metadata.x_api_key =
-    request.header('X-Api-Key') === undefined
-      ? null
-      : request.header('X-Api-Key');
-  metadata.x_api_user_id =
-    request.header('x-api-user-id') === undefined
-      ? null
-      : request.header('x-api-user-id');
-  metadata.x_api_umbrella_request_id =
-    request.header('x-api-umbrella-request-id') === undefined
-      ? null
-      : request.header('x-api-umbrella-request-id');
 
   return metadata;
 }

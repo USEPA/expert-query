@@ -15,7 +15,6 @@ type Props = {
 export type Content = {
   services: {
     eqDataApi: string;
-    eqApiKey: string;
   };
   alertsConfig: {
     [page: string]: {

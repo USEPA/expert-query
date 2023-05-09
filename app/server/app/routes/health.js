@@ -6,11 +6,6 @@ import { fileURLToPath } from 'node:url';
 import { getActiveSchema } from '../middleware.js';
 import { knex } from '../utilities/database.js';
 import { getEnvironment } from '../utilities/environment.js';
-import {
-  formatLogMsg,
-  log,
-  populateMetdataObjFromRequest,
-} from '../utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
@@ -27,8 +22,6 @@ export default function (app, basePath) {
   });
 
   router.get('/health/etlGlossary', async function (req, res) {
-    const metadataObj = populateMetdataObjFromRequest(req);
-
     try {
       // check etl status in db
       const query = knex
@@ -78,9 +71,8 @@ export default function (app, basePath) {
       res
         .status(200)
         .json({ status: timeSinceLastUpdate >= 24.5 ? 'FAILED-TIME' : 'UP' });
-    } catch (error) {
-      log.error(formatLogMsg(metadataObj, 'Error!: ', error));
-      res.status(500).send('Error!' + error);
+    } catch (err) {
+      res.status(500).send('Error!' + err);
     }
   });
 

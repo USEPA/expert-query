@@ -3,15 +3,15 @@
   "servers": [
     {
       "description": "Production",
-      "url": "https://api.epa.gov/expertquery/api"
+      "url": "https://owapps.app.cloud.gov/expertquery/api"
     },
     {
       "description": "Staging",
-      "url": "https://api.epa.gov/expertquery-stage/api"
+      "url": "https://owapps-stage.app.cloud.gov/expertquery/api"
     },
     {
       "description": "Development",
-      "url": "https://api.epa.gov/expertquery-dev/api"
+      "url": "https://owapps-dev.app.cloud.gov/expertquery/api"
     },
     {
       "description": "Developer",
