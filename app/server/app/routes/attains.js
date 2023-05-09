@@ -721,7 +721,6 @@ export default function (app, basePath) {
   const corsOptions = {
     origin: '*',
     methods: 'GET,HEAD,POST',
-    allowedHeaders: ['EQ-SECRET', 'X-Api-Key'],
   };
 
   Object.entries(tableConfig).forEach(([profileName, profile]) => {

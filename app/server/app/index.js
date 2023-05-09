@@ -117,7 +117,6 @@ app.options(
   cors({
     origin: '*',
     methods: ['GET', 'POST', 'HEAD'],
-    allowedHeaders: ['EQ-SECRET', 'X-Api-Key'],
   }),
 );
 
