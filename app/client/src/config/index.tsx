@@ -64,7 +64,6 @@ export function getData<T>({
 
   return fetchData(url, {
     method: 'GET',
-    credentials: 'include' as const,
     headers,
     signal,
   });
