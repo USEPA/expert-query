@@ -112,7 +112,14 @@ requiredEnvVars.forEach((envVar) => {
 /****************************************************************
 Enable CORS/Preflight/OPTIONS request
 ****************************************************************/
-app.options('*', cors());
+app.options(
+  '*',
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'HEAD'],
+    headers: ['X-Api-Key'],
+  }),
+);
 
 /****************************************************************
  Setup server and routes

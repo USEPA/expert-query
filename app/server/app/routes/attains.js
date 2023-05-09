@@ -719,7 +719,9 @@ export default function (app, basePath) {
   router.use(getActiveSchema);
 
   const corsOptions = {
+    origin: '*',
     methods: 'GET,HEAD,POST',
+    headers: ['X-Api-Key'],
   };
 
   Object.entries(tableConfig).forEach(([profileName, profile]) => {
