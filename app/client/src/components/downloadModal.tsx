@@ -16,6 +16,7 @@ import type { FetchState, Primitive, Status } from 'types';
 */
 
 export function DownloadModal<D extends PostData>({
+  apiKey,
   dataId,
   downloadStatus,
   filename,
@@ -35,7 +36,7 @@ export function DownloadModal<D extends PostData>({
 
     const countUrl = `${queryUrl}/count`;
     setCount({ status: 'pending', data: null });
-    postData(countUrl, queryData)
+    postData({ url: countUrl, apiKey, data: queryData })
       .then((res) => {
         setCount({
           status: 'success',
@@ -46,7 +47,7 @@ export function DownloadModal<D extends PostData>({
         console.error(err);
         setCount({ status: 'failure', data: null });
       });
-  }, [queryData, queryUrl]);
+  }, [apiKey, queryData, queryUrl]);
 
   // Retrieve the requested data in the specified format
   const executeQuery = useCallback(() => {
@@ -54,7 +55,7 @@ export function DownloadModal<D extends PostData>({
     if (!filename) return;
 
     setDownloadStatus('pending');
-    postData(queryUrl, queryData, 'blob')
+    postData({ url: queryUrl, apiKey, data: queryData, responseType: 'blob' })
       .then((res) => {
         const fileUrl = window.URL.createObjectURL(res);
         const trigger = document.createElement('a');
@@ -70,7 +71,7 @@ export function DownloadModal<D extends PostData>({
         setDownloadStatus('failure');
       })
       .finally(() => onClose());
-  }, [queryUrl, filename, setDownloadStatus, queryData, onClose]);
+  }, [apiKey, queryUrl, filename, setDownloadStatus, queryData, onClose]);
 
   const [id] = useState(uniqueId('modal-'));
 
@@ -175,6 +176,7 @@ export function DownloadModal<D extends PostData>({
 */
 
 type DownloadModalProps<D extends PostData> = {
+  apiKey: string;
   dataId?: string;
   downloadStatus: Status;
   filename: string | null;
