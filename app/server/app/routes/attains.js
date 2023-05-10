@@ -726,10 +726,10 @@ export default function (app, basePath) {
   // Cors config for private endpoints
   // This is needed for private endpoints to work within EQ UI.
   const allowlist = [
-    'https://owapps-dev.app.cloud.gov/expertquery',
-    'https://owapps-stage.app.cloud.gov/expertquery',
-    'https://owapps.app.cloud.gov/expertquery',
-    'https://owapps.epa.gov/expertquery',
+    'https://owapps-dev.app.cloud.gov',
+    'https://owapps-stage.app.cloud.gov',
+    'https://owapps.app.cloud.gov',
+    'https://owapps.epa.gov',
   ];
   const corsOptionsDelegate = function (req, callback) {
     let corsOptionsRes = corsOptions;
