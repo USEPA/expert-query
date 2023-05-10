@@ -146,7 +146,7 @@ export function DownloadModal<D extends PostData>({
                   </div>
                   <div className="usa-modal__footer">
                     <ul className="flex-justify-center usa-button-group">
-                      <li className="margin-right-4 margin-y-auto usa-button-group__item">
+                      <li className="usa-button-group__item mobile-lg:margin-right-5 mobile-lg:margin-y-auto">
                         <button
                           type="button"
                           className="height-5 usa-button"
@@ -156,22 +156,19 @@ export function DownloadModal<D extends PostData>({
                           Cancel
                         </button>
                       </li>
-                      <li className="margin-y-auto usa-button-group__item">
+                      <li className="usa-button-group__item mobile-lg:margin-y-auto">
                         {downloadStatus === 'pending' ? (
                           <button
-                            className="height-5 usa-button hover:bg-primary"
-                            disabled={count.data === 0}
+                            className="display-flex flex-justify-center height-5 usa-button hover:bg-primary mobile-lg:width-15"
                             onClick={undefined}
                             style={{ cursor: 'initial' }}
                             type="button"
                           >
-                            <span className="display-flex">
-                              Working <LoadingButtonIcon />
-                            </span>
+                            Working <LoadingButtonIcon />
                           </button>
                         ) : (
                           <button
-                            className="height-5 usa-button"
+                            className="height-5 usa-button mobile-lg:width-15"
                             disabled={count.data === 0}
                             onClick={executeQuery}
                             type="button"

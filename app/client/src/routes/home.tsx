@@ -228,12 +228,15 @@ export function QueryBuilder() {
               styles={['margin-bottom-2']}
             />
             <button
-              className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
+              className="display-flex flex-justify-center margin-bottom-1 usa-button"
               onClick={openDownloadConfirmation}
               type="button"
             >
-              <Download className="height-205 margin-right-1 usa-icon width-205" />
-              Download
+              <Download
+                aria-hidden="true"
+                className="height-205 margin-right-1 usa-icon width-205"
+              />
+              <span className="margin-y-auto">Download</span>
             </button>
             {downloadStatus === 'success' && (
               <Alert type="success">
