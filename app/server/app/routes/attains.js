@@ -360,9 +360,8 @@ async function checkQueryCount(query) {
     .count()
     .first();
 
-  const countInt = parseInt(count.count);
-  if (countInt > maxQuerySize) return null;
-  return countInt;
+  if (count.count > maxQuerySize) return null;
+  return count.count;
 }
 
 /**
@@ -412,6 +411,8 @@ function executeQueryCountOnly(profile, req, res) {
  * @param {express.Response} res
  */
 async function executeQueryCountPerOrgCycle(profile, req, res) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
   // always return json with the count
   try {
     const groupByColumns = [];
@@ -453,8 +454,11 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
     res.status(200).json(results);
   } catch (error) {
     log.error(
-      `Failed to get count from the "${profile.tableName}" table:`,
-      error,
+      formatLogMsg(
+        metadataObj,
+        `Failed to get counts per organizaiton and reporting cycle from the "${profile.tableName}" table:`,
+        error,
+      ),
     );
     return res.status(error.code ?? 500).json(error);
   }
