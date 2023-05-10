@@ -777,9 +777,27 @@ export default function (app, basePath) {
   router.use(protectRoutes);
   router.use(getActiveSchema);
 
+  // Cors config for public endpoints
   const corsOptions = {
-    origin: '*',
     methods: 'GET,HEAD,POST',
+  };
+
+  // Cors config for private endpoints
+  // This is needed for private endpoints to work within EQ UI.
+  const allowlist = [
+    'https://owapps-dev.app.cloud.gov',
+    'https://owapps-stage.app.cloud.gov',
+    'https://owapps.app.cloud.gov',
+    'https://owapps.epa.gov',
+  ];
+  const corsOptionsDelegate = function (req, callback) {
+    const corsOptionsRes = { ...corsOptions };
+    if (allowlist.indexOf(req.header('Origin')) !== -1) {
+      corsOptionsRes.origin = true; // reflect (enable) the requested origin in the CORS response
+    } else {
+      corsOptionsRes.origin = false; // disable CORS for this request
+    }
+    callback(null, corsOptionsRes); // callback expects two parameters: error and options
   };
 
   Object.entries(tableConfig).forEach(([profileName, profile]) => {
@@ -830,20 +848,36 @@ export default function (app, basePath) {
     // ****************************** //
 
     // get column domain values
-    router.get('/:profile/values/:column', function (req, res) {
-      executeValuesQuery(req, res);
-    });
-    router.post('/:profile/values/:column', function (req, res) {
-      executeValuesQuery(req, res);
-    });
+    router.get(
+      '/:profile/values/:column',
+      cors(corsOptionsDelegate),
+      function (req, res) {
+        executeValuesQuery(req, res);
+      },
+    );
+    router.post(
+      '/:profile/values/:column',
+      cors(corsOptionsDelegate),
+      function (req, res) {
+        executeValuesQuery(req, res);
+      },
+    );
 
-    router.get('/health/etlDatabase', async function (req, res) {
-      await checkDatabaseHealth(req, res);
-    });
+    router.get(
+      '/health/etlDatabase',
+      cors(corsOptionsDelegate),
+      async function (req, res) {
+        await checkDatabaseHealth(req, res);
+      },
+    );
 
-    router.get('/health/etlDomainValues', async function (req, res) {
-      await checkDomainValuesHealth(req, res);
-    });
+    router.get(
+      '/health/etlDomainValues',
+      cors(corsOptionsDelegate),
+      async function (req, res) {
+        await checkDomainValuesHealth(req, res);
+      },
+    );
   });
 
   app.use(`${basePath}api/attains`, router);
