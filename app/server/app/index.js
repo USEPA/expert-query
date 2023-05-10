@@ -115,7 +115,6 @@ Enable CORS/Preflight/OPTIONS request
 app.options(
   '*',
   cors({
-    origin: '*',
     methods: ['GET', 'POST', 'HEAD'],
   }),
 );

@@ -719,7 +719,6 @@ export default function (app, basePath) {
   router.use(getActiveSchema);
 
   const corsOptions = {
-    origin: '*',
     methods: 'GET,HEAD,POST',
   };
 
