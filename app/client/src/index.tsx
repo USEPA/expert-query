@@ -5,7 +5,6 @@ import reportWebVitals from './reportWebVitals';
 import { ContentProvider } from 'contexts/content';
 import { ErrorBoundary } from 'components/errorBoundary';
 import { App } from 'components/app';
-import './styles.css';
 
 const container = document.getElementById('root') as HTMLElement;
 

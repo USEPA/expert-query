@@ -21,13 +21,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/actions?${columnsValue}&format=csv`,
+      `${origin}/api/attains/actions?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/actions`,
+      )} ${origin}/api/attains/actions -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -47,13 +47,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=csv`,
+      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"actionAgency":["State"],"actionId":["10081","56325"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/actions`,
+      )} ${origin}/api/attains/actions -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -76,13 +76,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=tsv`,
+      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"actionAgency":["EPA"],"region":["06","09"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/actions`,
+      )} ${origin}/api/attains/actions -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -110,13 +110,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=xlsx`,
+      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"actionAgency":["Tribal"],"assessmentUnitId":["AS-10S","AS-05S"],"waterType":["WASH","GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/actions`,
+      )} ${origin}/api/attains/actions -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -155,13 +155,13 @@ describe('Data Profile Action', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=xlsx`,
+      `${origin}/api/attains/actions?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"actionAgency":["Tribal","EPA"],"actionId":["10081","10817","41897","39736"],"assessmentUnitId":["AS-03O","AS-04S"],"organizationId":["CA_SWRCB","MTDEQ","21KY"],"waterType":["GULF"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/actions`,
+      )} ${origin}/api/attains/actions -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 });
