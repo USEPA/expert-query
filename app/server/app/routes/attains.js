@@ -331,11 +331,8 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     const exactArg = queryParams.filters[col.alias];
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
-      if (subQuery) appendRangeToWhere(subQuery, col, lowArg, highArg);
     } else if (exactArg) {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
-      if (subQuery)
-        appendToWhere(subQuery, col.name, queryParams.filters[col.alias]);
     }
   });
 
