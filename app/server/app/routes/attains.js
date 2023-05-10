@@ -288,15 +288,16 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
   // get a subquery for when "Latest" is used,
   // so that we can apply the same filters to the subquery
   const latestColumn = profile.columns.find((col) => col.default === 'latest');
-  const subQuery = latestColumn
-    ? createLatestSubquery(
-        req,
-        profile,
-        queryParams,
-        latestColumn.name,
-        latestColumn.type,
-      )
-    : null;
+  const subQuery =
+    latestColumn && !queryParams.filters.hasOwnProperty(latestColumn.alias)
+      ? createLatestSubquery(
+          req,
+          profile,
+          queryParams,
+          latestColumn.name,
+          latestColumn.type,
+        )
+      : null;
 
   // build select statement of the query
   let selectText = undefined;
