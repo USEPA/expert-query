@@ -733,7 +733,6 @@ export default function (app, basePath) {
   ];
   const corsOptionsDelegate = function (req, callback) {
     const corsOptionsRes = { ...corsOptions };
-    console.log('origin: ', req.header('Origin'));
     if (allowlist.indexOf(req.header('Origin')) !== -1) {
       corsOptionsRes.origin = true; // reflect (enable) the requested origin in the CORS response
     } else {
