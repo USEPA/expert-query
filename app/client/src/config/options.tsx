@@ -34,13 +34,7 @@ export const dataProfile = Object.entries(profiles)
   .map(([id, profile]) => {
     return {
       value: id,
-      label: (
-        <p className="margin-1">
-          <b>{profile.label}</b>
-          <br />
-          <em>{profile.description}</em>
-        </p>
-      ),
+      label: profile.label,
     } as const;
   });
 
