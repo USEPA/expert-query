@@ -69,7 +69,7 @@ describe('CopyBox', () => {
       cy.wait(1000);
       cy.findAllByRole('button', { name: 'Copy content' }).eq(1).focus().realClick();
       const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
-      cy.clipboardValue(`${origin}/api/attains/actions?${columnsValue}&format=csv`);
+      cy.clipboardValue(`${origin}/api/attains/actions?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`);
     },
   );
 
@@ -84,7 +84,7 @@ describe('CopyBox', () => {
       cy.clipboardValue(
         `curl -X POST --json ${JSON.stringify(
           `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
-        )} ${origin}/api/attains/actions`,
+        )} ${origin}/api/attains/actions -H "X-Api-Key: <YOUR_API_KEY>"`,
       );
     },
   );
