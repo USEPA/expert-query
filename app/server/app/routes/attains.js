@@ -6,10 +6,14 @@ import { readdirSync, statSync } from 'node:fs';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
-import { getActiveSchema } from '../middleware.js';
+import { getActiveSchema, protectRoutes } from '../middleware.js';
 import { appendToWhere, knex } from '../utilities/database.js';
 import { getEnvironment } from '../utilities/environment.js';
-import { log } from '../utilities/logger.js';
+import {
+  formatLogMsg,
+  log,
+  populateMetdataObjFromRequest,
+} from '../utilities/logger.js';
 import StreamingService from '../utilities/streamingService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -349,6 +353,8 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
  * @param {express.Response} res
  */
 async function executeQuery(profile, req, res) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
   // output types csv, tab-separated, Excel, or JSON
   try {
     const query = knex
@@ -379,7 +385,13 @@ async function executeQuery(profile, req, res) {
       await streamJson(query, res, startId);
     }
   } catch (error) {
-    log.error(`Failed to get data from the "${profile.tableName}" table...`);
+    log.error(
+      formatLogMsg(
+        metadataObj,
+        `Failed to get data from the "${profile.tableName}" table...`,
+        error,
+      ),
+    );
     return res.status(error.code ?? 500).json(error);
   }
 }
@@ -440,6 +452,8 @@ async function checkQueryCount(query) {
  * @param {express.Response} res
  */
 function executeQueryCountOnly(profile, req, res) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
   // always return json with the count
   try {
     const query = knex.withSchema(req.activeSchema).from(profile.tableName);
@@ -461,8 +475,11 @@ function executeQueryCountOnly(profile, req, res) {
     });
   } catch (error) {
     log.error(
-      `Failed to get count from the "${profile.tableName}" table:`,
-      error,
+      formatLogMsg(
+        metadataObj,
+        `Failed to get count from the "${profile.tableName}" table:`,
+        error,
+      ),
     );
     return res.status(error.code ?? 500).json(error);
   }
@@ -474,6 +491,8 @@ function executeQueryCountOnly(profile, req, res) {
  * @param {express.Response} res
  */
 function executeValuesQuery(req, res) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
   const profile = tableConfig[req.params.profile];
   if (!profile) {
     return res
@@ -494,7 +513,11 @@ function executeValuesQuery(req, res) {
     .then((values) => res.status(200).json(values))
     .catch((error) => {
       log.error(
-        `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
+        formatLogMsg(
+          metadataObj,
+          `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
+          error,
+        ),
       );
       res.status(500).json({ message: 'Error! ' + error });
     });
@@ -614,6 +637,8 @@ async function queryColumnValues(profile, columns, params, schema) {
  * @param {express.Response} res
  */
 async function checkDatabaseHealth(req, res) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
   try {
     // check etl status in db
     let query = knex
@@ -674,8 +699,9 @@ async function checkDatabaseHealth(req, res) {
 
     // everything passed
     res.status(200).json({ status: 'UP' });
-  } catch (err) {
-    res.status(500).send('Error!' + err);
+  } catch (error) {
+    log.error(formatLogMsg(metadataObj, 'Error!', error));
+    res.status(500).send('Error!' + error);
   }
 }
 
@@ -748,18 +774,39 @@ async function checkDomainValuesHealth(req, res) {
     res
       .status(200)
       .json({ status: timeSinceLastUpdate >= 169 ? 'FAILED-TIME' : 'UP' });
-  } catch (err) {
-    res.status(500).send('Error!' + err);
+  } catch (error) {
+    log.error(formatLogMsg(metadataObj, 'Error!', error));
+    res.status(500).send('Error!' + error);
   }
 }
 
 export default function (app, basePath) {
   const router = express.Router();
 
+  router.use(protectRoutes);
   router.use(getActiveSchema);
 
+  // Cors config for public endpoints
   const corsOptions = {
     methods: 'GET,HEAD,POST',
+  };
+
+  // Cors config for private endpoints
+  // This is needed for private endpoints to work within EQ UI.
+  const allowlist = [
+    'https://owapps-dev.app.cloud.gov',
+    'https://owapps-stage.app.cloud.gov',
+    'https://owapps.app.cloud.gov',
+    'https://owapps.epa.gov',
+  ];
+  const corsOptionsDelegate = function (req, callback) {
+    const corsOptionsRes = { ...corsOptions };
+    if (allowlist.indexOf(req.header('Origin')) !== -1) {
+      corsOptionsRes.origin = true; // reflect (enable) the requested origin in the CORS response
+    } else {
+      corsOptionsRes.origin = false; // disable CORS for this request
+    }
+    callback(null, corsOptionsRes); // callback expects two parameters: error and options
   };
 
   Object.entries(tableConfig).forEach(([profileName, profile]) => {
@@ -796,20 +843,36 @@ export default function (app, basePath) {
     // ****************************** //
 
     // get column domain values
-    router.get('/:profile/values/:column', function (req, res) {
-      executeValuesQuery(req, res);
-    });
-    router.post('/:profile/values/:column', function (req, res) {
-      executeValuesQuery(req, res);
-    });
+    router.get(
+      '/:profile/values/:column',
+      cors(corsOptionsDelegate),
+      function (req, res) {
+        executeValuesQuery(req, res);
+      },
+    );
+    router.post(
+      '/:profile/values/:column',
+      cors(corsOptionsDelegate),
+      function (req, res) {
+        executeValuesQuery(req, res);
+      },
+    );
 
-    router.get('/health/etlDatabase', async function (req, res) {
-      await checkDatabaseHealth(req, res);
-    });
+    router.get(
+      '/health/etlDatabase',
+      cors(corsOptionsDelegate),
+      async function (req, res) {
+        await checkDatabaseHealth(req, res);
+      },
+    );
 
-    router.get('/health/etlDomainValues', async function (req, res) {
-      await checkDomainValuesHealth(req, res);
-    });
+    router.get(
+      '/health/etlDomainValues',
+      cors(corsOptionsDelegate),
+      async function (req, res) {
+        await checkDomainValuesHealth(req, res);
+      },
+    );
   });
 
   app.use(`${basePath}api/attains`, router);
