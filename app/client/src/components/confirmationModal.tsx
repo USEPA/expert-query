@@ -62,10 +62,10 @@ export function ConfirmationModalFooter({
   return (
     <div className="usa-modal__footer">
       <ul className="flex-justify-center usa-button-group">
-        <li className="usa-button-group__item">
+        <li className="usa-button-group__item mobile-lg:margin-right-5 mobile-lg:margin-y-auto">
           <Button children="Cancel" onClick={onClose} />
         </li>
-        <li className="usa-button-group__item">
+        <li className="usa-button-group__item mobile-lg:margin-y-auto">
           <Button
             children={continueText}
             onClick={onContinue}
