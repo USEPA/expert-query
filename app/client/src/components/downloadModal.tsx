@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReactComponent as Close } from '@uswds/uswds/img/usa-icons/close.svg';
 // components
 import { Alert } from 'components/alert';
-import { Loading, LoadingButtonIcon } from 'components/loading';
+import { LoadingButtonIcon } from 'components/loading';
 // utils
 import { postData } from 'config';
 import { isAbort, useAbort } from 'utils';
@@ -36,7 +36,7 @@ export function DownloadModal<D extends PostData>({
   const focusRef = useRef<HTMLButtonElement>(null);
 
   const [count, setCount] = useState<FetchState<number | null>>({
-    status: 'idle',
+    status: 'pending',
     data: null,
   });
 

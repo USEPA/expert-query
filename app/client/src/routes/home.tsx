@@ -8,19 +8,16 @@ import {
 } from 'react-router-dom';
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
-import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
 import { Checkbox } from 'components/checkbox';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
-import { GlossaryPanel } from 'components/glossaryPanel';
 import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
-import { NavButton } from 'components/navButton';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -91,12 +88,6 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <NavButton
-          label="Glossary"
-          icon={Book}
-          styles={['js-glossary-toggle']}
-        />
-        <GlossaryPanel path={getPageName()} />
         <div>
           <h2>Query ATTAINS Data</h2>
           <hr />
@@ -247,7 +238,7 @@ export function QueryBuilder() {
             {downloadStatus === 'success' && (
               <Alert type="success">
                 Query executed successfully, please check your downloads folder
-                for the results file.
+                for the output file.
               </Alert>
             )}
             {downloadStatus === 'failure' && (
@@ -258,7 +249,7 @@ export function QueryBuilder() {
             )}
           </AccordionItem>
 
-          <AccordionItem heading="Advanced API Queries">
+          <AccordionItem heading="Advanced Queries">
             <h4>Current Query</h4>
             <CopyBox
               testId="current-query-copy-box-container"
@@ -1361,11 +1352,6 @@ function getMultiOptionFields(fields: typeof allFieldsConfig) {
       return field.type === 'multiselect' ? field.key : null;
     }),
   );
-}
-
-function getPageName() {
-  const pathParts = window.location.pathname.split('/');
-  return pathParts.length > 1 ? pathParts[1] : '';
 }
 
 function getSingleOptionFields(fields: typeof allFieldsConfig) {
