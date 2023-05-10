@@ -368,6 +368,8 @@ function FilterFields({
             filterKey: fieldConfig.key,
             filterLabel: fieldConfig.label,
             filterValue: filterState[fieldConfig.key],
+            placeholder:
+              'placeholder' in fieldConfig ? fieldConfig.placeholder : null,
             profile,
             secondaryFilterKey:
               'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
@@ -658,6 +660,7 @@ function SelectFilter<
   filterKey,
   filterLabel,
   filterValue,
+  placeholder,
   profile,
   secondaryFilterKey,
   sortDirection,
@@ -744,10 +747,25 @@ function SelectFilter<
     setOptions(null);
   }, [sourceValue]);
 
+  const formatOptionLabel = useCallback(
+    (option: Option) => {
+      return secondaryFilterKey ? (
+        <div>
+          <span style={{ fontWeight: 600 }}>{option.value}</span> (
+          {option.label})
+        </div>
+      ) : (
+        option.label
+      );
+    },
+    [secondaryFilterKey],
+  );
+
   return (
     <Select
       aria-label={`${filterLabel} input`}
       className="width-full"
+      formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
@@ -765,9 +783,10 @@ function SelectFilter<
       }}
       onMenuOpen={loadOptions}
       options={options ?? undefined}
-      placeholder={`Select ${getArticle(
-        filterLabel.split(' ')[0],
-      )} ${filterLabel}...`}
+      placeholder={
+        placeholder ??
+        `Select ${getArticle(filterLabel.split(' ')[0])} ${filterLabel}...`
+      }
       styles={{
         control: (base) => ({
           ...base,
@@ -1235,7 +1254,7 @@ function filterDynamicOptions({
       const secondaryValue = secondaryFieldName
         ? item[secondaryFieldName]
         : null;
-      const label = secondaryValue ? `${value} - ${secondaryValue}` : value;
+      const label = secondaryValue ? secondaryValue : value;
       return { label, value };
     });
     return defaultOption ? [defaultOption, ...options] : options;
@@ -1920,6 +1939,7 @@ type SelectFilterProps<
   filterKey: F;
   filterLabel: string;
   filterValue: FilterFieldState[F];
+  placeholder?: string | null;
   profile: Profile;
   secondaryFilterKey: FilterField;
   sortDirection?: SortDirection;
