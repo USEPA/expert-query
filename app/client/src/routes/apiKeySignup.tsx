@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 // components
 import { Loading } from 'components/loading';
 // config
@@ -35,7 +36,7 @@ export function ApiKeySignup() {
         <h2>What Next?</h2>
         <ul>
           <li>
-          Explore the Expert Query (EQ) web service <a href='${baseUrl}/api-documentation'>documentation</a>.
+          Explore the <b>Expert Query (EQ)</b> web service <a href='${baseUrl}/api-documentation'>documentation</a>.
           </li>
         </ul>
     `,
@@ -45,6 +46,11 @@ export function ApiKeySignup() {
   return (
     <div>
       <h2>API Key Signup</h2>
+      <p>
+        Sign up for an application programming interface (API) key to access and
+        use <b>Expert Query</b>'s web services, then explore the web service{' '}
+        <Link to={`${baseUrl}/api-documentation`}>documentation</Link>.
+      </p>
       <div id="apidatagov_signup">{loading && <Loading />}</div>
     </div>
   );
@@ -59,8 +65,8 @@ declare global {
     apiUmbrellaSignupOptions: {
       registrationSource: string;
       apiKey: string;
-      verifyEmail: boolean;
       signupConfirmationMessage: string;
+      verifyEmail: boolean;
     };
   }
 }
