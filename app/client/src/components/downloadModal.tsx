@@ -142,6 +142,8 @@ export function DownloadModal<D extends PostData>({
                     Please refine the search, or visit the{' '}
                     <a
                       href={`/national-downloads${dataId ? '#' + dataId : ''}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       National Downloads
                     </a>{' '}
