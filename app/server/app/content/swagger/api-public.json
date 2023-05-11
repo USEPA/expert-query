@@ -41,6 +41,7 @@
       "get": {
         "tags": ["ATTAINS - Actions"],
         "summary": "Query Actions profile data",
+        "description": "Query the Actions profile on the <a href='/expertquery/attains/actions' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -121,6 +122,7 @@
       "post": {
         "tags": ["ATTAINS - Actions"],
         "summary": "Query Actions profile data",
+        "description": "Query the Actions profile on the <a href='/expertquery/attains/actions' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "parameters": [
           {
             "$ref": "#/components/parameters/apiKeyHeader"
@@ -145,6 +147,7 @@
     "/attains/actions/count": {
       "get": {
         "summary": "Row count of Actions profile query",
+        "description": "Query the Actions profile on the <a href='/expertquery/attains/actions' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Actions"],
         "parameters": [
           {
@@ -216,6 +219,7 @@
       },
       "post": {
         "summary": "Row count of Actions profile query",
+        "description": "Query the Actions profile on the <a href='/expertquery/attains/actions' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Actions"],
         "parameters": [
           {
@@ -241,6 +245,7 @@
     "/attains/assessments": {
       "get": {
         "summary": "Query Assessments profile data",
+        "description": "Query the Assessments profile on the <a href='/expertquery/attains/assessments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessments"],
         "parameters": [
           {
@@ -447,6 +452,7 @@
       },
       "post": {
         "summary": "Query Assessments profile data",
+        "description": "Query the Assessments profile on the <a href='/expertquery/attains/assessments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessments"],
         "parameters": [
           {
@@ -472,6 +478,7 @@
     "/attains/assessments/count": {
       "get": {
         "summary": "Row count of Assessments profile query",
+        "description": "Query the Assessments profile on the <a href='/expertquery/attains/assessments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessments"],
         "parameters": [
           {
@@ -669,6 +676,7 @@
       },
       "post": {
         "summary": "Row count of Assessments profile query",
+        "description": "Query the Assessments profile on the <a href='/expertquery/attains/assessments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessments"],
         "parameters": [
           {
@@ -694,6 +702,7 @@
     "/attains/assessmentUnits": {
       "get": {
         "summary": "Query Assessment Units profile data",
+        "description": "Query the Assessment Units profile on the <a href='/expertquery/attains/assessmentUnits' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessment Units"],
         "parameters": [
           {
@@ -768,6 +777,7 @@
       },
       "post": {
         "summary": "Query Assessment Units profile data",
+        "description": "Query the Assessment Units profile on the <a href='/expertquery/attains/assessmentUnits' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessment Units"],
         "parameters": [
           {
@@ -793,6 +803,7 @@
     "/attains/assessmentUnits/count": {
       "get": {
         "summary": "Row count of Assessment Units profile query",
+        "description": "Query the Assessment Units profile on the <a href='/expertquery/attains/assessmentUnits' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessment Units"],
         "parameters": [
           {
@@ -858,6 +869,7 @@
       },
       "post": {
         "summary": "Row count of Assessment Units profile query",
+        "description": "Query the Assessment Units profile on the <a href='/expertquery/attains/assessmentUnits' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessment Units"],
         "parameters": [
           {
@@ -883,6 +895,7 @@
     "/attains/assessmentUnitsMonitoringLocations": {
       "get": {
         "summary": "Query Assessment Units with Monitoring Locations profile data",
+        "description": "Query the Assessment Units with Monitoring Locations profile on the <a href='/expertquery/attains/assessmentUnitsMonitoringLocations' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
         "parameters": [
           {
@@ -957,6 +970,7 @@
       },
       "post": {
         "summary": "Query Assessment Units with Monitoring Locations profile data",
+        "description": "Query the Assessment Units with Monitoring Locations profile on the <a href='/expertquery/attains/assessmentUnitsMonitoringLocations' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
         "parameters": [
           {
@@ -982,6 +996,7 @@
     "/attains/assessmentUnitsMonitoringLocations/count": {
       "get": {
         "summary": "Row count of Assessment Units with Monitoring Locations profile query",
+        "description": "Query the Assessment Units with Monitoring Locations profile on the <a href='/expertquery/attains/assessmentUnitsMonitoringLocations' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
         "parameters": [
           {
@@ -1047,6 +1062,7 @@
       },
       "post": {
         "summary": "Row count of Assessment Units with Monitoring Locations profile query",
+        "description": "Query the Assessment Units with Monitoring Locations profile on the <a href='/expertquery/attains/assessmentUnitsMonitoringLocations' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
         "parameters": [
           {
@@ -1072,6 +1088,7 @@
     "/attains/catchmentCorrespondence": {
       "get": {
         "summary": "Query Catchment Correspondence profile data",
+        "description": "Query the Catchment Correspondence profile on the <a href='/expertquery/attains/catchmentCorrespondence' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Catchment Correspondence"],
         "parameters": [
           {
@@ -1134,6 +1151,7 @@
       },
       "post": {
         "summary": "Query Catchment Correspondence profile data",
+        "description": "Query the Catchment Correspondence profile on the <a href='/expertquery/attains/catchmentCorrespondence' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Catchment Correspondence"],
         "parameters": [
           {
@@ -1159,6 +1177,7 @@
     "/attains/catchmentCorrespondence/count": {
       "get": {
         "summary": "Row count of Catchment Correspondence profile query",
+        "description": "Query the Catchment Correspondence profile on the <a href='/expertquery/attains/catchmentCorrespondence' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Catchment Correspondence"],
         "parameters": [
           {
@@ -1212,6 +1231,7 @@
       },
       "post": {
         "summary": "Row count of Catchment Correspondence profile query",
+        "description": "Query the Catchment Correspondence profile on the <a href='/expertquery/attains/catchmentCorrespondence' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Catchment Correspondence"],
         "parameters": [
           {
@@ -1237,6 +1257,7 @@
     "/attains/sources": {
       "get": {
         "summary": "Query Sources profile data",
+        "description": "Query the Sources profile on the <a href='/expertquery/attains/sources' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Sources"],
         "parameters": [
           {
@@ -1320,6 +1341,7 @@
       },
       "post": {
         "summary": "Query Sources profile data",
+        "description": "Query the Sources profile on the <a href='/expertquery/attains/sources' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Sources"],
         "parameters": [
           {
@@ -1345,6 +1367,7 @@
     "/attains/sources/count": {
       "get": {
         "summary": "Row count of Sources profile query",
+        "description": "Query the Sources profile on the <a href='/expertquery/attains/sources' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Sources"],
         "parameters": [
           {
@@ -1419,6 +1442,7 @@
       },
       "post": {
         "summary": "Row count of Sources profile query",
+        "description": "Query the Sources profile on the <a href='/expertquery/attains/sources' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - Sources"],
         "parameters": [
           {
@@ -1444,6 +1468,7 @@
     "/attains/tmdl": {
       "get": {
         "summary": "Query TMDL profile data",
+        "description": "Query the TMDL profile on the <a href='/expertquery/attains/tmdl' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - TMDL"],
         "parameters": [
           {
@@ -1551,6 +1576,7 @@
       },
       "post": {
         "summary": "Query TMDL profile data",
+        "description": "Query the TMDL profile on the <a href='/expertquery/attains/tmdl' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - TMDL"],
         "parameters": [
           {
@@ -1576,6 +1602,7 @@
     "/attains/tmdl/count": {
       "get": {
         "summary": "Row count of TMDL profile query",
+        "description": "Query the TMDL profile on the <a href='/expertquery/attains/tmdl' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - TMDL"],
         "parameters": [
           {
@@ -1674,6 +1701,7 @@
       },
       "post": {
         "summary": "Row count of TMDL profile query",
+        "description": "Query the TMDL profile on the <a href='/expertquery/attains/tmdl' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
         "tags": ["ATTAINS - TMDL"],
         "parameters": [
           {
@@ -3424,7 +3452,7 @@
       "apiKeyHeader": {
         "in": "header",
         "name": "x-api-key",
-        "description": "The API key used to access EPA web service resources. The below default value key is used for testing purposes only. Web service consumers should <a target=\"_blank\" rel=\"noreferrer\" href=\"/api-key-signup\">obtain their own API key</a>.",
+        "description": "The API key used to access EPA web service resources. The below default value key is used for testing purposes only. Web service consumers should <a target=\"_blank\" rel=\"noreferrer\" href=\"/expertquery/api-key-signup\">obtain their own API key</a>.",
         "schema": {
           "type": "string",
           "default": "53BVce47MQ3KXKibjx35g4ojaDQGh8qWfbdO8cE0"

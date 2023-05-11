@@ -41,18 +41,91 @@ class InvalidParameterException extends Error {
   }
 }
 
+/**
+ * Searches for a materialized view, associated with the profile, that is applicable to the provided columns/filters.
+ * @param {Object} profile definition of the profile being queried
+ * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
+ * @param {Array<string>} columnsForFilter names of columns that can be used to filter
+ * @returns definition of a materialized view that is applicable to the desired columns/filters or null if none are suitable
+ */
+function findMaterializedView(profile, columns, columnsForFilter) {
+  // search through tableconfig.materializedViews to see if the column
+  // we need is in here
+  return profile.materializedViews.find((mv) => {
+    for (const col of columnsForFilter.concat(columns.map((c) => c.name))) {
+      if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
+    }
+    return mv;
+  });
+}
+
+/**
+ * Finds full column definitions for the provided array of column aliases
+ * @param {Array<string>} columnAliases array of column aliases to get full column definitions for
+ * @param {Object} profile definition of the profile being queried
+ * @returns Array of full column definitions
+ */
+function getColumnsFromAliases(columnAliases, profile) {
+  const columns = [];
+  for (const alias of columnAliases) {
+    const column = profile.columns
+      .concat(profile.materializedViewColumns ?? [])
+      .find((col) => col.alias === alias);
+    if (!column) {
+      return res.status(404).json({
+        message: `The column ${alias} does not exist on the selected profile`,
+      });
+    }
+    columns.push(column);
+  }
+
+  return columns;
+}
+
 /** Get a subquery if "Latest" is used
  * @param {Object} query KnexJS query object
  * @param {Object} columnName name of the "Latest" column
  * @param {Object} columnType data type of the "Latest" column
  * @returns {Object} a different KnexJS query object
  */
-function createLatestSubquery(query, columnName, columnType) {
+function createLatestSubquery(req, profile, params, columnName, columnType) {
   if (columnType !== 'numeric' && columnType !== 'timestamptz') return;
 
-  const subQuery = query.clone();
-  subQuery.select('organizationid').max(columnName).groupBy('organizationid');
-  return subQuery;
+  const columnAliases = ['organizationId', 'region', 'reportingCycle', 'state'];
+
+  const columns = getColumnsFromAliases(columnAliases, profile);
+
+  // get columns for where clause
+  const columnsForFilter = [];
+  const columnNamesForFilter = [];
+  columns.forEach((col) => {
+    if (params.filters.hasOwnProperty(col.alias)) {
+      columnsForFilter.push(col);
+      columnNamesForFilter.push(col.name);
+    }
+  });
+
+  // search for materialized view tableConfig
+  const materializedView = findMaterializedView(
+    profile,
+    columns,
+    columnNamesForFilter,
+  );
+
+  // build the base of the subquery
+  const query = knex
+    .withSchema(req.activeSchema)
+    .select('organizationid')
+    .max(columnName)
+    .from(materializedView?.name || profile.tableName)
+    .groupBy('organizationid');
+
+  // build a where clause
+  columnsForFilter.forEach((col) => {
+    appendToWhere(query, col.name, params.filters[col.alias]);
+  });
+
+  return query;
 }
 
 /**
@@ -215,13 +288,20 @@ function getQueryParams(req) {
  * @param {Object} queryParams URL query value
  * @param {boolean} countOnly (Optional) should query for count only
  */
-function parseCriteria(query, profile, queryParams, countOnly = false) {
+function parseCriteria(req, query, profile, queryParams, countOnly = false) {
   // get a subquery for when "Latest" is used,
   // so that we can apply the same filters to the subquery
   const latestColumn = profile.columns.find((col) => col.default === 'latest');
-  const subQuery = latestColumn
-    ? createLatestSubquery(query, latestColumn.name, latestColumn.type)
-    : null;
+  const subQuery =
+    latestColumn && !queryParams.filters.hasOwnProperty(latestColumn.alias)
+      ? createLatestSubquery(
+          req,
+          profile,
+          queryParams,
+          latestColumn.name,
+          latestColumn.type,
+        )
+      : null;
 
   // build select statement of the query
   let selectText = undefined;
@@ -251,11 +331,8 @@ function parseCriteria(query, profile, queryParams, countOnly = false) {
     const exactArg = queryParams.filters[col.alias];
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
-      if (subQuery) appendRangeToWhere(subQuery, col, lowArg, highArg);
     } else if (exactArg) {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
-      if (subQuery)
-        appendToWhere(subQuery, col.name, queryParams.filters[col.alias]);
     }
   });
 
@@ -286,7 +363,7 @@ async function executeQuery(profile, req, res) {
 
     validateQueryParams(queryParams, profile);
 
-    parseCriteria(query, profile, queryParams);
+    parseCriteria(req, query, profile, queryParams);
 
     // Check that the query doesn't exceed the MAX_QUERY_SIZE.
     if ((await checkQueryCount(query)) === null) {
@@ -382,7 +459,7 @@ function executeQueryCountOnly(profile, req, res) {
 
     validateQueryParams(queryParams, profile);
 
-    parseCriteria(query, profile, queryParams, true);
+    parseCriteria(req, query, profile, queryParams, true);
 
     checkQueryCount(query).then((count) => {
       if (count === null) {
@@ -427,18 +504,7 @@ function executeValuesQuery(req, res) {
     ...(Array.isArray(additionalColumns) ? additionalColumns : []),
   ];
 
-  const columns = [];
-  for (const alias of columnAliases) {
-    const column = profile.columns
-      .concat(profile.materializedViewColumns ?? [])
-      .find((col) => col.alias === alias);
-    if (!column) {
-      return res.status(404).json({
-        message: `The column ${alias} does not exist on the selected profile`,
-      });
-    }
-    columns.push(column);
-  }
+  const columns = getColumnsFromAliases(columnAliases, profile);
 
   queryColumnValues(profile, columns, params, req.activeSchema)
     .then((values) => res.status(200).json(values))
@@ -498,12 +564,11 @@ async function queryColumnValues(profile, columns, params, schema) {
 
   // search through tableconfig.materializedViews to see if the column
   // we need is in here
-  const materializedView = profile.materializedViews.find((mv) => {
-    for (const col of columnsForFilter.concat(columns.map((c) => c.name))) {
-      if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
-    }
-    return mv;
-  });
+  const materializedView = findMaterializedView(
+    profile,
+    columns,
+    columnsForFilter,
+  );
 
   // ensure no mv-only columns exist if no mv was found
   if (!materializedView) {
@@ -718,9 +783,27 @@ export default function (app, basePath) {
   router.use(protectRoutes);
   router.use(getActiveSchema);
 
+  // Cors config for public endpoints
   const corsOptions = {
-    origin: '*',
     methods: 'GET,HEAD,POST',
+  };
+
+  // Cors config for private endpoints
+  // This is needed for private endpoints to work within EQ UI.
+  const allowlist = [
+    'https://owapps-dev.app.cloud.gov',
+    'https://owapps-stage.app.cloud.gov',
+    'https://owapps.app.cloud.gov',
+    'https://owapps.epa.gov',
+  ];
+  const corsOptionsDelegate = function (req, callback) {
+    const corsOptionsRes = { ...corsOptions };
+    if (allowlist.indexOf(req.header('Origin')) !== -1) {
+      corsOptionsRes.origin = true; // reflect (enable) the requested origin in the CORS response
+    } else {
+      corsOptionsRes.origin = false; // disable CORS for this request
+    }
+    callback(null, corsOptionsRes); // callback expects two parameters: error and options
   };
 
   Object.entries(tableConfig).forEach(([profileName, profile]) => {
@@ -757,20 +840,36 @@ export default function (app, basePath) {
     // ****************************** //
 
     // get column domain values
-    router.get('/:profile/values/:column', function (req, res) {
-      executeValuesQuery(req, res);
-    });
-    router.post('/:profile/values/:column', function (req, res) {
-      executeValuesQuery(req, res);
-    });
+    router.get(
+      '/:profile/values/:column',
+      cors(corsOptionsDelegate),
+      function (req, res) {
+        executeValuesQuery(req, res);
+      },
+    );
+    router.post(
+      '/:profile/values/:column',
+      cors(corsOptionsDelegate),
+      function (req, res) {
+        executeValuesQuery(req, res);
+      },
+    );
 
-    router.get('/health/etlDatabase', async function (req, res) {
-      await checkDatabaseHealth(req, res);
-    });
+    router.get(
+      '/health/etlDatabase',
+      cors(corsOptionsDelegate),
+      async function (req, res) {
+        await checkDatabaseHealth(req, res);
+      },
+    );
 
-    router.get('/health/etlDomainValues', async function (req, res) {
-      await checkDomainValuesHealth(req, res);
-    });
+    router.get(
+      '/health/etlDomainValues',
+      cors(corsOptionsDelegate),
+      async function (req, res) {
+        await checkDomainValuesHealth(req, res);
+      },
+    );
   });
 
   app.use(`${basePath}api/attains`, router);

@@ -73,9 +73,33 @@ export function Home() {
     initializeFilters,
   });
 
-  const profileRefreshDate = profile
-    ? content.data.metadata?.[profile]?.timestamp
-    : null;
+  const formatProfileOptionLabel = useCallback(
+    (option: Option) => {
+      const description = Object.entries(profiles).find(
+        ([id, _config]) => id === option.value,
+      )?.[1].description;
+      const refreshDate =
+        content.status === 'success'
+          ? Object.entries(content.data.metadata).find(
+              ([id, _metadata]) => id === option.value,
+            )?.[1].timestamp
+          : null;
+      return (
+        <div className="margin-1">
+          <div className="display-flex flex-justify flex-wrap margin-bottom-1">
+            <b className="font-ui-md margin-right-4">{option.label}</b>
+            {refreshDate && (
+              <em className="font-ui-xs">
+                <b>Refresh date:</b> {new Date(refreshDate).toLocaleString()}
+              </em>
+            )}
+          </div>
+          {description}
+        </div>
+      );
+    },
+    [content],
+  );
 
   if (content.status === 'pending') return <Loading />;
 
@@ -100,26 +124,30 @@ export function Home() {
               <h3>Data Profile</h3>
               <Select
                 id="select-data-profile"
+                classNames={{
+                  option: () => 'border-bottom border-base-lighter',
+                }}
                 instanceId="instance-select-data-profile"
                 aria-label="Select a data profile"
+                formatOptionLabel={formatProfileOptionLabel}
                 onChange={handleProfileChange}
                 options={staticOptions.dataProfile}
                 placeholder="Select a data profile..."
+                styles={{
+                  menu: (baseStyles) => ({
+                    ...baseStyles,
+                    maxHeight: '75vh',
+                  }),
+                  menuList: (baseStyles) => ({
+                    ...baseStyles,
+                    maxHeight: '75vh',
+                  }),
+                }}
                 value={profileOption}
               />
 
               {profile && (
                 <>
-                  {profileRefreshDate && (
-                    <p>
-                      {profiles[profile].label} profile data last refreshed{' '}
-                      <strong>
-                        {new Date(profileRefreshDate).toLocaleString()}
-                      </strong>
-                      .
-                    </p>
-                  )}
-
                   <Outlet
                     context={{
                       filterHandlers,
@@ -263,6 +291,15 @@ export function QueryBuilder() {
           </AccordionItem>
 
           <AccordionItem heading="Advanced Queries">
+            Visit our{' '}
+            <a
+              href={`${serverUrl}/api-documentation`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              API Documentation
+            </a>{' '}
+            page to learn more.
             <h4>Current Query</h4>
             <CopyBox
               testId="current-query-copy-box-container"
@@ -446,7 +483,7 @@ function FilterFields({
   );
 
   return (
-    <div className="grid-gap grid-row">
+    <div className="grid-gap-2 grid-row">
       {fieldsJsx.map(([field, key]) => (
         <div className="desktop:grid-col-4 tablet:grid-col-6" key={key}>
           {field}
@@ -762,6 +799,10 @@ function SelectFilter<
     <Select
       aria-label={`${filterLabel} input`}
       className="width-full"
+      classNames={{
+        container: () => 'font-ui-xs',
+        menuList: () => 'font-ui-xs',
+      }}
       formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}

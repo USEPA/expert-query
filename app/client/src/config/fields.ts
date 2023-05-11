@@ -646,6 +646,7 @@ export const filterFields = [
     type: 'select',
     default: { value: '', label: 'Latest' },
     direction: 'desc',
+    contextFields: ['organizationId', 'region', 'state'],
   },
   {
     key: 'seasonEndDateLo',

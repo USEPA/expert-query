@@ -337,7 +337,12 @@ export const tableConfig = {
       },
       {
         name: 'assessments_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
       {
         name: 'assessments_usegroup',
@@ -433,7 +438,12 @@ export const tableConfig = {
       },
       {
         name: 'assessmentunits_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
     ],
   },
@@ -525,7 +535,12 @@ export const tableConfig = {
       },
       {
         name: 'assessmentunitsmonitoringlocations_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
     ],
   },
@@ -589,7 +604,12 @@ export const tableConfig = {
       },
       {
         name: 'catchmentcorrespondence_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
     ],
   },
@@ -676,7 +696,12 @@ export const tableConfig = {
       },
       {
         name: 'sources_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
     ],
   },

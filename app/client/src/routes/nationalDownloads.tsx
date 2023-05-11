@@ -1,4 +1,5 @@
 import { ReactComponent as Exit } from '@uswds/uswds/img/usa-icons/launch.svg';
+import { Link } from 'react-router-dom';
 // components
 import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
@@ -25,11 +26,6 @@ export function NationalDownloads() {
     <>
       <div>
         <h2>National Downloads</h2>
-        <ul className="usa-list">
-          <li>
-            <a href="#attains">ATTAINS Data</a>
-          </li>
-        </ul>
         <hr />
         <Summary heading="Description">
           <p>
@@ -65,6 +61,7 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
     return (
       <section className="margin-top-6" id="attains">
         <h3 className="text-primary">ATTAINS Data</h3>
+        Go to the <Link to="/attains">ATTAINS Query</Link> page.
         <table className="margin-x-auto usa-table usa-table--stacked width-full">
           <thead>
             <tr>
@@ -82,7 +79,7 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
                 <tr key={profile}>
                   <th scope="row" data-label="Download link">
                     <a href={fileInfo.url}>
-                      {profiles[profile as Profile].label} Profile Data
+                      {profiles[profile as Profile].label} Profile
                       <Exit
                         aria-hidden="true"
                         className="height-2 margin-left-05 text-primary top-05 usa-icon width-2"
