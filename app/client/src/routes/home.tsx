@@ -1,7 +1,6 @@
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
-  Link,
   Outlet,
   useNavigate,
   useOutletContext,
@@ -295,7 +294,14 @@ export function QueryBuilder() {
           </AccordionItem>
 
           <AccordionItem heading="Advanced API Queries">
-            Visit our <Link to="/api-documentation">API Documentation</Link>{' '}
+            Visit our{' '}
+            <a
+              href={`${serverUrl}/api-documentation`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              API Documentation
+            </a>{' '}
             page to learn more.
             <h4>Current Query</h4>
             <CopyBox
