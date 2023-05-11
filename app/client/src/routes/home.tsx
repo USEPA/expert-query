@@ -8,19 +8,16 @@ import {
 } from 'react-router-dom';
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
-import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
 import { Checkbox } from 'components/checkbox';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
-import { GlossaryPanel } from 'components/glossaryPanel';
 import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
-import { NavButton } from 'components/navButton';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -39,9 +36,9 @@ import {
 // utils
 import { isAbort, useAbort } from 'utils';
 // types
-import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
-import type { DomainOptions, Option, Primitive, Status } from 'types';
 import type { Profile } from 'config/profiles';
+import type { ChangeEvent } from 'react';
+import type { DomainOptions, Option, Primitive, Status } from 'types';
 
 /*
 ## Components
@@ -117,12 +114,6 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <NavButton
-          label="Glossary"
-          icon={Book}
-          styles={['js-glossary-toggle']}
-        />
-        <GlossaryPanel path={getPageName()} />
         <div>
           <h2>Query ATTAINS Data</h2>
           <hr />
@@ -211,7 +202,7 @@ export function QueryBuilder() {
     openDownloadConfirmation,
   } = useDownloadConfirmationVisibility();
 
-  const [downloadStatus, setDownloadStatus] = useDownloadStatus();
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
 
   const { content } = useContentState();
 
@@ -275,15 +266,21 @@ export function QueryBuilder() {
               styles={['margin-bottom-2']}
             />
             <button
-              className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
+              className="display-flex flex-justify-center margin-bottom-1 usa-button"
               onClick={openDownloadConfirmation}
               type="button"
             >
-              <Download className="height-205 margin-right-1 usa-icon width-205" />
-              Download
+              <Download
+                aria-hidden="true"
+                className="height-205 margin-right-1 usa-icon width-205"
+              />
+              <span className="margin-y-auto">Download</span>
             </button>
             {downloadStatus === 'success' && (
-              <Alert type="success">Query executed successfully.</Alert>
+              <Alert type="success">
+                Query executed successfully, please check your downloads folder
+                for the output file.
+              </Alert>
             )}
             {downloadStatus === 'failure' && (
               <Alert type="error">
@@ -293,7 +290,7 @@ export function QueryBuilder() {
             )}
           </AccordionItem>
 
-          <AccordionItem heading="Advanced API Queries">
+          <AccordionItem heading="Advanced Queries">
             Visit our{' '}
             <a
               href={`${serverUrl}/api-documentation`}
@@ -886,25 +883,6 @@ function useDownloadConfirmationVisibility() {
   };
 }
 
-function useDownloadStatus() {
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
-
-  useEffect(() => {
-    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
-
-    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
-
-    return function cleanup() {
-      clearTimeout(messageTimeout);
-    };
-  }, [downloadStatus]);
-
-  return [downloadStatus, setDownloadStatus] as [
-    Status,
-    Dispatch<SetStateAction<Status>>,
-  ];
-}
-
 function useFormat() {
   const [format, setFormat] = useState<FormatOption>({
     label: 'Comma-separated (CSV)',
@@ -1487,11 +1465,6 @@ function getMultiOptionFields(fields: typeof allFieldsConfig) {
       return field.type === 'multiselect' ? field.key : null;
     }),
   );
-}
-
-function getPageName() {
-  const pathParts = window.location.pathname.split('/');
-  return pathParts.length > 1 ? pathParts[1] : '';
 }
 
 function getSingleOptionFields(fields: typeof allFieldsConfig) {

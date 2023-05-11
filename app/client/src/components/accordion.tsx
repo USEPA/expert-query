@@ -41,7 +41,10 @@ export function AccordionItem({
         </button>
       </h4>
       {expanded && (
-        <div className="usa-accordion__content usa-prose" id={id}>
+        <div
+          className="overflow-visible usa-accordion__content usa-prose"
+          id={id}
+        >
           {children}
         </div>
       )}

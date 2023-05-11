@@ -129,26 +129,6 @@ describe('Home Page', () => {
     cy.findByRole('button', { name: 'Cancel' }).click();
   });
 
-  it('Verify Glossary toggle button', () => {
-    cy.findByRole('button', { name: 'Glossary' }).click();
-    cy.findByRole('button', { name: 'Glossary' })
-      .should('have.attr', 'aria-expanded')
-      .and('equal', 'true');
-    cy.findByRole('button', { name: 'Glossary' }).click();
-    cy.findByRole('button', { name: 'Glossary' })
-      .should('have.attr', 'aria-expanded')
-      .and('equal', 'false');
-  });
-
-  it('Verify Glossary silder open', () => {
-    cy.findByRole('button', { name: 'Glossary' }).click();
-    cy.get('#glossary')
-      .should('have.attr', 'aria-hidden')
-      .and('equal', 'false');
-    cy.get('body').click(0, 0);
-    cy.get('#glossary').should('have.attr', 'aria-hidden').and('equal', 'true');
-  });
-
   it('Verify url after clear the query', () => {
     cy.selectProfile('Sources');
     //Assessment Unit ID
@@ -186,10 +166,10 @@ describe('Home Page', () => {
     //File Format
     cy.findByText('Tab-separated (TSV)').click();
 
-    const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
+    const columnsValue =
+      'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
 
-    const queryValue =
-      `/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=R&state=TX&format=tsv&api_key=<YOUR_API_KEY>`;
+    const queryValue = `/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=R&state=TX&format=tsv&api_key=<YOUR_API_KEY>`;
     cy.selectCopyBox('api-query-copy-box-container', `${origin}${queryValue}`);
 
     cy.findAllByRole('button', { name: 'Clear Search' }).each(
