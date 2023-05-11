@@ -8,6 +8,8 @@ import { Loading, LoadingButtonIcon } from 'components/loading';
 // utils
 import { postData } from 'config';
 import { isAbort, useAbort } from 'utils';
+// config
+import { serverUrl } from 'config';
 // styles
 import '@reach/dialog/styles.css';
 // types
@@ -141,7 +143,7 @@ export function DownloadModal<D extends PostData>({
                   <p>
                     Please refine the search, or visit the{' '}
                     <a
-                      href={`/national-downloads${dataId ? '#' + dataId : ''}`}
+                      href={`${serverUrl}/national-downloads${dataId ? '#' + dataId : ''}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
