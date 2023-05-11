@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReactComponent as Close } from '@uswds/uswds/img/usa-icons/close.svg';
 // components
 import { Alert } from 'components/alert';
-import { LoadingButtonIcon } from 'components/loading';
+import { Loading, LoadingButtonIcon } from 'components/loading';
 // utils
 import { postData } from 'config';
 import { isAbort, useAbort } from 'utils';
@@ -124,6 +124,7 @@ export function DownloadModal<D extends PostData>({
           <h2 className="usa-modal__heading">Download Status</h2>
           {count.status === 'pending' && (
             <div className="usa-prose">
+              <Loading />
               <p>Validating query, please wait...</p>
             </div>
           )}
