@@ -29,7 +29,7 @@ export function ApiKeySignup() {
 
     window.apiUmbrellaSignupOptions = {
       registrationSource: 'expert-query',
-      apiKey: content.data.services.eqApiKey,
+      apiKey: content.data.services.eqApiSignupKey,
       verifyEmail: true,
       signupConfirmationMessage: `
         <h2>What Next?</h2>
