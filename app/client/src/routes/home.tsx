@@ -36,9 +36,9 @@ import {
 // utils
 import { isAbort, useAbort } from 'utils';
 // types
+import type { Profile } from 'config/profiles';
 import type { ChangeEvent } from 'react';
 import type { DomainOptions, Option, Primitive, Status } from 'types';
-import type { Profile } from 'config/profiles';
 
 /*
 ## Components
