@@ -21,13 +21,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/tmdl?${columnsValue}&format=csv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/tmdl`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -46,13 +46,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"actionAgency":["EPA"],"npdesIdentifier":["477001"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/tmdl`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -95,13 +95,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"actionId":["R7_KS_2020_00204"],"completionDateLo":"10-03-1955","completionDateHi":"12-18-1992","explicitMarginOfSafety":["10.3 acre-feet per year"],"fiscalYearEstablishedLo":"1984","fiscalYearEstablishedHi":"2023","implicitMarginOfSafety":["Implicit due to conservative assumptions"],"npdesIdentifier":["477001"],"sourceType":["Both"],"tmdlDateLo":"01-04-1956","tmdlDateHi":"07-11-2020"},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/tmdl`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -154,13 +154,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=tsv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"actionAgency":["EPA"],"actionId":["IA7001","R7MO1344TMDL1"],"completionDateLo":"11-02-1987","completionDateHi":"12-16-1991","fiscalYearEstablishedLo":"2014","fiscalYearEstablishedHi":"2018","includeInMeasure":["Y"],"organizationId":["21SC60WQ","OKDEQ"],"otherIdentifier":["City of Belvue"],"sourceType":["Nonpoint source"],"tmdlDateLo":"08-05-1993","tmdlDateHi":"03-09-1994"},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/tmdl`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -238,13 +238,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"actionAgency":["Tribal"],"actionId":["70200","R7MO3960TMDL1Revised"],"addressedParameter":["ALGAE"],"assessmentUnitId":["FL1382G","KS-1027020736"],"completionDateLo":"12-08-2009","completionDateHi":"09-08-2017","explicitMarginOfSafety":["1.21E+09"],"fiscalYearEstablishedLo":"2008","fiscalYearEstablishedHi":"2019","implicitMarginOfSafety":["TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located."],"includeInMeasure":["N"],"inIndianCountry":["Y"],"npdesIdentifier":["59925"],"organizationId":["21KAN001","21FL303D"],"otherIdentifier":["BPU Kaw Power Station"],"pollutant":["CFC-113"],"region":["06"],"sourceType":["Point source"],"tmdlDateLo":"12-08-2019","tmdlDateHi":"09-30-2022","waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/tmdl`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 });

@@ -16,28 +16,26 @@ export function Page({ children }: PageProps) {
       ? `${location.protocol}//${location.hostname}:9090`
       : serverUrl;
 
-  const navItems = {
-    attains: { path: '/attains', label: 'Query ATTAINS Data' },
-    nationalDownloads: {
-      path: '/national-downloads',
-      label: 'National Downloads',
-    },
-    apiDocs: { path: '/api-documentation', label: 'API Documentation' },
-    apiKeySignup: { path: '/api-key-signup', label: 'API Key Signup' },
-  };
-
   return (
     <div className="l-page has-footer">
-      <div className="l-constrain maxw-widescreen">
+      <div className="l-constrain">
         <div className="l-page__header">
-          <div className="l-page__header-first usa-logo">
+          <div className="l-page__header-first usa-logo margin-top-0">
             <h1 className="web-area-title usa-logo__text">
               <NavLink to="/">Expert Query</NavLink>
             </h1>
           </div>
-          <div className="l-page__header-last">
+          <div className="l-page__header-last grid-row">
             <a
-              className="header-link margin-right-3"
+              className="margin-left-2 tablet:margin-left-0 margin-right-3 text-no-underline tablet:grid-col-auto"
+              href={`${serverUrl}/national-downloads`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              National Downloads
+            </a>
+            <a
+              className="margin-left-2 tablet:margin-left-0 margin-right-3 text-no-underline tablet:grid-col-auto"
               href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
               target="_blank"
               rel="noopener noreferrer"
@@ -45,8 +43,8 @@ export function Page({ children }: PageProps) {
               User's Guide (PDF)
             </a>
             <a
-              className="header-link"
-              href="https://www.epa.gov/expertquery/forms/contact-us-about-expert-query"
+              className="margin-left-2 tablet:margin-left-0 margin-right-3 text-no-underline tablet:grid-col-auto"
+              href="https://www.epa.gov/waterdata/forms/contact-us-about-water-data-and-tools"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -55,29 +53,7 @@ export function Page({ children }: PageProps) {
           </div>
         </div>
 
-        <div className="l-sidebar l-sidebar--reversed">
-          <div className="l-sidebar__main">
-            <article className="article">{children}</article>
-          </div>
-          <div className="l-sidebar__sidebar">
-            <nav aria-label="Side navigation,">
-              <ul className="usa-sidenav">
-                {Object.entries(navItems).map(([key, item]) => (
-                  <li key={key} className="usa-sidenav__item">
-                    <NavLink
-                      to={item.path}
-                      className={({ isActive }) =>
-                        isActive ? 'usa-current' : ''
-                      }
-                    >
-                      {item.label}
-                    </NavLink>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
-        </div>
+        <article className="article">{children}</article>
       </div>
 
       <div className="l-page__footer">

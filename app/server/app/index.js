@@ -1,4 +1,5 @@
 import browserSync from 'browser-sync';
+import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import path from 'node:path';
@@ -46,7 +47,7 @@ app.use(function (req, res, next) {
  Revoke unneeded and potentially harmful HTTP methods
  ****************************************************************/
 app.use(function (req, res, next) {
-  const whiteList = ['GET', 'POST', 'HEAD'];
+  const whiteList = ['GET', 'POST', 'OPTIONS', 'HEAD'];
   if (whiteList.indexOf(req.method) != -1) next();
   else {
     res.sendStatus(401);
@@ -107,6 +108,16 @@ requiredEnvVars.forEach((envVar) => {
     process.exit();
   }
 });
+
+/****************************************************************
+Enable CORS/Preflight/OPTIONS request
+****************************************************************/
+app.options(
+  '*',
+  cors({
+    methods: ['GET', 'POST', 'HEAD'],
+  }),
+);
 
 /****************************************************************
  Setup server and routes

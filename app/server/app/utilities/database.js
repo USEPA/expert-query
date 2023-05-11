@@ -1,4 +1,5 @@
 import knexJs from 'knex';
+import pg from 'pg';
 import { log } from '../utilities/logger.js';
 
 let isLocal = false;
@@ -39,6 +40,18 @@ log.info(
 );
 log.info(`MAX_QUERY_SIZE: ${parseInt(process.env.MAX_QUERY_SIZE)}`);
 log.info(`JSON_PAGE_SIZE: ${parseInt(process.env.JSON_PAGE_SIZE)}`);
+
+// Setup parsers for ensuring output matches datatype in database
+// (i.e., return count as 124 instead of "124")
+pg.types.setTypeParser(pg.types.builtins.INT8, (value) => {
+  return parseInt(value);
+});
+pg.types.setTypeParser(pg.types.builtins.FLOAT8, (value) => {
+  return parseFloat(value);
+});
+pg.types.setTypeParser(pg.types.builtins.NUMERIC, (value) => {
+  return parseFloat(value);
+});
 
 /**
  * Appends to the where clause of the provided query.

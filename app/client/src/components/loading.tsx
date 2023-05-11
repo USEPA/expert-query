@@ -17,7 +17,7 @@ export function LoadingButtonIcon() {
     <img
       src={loaderWhite}
       alt="Loading..."
-      className="margin-left-105 margin-y-neg-05 height-2 is-loading"
+      className="margin-left-105 margin-y-auto height-2 is-loading"
     />
   );
 }

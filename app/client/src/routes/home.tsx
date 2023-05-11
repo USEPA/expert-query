@@ -8,19 +8,16 @@ import {
 } from 'react-router-dom';
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
-import { ReactComponent as Book } from '@uswds/uswds/img/usa-icons/local_library.svg';
 // components
 import { Accordion, AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
 import { Checkbox } from 'components/checkbox';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
-import { GlossaryPanel } from 'components/glossaryPanel';
 import { InfoTooltip } from 'components/infoTooltip';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
-import { NavButton } from 'components/navButton';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { Summary } from 'components/summary';
@@ -39,9 +36,9 @@ import {
 // utils
 import { isAbort, useAbort } from 'utils';
 // types
-import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
-import type { DomainOptions, Option, Primitive, Status } from 'types';
 import type { Profile } from 'config/profiles';
+import type { ChangeEvent } from 'react';
+import type { DomainOptions, Option, Primitive, Status } from 'types';
 
 /*
 ## Components
@@ -63,7 +60,12 @@ export function Home() {
 
   const { sourceState, sourceHandlers } = useSourceState();
 
+  const apiKey = content.data.services?.eqApiKey || '';
+  const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
+
   const { queryParams, queryParamErrors } = useQueryParams({
+    apiKey,
+    apiUrl,
     format: format.value,
     profile,
     staticOptions,
@@ -71,12 +73,33 @@ export function Home() {
     initializeFilters,
   });
 
-  const eqDataUrl =
-    content.data.services?.eqDataApi || `${serverUrl}/api/attains`;
-
-  const profileRefreshDate = profile
-    ? content.data.metadata?.[profile]?.timestamp
-    : null;
+  const formatProfileOptionLabel = useCallback(
+    (option: Option) => {
+      const description = Object.entries(profiles).find(
+        ([id, _config]) => id === option.value,
+      )?.[1].description;
+      const refreshDate =
+        content.status === 'success'
+          ? Object.entries(content.data.metadata).find(
+              ([id, _metadata]) => id === option.value,
+            )?.[1].timestamp
+          : null;
+      return (
+        <div className="margin-1">
+          <div className="display-flex flex-justify flex-wrap margin-bottom-1">
+            <b className="font-ui-md margin-right-4">{option.label}</b>
+            {refreshDate && (
+              <em className="font-ui-xs">
+                <b>Refresh date:</b> {new Date(refreshDate).toLocaleString()}
+              </em>
+            )}
+          </div>
+          {description}
+        </div>
+      );
+    },
+    [content],
+  );
 
   if (content.status === 'pending') return <Loading />;
 
@@ -91,12 +114,6 @@ export function Home() {
   if (content.status === 'success') {
     return (
       <>
-        <NavButton
-          label="Glossary"
-          icon={Book}
-          styles={['js-glossary-toggle']}
-        />
-        <GlossaryPanel path={getPageName()} />
         <div>
           <h2>Query ATTAINS Data</h2>
           <hr />
@@ -107,26 +124,30 @@ export function Home() {
               <h3>Data Profile</h3>
               <Select
                 id="select-data-profile"
+                classNames={{
+                  option: () => 'border-bottom border-base-lighter',
+                }}
                 instanceId="instance-select-data-profile"
                 aria-label="Select a data profile"
+                formatOptionLabel={formatProfileOptionLabel}
                 onChange={handleProfileChange}
                 options={staticOptions.dataProfile}
                 placeholder="Select a data profile..."
+                styles={{
+                  menu: (baseStyles) => ({
+                    ...baseStyles,
+                    maxHeight: '75vh',
+                  }),
+                  menuList: (baseStyles) => ({
+                    ...baseStyles,
+                    maxHeight: '75vh',
+                  }),
+                }}
                 value={profileOption}
               />
 
               {profile && (
                 <>
-                  {profileRefreshDate && (
-                    <p>
-                      {profiles[profile].label} profile data last refreshed{' '}
-                      <strong>
-                        {new Date(profileRefreshDate).toLocaleString()}
-                      </strong>
-                      .
-                    </p>
-                  )}
-
                   <Outlet
                     context={{
                       filterHandlers,
@@ -135,7 +156,7 @@ export function Home() {
                       formatHandler,
                       profile,
                       queryParams,
-                      queryUrl: eqDataUrl,
+                      queryUrl: apiUrl,
                       resetFilters,
                       sourceHandlers,
                       sourceState,
@@ -181,12 +202,18 @@ export function QueryBuilder() {
     openDownloadConfirmation,
   } = useDownloadConfirmationVisibility();
 
-  const [downloadStatus, setDownloadStatus] = useDownloadStatus();
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+
+  const { content } = useContentState();
+
+  const apiKey = content.data.services?.eqApiKey || '';
+  const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
 
   return (
     <>
       {downloadConfirmationVisible && (
         <DownloadModal
+          apiKey={apiKey}
           dataId="attains"
           filename={profile && format ? `${profile}.${format.value}` : null}
           downloadStatus={downloadStatus}
@@ -213,6 +240,8 @@ export function QueryBuilder() {
               </Button>
             </div>
             <FilterGroups
+              apiKey={apiKey}
+              apiUrl={apiUrl}
               filterHandlers={filterHandlers}
               filterState={filterState}
               profile={profile}
@@ -237,15 +266,21 @@ export function QueryBuilder() {
               styles={['margin-bottom-2']}
             />
             <button
-              className="align-items-center display-flex flex-justify-center margin-bottom-1 usa-button"
+              className="display-flex flex-justify-center margin-bottom-1 usa-button"
               onClick={openDownloadConfirmation}
               type="button"
             >
-              <Download className="height-205 margin-right-1 usa-icon width-205" />
-              Download
+              <Download
+                aria-hidden="true"
+                className="height-205 margin-right-1 usa-icon width-205"
+              />
+              <span className="margin-y-auto">Download</span>
             </button>
             {downloadStatus === 'success' && (
-              <Alert type="success">Query executed successfully.</Alert>
+              <Alert type="success">
+                Query executed successfully, please check your downloads folder
+                for the output file.
+              </Alert>
             )}
             {downloadStatus === 'failure' && (
               <Alert type="error">
@@ -255,7 +290,16 @@ export function QueryBuilder() {
             )}
           </AccordionItem>
 
-          <AccordionItem heading="Advanced API Queries">
+          <AccordionItem heading="Advanced Queries">
+            Visit our{' '}
+            <a
+              href={`${serverUrl}/api-documentation`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              API Documentation
+            </a>{' '}
+            page to learn more.
             <h4>Current Query</h4>
             <CopyBox
               testId="current-query-copy-box-container"
@@ -274,7 +318,7 @@ export function QueryBuilder() {
                 queryParams.filters,
                 queryParams.options,
                 queryParams.columns,
-              )}`}
+              )}&api_key=<YOUR_API_KEY>`}
             />
             <h4>cURL</h4>
             <CopyBox
@@ -283,7 +327,7 @@ export function QueryBuilder() {
                 queryParams,
               ).replaceAll('"', '\\"')}" ${queryUrl}/${
                 profiles[profile].resource
-              }`}
+              } -H "X-Api-Key: <YOUR_API_KEY>"`}
             />
           </AccordionItem>
         </Accordion>
@@ -293,6 +337,8 @@ export function QueryBuilder() {
 }
 
 function FilterFields({
+  apiKey,
+  apiUrl,
   fields,
   filterHandlers,
   filterState,
@@ -342,6 +388,8 @@ function FilterFields({
             ? sourceState[sourceFieldConfig.id]
             : null;
           const selectProps = {
+            apiKey,
+            apiUrl,
             contextFilters: getContextFilters(fieldConfig, profile, {
               ...queryParams.filters,
               ...(sourceKey && sourceValue
@@ -354,6 +402,8 @@ function FilterFields({
             filterKey: fieldConfig.key,
             filterLabel: fieldConfig.label,
             filterValue: filterState[fieldConfig.key],
+            placeholder:
+              'placeholder' in fieldConfig ? fieldConfig.placeholder : null,
             profile,
             secondaryFilterKey:
               'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
@@ -433,7 +483,7 @@ function FilterFields({
   );
 
   return (
-    <div className="grid-gap grid-row">
+    <div className="grid-gap-2 grid-row">
       {fieldsJsx.map(([field, key]) => (
         <div className="desktop:grid-col-4 tablet:grid-col-6" key={key}>
           {field}
@@ -636,12 +686,15 @@ function SourceSelectFilter(
 function SelectFilter<
   P extends SingleSelectFilterProps | MultiSelectFilterProps,
 >({
+  apiKey,
+  apiUrl,
   contextFilters,
   defaultOption,
   filterHandler,
   filterKey,
   filterLabel,
   filterValue,
+  placeholder,
   profile,
   secondaryFilterKey,
   sortDirection,
@@ -655,6 +708,8 @@ function SelectFilter<
   // Create the filter function from the HOF
   const filterFunc = useMemo(() => {
     return filterOptions({
+      apiKey,
+      apiUrl,
       defaultOption,
       filters: contextFilters,
       profile,
@@ -665,6 +720,8 @@ function SelectFilter<
       staticOptions,
     });
   }, [
+    apiKey,
+    apiUrl,
     content,
     contextFilters,
     defaultOption,
@@ -724,10 +781,29 @@ function SelectFilter<
     setOptions(null);
   }, [sourceValue]);
 
+  const formatOptionLabel = useCallback(
+    (option: Option) => {
+      return secondaryFilterKey ? (
+        <div>
+          <span style={{ fontWeight: 600 }}>{option.value}</span> (
+          {option.label})
+        </div>
+      ) : (
+        option.label
+      );
+    },
+    [secondaryFilterKey],
+  );
+
   return (
     <Select
       aria-label={`${filterLabel} input`}
       className="width-full"
+      classNames={{
+        container: () => 'font-ui-xs',
+        menuList: () => 'font-ui-xs',
+      }}
+      formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
@@ -745,9 +821,10 @@ function SelectFilter<
       }}
       onMenuOpen={loadOptions}
       options={options ?? undefined}
-      placeholder={`Select ${getArticle(
-        filterLabel.split(' ')[0],
-      )} ${filterLabel}...`}
+      placeholder={
+        placeholder ??
+        `Select ${getArticle(filterLabel.split(' ')[0])} ${filterLabel}...`
+      }
       styles={{
         control: (base) => ({
           ...base,
@@ -804,25 +881,6 @@ function useDownloadConfirmationVisibility() {
     downloadConfirmationVisible,
     openDownloadConfirmation,
   };
-}
-
-function useDownloadStatus() {
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
-
-  useEffect(() => {
-    if (downloadStatus === 'idle' || downloadStatus === 'pending') return;
-
-    const messageTimeout = setTimeout(() => setDownloadStatus('idle'), 10_000);
-
-    return function cleanup() {
-      clearTimeout(messageTimeout);
-    };
-  }, [downloadStatus]);
-
-  return [downloadStatus, setDownloadStatus] as [
-    Status,
-    Dispatch<SetStateAction<Status>>,
-  ];
 }
 
 function useFormat() {
@@ -928,12 +986,16 @@ function useProfile() {
 }
 
 function useQueryParams({
+  apiKey,
+  apiUrl,
   profile,
   filterState,
   format,
   initializeFilters,
   staticOptions,
 }: {
+  apiKey: string;
+  apiUrl: string;
   profile: Profile | null;
   filterState: FilterFieldState;
   format: Format;
@@ -949,7 +1011,7 @@ function useQueryParams({
   // Populate the input fields with URL parameters, if any
   useEffect(() => {
     if (parametersLoaded || !profile || !staticOptions) return;
-    getUrlInputs(staticOptions, profile, getSignal())
+    getUrlInputs(apiKey, apiUrl, staticOptions, profile, getSignal())
       .then(({ filters, errors }) => {
         initializeFilters(filters);
         if (errors.invalid.size || errors.duplicate.size)
@@ -959,7 +1021,15 @@ function useQueryParams({
         console.error(`Error loading initial inputs: ${err}`);
       })
       .finally(() => setParametersLoaded(true));
-  }, [getSignal, initializeFilters, parametersLoaded, profile, staticOptions]);
+  }, [
+    apiKey,
+    apiUrl,
+    getSignal,
+    initializeFilters,
+    parametersLoaded,
+    profile,
+    staticOptions,
+  ]);
 
   // Track non-empty values relevant to the current profile
   const [parameters, setParameters] = useState<QueryData>({
@@ -1095,12 +1165,14 @@ function buildUrlQueryString(
 // Returns a boolean, specifying if a value is found in the
 // specified table and column of the database
 async function checkColumnValue(
+  apiKey: string,
+  apiUrl: string,
   value: Primitive,
   fieldName: string,
   profile: string,
 ) {
-  const url = `${serverUrl}/api/attains/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
-  const res = await getData<Primitive[]>(url);
+  const url = `${apiUrl}/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
+  const res = await getData<Primitive[]>({ url, apiKey });
   if (res.length) return true;
   return false;
 }
@@ -1156,6 +1228,8 @@ function createSourceReducer() {
 
 // Filters options that require fetching values from the database
 function filterDynamicOptions({
+  apiKey,
+  apiUrl,
   defaultOption,
   direction = 'asc',
   fieldName,
@@ -1164,6 +1238,8 @@ function filterDynamicOptions({
   profile,
   secondaryFieldName,
 }: {
+  apiKey: string;
+  apiUrl: string;
   defaultOption?: Option | null;
   direction?: SortDirection;
   fieldName: string;
@@ -1176,7 +1252,7 @@ function filterDynamicOptions({
     inputValue: string,
     signal?: AbortSignal,
   ): Promise<Array<Option>> {
-    const url = `${serverUrl}/api/attains/${profile}/values/${fieldName}`;
+    const url = `${apiUrl}/${profile}/values/${fieldName}`;
     const data = {
       text: inputValue,
       direction: direction ?? null,
@@ -1184,14 +1260,20 @@ function filterDynamicOptions({
       filters,
       additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
     };
-    const values = await postData(url, data, 'json', signal);
+    const values = await postData({
+      url,
+      apiKey,
+      data,
+      responseType: 'json',
+      signal,
+    });
     const options = values.map((item: Record<string, string>) => {
       const value = item[fieldName];
       // Concatenate primary column value with secondary, if present
       const secondaryValue = secondaryFieldName
         ? item[secondaryFieldName]
         : null;
-      const label = secondaryValue ? `${value} - ${secondaryValue}` : value;
+      const label = secondaryValue ? secondaryValue : value;
       return { label, value };
     });
     return defaultOption ? [defaultOption, ...options] : options;
@@ -1200,6 +1282,8 @@ function filterDynamicOptions({
 
 // Filters options by search input, returning a maximum number of options
 function filterOptions({
+  apiKey,
+  apiUrl,
   defaultOption,
   dynamicOptionLimit,
   fieldName,
@@ -1209,6 +1293,8 @@ function filterOptions({
   staticOptions,
   secondaryFieldName,
 }: {
+  apiKey: string;
+  apiUrl: string;
   defaultOption?: Option | null;
   dynamicOptionLimit?: number;
   fieldName: string;
@@ -1225,6 +1311,8 @@ function filterOptions({
     );
   } else {
     return filterDynamicOptions({
+      apiKey,
+      apiUrl,
       defaultOption,
       direction,
       fieldName,
@@ -1379,11 +1467,6 @@ function getMultiOptionFields(fields: typeof allFieldsConfig) {
   );
 }
 
-function getPageName() {
-  const pathParts = window.location.pathname.split('/');
-  return pathParts.length > 1 ? pathParts[1] : '';
-}
-
 function getSingleOptionFields(fields: typeof allFieldsConfig) {
   return removeNulls(
     fields.map((field) => {
@@ -1415,6 +1498,8 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
 
 // Uses URL route/query parameters or default values for initial state
 async function getUrlInputs(
+  apiKey: string,
+  apiUrl: string,
   staticOptions: StaticOptions,
   profile: Profile,
   _signal: AbortSignal,
@@ -1429,6 +1514,8 @@ async function getUrlInputs(
       if (!isFilterField(key)) return;
       if (isMultiOptionField(key)) {
         newState[key] = await matchMultipleOptions(
+          apiKey,
+          apiUrl,
           params[key] ?? null,
           key,
           getStaticOptions(key, staticOptions),
@@ -1436,6 +1523,8 @@ async function getUrlInputs(
         );
       } else if (isSingleOptionField(key)) {
         newState[key] = await matchSingleOption(
+          apiKey,
+          apiUrl,
           params[key] ?? null,
           key,
           getStaticOptions(key, staticOptions),
@@ -1535,12 +1624,16 @@ function matchDate(values: InputValue, yearOnly = false) {
 
 // Wrapper function to add type assertion
 async function matchMultipleOptions(
+  apiKey: string,
+  apiUrl: string,
   values: InputValue,
   fieldName: MultiOptionField,
   options: ReadonlyArray<Option> | null = null,
   profile: string | null = null,
 ) {
   return (await matchOptions(
+    apiKey,
+    apiUrl,
     values,
     fieldName,
     options,
@@ -1551,12 +1644,16 @@ async function matchMultipleOptions(
 
 // Wrapper function to add type assertion
 async function matchSingleOption(
+  apiKey: string,
+  apiUrl: string,
   values: InputValue,
   fieldName: SingleOptionField,
   options: ReadonlyArray<Option> | null = null,
   profile: string | null = null,
 ) {
   return (await matchOptions(
+    apiKey,
+    apiUrl,
     values,
     fieldName,
     options,
@@ -1566,6 +1663,8 @@ async function matchSingleOption(
 
 // Produce the option/s corresponding to a particular value
 async function matchOptions(
+  apiKey: string,
+  apiUrl: string,
   values: InputValue,
   fieldName: MultiOptionField | SingleOptionField,
   options: ReadonlyArray<Option> | null = null,
@@ -1584,7 +1683,13 @@ async function matchOptions(
         const match = options.find((option) => option.value === value);
         if (match) matches.add(match);
       } else if (profile) {
-        const isValid = await checkColumnValue(value, fieldName, profile);
+        const isValid = await checkColumnValue(
+          apiKey,
+          apiUrl,
+          value,
+          fieldName,
+          profile,
+        );
         if (isValid) matches.add({ label: value, value });
       }
     }),
@@ -1767,6 +1872,8 @@ type FilterFieldState = {
 };
 
 type FilterGroupsProps = {
+  apiKey: string;
+  apiUrl: string;
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
   profile: Profile;
@@ -1838,12 +1945,15 @@ type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
 type SelectFilterProps<
   F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
 > = {
+  apiKey: string;
+  apiUrl: string;
   contextFilters: FilterQueryData;
   defaultOption?: Option | null;
   filterHandler: FilterFieldInputHandlers[F];
   filterKey: F;
   filterLabel: string;
   filterValue: FilterFieldState[F];
+  placeholder?: string | null;
   profile: Profile;
   secondaryFilterKey: FilterField;
   sortDirection?: SortDirection;

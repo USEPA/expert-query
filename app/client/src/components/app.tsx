@@ -33,7 +33,10 @@ function useFetchedContent() {
     const controller = new AbortController();
 
     contentDispatch({ type: 'FETCH_CONTENT_REQUEST' });
-    getData<Content>(`${serverUrl}/api/lookupFiles`, controller.signal)
+    getData<Content>({
+      url: `${serverUrl}/api/lookupFiles`,
+      signal: controller.signal,
+    })
       .then((res) => {
         contentDispatch({
           type: 'FETCH_CONTENT_SUCCESS',
