@@ -9,11 +9,13 @@
 
 /* --- EPA/USWDS --- */
 .usa-site-alert .usa-alert {
+  margin-top: 0 !important;
   max-width: 1400px;
+  padding: 0;
 }
 
 .usa-alert:before {
-  display: none;
+  display: none !important;
 }
 
 .usa-site-alert .usa-alert__body {
