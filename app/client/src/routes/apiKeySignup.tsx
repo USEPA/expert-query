@@ -13,11 +13,6 @@ export function ApiKeySignup() {
   const { content } = useContentState();
   const [loading, setLoading] = useState(true);
 
-  const baseUrl =
-    window.location.hostname === 'localhost'
-      ? `${window.location.protocol}//${window.location.hostname}:3000`
-      : serverUrl;
-
   useEffect(() => {
     if (content.status !== 'success') return;
 
@@ -36,12 +31,12 @@ export function ApiKeySignup() {
         <h2>What Next?</h2>
         <ul>
           <li>
-          Explore the <b>Expert Query (EQ)</b> web service <a href='${baseUrl}/api-documentation'>documentation</a>.
+          Explore the <b>Expert Query (EQ)</b> web service <a href='${serverUrl}/api-documentation'>documentation</a>.
           </li>
         </ul>
     `,
     };
-  }, [baseUrl, content]);
+  }, [content]);
 
   return (
     <div>
@@ -49,7 +44,7 @@ export function ApiKeySignup() {
       <p>
         Sign up for an application programming interface (API) key to access and
         use <b>Expert Query</b>'s web services, then explore the web service{' '}
-        <Link to={`${baseUrl}/api-documentation`}>documentation</Link>.
+        <Link to={`${serverUrl}/api-documentation`}>documentation</Link>.
       </p>
       <div id="apidatagov_signup">{loading && <Loading />}</div>
     </div>
