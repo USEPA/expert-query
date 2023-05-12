@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import '@uswds/uswds/css/uswds.css';
 // components
 import ApiDocs from 'routes/apiDocs';
+import ApiKeySignup from 'routes/apiKeySignup';
 import { Home, QueryBuilder } from 'routes/home';
 import NationalDownloads from 'routes/nationalDownloads';
 import ErrorPage from 'routes/404';
@@ -138,6 +139,7 @@ export function App() {
         <Routes>
           <Route index element={<Navigate to="/attains" replace />} />
           <Route path="/api-documentation" element={<ApiDocs />} />
+          <Route path="/api-key-signup" element={<ApiKeySignup />} />
           <Route path="/attains" element={<Home />}>
             <Route path=":profile" element={<QueryBuilder />} />
           </Route>

@@ -16,6 +16,7 @@ export type Content = {
   services: {
     eqDataApi: string;
     eqApiKey: string;
+    eqApiSignupKey: string;
   };
   alertsConfig: {
     [page: string]: {
