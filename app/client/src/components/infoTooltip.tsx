@@ -1,4 +1,4 @@
-import { ReactComponent as Info } from 'uswds/img/usa-icons/info.svg';
+import { ReactComponent as Info } from '@uswds/uswds/img/usa-icons/info.svg';
 import { Portal } from '@reach/portal';
 import { TooltipPopup, useTooltip } from '@reach/tooltip';
 import { cloneElement, useRef } from 'react';
@@ -32,7 +32,7 @@ export function InfoTooltip({
           'hover:bg-white',
         ].join(' ')}
         ref={triggerRef}
-        style={{ background: 'inherit' }}
+        style={{ background: 'inherit', cursor: 'help' }}
         type="button"
       >
         <Info

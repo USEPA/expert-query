@@ -6,7 +6,7 @@ describe('Api Validations', () => {
       : window.location.origin;
 
   it("Verify data profile item's count POST api", () => {
-    const url = `${origin}/attains/data/sources/count`;
+    const url = `${origin}/api/attains/sources/count`;
     const body = { filters: { confirmed: ['Y'] }, options: { format: 'tsv' } };
 
     cy.request('POST', url, body).then(async ({ body, status }) => {
@@ -16,7 +16,7 @@ describe('Api Validations', () => {
   });
 
   it("Verify data profile item's count GET api", () => {
-    const url = `${origin}/attains/data/sources/count?confirmed=Y&format=tsw`;
+    const url = `${origin}/api/attains/sources/count?confirmed=Y&format=tsv`;
 
     cy.request('GET', url).then(async ({ body, status }) => {
       expect(status).to.eq(200);
@@ -25,7 +25,7 @@ describe('Api Validations', () => {
   });
 
   it('Verify sources downloading POST api', () => {
-    const url = `${origin}/attains/data/sources`;
+    const url = `${origin}/api/attains/sources`;
     const body = {
       filters: { confirmed: ['Y'], parameterGroup: ['OTHER CAUSE'] },
       options: { format: 'tsv' },
@@ -37,11 +37,11 @@ describe('Api Validations', () => {
   });
 
   it('Verify sources downloading GET api', () => {
-    const url = `${origin}/attains/data/sources?confirmed=Y&format=tsw&parameterGroup=OTHER CAUSE`;
+    const url = `${origin}/api/attains/sources?confirmed=Y&parameterGroup=OTHER CAUSE`;
 
     cy.request('GET', url).then(async ({ body, status }) => {
       expect(status).to.eq(200);
-      expect(body).to.be.a('array');
+      expect(body.data).to.be.a('array');
     });
   });
 
@@ -78,7 +78,7 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/actions/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/actions/values/${fieldNames[i]}?text=&limit=20`;
 
       cy.request('GET', url).then(async ({ body, status }) => {
         expect(status).to.eq(200);
@@ -97,7 +97,7 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/assessmentUnits/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/assessmentUnits/values/${fieldNames[i]}?text=&limit=20`;
 
       cy.request('GET', url).then(async ({ body, status }) => {
         expect(status).to.eq(200);
@@ -126,7 +126,7 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/assessments/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/assessments/values/${fieldNames[i]}?text=&limit=20`;
 
       cy.request('GET', url).then(async ({ body, status }) => {
         expect(status).to.eq(200);
@@ -146,7 +146,7 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/assessmentUnitsMonitoringLocations/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/assessmentUnitsMonitoringLocations/values/${fieldNames[i]}?text=&limit=20`;
 
       cy.request('GET', url).then(async ({ body, status }) => {
         expect(status).to.eq(200);
@@ -164,7 +164,7 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/catchmentCorrespondence/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/catchmentCorrespondence/values/${fieldNames[i]}?text=&limit=20`;
 
       cy.request('GET', url).then(async ({ body, status }) => {
         expect(status).to.eq(200);
@@ -185,7 +185,7 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/sources/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/sources/values/${fieldNames[i]}?text=&limit=20`;
 
       cy.request('GET', url).then(async ({ body, status }) => {
         expect(status).to.eq(200);
@@ -210,7 +210,7 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/tmdl/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/tmdl/values/${fieldNames[i]}?text=&limit=20`;
 
       cy.request('GET', url).then(async ({ body, status }) => {
         expect(status).to.eq(200);
@@ -220,7 +220,7 @@ describe('Api Validations', () => {
   });
 
   it('Verify error message while using wrong Profile name GET api', () => {
-    const url = `${origin}/api/wrongProfile/values/fieldName`;
+    const url = `${origin}/api/attains/wrongProfile/values/fieldName`;
     const message = 'The requested profile does not exist';
 
     cy.request({ method: 'GET', url, failOnStatusCode: false }).then(
@@ -232,9 +232,9 @@ describe('Api Validations', () => {
   });
 
   it('Verify error message while using correct Profile name and wrong fieldName name GET api', () => {
-    const url = `${origin}/api/actions/values/wrongFieldName`;
+    const url = `${origin}/api/attains/actions/values/wrongFieldName`;
     const message =
-      'The requested column does not exist on the selected profile';
+      'The column wrongFieldName does not exist on the selected profile';
 
     cy.request({ method: 'GET', url, failOnStatusCode: false }).then(
       async ({ body, status }) => {

@@ -1,26 +1,22 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import Excel from 'exceljs';
-import { createWriteStream, mkdirSync } from 'fs';
 import https from 'https';
-import path, { resolve } from 'path';
 import pg from 'pg';
-import QueryStream from 'pg-query-stream';
 import { setTimeout } from 'timers/promises';
-import { fileURLToPath } from 'url';
-import util from 'util';
-import zlib from 'zlib';
 // utils
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
-import StreamingService from './utilities/streamingService.js';
 import * as profiles from './profiles/index.js';
-import { createS3Stream, deleteDirectory, readS3File } from './s3.js';
+import {
+  deleteDirectory,
+  readS3File,
+  retryRequest,
+  syncDomainValues,
+} from './s3.js';
 // config
 import { tableConfig } from '../config/tableConfig.js';
 
 const { Client, Pool } = pg;
-const setImmediatePromise = util.promisify(setImmediate);
 
 const environment = getEnvironment();
 
@@ -247,7 +243,7 @@ export async function checkForServerCrash() {
             !log.rows[0].end_time &&
             !log.rows[0].load_error
           ) {
-            logEtlLoadError(
+            await logEtlLoadError(
               client,
               id,
               'Server crashed. Check cloud.gov logs for more info.',
@@ -464,11 +460,13 @@ export async function runJob(s3Config, checkIfReady = true) {
     }
   }
 
-  updateEtlStatus(pool, 'database', 'running');
+  await updateEtlStatus(pool, 'database', 'running');
   try {
     await runLoad(pool, s3Config, s3Julian);
     await trimSchema(pool, s3Config);
+    if (!environment.isLocal) await trimNationalDownloads(pool);
     await updateEtlStatus(pool, 'database', 'success');
+    await syncDomainValues(s3Config, pool);
   } catch (err) {
     log.warn(`Run failed, continuing to schedule cron task: ${err}`);
     await updateEtlStatus(pool, 'database', 'failed');
@@ -491,6 +489,58 @@ export async function getActiveSchema(pool) {
   return schemas.rows[0].schema_name;
 }
 
+async function fetchStateValues(s3Config, retryCount = 0) {
+  const res = await axios.get(s3Config.services.stateCodes, {
+    timeout: s3Config.config.webServiceTimeout,
+  });
+
+  if (res.status !== 200) {
+    return retryRequest('States', retryCount, s3Config, fetchStateValues);
+  }
+
+  return res.data.data;
+}
+
+async function loadStatesTable(pool, s3Config, schemaName) {
+  const client = await pool.connect();
+  try {
+    const uniqueCodes = new Set();
+    const states = (await fetchStateValues(s3Config)).filter((state) => {
+      return uniqueCodes.has(state.code) ? false : uniqueCodes.add(state.code);
+    });
+
+    await client.query('BEGIN');
+    await client.query(`SET search_path TO ${schemaName}`);
+    await client.query('DROP TABLE IF EXISTS states');
+    await client.query(
+      `CREATE TABLE states
+        (
+          id SERIAL PRIMARY KEY,
+          statecode VARCHAR(2),
+          statename VARCHAR(100)
+        )`,
+    );
+    for (const state of states) {
+      await client.query(
+        'INSERT INTO states(statecode, statename) VALUES ($1, $2)',
+        [state.code, state.name],
+      );
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    log.warn(`Failed to load states table: ${err}`);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function loadUtilityTables(pool, s3Config, schemaName) {
+  await loadStatesTable(pool, s3Config, schemaName);
+  log.info('Utility tables finished updating');
+}
+
 export async function runLoad(pool, s3Config, s3Julian) {
   log.info('Running ETL process!');
 
@@ -501,6 +551,9 @@ export async function runLoad(pool, s3Config, s3Julian) {
 
   try {
     const schemaId = await createNewSchema(pool, schemaName, s3Julian);
+
+    // Load tables first that will be used when creating profile materialized views
+    await loadUtilityTables(pool, s3Config, schemaName);
 
     // Add tables to schema and import new data
     const loadTasks = Object.values(profiles).map((profile) => {
@@ -665,19 +718,19 @@ export async function trimSchema(pool, s3Config) {
 export async function trimNationalDownloads(pool) {
   // get list of currently stored schemas
   const schemas = await pool
-    .query('SELECT schema_name FROM logging.etl_schemas')
+    .query(
+      'SELECT s3_julian FROM logging.etl_schemas WHERE s3_julian IS NOT NULL',
+    )
     .catch((err) => {
       log.warn(`Could not query schemas: ${err}`);
     });
   if (!schemas?.rowCount) return;
 
   // build a list of directories (schemas) to leave on S3
-  const dirsToIgnore = schemas.rows.map((schema) => {
-    return schema.schema_name.replace('schema_', '');
-  });
-  dirsToIgnore.push('latest');
+  const dirsToIgnore = schemas.rows.map((schema) => schema.s3_julian);
+  dirsToIgnore.push('latest.json');
 
-  deleteDirectory({
+  await deleteDirectory({
     directory: 'national-downloads',
     dirsToIgnore,
   });
@@ -743,11 +796,14 @@ async function createIndexes(client, overrideWorkMemory, tableName) {
   // create materialized views for the table
   count = 0;
   for (const mv of table.materializedViews) {
+    // optionally join columns from other tables
+    const joinClause = (join) =>
+      `LEFT JOIN ${join.table} ON ${join.joinKey[0]} = ${join.joinKey[1]}`;
     await client.query(`
       CREATE MATERIALIZED VIEW IF NOT EXISTS ${mv.name}
       AS
       SELECT DISTINCT ${mv.columns.map((col) => col.name).join(', ')}
-      FROM ${tableName} 
+      FROM ${tableName} ${mv.joins ? mv.joins.map(joinClause).join(' ') : ''}
 
       WITH DATA;
     `);
@@ -854,193 +910,6 @@ function getProfileEtl(
       log.warn(`Failed to load table ${tableName}! ${err}`);
       throw err;
     }
-  };
-}
-
-function streamNationalDownloadSingleProfile(
-  pool,
-  activeSchema,
-  profile,
-  format,
-  inStream,
-) {
-  // output types csv, tab-separated, Excel, or JSON
-  try {
-    const tableName = profile.tableName;
-
-    const stream = inStream.stream;
-    const client = inStream.client;
-
-    const extension = `.${format}.gz`;
-
-    // create zip streams
-    const gzipStream = zlib.createGzip();
-
-    const isLocal = environment.isLocal;
-
-    // create output stream
-    let writeStream;
-    if (isLocal) {
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const subFolderPath = resolve(
-        __dirname,
-        `../../../app/server/app/content-etl/national-downloads/new`,
-      );
-
-      // create the sub folder if it doesn't already exist
-      mkdirSync(subFolderPath, { recursive: true });
-
-      writeStream = createWriteStream(
-        `${subFolderPath}/${tableName}${extension}`,
-      );
-
-      gzipStream.pipe(writeStream);
-    } else {
-      writeStream = createS3Stream({
-        contentType: 'application/gzip',
-        filePath: `national-downloads/new/${tableName}${extension}`,
-        stream: gzipStream,
-      });
-    }
-
-    // start streaming/transforming the data into the S3 bucket
-    if (format === 'xlsx') {
-      // create workbook
-      const workbook = new Excel.stream.xlsx.WorkbookWriter({
-        stream: gzipStream,
-        useStyles: true,
-      });
-
-      const worksheet = workbook.addWorksheet('data');
-
-      StreamingService.streamResponse(gzipStream, stream, 'xlsx', {
-        workbook,
-        worksheet,
-      });
-    } else {
-      StreamingService.streamResponse(gzipStream, stream, format);
-    }
-
-    // get the promises for verifying the streaming operation is complete
-    let promise = writeStream;
-    if (isLocal) {
-      promise = new Promise((resolve, reject) => {
-        writeStream.on('finish', () => {
-          log.info(
-            `Finished building national download for ${tableName}${extension}`,
-          );
-          resolve();
-        });
-        writeStream.on('error', reject);
-      });
-    }
-
-    // return a promise for all of the streams and the db connection client,
-    // so we can close the connection later
-    return {
-      promise,
-      client,
-    };
-  } catch (error) {
-    log.error(
-      `Failed to build national download from the "${profile.tableName}" table...`,
-      error,
-    );
-  }
-}
-
-export async function streamNationalDownloads(pool, activeSchema) {
-  const tables = Object.values(tableConfig);
-
-  const formats = ['csv'];
-
-  const shouldShareStreams =
-    !process.env.STREAM_SHARED || process.env.STREAM_SHARED === 'true';
-
-  // fire off the streams and keep track of the db connection clients
-  let promises = [];
-  let clients = [];
-  for (const table of tables) {
-    let inStream;
-
-    // go ahead and build the input stream if we are sharing the streams
-    if (shouldShareStreams) {
-      inStream = shouldShareStreams
-        ? await buildInputStream(activeSchema, pool, table)
-        : null;
-    }
-
-    // clear out promises and clients for next loop iteration
-    if (!shouldShareStreams && process.env.STREAM_SERIALLY === 'true') {
-      promises = [];
-      clients = [];
-    }
-
-    // fire off streams for each format
-    for (const format of formats) {
-      if (!inStream) {
-        inStream = await buildInputStream(activeSchema, pool, table);
-      }
-
-      const { promise, client } = streamNationalDownloadSingleProfile(
-        pool,
-        activeSchema,
-        table,
-        format,
-        inStream,
-      );
-
-      promises.push(promise);
-      clients.push(client);
-
-      // for concurrent streams, close connections as promises resolve
-      if (process.env.STREAM_SERIALLY !== 'true') {
-        promise.then(() => {
-          log.info(`Closing connection to ${table.tableName}`);
-          try {
-            client.release();
-          } catch (ex) {}
-        });
-      }
-    }
-
-    // for serial streaming, close streams after await completes
-    if (process.env.STREAM_SERIALLY === 'true') {
-      await Promise.all(promises);
-      try {
-        clients.forEach((client) => client.release());
-      } catch (ex) {}
-    }
-  }
-
-  // for concurrent streaming, wait for all promises to complete prior to exiting
-  if (process.env.STREAM_SERIALLY !== 'true') await Promise.all(promises);
-}
-
-async function buildInputStream(activeSchema, pool, profile) {
-  const tableName = profile.tableName;
-
-  const selectText = profile.columns
-    .map((col) =>
-      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
-    )
-    .join(', ');
-
-  // build the db query stream
-  const query = new QueryStream(
-    `SELECT ${selectText} FROM ${activeSchema}.${tableName}`,
-    null,
-    {
-      batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
-      highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
-    },
-  );
-  const client = await pool.connect();
-  const stream = client.query(query);
-
-  return {
-    client,
-    stream,
   };
 }
 

@@ -13,7 +13,6 @@ export type AliasedField =
   | 'associatedActionAgency'
   | 'associatedActionStatus'
   | 'associatedActionType'
-  | 'parameter'
   | 'pollutant';
 
 export type AliasedOptions = {
@@ -28,7 +27,6 @@ export type ConcreteField =
   | 'assessmentUnitStatus'
   | 'delistedReason'
   | 'locationTypeCode'
-  | 'organizationId'
   | 'parameterGroup'
   | 'parameterName'
   | 'parameterStatus'
@@ -51,7 +49,7 @@ type EmptyStatus = Exclude<Status, 'success'>;
 
 type FetchEmptyState = {
   status: EmptyStatus;
-  data: null;
+  data: null | Record<string, never>;
 };
 
 export type FetchState<Type> = FetchEmptyState | FetchSuccessState<Type>;
@@ -62,7 +60,6 @@ type FetchSuccessState<Type> = {
 };
 
 export type Option = {
-  context?: string;
   description?: ReactNode;
   label: ReactNode;
   value: Primitive;

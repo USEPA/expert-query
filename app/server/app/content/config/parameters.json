@@ -1,4 +1,4 @@
 {
   "debounceMilliseconds": 250,
-  "maxQuerySize": 1000000
+  "selectOptionsPageSize": 20
 }

@@ -56,6 +56,7 @@ jobs:
       CLOUD_SPACE: staging
       CF_ORG: ${{ secrets.CF_ORG }}
       CF_SPACE: ${{ secrets.CF_SPACE_STAGING }}
+      CF_STACK: cflinuxfs4
       CF_USER_STAGING: ${{ secrets.CF_USER_STAGING }}
       CF_PASSWORD_STAGING: ${{ secrets.CF_PASSWORD_STAGING }}
       CF_S3_PUB_ACCESS_KEY: ${{ secrets.CF_STAGING_S3_PUB_ACCESS_KEY }}
@@ -67,7 +68,10 @@ jobs:
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
       DB_USERNAME: ${{ secrets.EQ_USER_STAGING }}
+      EQ_SECRET: ${{ secrets.EQ_SECRET_STAGING }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
+      JSON_PAGE_SIZE: 1000
+      MAX_QUERY_SIZE: 1000000
       SERVER_BASE_PATH: /expertquery
       SERVER_URL: https://owapps-stage.app.cloud.gov/expertquery
       STREAM_BATCH_SIZE: 2000
@@ -116,14 +120,19 @@ jobs:
 
       - name: Set application-level variables
         run: |
+          cf set-env $APP_NAME "CF_S3_PUB_ACCESS_KEY" "$CF_S3_PUB_ACCESS_KEY" > /dev/null
           cf set-env $APP_NAME "CF_S3_PUB_BUCKET_ID" "$CF_S3_PUB_BUCKET_ID" > /dev/null
           cf set-env $APP_NAME "CF_S3_PUB_REGION" "$CF_S3_PUB_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PUB_SECRET_KEY" "$CF_S3_PUB_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MAX" "$DB_POOL_MAX" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MIN" "$DB_POOL_MIN" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
+          cf set-env $APP_NAME "EQ_SECRET" "$EQ_SECRET" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "JSON_PAGE_SIZE" "$JSON_PAGE_SIZE" > /dev/null
+          cf set-env $APP_NAME "MAX_QUERY_SIZE" "$MAX_QUERY_SIZE" > /dev/null
           cf set-env $APP_NAME "PUBLIC_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null
           cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
@@ -150,7 +159,7 @@ jobs:
 
       # Now that front-end is built in server/dist, only push server dir to Cloud.gov
       - name: Deploy application to Cloud.gov
-        run: cf push $APP_NAME --strategy rolling -f ../manifest-staging.yml -p . -t 180
+        run: cf push $APP_NAME --strategy rolling -f ../manifest-staging.yml -p . -t 180 -s $CF_STACK
         working-directory: app/server
 
   etl:
@@ -169,6 +178,7 @@ jobs:
       APP_NAME: expert-query-etl-staging
       CF_ORG: ${{ secrets.CF_ORG }}
       CF_SPACE: ${{ secrets.CF_SPACE_STAGING }}
+      CF_STACK: cflinuxfs4
       CF_USER_STAGING: ${{ secrets.CF_USER_STAGING }}
       CF_PASSWORD_STAGING: ${{ secrets.CF_PASSWORD_STAGING }}
       CF_S3_PUB_ACCESS_KEY: ${{ secrets.CF_STAGING_S3_PUB_ACCESS_KEY }}
@@ -184,10 +194,6 @@ jobs:
       EQ_USERNAME: ${{ secrets.EQ_USER_STAGING }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
       MV_API_KEY: ${{ secrets.MV_API_KEY }}
-      STREAM_BATCH_SIZE: 2000
-      STREAM_HIGH_WATER_MARK: 10000
-      STREAM_SERIALLY: ${{ 'false' }}
-      STREAM_SHARED: ${{ 'false' }}
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -221,10 +227,6 @@ jobs:
           cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
           cf set-env $APP_NAME "MV_API_KEY" "$MV_API_KEY" > /dev/null
-          cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
-          cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
-          cf set-env $APP_NAME "STREAM_SERIALLY" "$STREAM_SERIALLY" > /dev/null
-          cf set-env $APP_NAME "STREAM_SHARED" "$STREAM_SHARED" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
 
       - name: Configure Private AWS Credentials
@@ -246,5 +248,5 @@ jobs:
 
       # Now that front-end is built in server/dist, only push server dir to Cloud.gov
       - name: Deploy application to Cloud.gov
-        run: cf push $APP_NAME --strategy rolling -f manifest-staging.yml -p . -t 180
+        run: cf push $APP_NAME --strategy rolling -f manifest-staging.yml -p . -t 180 -s $CF_STACK
         working-directory: etl

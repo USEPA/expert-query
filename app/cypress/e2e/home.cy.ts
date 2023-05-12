@@ -44,12 +44,9 @@ describe('Home Page', () => {
       });
   });
 
-  it('Clear Search button is available when data profile is select', () => {
+  it('Clear Search button is available when data profile is selected', () => {
     cy.selectProfile('Actions');
-    cy.findAllByRole('button', { name: 'Clear Search' }).should(
-      'have.length',
-      2,
-    );
+    cy.findByRole('button', { name: 'Clear Search' });
   });
 
   it('Data profile Sources query link', () => {
@@ -69,42 +66,33 @@ describe('Home Page', () => {
     ];
     profiles.forEach((profile) => {
       cy.selectProfile(profile);
-      cy.findAllByRole('button', { name: 'Clear Search' }).should(
-        'have.length',
-        2,
-      );
+      cy.findByRole('button', { name: 'Clear Search' });
     });
   });
 
   it('searching with a <script> tag displays no option', () => {
     const search = '<script>var j = 1;</script>';
     cy.get(`[aria-label="Select a data profile"]`).type(search);
-    cy.get('.css-4ljt47-MenuList')
+    cy.get('#react-select-instance-select-data-profile-listbox')
       .children('div')
       .should('contain.text', 'No options');
     cy.get('body').click(0, 0);
   });
 
   // for new query structure, this verify is not necessary
-  it.skip('Verify url by selecting different format', () => {
+  it('Verify url by selecting different format', () => {
     cy.selectProfile('Actions');
     cy.findByText('Comma-separated (CSV)').click();
-    cy.url().should('include', 'attains/actions#');
+    cy.url().should('include', 'attains/actions');
     cy.findByText('Tab-separated (TSV)').click();
-    cy.url().should('include', 'attains/actions#');
+    cy.url().should('include', 'attains/actions');
     cy.findByText('Microsoft Excel (XLSX)').click();
-    cy.url().should('include', 'attains/actions#');
-    cy.findByText('JavaScript Object Notation (JSON)').click();
-    cy.url().should('include', 'attains/actions#');
+    cy.url().should('include', 'attains/actions');
   });
 
   it('Verify Clear Search button after clear', () => {
     cy.selectProfile('Actions');
-    cy.findAllByRole('button', { name: 'Clear Search' }).each(
-      ($elem, index) => {
-        index === 0 && cy.wrap($elem).click({ force: true });
-      },
-    );
+    cy.findByRole('button', { name: 'Clear Search' }).click({ force: true });
     cy.wait(2000);
     cy.findByText('Continue').should('exist');
     cy.findByText('Cancel').should('exist').click();
@@ -112,7 +100,7 @@ describe('Home Page', () => {
 
   it('Verify Download Status Pop-up with stubing api', () => {
     cy.selectProfile('Actions');
-    cy.intercept('POST', `${origin}/attains/data/actions/count`, {
+    cy.intercept('POST', `${origin}/api/attains/actions/count`, {
       count: '510',
     }).as('api-response');
 
@@ -129,36 +117,16 @@ describe('Home Page', () => {
     cy.get('.usa-modal__main').should('not.exist');
   });
 
-  it('Verify desiabled button when count is zero', () => {
+  it('Verify disabled button when count is zero', () => {
     cy.selectProfile('Assessments');
-    cy.intercept('POST', `${origin}/attains/data/assessments/count`, {
-      count: '0',
+    cy.intercept('POST', `${origin}/api/attains/assessments/count`, {
+      count: 0,
     }).as('assessments-count');
     cy.findByRole('button', { name: 'Download' }).click();
 
     cy.wait('@assessments-count');
     cy.findByRole('button', { name: 'Continue' }).should('be.disabled');
     cy.findByRole('button', { name: 'Cancel' }).click();
-  });
-
-  it('Verify Glossary toggle button', () => {
-    cy.findByRole('button', { name: 'Glossary' }).click();
-    cy.findByRole('button', { name: 'Glossary' })
-      .should('have.attr', 'aria-expanded')
-      .and('equal', 'true');
-    cy.findByRole('button', { name: 'Glossary' }).click();
-    cy.findByRole('button', { name: 'Glossary' })
-      .should('have.attr', 'aria-expanded')
-      .and('equal', 'false');
-  });
-
-  it('Verify Glossary silder open', () => {
-    cy.findByRole('button', { name: 'Glossary' }).click();
-    cy.get('#glossary')
-      .should('have.attr', 'aria-hidden')
-      .and('equal', 'false');
-    cy.get('body').click(0, 0);
-    cy.get('#glossary').should('have.attr', 'aria-hidden').and('equal', 'true');
   });
 
   it('Verify url after clear the query', () => {
@@ -192,13 +160,16 @@ describe('Home Page', () => {
     cy.selectOption('input-state', 'texas');
 
     //Assessment Unit Status
+    cy.findByRole('checkbox', { name: 'Active' }).click({ force: true });
     cy.findByRole('checkbox', { name: 'Retired' }).click({ force: true });
 
     //File Format
     cy.findByText('Tab-separated (TSV)').click();
 
-    const queryValue =
-      '/attains/data/assessmentUnits?assessmentUnitStatus=R&state=TX&format=tsv';
+    const columnsValue =
+      'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
+
+    const queryValue = `/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=R&state=TX&format=tsv&api_key=<YOUR_API_KEY>`;
     cy.selectCopyBox('api-query-copy-box-container', `${origin}${queryValue}`);
 
     cy.findAllByRole('button', { name: 'Clear Search' }).each(
@@ -208,9 +179,10 @@ describe('Home Page', () => {
     );
     cy.wait(2000);
     cy.findByText('Continue').should('exist').click();
+
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/assessmentUnits?format=tsv`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=A&format=tsv&api_key=<YOUR_API_KEY>`,
     );
   });
 });

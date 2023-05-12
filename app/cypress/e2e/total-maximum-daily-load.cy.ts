@@ -5,6 +5,9 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.findByRole('button', { name: 'Advanced API Queries' }).click();
   });
 
+  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=pollutant&columns=addressedParameter&columns=sourceType&columns=npdesIdentifier&columns=otherIdentifier&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=explicitMarginOfSafety&columns=implicitMarginOfSafety&columns=includeInMeasure&columns=completionDate&columns=tmdlDate&columns=fiscalYearEstablished&columns=assessmentUnitId&columns=assessmentUnitName&columns=loadAllocation&columns=loadAllocationUnits&columns=locationDescription&columns=waterSize&columns=waterSizeUnits&columns=wasteLoadAllocation';
+  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"pollutant\",\"addressedParameter\",\"sourceType\",\"npdesIdentifier\",\"otherIdentifier\",\"actionId\",\"actionName\",\"actionAgency\",\"inIndianCountry\",\"explicitMarginOfSafety\",\"implicitMarginOfSafety\",\"includeInMeasure\",\"completionDate\",\"tmdlDate\",\"fiscalYearEstablished\",\"assessmentUnitId\",\"assessmentUnitName\",\"loadAllocation\",\"loadAllocationUnits\",\"locationDescription\",\"waterSize\",\"waterSizeUnits\",\"wasteLoadAllocation\"]';
+
   const location = window.location;
   const origin =
     location.hostname === 'localhost'
@@ -18,13 +21,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/tmdl?format=csv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{},"options":{"format":"csv"}}',
-      )} ${origin}/attains/data/tmdl`,
+        `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -35,7 +38,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     //NPDES ID
     cy.selectOption('input-npdesIdentifier', '477001');
 
-    const queryValue = 'actionAgency=E&npdesIdentifier=477001';
+    const queryValue = 'actionAgency=EPA&npdesIdentifier=477001';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -43,19 +46,19 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/tmdl?${queryValue}&format=csv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionAgency":["E"],"npdesIdentifier":["477001"]},"options":{"format":"csv"}}',
-      )} ${origin}/attains/data/tmdl`,
+        `{"filters":{"actionAgency":["EPA"],"npdesIdentifier":["477001"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
   it('Verify copy box text flavor 3', () => {
     //Action Name
-    cy.selectOption('input-actionName', 'ks big blue');
+    cy.selectOption('input-actionId', 'ks big blue');
 
     //Completion Date
     cy.get('#input-completionDateLo').type('1955-10-03');
@@ -84,7 +87,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.get('#input-tmdlDateHi').type('2020-07-11');
 
     const queryValue =
-      'actionName=KS%20Big%20Blue%20River%20TMDL&completionDateLo=10-03-1955&completionDateHi=12-18-1992&explicitMarginOfSafety=10.3%20acre-feet%20per%20year&fiscalYearEstablishedLo=1984&fiscalYearEstablishedHi=2023&implicitMarginOfSafety=Implicit%20due%20to%20conservative%20assumptions&npdesIdentifier=477001&sourceType=Both&tmdlDateLo=01-04-1956&tmdlDateHi=07-11-2020';
+      'actionId=R7_KS_2020_00204&completionDateLo=10-03-1955&completionDateHi=12-18-1992&explicitMarginOfSafety=10.3%20acre-feet%20per%20year&fiscalYearEstablishedLo=1984&fiscalYearEstablishedHi=2023&implicitMarginOfSafety=Implicit%20due%20to%20conservative%20assumptions&npdesIdentifier=477001&sourceType=Both&tmdlDateLo=01-04-1956&tmdlDateHi=07-11-2020';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -92,13 +95,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/tmdl?${queryValue}&format=csv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionName":["KS Big Blue River TMDL"],"completionDateLo":"10-03-1955","completionDateHi":"12-18-1992","explicitMarginOfSafety":["10.3 acre-feet per year"],"fiscalYearEstablishedLo":"1984","fiscalYearEstablishedHi":"2023","implicitMarginOfSafety":["Implicit due to conservative assumptions"],"npdesIdentifier":["477001"],"sourceType":["Both"],"tmdlDateLo":"01-04-1956","tmdlDateHi":"07-11-2020"},"options":{"format":"csv"}}',
-      )} ${origin}/attains/data/tmdl`,
+        `{"filters":{"actionId":["R7_KS_2020_00204"],"completionDateLo":"10-03-1955","completionDateHi":"12-18-1992","explicitMarginOfSafety":["10.3 acre-feet per year"],"fiscalYearEstablishedLo":"1984","fiscalYearEstablishedHi":"2023","implicitMarginOfSafety":["Implicit due to conservative assumptions"],"npdesIdentifier":["477001"],"sourceType":["Both"],"tmdlDateLo":"01-04-1956","tmdlDateHi":"07-11-2020"},"options":{"format":"csv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -108,9 +111,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     //Action ID
     cy.selectOption('input-actionId', 'ia7001');
-
-    //Action Name
-    cy.selectOption('input-actionName', 'cedar creek');
+    cy.selectOption('input-actionId', 'cedar creek');
 
     //Completion Date
     cy.get('#input-completionDateLo').type('1987-11-02');
@@ -126,10 +127,8 @@ describe('Data Profile Total Maximum Daily Load', () => {
     });
 
     //Organization ID
-    cy.selectOption('input-organizationId', '21awic');
-
-    //Organization Name
-    cy.selectOption('input-organizationName', 'oklahoma');
+    cy.selectOption('input-organizationId', '21sc60wq');
+    cy.selectOption('input-organizationId', 'oklahoma');
 
     //Other Identifier
     cy.selectOption('input-otherIdentifier', 'city of belvue');
@@ -147,7 +146,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.findByText('Tab-separated (TSV)').click();
 
     const queryValue =
-      'actionAgency=E&actionId=IA7001&actionName=Cedar%20Creek%20E.%20coli%20TMDL&completionDateLo=11-02-1987&completionDateHi=12-16-1991&fiscalYearEstablishedLo=2014&fiscalYearEstablishedHi=2018&inIndianCountry=Y&organizationId=21AWIC&organizationName=Oklahoma&otherIdentifier=City%20of%20Belvue&sourceType=Nonpoint%20source&tmdlDateLo=08-05-1993&tmdlDateHi=03-09-1994';
+      'actionAgency=EPA&actionId=IA7001&actionId=R7MO1344TMDL1&completionDateLo=11-02-1987&completionDateHi=12-16-1991&fiscalYearEstablishedLo=2014&fiscalYearEstablishedHi=2018&includeInMeasure=Y&organizationId=21SC60WQ&organizationId=OKDEQ&otherIdentifier=City%20of%20Belvue&sourceType=Nonpoint%20source&tmdlDateLo=08-05-1993&tmdlDateHi=03-09-1994';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -155,13 +154,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/tmdl?${queryValue}&format=tsv`,
+      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionAgency":["E"],"actionId":["IA7001"],"actionName":["Cedar Creek E. coli TMDL"],"completionDateLo":"11-02-1987","completionDateHi":"12-16-1991","fiscalYearEstablishedLo":"2014","fiscalYearEstablishedHi":"2018","inIndianCountry":["Y"],"organizationId":["21AWIC"],"organizationName":["Oklahoma"],"otherIdentifier":["City of Belvue"],"sourceType":["Nonpoint source"],"tmdlDateLo":"08-05-1993","tmdlDateHi":"03-09-1994"},"options":{"format":"tsv"}}',
-      )} ${origin}/attains/data/tmdl`,
+        `{"filters":{"actionAgency":["EPA"],"actionId":["IA7001","R7MO1344TMDL1"],"completionDateLo":"11-02-1987","completionDateHi":"12-16-1991","fiscalYearEstablishedLo":"2014","fiscalYearEstablishedHi":"2018","includeInMeasure":["Y"],"organizationId":["21SC60WQ","OKDEQ"],"otherIdentifier":["City of Belvue"],"sourceType":["Nonpoint source"],"tmdlDateLo":"08-05-1993","tmdlDateHi":"03-09-1994"},"options":{"format":"tsv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -171,18 +170,14 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     //Action ID
     cy.selectOption('input-actionId', '70200');
-
-    //Action Name
-    cy.selectOption('input-actionName', 'bear creek');
+    cy.selectOption('input-actionId', 'bear creek');
 
     //Addressed Parameter
     cy.selectOption('input-addressedParameter', 'algae');
 
     //Assessment Unit ID
     cy.selectOption('input-assessmentUnitId', 'fl1382g');
-
-    //Assessment Unit Name
-    cy.selectOption('input-assessmentUnitName', 'ash cr');
+    cy.selectOption('input-assessmentUnitId', 'ash cr');
 
     //Completion Date
     cy.get('#input-completionDateLo').type('2009-12-08');
@@ -212,10 +207,8 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.selectOption('input-npdesIdentifier', '59925');
 
     //Organization ID
-    cy.selectOption('input-organizationId', '21pa');
-
-    //Organization Name
-    cy.selectOption('input-organizationName', 'florida');
+    cy.selectOption('input-organizationId', '21kan001');
+    cy.selectOption('input-organizationId', 'florida');
 
     //Other Identifier
     cy.selectOption('input-otherIdentifier', 'bpu');
@@ -225,9 +218,6 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     //Region
     cy.selectOption('input-region', '06');
-
-    //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2016{downArrow}');
 
     //Source Type
     cy.findByRole('checkbox', { name: 'Point source' }).click({ force: true });
@@ -239,11 +229,8 @@ describe('Data Profile Total Maximum Daily Load', () => {
     //Water Type
     cy.selectOption('input-waterType', 'harbor');
 
-    //File Format
-    cy.findByText('JavaScript Object Notation (JSON)').click();
-
     const queryValue =
-      'actionAgency=T&actionId=70200&actionName=Bear%20Creek%20Unknown%20TMDL%20REVISED&addressedParameter=ALGAE&assessmentUnitId=FL1382G&assessmentUnitName=Ash%20Cr&completionDateLo=12-08-2009&completionDateHi=09-08-2017&explicitMarginOfSafety=1.21E+09&fiscalYearEstablishedLo=2008&fiscalYearEstablishedHi=2019&implicitMarginOfSafety=TSS%20target%20based%20on%20the%2025th%20percentile%20concentration%20of%20all%20USGS%20TSS%20data%20from%20Missouri%20in%20the%20EDU%20where%20Mound%20Branch%20is%20located.&includeInMeasure=Y&inIndianCountry=N&npdesIdentifier=59925&organizationId=21PA&organizationName=Florida&otherIdentifier=BPU%20Kaw%20Power%20Station&pollutant=CFC-113&region=06&reportingCycle=2016&sourceType=Point%20source&tmdlDateLo=12-08-2019&tmdlDateHi=09-30-2022&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS';
+      'actionAgency=Tribal&actionId=70200&actionId=R7MO3960TMDL1Revised&addressedParameter=ALGAE&assessmentUnitId=FL1382G&assessmentUnitId=KS-1027020736&completionDateLo=12-08-2009&completionDateHi=09-08-2017&explicitMarginOfSafety=1.21E+09&fiscalYearEstablishedLo=2008&fiscalYearEstablishedHi=2019&implicitMarginOfSafety=TSS%20target%20based%20on%20the%2025th%20percentile%20concentration%20of%20all%20USGS%20TSS%20data%20from%20Missouri%20in%20the%20EDU%20where%20Mound%20Branch%20is%20located.&includeInMeasure=N&inIndianCountry=Y&npdesIdentifier=59925&organizationId=21KAN001&organizationId=21FL303D&otherIdentifier=BPU%20Kaw%20Power%20Station&pollutant=CFC-113&region=06&sourceType=Point%20source&tmdlDateLo=12-08-2019&tmdlDateHi=09-30-2022&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -251,13 +238,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/tmdl?${queryValue}&format=json`,
+      `${origin}/api/attains/tmdl?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"actionAgency":["T"],"actionId":["70200"],"actionName":["Bear Creek Unknown TMDL REVISED"],"addressedParameter":["ALGAE"],"assessmentUnitId":["FL1382G"],"assessmentUnitName":["Ash Cr"],"completionDateLo":"12-08-2009","completionDateHi":"09-08-2017","explicitMarginOfSafety":["1.21E+09"],"fiscalYearEstablishedLo":"2008","fiscalYearEstablishedHi":"2019","implicitMarginOfSafety":["TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located."],"includeInMeasure":["Y"],"inIndianCountry":["N"],"npdesIdentifier":["59925"],"organizationId":["21PA"],"organizationName":["Florida"],"otherIdentifier":["BPU Kaw Power Station"],"pollutant":["CFC-113"],"region":["06"],"reportingCycle":"2016","sourceType":["Point source"],"tmdlDateLo":"12-08-2019","tmdlDateHi":"09-30-2022","waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"json"}}',
-      )} ${origin}/attains/data/tmdl`,
+        `{"filters":{"actionAgency":["Tribal"],"actionId":["70200","R7MO3960TMDL1Revised"],"addressedParameter":["ALGAE"],"assessmentUnitId":["FL1382G","KS-1027020736"],"completionDateLo":"12-08-2009","completionDateHi":"09-08-2017","explicitMarginOfSafety":["1.21E+09"],"fiscalYearEstablishedLo":"2008","fiscalYearEstablishedHi":"2019","implicitMarginOfSafety":["TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located."],"includeInMeasure":["N"],"inIndianCountry":["Y"],"npdesIdentifier":["59925"],"organizationId":["21KAN001","21FL303D"],"otherIdentifier":["BPU Kaw Power Station"],"pollutant":["CFC-113"],"region":["06"],"sourceType":["Point source"],"tmdlDateLo":"12-08-2019","tmdlDateHi":"09-30-2022","waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 });

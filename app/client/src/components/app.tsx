@@ -1,19 +1,29 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
-import 'uswds/css/uswds.css';
-import 'bootstrap/dist/css/bootstrap-grid.min.css';
+import '@uswds/uswds/css/uswds.css';
 // components
+import ApiDocs from 'routes/apiDocs';
+import ApiKeySignup from 'routes/apiKeySignup';
 import { Home, QueryBuilder } from 'routes/home';
 import NationalDownloads from 'routes/nationalDownloads';
 import ErrorPage from 'routes/404';
 import { MarkdownContent } from 'components/markdownContent';
+import Page from 'components/page';
 // contexts
 import { useContentState, useContentDispatch } from 'contexts/content';
 // config
 import { cloudSpace, getData, serverBasePath, serverUrl } from '../config';
 // types
 import type { Content } from 'contexts/content';
+
+declare global {
+  interface Window {
+    ga: Function;
+    gaTarget: string;
+    logToGa: Function;
+  }
+}
 
 /** Custom hook to fetch static content */
 function useFetchedContent() {
@@ -23,7 +33,10 @@ function useFetchedContent() {
     const controller = new AbortController();
 
     contentDispatch({ type: 'FETCH_CONTENT_REQUEST' });
-    getData<Content>(`${serverUrl}/api/lookupFiles`, controller.signal)
+    getData<Content>({
+      url: `${serverUrl}/api/lookupFiles`,
+      signal: controller.signal,
+    })
       .then((res) => {
         contentDispatch({
           type: 'FETCH_CONTENT_SUCCESS',
@@ -90,7 +103,7 @@ function useDisclaimerBanner() {
     const siteAlert = document.querySelector('.usa-site-alert');
     if (!siteAlert) return;
 
-    const banner = document.createElement('div');
+    const banner = document.createElement('aside');
     banner.setAttribute('id', 'eq-disclaimer-banner');
     banner.setAttribute(
       'class',
@@ -110,7 +123,7 @@ function useDisclaimerBanner() {
 }
 
 // workaround to preserve the href in the url, without this
-// the ErrorPage will 
+// the ErrorPage will
 // redirect to http://localhost:9090/404.html?src=http://localhost:3000/404
 // instead of  http://localhost:9090/404.html?src=http://localhost:3000/some-url-doesnt-exist
 const href = window.location.href;
@@ -122,14 +135,18 @@ export function App() {
 
   return (
     <BrowserRouter basename={serverBasePath}>
-      <Routes>
-        <Route index element={<Navigate to="/attains" replace />} />
-        <Route path="/attains" element={<Home />}>
-          <Route path=":profile" element={<QueryBuilder />} />
-        </Route>
-        <Route path="/national-downloads" element={<NationalDownloads />} />
-        <Route path="*" element={<ErrorPage src={href} />} />
-      </Routes>
+      <Page>
+        <Routes>
+          <Route index element={<Navigate to="/attains" replace />} />
+          <Route path="/api-documentation" element={<ApiDocs />} />
+          <Route path="/api-key-signup" element={<ApiKeySignup />} />
+          <Route path="/attains" element={<Home />}>
+            <Route path=":profile" element={<QueryBuilder />} />
+          </Route>
+          <Route path="/national-downloads" element={<NationalDownloads />} />
+          <Route path="*" element={<ErrorPage src={href} />} />
+        </Routes>
+      </Page>
     </BrowserRouter>
   );
 }

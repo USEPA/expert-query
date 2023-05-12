@@ -4,7 +4,6 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
-  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -14,7 +13,13 @@ import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
 import { fileURLToPath } from 'url';
-import { endConnPool, startConnPool, updateEtlStatus } from './database.js';
+import { tableConfig } from '../config/tableConfig.js';
+import {
+  endConnPool,
+  getActiveSchema,
+  startConnPool,
+  updateEtlStatus,
+} from './database.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -131,18 +136,18 @@ export async function uploadFilePublic(
 }
 
 // Retries an HTTP request in response to a failure
-async function retryRequest(serviceName, count, s3Config, callback) {
-  log.info(`Non-200 response returned from ${serviceName} service, retrying`);
+export async function retryRequest(serviceName, count, s3Config, callback) {
   if (count < s3Config.config.retryLimit) {
+    log.info(`Non-200 response returned from ${serviceName} service, retrying`);
     await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
     return callback(s3Config, count + 1);
   } else {
-    throw new Error(`Sync ${serviceName} retry count exceeded`);
+    throw new Error(`${serviceName} request retry count exceeded`);
   }
 }
 
 // Sync the domain values corresponding to a single domain name
-function fetchSingleDomain(name, mapping) {
+function fetchSingleDomain(name, mapping, pool) {
   return async function (s3Config, retryCount = 0) {
     try {
       const res = await axios.get(
@@ -155,34 +160,16 @@ function fetchSingleDomain(name, mapping) {
           `Domain Values (${mapping.domainName})`,
           retryCount,
           s3Config,
-          fetchSingleDomain(name, mapping),
+          fetchSingleDomain(name, mapping, pool),
         );
       }
 
-      // Filter out specific values from the result
-      let filteredData = res.data;
-      if ('filters' in mapping) {
-        mapping.filters.forEach(([field, filter]) => {
-          filteredData = filteredData.filter((domainValue) => {
-            if (Array.isArray(filter)) {
-              return !filter.includes(domainValue[field]);
-            } else {
-              return filter !== domainValue[field];
-            }
-          });
-        });
-      }
-
       const valuesAdded = new Set();
-      let values = filteredData
+      let values = res.data
         .map((value) => {
           return {
             label: value[mapping.labelField ?? 'name'],
             value: value[mapping.valueField ?? 'code'],
-            // Optional context field
-            ...(mapping.contextField && {
-              context: value[mapping.contextField],
-            }),
           };
         })
         .filter((item) => {
@@ -190,6 +177,20 @@ function fetchSingleDomain(name, mapping) {
             ? false
             : valuesAdded.add(item.value);
         });
+
+      // Add any column values not represented by domain values service
+      for (const colAlias of mapping.columns) {
+        const colValues = await queryColumnValues(pool, colAlias);
+        colValues.forEach((value) => {
+          if (valuesAdded.has(value)) return;
+          // Warn about mismatch, since value added here may not have the desired label
+          log.warn(
+            `Column value missing from "${mapping.domainName}" domain service: ${value}`,
+          );
+          valuesAdded.add(value);
+          values.push({ label: value, value });
+        });
+      }
 
       const output = {};
       output[name] = values;
@@ -204,7 +205,7 @@ function fetchSingleDomain(name, mapping) {
           `Domain Values (${mapping.domainName})`,
           retryCount,
           s3Config,
-          fetchSingleDomain(name, mapping),
+          fetchSingleDomain(name, mapping, pool),
         );
       } catch (err) {
         log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
@@ -214,16 +215,16 @@ function fetchSingleDomain(name, mapping) {
   };
 }
 
-export async function syncDomainValues(s3Config) {
-  const pool = startConnPool();
+export async function syncDomainValues(s3Config, poolParam = null) {
+  const pool = poolParam ? poolParam : startConnPool();
   await updateEtlStatus(pool, 'domain_values', 'running');
 
   try {
     const fetchPromises = [];
-    fetchPromises.push(fetchStateValues(s3Config));
+    fetchPromises.push(fetchStateValues(pool)(s3Config));
 
     Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
-      fetchPromises.push(fetchSingleDomain(name, mapping)(s3Config));
+      fetchPromises.push(fetchSingleDomain(name, mapping, pool)(s3Config));
     });
 
     await Promise.all(fetchPromises);
@@ -244,59 +245,68 @@ export async function syncDomainValues(s3Config) {
     log.error(`Sync Domain Values failed! ${err}`);
     await updateEtlStatus(pool, 'domain_values', 'failed');
   } finally {
-    endConnPool(pool);
+    if (!poolParam) await endConnPool(pool);
   }
 }
 
 // Sync state codes and labels from the states service
-async function fetchStateValues(s3Config, retryCount = 0) {
-  try {
-    const res = await axios.get(s3Config.services.stateCodes, {
-      timeout: s3Config.config.webServiceTimeout,
-    });
-
-    if (res.status !== 200) {
-      return await retryRequest(
-        'States',
-        retryCount,
-        s3Config,
-        fetchStateValues,
-      );
-    }
-
-    const valuesAdded = new Set();
-    const states = res.data.data
-      .map((state) => {
-        return {
-          label: state.name,
-          value: state.code,
-        };
-      })
-      .filter((item) => {
-        return valuesAdded.has(item.value)
-          ? false
-          : valuesAdded.add(item.value);
+function fetchStateValues(pool) {
+  return async function (s3Config, retryCount = 0) {
+    try {
+      const res = await axios.get(s3Config.services.stateCodes, {
+        timeout: s3Config.config.webServiceTimeout,
       });
 
-    const output = {};
-    output.state = states;
-    await uploadFilePublic(
-      'state.json',
-      JSON.stringify(output),
-      'content-etl/domainValues',
-    );
-  } catch (errOuter) {
-    try {
-      return await retryRequest(
-        'States',
-        retryCount,
-        s3Config,
-        fetchStateValues,
+      if (res.status !== 200) {
+        return await retryRequest(
+          'States',
+          retryCount,
+          s3Config,
+          fetchStateValues(pool),
+        );
+      }
+
+      const valuesAdded = new Set();
+      const states = res.data.data
+        .map((state) => ({
+          label: state.name,
+          value: state.code,
+        }))
+        .filter((item) => {
+          return valuesAdded.has(item.value)
+            ? false
+            : valuesAdded.add(item.value);
+        });
+
+      const colValues = await queryColumnValues(pool, 'state');
+      colValues.forEach((value) => {
+        if (valuesAdded.has(value)) return;
+        // Warn about mismatch, since value added here will not have a nice label
+        log.warn(`Column value missing from "States" domain service: ${value}`);
+        valuesAdded.add(value);
+        states.push({ label: value, value });
+      });
+
+      const output = {};
+      output.state = states;
+      await uploadFilePublic(
+        'state.json',
+        JSON.stringify(output),
+        'content-etl/domainValues',
       );
-    } catch (err) {
-      log.warn(`Sync States failed! ${err}`);
+    } catch (errOuter) {
+      try {
+        return await retryRequest(
+          'States',
+          retryCount,
+          s3Config,
+          fetchStateValues(pool),
+        );
+      } catch (err) {
+        log.warn(`Sync States failed! ${err}`);
+      }
     }
-  }
+  };
 }
 
 export async function syncGlossary(s3Config, retryCount = 0) {
@@ -348,84 +358,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
       await updateEtlStatus(pool, 'glossary', 'failed');
     }
   } finally {
-    endConnPool(pool);
-  }
-}
-
-// Creates a stream for streaming data to s3
-export function createS3Stream({ contentType, filePath, stream }) {
-  // setup public s3 bucket
-  setAwsConfig();
-
-  const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
-
-  return s3
-    .upload({
-      Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-      Key: filePath,
-      ACL: 'public-read',
-      ContentType: contentType,
-      Body: stream,
-    })
-    .promise();
-}
-
-// Copies files between directories on s3
-export async function copyDirectory({ contentType, source, destination }) {
-  try {
-    if (environment.isLocal) {
-      const sourcePath = resolve(
-        __dirname,
-        `../../../app/server/app/content-etl/${source}`,
-      );
-      const destPath = resolve(
-        __dirname,
-        `../../../app/server/app/content-etl/${destination}`,
-      );
-
-      // exit early if the source path doesn't exist
-      if (!existsSync(sourcePath)) return;
-
-      renameSync(sourcePath, destPath);
-    } else {
-      // setup public s3 bucket
-      setAwsConfig();
-
-      const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
-
-      // get list of files in the source directory
-      const data = await s3
-        .listObjects({
-          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-          Prefix: source,
-        })
-        .promise();
-
-      for (const file of data.Contents) {
-        // copy the file from source to destination
-        await s3
-          .copyObject({
-            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-            CopySource: `${process.env.CF_S3_PUB_BUCKET_ID}/${file.Key}`,
-            Key: file.Key.replace(source, destination),
-            ACL: 'public-read',
-            ContentType: contentType,
-          })
-          .promise();
-
-        // delete the file from the source
-        await s3
-          .deleteObject({
-            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-            Key: file.Key,
-          })
-          .promise();
-      }
-    }
-  } catch (err) {
-    log.warn(
-      `Error copying directory from "${source}" to "${destination}": ${err}`,
-    );
+    await endConnPool(pool);
   }
 }
 
@@ -476,6 +409,7 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
       data.Contents.forEach(async (file) => {
         // skip file if in dirsToIgnore
         if (
+          fullPathDirsToIgnore.includes(file.Key) ||
           fullPathDirsToIgnore.includes(
             file.Key.substring(0, file.Key.lastIndexOf('/')),
           )
@@ -497,30 +431,32 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
   }
 }
 
-export async function archiveNationalDownloads(schemaName) {
-  if (schemaName) {
-    const subFolder = schemaName.replace('schema_', '');
-    log.info(`Start copying "latest" to "${subFolder}"`);
-    await copyDirectory({
-      contentType: 'application/gzip',
-      source: 'national-downloads/latest',
-      destination: `national-downloads/${subFolder}`,
-    });
-    log.info(`Finished copying "latest" to "${subFolder}"`);
-  } else {
-    deleteDirectory({
-      directory: 'national-downloads/latest',
-      dirsToIgnore: [],
-    });
+async function queryColumnValues(pool, colAlias) {
+  const values = new Set();
+  try {
+    const schemaName = await getActiveSchema(pool);
+    if (!schemaName) return [];
+    await Promise.all(
+      Object.values(tableConfig).map(async (config) => {
+        const colConfig = config.columns.find((col) => col.alias === colAlias);
+        if (!colConfig) return;
+        const materializedView = config.materializedViews.find((mv) =>
+          mv.columns.some((col) => col.name === colConfig.name),
+        );
+        const res = await pool.query(
+          `SELECT DISTINCT "${colConfig.name}" FROM "${schemaName}"."${
+            materializedView?.name ?? config.tableName
+          }" WHERE "${colConfig.name}" IS NOT NULL`,
+        );
+        res.rows.forEach((row) => {
+          values.add(row[colConfig.name]);
+        });
+      }),
+    );
+  } catch (err) {
+    log.warn(`Error querying values for column "${colAlias}"! ${err}`);
   }
-
-  log.info('Start copying "new" to "latest"');
-  await copyDirectory({
-    contentType: 'application/gzip',
-    source: 'national-downloads/new',
-    destination: `national-downloads/latest`,
-  });
-  log.info('Finished copying "new" to "latest"');
+  return Array.from(values);
 }
 
 export async function readS3File({ bucketInfo, path }) {

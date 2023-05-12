@@ -50,6 +50,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'actions_assessments',
@@ -61,7 +62,9 @@ export const tableConfig = {
           { name: 'organizationtype' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'actions_actions',
@@ -75,6 +78,10 @@ export const tableConfig = {
           { name: 'region' },
           { name: 'state' },
         ],
+      },
+      {
+        name: 'actions_parameter',
+        columns: [{ name: 'parameter' }],
       },
     ],
   },
@@ -267,6 +274,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'assessments_assessments',
@@ -278,7 +286,9 @@ export const tableConfig = {
           { name: 'organizationtype' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'assessments_alternatelistingidentifier',
@@ -318,16 +328,31 @@ export const tableConfig = {
         columns: [{ name: 'parameterircategory', type: 'numeric' }],
       },
       {
+        name: 'assessments_parametername',
+        columns: [{ name: 'parametername' }, { name: 'parametergroup' }],
+      },
+      {
         name: 'assessments_parameterstateircategory',
         columns: [{ name: 'parameterstateircategory', type: 'numeric' }],
       },
       {
         name: 'assessments_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
       {
         name: 'assessments_usegroup',
-        columns: [{ name: 'usegroup' }],
+        columns: [
+          { name: 'usegroup' },
+          { name: 'usename' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'state' },
+        ],
       },
       {
         name: 'assessments_useircategory',
@@ -343,7 +368,7 @@ export const tableConfig = {
     tableName: 'assessment_units',
     idColumn: 'objectid',
     columns: [
-      { name: 'objectid', alias: 'objectid', skipIndex: true },
+      { name: 'objectid', alias: 'objectId', skipIndex: true },
       {
         name: 'assessmentunitid',
         alias: 'assessmentUnitId',
@@ -392,6 +417,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'assessmentunits_assessments',
@@ -402,15 +428,22 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'assessmentunits_locationtext',
-        columns: [{ name: 'locationtext' }],
+        columns: [{ name: 'locationtypecode' }, { name: 'locationtext' }],
       },
       {
         name: 'assessmentunits_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
     ],
   },
@@ -478,6 +511,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'assessmentunitsmonitoringlocations_assessments',
@@ -488,7 +522,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'assessmentunitsmonitoringlocations_locationtext',
@@ -499,7 +535,12 @@ export const tableConfig = {
       },
       {
         name: 'assessmentunitsmonitoringlocations_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
     ],
   },
@@ -542,6 +583,7 @@ export const tableConfig = {
       },
       { name: 'state', alias: 'state' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'catchmentcorrespondence_assessments',
@@ -552,7 +594,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'catchmentcorrespondence_catchmentnhdplusid',
@@ -560,7 +604,12 @@ export const tableConfig = {
       },
       {
         name: 'catchmentcorrespondence_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
     ],
   },
@@ -618,6 +667,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'sources_assessments',
@@ -628,7 +678,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'sources_causename',
@@ -644,7 +696,12 @@ export const tableConfig = {
       },
       {
         name: 'sources_reportingcycle',
-        columns: [{ name: 'reportingcycle', type: 'numeric' }],
+        columns: [
+          { name: 'organizationid' },
+          { name: 'region' },
+          { name: 'reportingcycle', type: 'numeric' },
+          { name: 'state' },
+        ],
       },
     ],
   },
@@ -750,6 +807,7 @@ export const tableConfig = {
       { name: 'watersizeunits', alias: 'waterSizeUnits', skipIndex: true },
       { name: 'watertype', alias: 'waterType' },
     ],
+    materializedViewColumns: [{ name: 'statename', alias: 'stateName' }],
     materializedViews: [
       {
         name: 'tmdl_assessments',
@@ -760,7 +818,9 @@ export const tableConfig = {
           { name: 'organizationname' },
           { name: 'region' },
           { name: 'state' },
+          { name: 'statename' },
         ],
+        joins: [{ table: 'states', joinKey: ['state', 'statecode'] }],
       },
       {
         name: 'tmdl_actions',
@@ -768,6 +828,9 @@ export const tableConfig = {
           { name: 'actionid' },
           { name: 'actionname' },
           { name: 'actionagency' },
+          { name: 'organizationid' },
+          { name: 'organizationname' },
+          { name: 'state' },
         ],
       },
       {

@@ -5,6 +5,9 @@ describe('Data Profile Assessment Units', () => {
     cy.findByRole('button', { name: 'Advanced API Queries' }).click();
   });
 
+  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
+  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"locationTypeCode\",\"locationText\",\"useClassName\",\"assessmentUnitId\",\"assessmentUnitName\",\"assessmentUnitStatus\",\"reportingCycle\",\"cycleId\",\"locationDescription\",\"sizeSource\",\"sourceScale\",\"waterSize\",\"waterSizeUnits\"]';
+
   const location = window.location;
   const origin =
     location.hostname === 'localhost'
@@ -12,24 +15,27 @@ describe('Data Profile Assessment Units', () => {
       : window.location.origin;
 
   it('Verify copy box text flavor 1', () => {
+    const queryValue = 'assessmentUnitStatus=A';
+
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits#`,
+      `${origin}/attains/assessmentUnits#${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/assessmentUnits?format=csv`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{},"options":{"format":"csv"}}',
-      )} ${origin}/attains/data/assessmentUnits`,
+        `{"filters":{"assessmentUnitStatus":["A"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
   it('Verify copy box text flavor 2', () => {
     //Assessment Unit State
+    cy.findByRole('checkbox', { name: 'Active' }).click({ force: true });
     cy.findByRole('checkbox', { name: 'Retired' }).click({ force: true });
 
     //Location Text
@@ -47,22 +53,23 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/assessmentUnits?${queryValue}&format=csv`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2"],"assessmentUnitStatus":["R"],"locationText":["Buffalo County"]},"options":{"format":"csv"}}',
-      )} ${origin}/attains/data/assessmentUnits`,
+        `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2"],"assessmentUnitStatus":["R"],"locationText":["Buffalo County"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
   it('Verify copy box text flavor 3', () => {
     //Assessment Unit State
+    cy.findByRole('checkbox', { name: 'Active' }).click({ force: true });
     cy.findByRole('checkbox', { name: 'Retired' }).click({ force: true });
 
-    //Organization Name
-    cy.selectOption('input-organizationName', 'wisconsin');
+    //Organization ID
+    cy.selectOption('input-organizationId', 'wisconsin');
 
     //Water Type
     cy.selectOption('input-waterType', 'ocean');
@@ -71,7 +78,7 @@ describe('Data Profile Assessment Units', () => {
     cy.findByText('Tab-separated (TSV)').click();
 
     const queryValue =
-      'assessmentUnitStatus=R&organizationName=Wisconsin&waterType=OCEAN';
+      'assessmentUnitStatus=R&organizationId=WIDNR&waterType=OCEAN';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -79,23 +86,24 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/assessmentUnits?${queryValue}&format=tsv`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitStatus":["R"],"organizationName":["Wisconsin"],"waterType":["OCEAN"]},"options":{"format":"tsv"}}',
-      )} ${origin}/attains/data/assessmentUnits`,
+        `{"filters":{"assessmentUnitStatus":["R"],"organizationId":["WIDNR"],"waterType":["OCEAN"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
   it('Verify copy box text flavor 4', () => {
     //Assessment Unit State
+    cy.findByRole('checkbox', { name: 'Active' }).click({ force: true });
     cy.findByRole('checkbox', { name: 'Historical' }).click({ force: true });
     cy.findByRole('checkbox', { name: 'Active' }).click({ force: true });
 
-    //Organization Name
-    cy.selectOption('input-organizationName', 'montana');
+    //Organization Id
+    cy.selectOption('input-organizationId', 'montana');
 
     //Use Class Name
     cy.selectOption('input-useClassName', 'a-1');
@@ -107,7 +115,7 @@ describe('Data Profile Assessment Units', () => {
     cy.findByText('Microsoft Excel (XLSX)').click();
 
     const queryValue =
-      'assessmentUnitStatus=H&assessmentUnitStatus=A&organizationName=Montana&useClassName=A-1&waterType=LAKE/RESERVOIR/POND';
+      'assessmentUnitStatus=H&assessmentUnitStatus=A&organizationId=MTDEQ&useClassName=A-1&waterType=LAKE/RESERVOIR/POND';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -115,42 +123,37 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/assessmentUnits?${queryValue}&format=xlsx`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitStatus":["H","A"],"organizationName":["Montana"],"useClassName":["A-1"],"waterType":["LAKE/RESERVOIR/POND"]},"options":{"format":"xlsx"}}',
-      )} ${origin}/attains/data/assessmentUnits`,
+        `{"filters":{"assessmentUnitStatus":["H","A"],"organizationId":["MTDEQ"],"useClassName":["A-1"],"waterType":["LAKE/RESERVOIR/POND"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
   it('Verify copy box text flavor 5', () => {
     //Assessment Unit State
-    cy.findByRole('checkbox', { name: 'Active' }).click({ force: true });
     cy.findByRole('checkbox', { name: 'Retired' }).click({ force: true });
     cy.findByRole('checkbox', { name: 'Historical' }).click({ force: true });
 
     //Assessment Unit ID
     cy.selectOption('input-assessmentUnitId', 'AL-Gulf-of-Mexico-2');
-
-    //Assessment Unit Name
-    cy.selectOption('input-assessmentUnitName', 'archibald lake');
+    cy.selectOption('input-assessmentUnitId', 'archibald lake');
 
     //Location Text
     cy.selectOption('input-locationText', 'green county');
 
     //Organization ID
     cy.selectOption('input-organizationId', 'okdeq');
-
-    //Organization Name
-    cy.selectOption('input-organizationName', 'tennessee');
-
-    //Region
-    cy.selectOption('input-region', '05');
+    cy.selectOption('input-organizationId', 'tennessee');
 
     //State
     cy.selectOption('input-state', 'colorado');
+
+    //Region
+    cy.selectOption('input-region', '05');
 
     //Use Class Name
     cy.selectOption('input-useClassName', 'se3');
@@ -162,7 +165,7 @@ describe('Data Profile Assessment Units', () => {
     cy.findByText('Microsoft Excel (XLSX)').click();
 
     const queryValue =
-      'assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitName=Archibald%20Lake&assessmentUnitStatus=A&assessmentUnitStatus=R&assessmentUnitStatus=H&locationText=Green%20County&organizationId=OKDEQ&organizationName=Tennessee&region=05&state=CO&useClassName=SE3&waterType=FLOWAGE';
+      'assessmentUnitId=AL-Gulf-of-Mexico-2&assessmentUnitId=WI10000917&assessmentUnitStatus=A&assessmentUnitStatus=R&assessmentUnitStatus=H&locationText=Green%20County&organizationId=OKDEQ&organizationId=TDECWR&region=05&state=CO&useClassName=SE3&waterType=FLOWAGE';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -170,13 +173,13 @@ describe('Data Profile Assessment Units', () => {
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/attains/data/assessmentUnits?${queryValue}&format=xlsx`,
+      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        '{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2"],"assessmentUnitName":["Archibald Lake"],"assessmentUnitStatus":["A","R","H"],"locationText":["Green County"],"organizationId":["OKDEQ"],"organizationName":["Tennessee"],"region":["05"],"state":["CO"],"useClassName":["SE3"],"waterType":["FLOWAGE"]},"options":{"format":"xlsx"}}',
-      )} ${origin}/attains/data/assessmentUnits`,
+        `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2","WI10000917"],"assessmentUnitStatus":["A","R","H"],"locationText":["Green County"],"organizationId":["OKDEQ","TDECWR"],"region":["05"],"state":["CO"],"useClassName":["SE3"],"waterType":["FLOWAGE"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
+      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 });

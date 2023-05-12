@@ -1,7 +1,7 @@
 import { uniqueId } from 'lodash';
 import { Dialog } from '@reach/dialog';
 import { useState } from 'react';
-import { ReactComponent as Close } from 'uswds/img/usa-icons/close.svg';
+import { ReactComponent as Close } from '@uswds/uswds/img/usa-icons/close.svg';
 // styles
 import '@reach/dialog/styles.css';
 // types
@@ -62,10 +62,10 @@ export function ConfirmationModalFooter({
   return (
     <div className="usa-modal__footer">
       <ul className="flex-justify-center usa-button-group">
-        <li className="usa-button-group__item">
+        <li className="usa-button-group__item mobile-lg:margin-right-5 mobile-lg:margin-y-auto">
           <Button children="Cancel" onClick={onClose} />
         </li>
-        <li className="usa-button-group__item">
+        <li className="usa-button-group__item mobile-lg:margin-y-auto">
           <Button
             children={continueText}
             onClick={onContinue}

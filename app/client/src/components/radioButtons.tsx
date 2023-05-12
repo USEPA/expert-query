@@ -29,7 +29,7 @@ export function RadioButtons({
           <div
             key={option.value.toString()}
             className="usa-radio"
-            style={{ background: 'inherit' }}
+            style={{ background: 'inherit', width: 'fit-content' }}
           >
             <input
               className={`usa-radio__input ${tile && 'usa-radio__input--tile'}`}

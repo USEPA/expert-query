@@ -6,6 +6,7 @@ import {
   useReducer,
 } from 'react';
 import type { DomainOptions } from 'types';
+import type { Profile } from '../config/profiles';
 
 type Props = {
   children: ReactNode;
@@ -14,11 +15,8 @@ type Props = {
 export type Content = {
   services: {
     eqDataApi: string;
-    googleAnalyticsMapping: Array<{
-      urlLookup: string;
-      wildcardUrl: string;
-      name: string;
-    }>;
+    eqApiKey: string;
+    eqApiSignupKey: string;
   };
   alertsConfig: {
     [page: string]: {
@@ -32,9 +30,17 @@ export type Content = {
     definition: string;
     definitionHtml: string;
   }>;
+  metadata: Partial<{
+    [P in Profile]: {
+      url: string;
+      size: number | null;
+      numRows: number;
+      timestamp: string;
+    };
+  }>;
   parameters: {
     debounceMilliseconds: number;
-    maxQuerySize: number;
+    selectOptionsPageSize: number;
   };
 };
 
