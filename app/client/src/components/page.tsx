@@ -21,9 +21,9 @@ export function Page({ children }: PageProps) {
       <div className="l-constrain">
         <div className="l-page__header">
           <div className="l-page__header-first usa-logo margin-top-0">
-            <h1 className="web-area-title usa-logo__text">
+            <div className="web-area-title usa-logo__text">
               <NavLink to="/">Expert Query</NavLink>
-            </h1>
+            </div>
           </div>
           <div className="l-page__header-last grid-row">
             <a

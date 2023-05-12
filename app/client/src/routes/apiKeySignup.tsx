@@ -40,7 +40,7 @@ export function ApiKeySignup() {
 
   return (
     <div>
-      <h2>API Key Signup</h2>
+      <h1>API Key Signup</h1>
       <p>
         Sign up for an application programming interface (API) key to access and
         use <b>Expert Query</b>'s web services, then explore the web service{' '}

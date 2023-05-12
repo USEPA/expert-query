@@ -5,6 +5,7 @@ import {
   useNavigate,
   useOutletContext,
   useParams,
+  useSearchParams,
 } from 'react-router-dom';
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
@@ -38,7 +39,7 @@ import { isAbort, useAbort } from 'utils';
 // types
 import type { Profile } from 'config/profiles';
 import type { ChangeEvent } from 'react';
-import type { DomainOptions, Option, Primitive, Status } from 'types';
+import type { DomainOptions, Option, Status } from 'types';
 
 /*
 ## Components
@@ -115,13 +116,13 @@ export function Home() {
     return (
       <>
         <div>
-          <h2>Query ATTAINS Data</h2>
+          <h1>Query ATTAINS Data</h1>
           <hr />
           <ParameterErrorAlert parameters={queryParamErrors} />
           <Intro />
           {staticOptions && (
             <>
-              <h3>Data Profile</h3>
+              <h2>Data Profile</h2>
               <Select
                 id="select-data-profile"
                 classNames={{
@@ -300,14 +301,14 @@ export function QueryBuilder() {
               API Documentation
             </a>{' '}
             page to learn more.
-            <h4>Current Query</h4>
+            <h3>Current Query</h3>
             <CopyBox
               testId="current-query-copy-box-container"
               text={`${window.location.origin}${
                 window.location.pathname
-              }#${buildUrlQueryString(queryParams.filters)}`}
+              }?${buildUrlQueryString(queryParams.filters)}`}
             />
-            <h4>{profiles[profile].label} API Query</h4>
+            <h3>{profiles[profile].label} API Query</h3>
             <CopyBox
               testId="api-query-copy-box-container"
               lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
@@ -320,7 +321,7 @@ export function QueryBuilder() {
                 queryParams.columns,
               )}&api_key=<YOUR_API_KEY>`}
             />
-            <h4>cURL</h4>
+            <h3>cURL</h3>
             <CopyBox
               testId="curl-copy-box-container"
               text={`curl -X POST --json "${JSON.stringify(
@@ -510,7 +511,7 @@ function FilterGroups(props: FilterGroupsProps) {
           key={group.key}
         >
           <hr />
-          <h4 className="text-primary">{filterGroupLabels[group.key]}</h4>
+          <h3 className="text-primary">{filterGroupLabels[group.key]}</h3>
           <FilterFields
             {...props}
             fields={group.fields as Array<(typeof filterFieldsConfig)[number]>}
@@ -975,7 +976,7 @@ function useProfile() {
   const handleProfileChange = useCallback(
     (ev: Option | null) => {
       const route = ev
-        ? `/attains/${ev.value}${window.location.hash}`
+        ? `/attains/${ev.value}${window.location.search}`
         : '/attains';
       navigate(route, { replace: true });
     },
@@ -1038,6 +1039,8 @@ function useQueryParams({
     options: {},
   });
 
+  const [_searchParams, setSearchParams] = useSearchParams();
+
   // Update URL when inputs change
   useEffect(() => {
     if (!profile || !parametersLoaded) return;
@@ -1063,7 +1066,7 @@ function useQueryParams({
     );
 
     if (Object.keys(newFilterQueryParams).length) {
-      window.location.hash = buildUrlQueryString(newFilterQueryParams);
+      setSearchParams(newFilterQueryParams, { replace: true });
     } else removeHash();
 
     setParameters({
@@ -1071,7 +1074,7 @@ function useQueryParams({
       options: { format },
       columns: Array.from(profiles[profile].columns),
     });
-  }, [filterState, format, parametersLoaded, profile]);
+  }, [filterState, format, parametersLoaded, profile, setSearchParams]);
 
   return { queryParams: parameters, queryParamErrors: parameterErrors };
 }
@@ -1167,12 +1170,12 @@ function buildUrlQueryString(
 async function checkColumnValue(
   apiKey: string,
   apiUrl: string,
-  value: Primitive,
+  value: string,
   fieldName: string,
   profile: string,
 ) {
   const url = `${apiUrl}/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
-  const res = await getData<Primitive[]>({ url, apiKey });
+  const res = await getData<string[]>({ url, apiKey });
   if (res.length) return true;
   return false;
 }
@@ -1577,7 +1580,7 @@ function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
 }
 
 // Type narrowing
-function isOption(maybeOption: Option | Primitive): maybeOption is Option {
+function isOption(maybeOption: Option | string): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
@@ -1671,7 +1674,7 @@ async function matchOptions(
   profile: string | null = null,
   multiple = false,
 ) {
-  const valuesArray: Primitive[] = [];
+  const valuesArray: string[] = [];
   if (Array.isArray(values)) valuesArray.push(...values);
   else if (values !== null) valuesArray.push(values);
 
@@ -1712,36 +1715,35 @@ function matchYear(values: InputValue) {
 function parseInitialParams(
   profile: Profile,
 ): [FilterQueryData, ParameterErrors] {
-  const uniqueParams: { [field: string]: Primitive | Set<Primitive> } = {};
+  const uniqueParams: { [field: string]: string | Set<string> } = {};
   const paramErrors: ParameterErrors = {
     duplicate: new Set(),
     invalid: new Set(),
   };
 
-  const initialParamsList = window.location.hash.replace('#', '').split('&');
-  initialParamsList.forEach((param) => {
-    const parsedParam = param.split('=');
-    // Disregard invalid or empty parameters
-    if (parsedParam.length !== 2 || parsedParam[1] === '') return;
+  Array.from(new URLSearchParams(window.location.search)).forEach(
+    ([field, uriValue]) => {
+      // Disregard empty parameters
+      if (!uriValue) return;
 
-    const [field, uriValue] = parsedParam;
-    const newValue = decodeURI(uriValue);
+      const newValue = decodeURI(uriValue);
 
-    if (field in uniqueParams) {
-      if (!isMultiOptionField(field)) return paramErrors.duplicate.add(field);
-      // Multiple values, add to an array
-      const value = uniqueParams[field];
-      if (value instanceof Set) value.add(newValue);
-      else uniqueParams[field] = new Set([value, newValue]);
-    } else {
-      if (!isProfileField(field, profile)) {
-        paramErrors.invalid.add(field);
-        return;
+      if (field in uniqueParams) {
+        if (!isMultiOptionField(field)) return paramErrors.duplicate.add(field);
+        // Multiple values, add to an array
+        const value = uniqueParams[field];
+        if (value instanceof Set) value.add(newValue);
+        else uniqueParams[field] = new Set([value, newValue]);
+      } else {
+        if (!isProfileField(field, profile)) {
+          paramErrors.invalid.add(field);
+          return;
+        }
+        // Single value
+        uniqueParams[field] = newValue;
       }
-      // Single value
-      uniqueParams[field] = newValue;
-    }
-  });
+    },
+  );
 
   const params = Object.entries(uniqueParams).reduce(
     (current, [param, value]) => {
@@ -1884,7 +1886,7 @@ type FilterGroupsProps = {
 };
 
 type FilterQueryData = Partial<{
-  [F in FilterField]: Primitive | Primitive[];
+  [F in FilterField]: string | string[];
 }>;
 
 type HomeContext = {
@@ -1901,7 +1903,7 @@ type HomeContext = {
   staticOptions: StaticOptions;
 };
 
-type InputValue = Primitive | Primitive[] | null;
+type InputValue = string | string[] | null;
 
 type MultiOptionField = (typeof multiOptionFields)[number];
 
@@ -2012,6 +2014,6 @@ type SourceSelectFilterProps<
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
-type UrlQueryParam = [string, Primitive];
+type UrlQueryParam = [string, string];
 
 type YearField = (typeof yearFields)[number];
