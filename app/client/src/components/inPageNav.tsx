@@ -4,12 +4,10 @@ import {
   useEffect,
   useContext,
   useMemo,
-  useReducer,
-  useRef,
   useState,
 } from 'react';
 // types
-import type { Dispatch, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 /*
 ## Utils
@@ -41,47 +39,73 @@ function getHeadingId(heading: HTMLHeadingElement) {
   return id;
 }
 
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case 'REGISTER_NAV_ITEM': {
-      return {
-        ...state,
-        items: [...state.items, action.payload],
-      };
-    }
-    case 'SET_ACTIVE_ITEM': {
-      return {
-        ...state,
-        active: action.payload,
-      };
-    }
-    case 'DEREGISTER_NAV_ITEM': {
-      return {
-        active: state.active === action.payload ? '' : state.active,
-        items: state.items.reduce<State['items']>((current, next) => {
-          if (next.id === action.payload) {
-            return current;
-          } else {
-            return [...current, next];
-          }
-        }, []),
-      };
-    }
-    default:
-      throw new Error(`Unhandled action type: ${action}`);
-  }
-}
-
 /*
 ## Contexts
 */
 
 const StateContext = createContext<State | undefined>(undefined);
-const DispatchContext = createContext<Dispatch<Action> | undefined>(undefined);
+const DispatchContext = createContext<ObserverDispatch | undefined>(undefined);
 
 function InPageNavProvider({ children }: { children: ReactNode }) {
-  const initialState: State = { active: '', items: [] };
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [active, setActive] = useState('');
+  const [navItems, setNavItems] = useState<Array<InPageNavItem>>([]);
+
+  const state: State = useMemo(() => {
+    return {
+      active,
+      navItems,
+    };
+  }, [active, navItems]);
+
+  const observer = useMemo(() => {
+    const options = {
+      rootMargin: '0% 0% 0% 0%',
+      threshold: [0, 0.75, 1],
+    };
+    return new IntersectionObserver((entries: IntersectionObserverEntry[]) => {
+      for (const entry of entries) {
+        if (
+          entry.isIntersecting &&
+          options.threshold.some((t) => entry.intersectionRatio >= t)
+        ) {
+          setActive(entry.target.id);
+          return;
+        }
+      }
+    }, options);
+  }, []);
+
+  const observe = useCallback(
+    (item: InPageNavItem) => {
+      observer.observe(item.node);
+      setNavItems((prev) => [...prev, item]);
+    },
+    [observer],
+  );
+
+  const unobserve = useCallback((itemId: string) => {
+    setActive((prev) => (prev === itemId ? '' : prev));
+    setNavItems((prev) => {
+      return prev.reduce<Array<InPageNavItem>>((current, next) => {
+        if (next.id === itemId) {
+          return current;
+        } else {
+          return [...current, next];
+        }
+      }, []);
+    });
+  }, []);
+
+  const dispatch: ObserverDispatch = {
+    observe,
+    unobserve,
+  };
+
+  useEffect(() => {
+    return function cleanup() {
+      observer.disconnect();
+    };
+  }, [observer]);
 
   return (
     <StateContext.Provider value={state}>
@@ -129,38 +153,7 @@ export function InPageNav({ children }: { children: ReactNode }) {
 }
 
 function InPageNavInner({ children }: { children: ReactNode }) {
-  const dispatch = useInPageNavDispatch();
-
-  const observer = useMemo(() => {
-    return new IntersectionObserver(
-      (entries: IntersectionObserverEntry[]) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting && entry.intersectionRatio >= 1) {
-            dispatch({ type: 'SET_ACTIVE_ITEM', payload: entry.target.id });
-            return;
-          }
-        }
-      },
-      { rootMargin: '10% 0 10% 0' },
-    );
-  }, [dispatch]);
-
-  const { active, items: navItems } = useInPageNavState();
-
-  useEffect(() => {
-    observer.takeRecords().forEach((entry) => {
-      observer.unobserve(entry.target);
-    });
-    navItems.forEach((item) => {
-      observer.observe(item.node);
-    });
-  }, [navItems, observer]);
-
-  useEffect(() => {
-    return function cleanup() {
-      observer.disconnect();
-    };
-  }, [observer]);
+  const { active, navItems } = useInPageNavState();
 
   return <div>{children}</div>;
 }
@@ -170,20 +163,17 @@ function InPageNavList() {
 }
 
 export function NavHeading({ children, id, label, level }: NavHeadingProps) {
-  const dispatch = useInPageNavDispatch();
+  const { observe, unobserve } = useInPageNavDispatch();
 
   const ref = useCallback(
     (node: HTMLHeadingElement | null) => {
       if (!node) {
-        dispatch({ type: 'DEREGISTER_NAV_ITEM', payload: id });
+        unobserve(id);
       } else {
-        dispatch({
-          type: 'REGISTER_NAV_ITEM',
-          payload: { id, label: label ?? children, node },
-        });
+        observe({ id, label: label ?? children, node });
       }
     },
-    [children, dispatch, id, label],
+    [children, id, label, observe, unobserve],
   );
 
   switch (level) {
@@ -230,20 +220,6 @@ export function NavHeading({ children, id, label, level }: NavHeadingProps) {
 ## Types
 */
 
-type Action =
-  | {
-      type: 'REGISTER_NAV_ITEM';
-      payload: InPageNavItem;
-    }
-  | {
-      type: 'SET_ACTIVE_ITEM';
-      payload: string;
-    }
-  | {
-      type: 'DEREGISTER_NAV_ITEM';
-      payload: string;
-    };
-
 type InPageNavItem = {
   id: string;
   label: ReactNode;
@@ -254,10 +230,15 @@ type NavHeadingProps = {
   children: ReactNode;
   id: string;
   label?: ReactNode;
-  level: 2 | 3 | 4 | 5 | 6;
+  level?: 2 | 3 | 4 | 5 | 6;
+};
+
+type ObserverDispatch = {
+  observe: (item: InPageNavItem) => void;
+  unobserve: (itemId: string) => void;
 };
 
 type State = {
   active: string;
-  items: Array<InPageNavItem>;
+  navItems: Array<InPageNavItem>;
 };

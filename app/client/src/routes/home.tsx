@@ -16,6 +16,7 @@ import { Checkbox } from 'components/checkbox';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
 import { InfoTooltip } from 'components/infoTooltip';
+import { InPageNav, NavHeading } from 'components/inPageNav';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
@@ -121,8 +122,8 @@ export function Home() {
           <ParameterErrorAlert parameters={queryParamErrors} />
           <Intro />
           {staticOptions && (
-            <>
-              <h2>Data Profile</h2>
+            <InPageNav>
+              <NavHeading id="select-data-profile">Data Profile</NavHeading>
               <Select
                 id="select-data-profile"
                 classNames={{
@@ -166,7 +167,7 @@ export function Home() {
                   />
                 </>
               )}
-            </>
+            </InPageNav>
           )}
         </div>
       </>
@@ -301,14 +302,18 @@ export function QueryBuilder() {
               API Documentation
             </a>{' '}
             page to learn more.
-            <h3>Current Query</h3>
+            <NavHeading id="current-query" level={3}>
+              Current Query
+            </NavHeading>
             <CopyBox
               testId="current-query-copy-box-container"
               text={`${window.location.origin}${
                 window.location.pathname
               }?${buildUrlQueryString(queryParams.filters)}`}
             />
-            <h3>{profiles[profile].label} API Query</h3>
+            <NavHeading id="webservice-query" level={3}>
+              {profiles[profile].label} API Query
+            </NavHeading>
             <CopyBox
               testId="api-query-copy-box-container"
               lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
