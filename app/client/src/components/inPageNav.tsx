@@ -135,11 +135,7 @@ function InPageNavLayoutInner({ children }: { children: ReactNode }) {
   }, [navItems]);
 
   return (
-    <div
-      className={`l-constrain ${
-        navItems.length > 0 ? 'maxw-desktop-lg' : ''
-      } usa-in-page-nav-container`}
-    >
+    <div className="usa-in-page-nav-container">
       {sortedNavItems.length > 0 && (
         <aside className="usa-in-page-nav">
           <nav className="usa-in-page-nav__nav">
@@ -168,7 +164,7 @@ function InPageNavLayoutInner({ children }: { children: ReactNode }) {
           </nav>
         </aside>
       )}
-      <div className="width-full">{children}</div>
+      <div className="flex-fill">{children}</div>
     </div>
   );
 }

@@ -129,7 +129,7 @@ export function Home() {
               }
             >
               <StepIndicator currentStep={1} totalSteps={3}>
-                Data Profile
+                Pick a Data Profile
               </StepIndicator>
             </InPageNavAnchor>
             <Select
@@ -144,6 +144,11 @@ export function Home() {
               options={staticOptions.dataProfile}
               placeholder="Select a data profile..."
               styles={{
+                container: (baseStyles) => ({
+                  ...baseStyles,
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr)',
+                }),
                 menu: (baseStyles) => ({
                   ...baseStyles,
                   maxHeight: '75vh',
@@ -1706,7 +1711,7 @@ function matchYear(values: InputValue) {
   return matchDate(values, true);
 }
 
-// Parse parameters provided in the URL hash into a JSON object
+// Parse parameters provided in the URL search into a JSON object
 function parseInitialParams(
   profile: Profile,
 ): [FilterQueryData, ParameterErrors] {

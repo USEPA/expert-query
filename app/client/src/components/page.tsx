@@ -55,11 +55,11 @@ export function Page({ children }: PageProps) {
             </a>
           </div>
         </div>
-      </div>
 
-      <InPageNavLayout>
-        <article className="article">{children}</article>
-      </InPageNavLayout>
+        <InPageNavLayout>
+          <article className="article">{children}</article>
+        </InPageNavLayout>
+      </div>
 
       <div className="l-page__footer">
         <div className="l-constrain">
