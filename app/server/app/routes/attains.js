@@ -520,7 +520,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
       });
     }
 
-    const results = await knex
+    const query = knex
       .withSchema(req.activeSchema)
       .select(groupByColumns)
       .count()
@@ -528,6 +528,11 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
       .from(profile.tableName)
       .groupBy(groupByColumns)
       .orderBy(orderByArray);
+
+    if (profile.tableName === 'catchment_correspondence')
+      query.whereNotNull('catchmentnhdplusid');
+
+    const results = await query;
 
     res.status(200).json(results);
   } catch (error) {
@@ -878,13 +883,6 @@ export default function (app, basePath) {
     router.get(`/${profileName}/count`, cors(corsOptions), function (req, res) {
       executeQueryCountOnly(profile, req, res);
     });
-    router.get(
-      `/${profileName}/countPerOrgCycle`,
-      cors(corsOptions),
-      async function (req, res) {
-        await executeQueryCountPerOrgCycle(profile, req, res);
-      },
-    );
 
     // create post requests
     router.post(
@@ -899,13 +897,6 @@ export default function (app, basePath) {
       cors(corsOptions),
       function (req, res) {
         executeQueryCountOnly(profile, req, res);
-      },
-    );
-    router.post(
-      `/${profileName}/countPerOrgCycle`,
-      cors(corsOptions),
-      async function (req, res) {
-        await executeQueryCountPerOrgCycle(profile, req, res);
       },
     );
 
@@ -926,6 +917,22 @@ export default function (app, basePath) {
       cors(corsOptionsDelegate),
       function (req, res) {
         executeValuesQuery(req, res);
+      },
+    );
+
+    // get bean counts
+    router.get(
+      `/${profileName}/countPerOrgCycle`,
+      cors(corsOptionsDelegate),
+      async function (req, res) {
+        await executeQueryCountPerOrgCycle(profile, req, res);
+      },
+    );
+    router.post(
+      `/${profileName}/countPerOrgCycle`,
+      cors(corsOptionsDelegate),
+      async function (req, res) {
+        await executeQueryCountPerOrgCycle(profile, req, res);
       },
     );
 
