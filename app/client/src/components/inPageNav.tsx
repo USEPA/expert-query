@@ -10,36 +10,6 @@ import {
 import type { ReactNode } from 'react';
 
 /*
-## Utils
-*/
-
-function getHeadingId(heading: HTMLHeadingElement) {
-  const baseId = heading.textContent
-    ?.toLowerCase()
-    // Replace non-alphanumeric characters with dashes
-    .replace(/[^a-z\d]/g, '-')
-    // Replace a sequence of two or more dashes with a single dash
-    .replace(/-{2,}/g, '-')
-    // Trim leading or trailing dash (there should only ever be one)
-    .replace(/^-|-$/g, '');
-
-  let id;
-  let suffix = 0;
-  do {
-    id = baseId;
-
-    // To avoid conflicts with existing IDs on the page, loop and append an
-    // incremented suffix until a unique ID is found.
-    suffix += 1;
-    if (suffix > 1) {
-      id += `-${suffix}`;
-    }
-  } while (document.getElementById(id ?? ''));
-
-  return id;
-}
-
-/*
 ## Contexts
 */
 
@@ -59,8 +29,8 @@ function InPageNavProvider({ children }: { children: ReactNode }) {
 
   const observer = useMemo(() => {
     const options = {
-      rootMargin: '0% 0% 0% 0%',
-      threshold: [0, 0.75, 1],
+      rootMargin: '48px 0px -80% 0px',
+      threshold: [1],
     };
     return new IntersectionObserver((entries: IntersectionObserverEntry[]) => {
       for (const entry of entries) {
@@ -144,76 +114,103 @@ function useInPageNavDispatch() {
 ## Components
 */
 
-export function InPageNav({ children }: { children: ReactNode }) {
+export function InPageNavLayout({ children }: { children: ReactNode }) {
   return (
     <InPageNavProvider>
-      <InPageNavInner>{children}</InPageNavInner>
+      <InPageNavLayoutInner>{children}</InPageNavLayoutInner>
     </InPageNavProvider>
   );
 }
 
-function InPageNavInner({ children }: { children: ReactNode }) {
+function InPageNavLayoutInner({ children }: { children: ReactNode }) {
   const { active, navItems } = useInPageNavState();
 
-  return <div>{children}</div>;
+  const sortedNavItems = useMemo(() => {
+    const sorted: InPageNavItem[] = [];
+    document.querySelectorAll('.in-page-nav-anchor').forEach((node) => {
+      const navItem = navItems.find((item) => item.id === node.id);
+      if (navItem) sorted.push(navItem);
+    });
+    return sorted;
+  }, [navItems]);
+
+  return (
+    <div
+      className={`l-constrain ${
+        navItems.length > 0 ? 'maxw-desktop-lg' : ''
+      } usa-in-page-nav-container`}
+    >
+      {sortedNavItems.length > 0 && (
+        <aside className="usa-in-page-nav">
+          <nav className="usa-in-page-nav__nav">
+            <h4 className="usa-in-page-nav__heading" tabIndex={0}>
+              On this page
+            </h4>
+            <ul className="usa-in-page-nav__list">
+              {sortedNavItems.map((item) => (
+                <li
+                  className={`usa-in-page-nav__item ${
+                    item.subItem ? 'usa-in-page-nav__item--sub-item' : ''
+                  }`}
+                  key={item.id}
+                >
+                  <a
+                    href={`#${item.id}`}
+                    className={`usa-in-page-nav__link ${
+                      active === item.id ? 'usa-current' : ''
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+      )}
+      <div className="width-full">{children}</div>
+    </div>
+  );
 }
 
-function InPageNavList() {
-  return <></>;
-}
-
-export function NavHeading({ children, id, label, level }: NavHeadingProps) {
+export function InPageNavAnchor({
+  children,
+  id,
+  label,
+  subItem = false,
+}: InPageNavAnchorProps) {
   const { observe, unobserve } = useInPageNavDispatch();
 
   const ref = useCallback(
-    (node: HTMLHeadingElement | null) => {
+    (node: HTMLDivElement | null) => {
       if (!node) {
         unobserve(id);
       } else {
-        observe({ id, label: label ?? children, node });
+        observe({ id, label, node, subItem });
       }
     },
-    [children, id, label, observe, unobserve],
+    [id, label, observe, unobserve, subItem],
   );
 
-  switch (level) {
-    case 2:
-      return (
-        <h2 id={id} ref={ref}>
-          {children}
-        </h2>
-      );
-    case 3:
-      return (
-        <h3 id={id} ref={ref}>
-          {children}
-        </h3>
-      );
-    case 4:
-      return (
-        <h4 id={id} ref={ref}>
-          {children}
-        </h4>
-      );
-    case 5:
-      return (
-        <h5 id={id} ref={ref}>
-          {children}
-        </h5>
-      );
-    case 6:
-      return (
-        <h6 id={id} ref={ref}>
-          {children}
-        </h6>
-      );
-    default:
-      return (
-        <h2 id={id} ref={ref}>
-          {children}
-        </h2>
-      );
-  }
+  return (
+    <div className="in-page-nav-anchor" id={id} ref={ref}>
+      {children}
+    </div>
+  );
+}
+
+export function NumberedInPageNavLabel({
+  children,
+  number,
+}: NumberedInPageNavLabelProps) {
+  return (
+    <>
+      <span className="bg-primary display-inline-block height-205 line-height-sans-3 margin-right-05 radius-pill text-center text-white width-205">
+        {number}
+      </span>{' '}
+      {children}
+    </>
+  );
 }
 
 /*
@@ -223,14 +220,15 @@ export function NavHeading({ children, id, label, level }: NavHeadingProps) {
 type InPageNavItem = {
   id: string;
   label: ReactNode;
-  node: HTMLHeadingElement;
+  node: HTMLDivElement;
+  subItem: boolean;
 };
 
-type NavHeadingProps = {
+type InPageNavAnchorProps = {
   children: ReactNode;
   id: string;
-  label?: ReactNode;
-  level?: 2 | 3 | 4 | 5 | 6;
+  label: ReactNode;
+  subItem?: boolean;
 };
 
 type ObserverDispatch = {
@@ -241,4 +239,9 @@ type ObserverDispatch = {
 type State = {
   active: string;
   navItems: Array<InPageNavItem>;
+};
+
+type NumberedInPageNavLabelProps = {
+  children: ReactNode;
+  number: number;
 };

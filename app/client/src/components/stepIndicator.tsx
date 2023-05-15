@@ -6,8 +6,8 @@ export function StepIndicator({
   totalSteps,
 }: StepIndicatorProps) {
   return (
-    <div className="usa-step-indicator__header margin-bottom-1">
-      <h4 className="usa-step-indicator__heading">
+    <div className="usa-step-indicator__header margin-bottom-2">
+      <h2 className="usa-step-indicator__heading line-height-sans-2">
         <span className="usa-step-indicator__heading-counter">
           <span className="usa-sr-only">Step</span>
           <span className="usa-step-indicator__current-step margin-right-05">
@@ -18,7 +18,7 @@ export function StepIndicator({
           </span>{' '}
         </span>
         <span className="usa-step-indicator__heading-text">{children}</span>
-      </h4>
+      </h2>
     </div>
   );
 }

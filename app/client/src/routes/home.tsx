@@ -10,19 +10,18 @@ import {
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
 // components
-import { Accordion, AccordionItem } from 'components/accordion';
+import { AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
-import { Checkbox } from 'components/checkbox';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
 import { InfoTooltip } from 'components/infoTooltip';
-import { InPageNav, NavHeading } from 'components/inPageNav';
+import { InPageNavAnchor, NumberedInPageNavLabel } from 'components/inPageNav';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
-import { Summary } from 'components/summary';
+import { StepIndicator } from 'components/stepIndicator';
 import { Button } from 'components/button';
 // contexts
 import { useContentState } from 'contexts/content';
@@ -115,62 +114,70 @@ export function Home() {
 
   if (content.status === 'success') {
     return (
-      <>
-        <div>
-          <h1>Query ATTAINS Data</h1>
-          <hr />
-          <ParameterErrorAlert parameters={queryParamErrors} />
-          <Intro />
-          {staticOptions && (
-            <InPageNav>
-              <NavHeading id="select-data-profile">Data Profile</NavHeading>
-              <Select
-                id="select-data-profile"
-                classNames={{
-                  option: () => 'border-bottom border-base-lighter',
-                }}
-                instanceId="instance-select-data-profile"
-                aria-label="Select a data profile"
-                formatOptionLabel={formatProfileOptionLabel}
-                onChange={handleProfileChange}
-                options={staticOptions.dataProfile}
-                placeholder="Select a data profile..."
-                styles={{
-                  menu: (baseStyles) => ({
-                    ...baseStyles,
-                    maxHeight: '75vh',
-                  }),
-                  menuList: (baseStyles) => ({
-                    ...baseStyles,
-                    maxHeight: '75vh',
-                  }),
-                }}
-                value={profileOption}
-              />
+      <div>
+        <h1>Query ATTAINS Data</h1>
+        <hr />
+        <ParameterErrorAlert parameters={queryParamErrors} />
+        {staticOptions && (
+          <>
+            <InPageNavAnchor
+              id="data-profile"
+              label={
+                <NumberedInPageNavLabel number={1}>
+                  Pick a Data Profile
+                </NumberedInPageNavLabel>
+              }
+            >
+              <StepIndicator currentStep={1} totalSteps={3}>
+                Data Profile
+              </StepIndicator>
+            </InPageNavAnchor>
+            <Select
+              id="select-data-profile"
+              classNames={{
+                option: () => 'border-bottom border-base-lighter',
+              }}
+              instanceId="instance-select-data-profile"
+              aria-label="Select a data profile"
+              formatOptionLabel={formatProfileOptionLabel}
+              onChange={handleProfileChange}
+              options={staticOptions.dataProfile}
+              placeholder="Select a data profile..."
+              styles={{
+                menu: (baseStyles) => ({
+                  ...baseStyles,
+                  maxHeight: '75vh',
+                }),
+                menuList: (baseStyles) => ({
+                  ...baseStyles,
+                  maxHeight: '75vh',
+                }),
+              }}
+              value={profileOption}
+            />
 
-              {profile && (
-                <>
-                  <Outlet
-                    context={{
-                      filterHandlers,
-                      filterState,
-                      format,
-                      formatHandler,
-                      profile,
-                      queryParams,
-                      queryUrl: apiUrl,
-                      resetFilters,
-                      sourceHandlers,
-                      sourceState,
-                      staticOptions,
-                    }}
-                  />
-                </>
-              )}
-            </InPageNav>
-          )}
-        </div>
-      </>
+            {profile && (
+              <>
+                <Outlet
+                  context={{
+                    filterHandlers,
+                    filterState,
+                    format,
+                    formatHandler,
+                    profile,
+                    queryParams,
+                    queryUrl: apiUrl,
+                    resetFilters,
+                    sourceHandlers,
+                    sourceState,
+                    staticOptions,
+                  }}
+                />
+              </>
+            )}
+          </>
+        )}
+      </div>
     );
   }
 
@@ -234,63 +241,83 @@ export function QueryBuilder() {
         />
       )}
       {profile && (
-        <Accordion>
-          <AccordionItem heading="Filters" initialExpand>
-            <div className="display-flex width-full flex-justify-center">
-              <Button onClick={openClearConfirmation} color="white">
-                Clear Search
-              </Button>
-            </div>
-            <FilterGroups
-              apiKey={apiKey}
-              apiUrl={apiUrl}
-              filterHandlers={filterHandlers}
-              filterState={filterState}
-              profile={profile}
-              queryParams={queryParams}
-              sourceHandlers={sourceHandlers}
-              sourceState={sourceState}
-              staticOptions={staticOptions}
-            />
-          </AccordionItem>
+        <div>
+          <InPageNavAnchor
+            id="apply-filters"
+            label={
+              <NumberedInPageNavLabel number={2}>
+                Apply Filters
+              </NumberedInPageNavLabel>
+            }
+          >
+            <StepIndicator currentStep={2} totalSteps={3}>
+              Apply Filters
+            </StepIndicator>
+          </InPageNavAnchor>
+          <div className="display-flex width-full flex-justify-center">
+            <Button onClick={openClearConfirmation} color="white">
+              Clear Search
+            </Button>
+          </div>
+          <FilterGroups
+            apiKey={apiKey}
+            apiUrl={apiUrl}
+            filterHandlers={filterHandlers}
+            filterState={filterState}
+            profile={profile}
+            queryParams={queryParams}
+            sourceHandlers={sourceHandlers}
+            sourceState={sourceState}
+            staticOptions={staticOptions}
+          />
 
-          <AccordionItem heading="Download the Data" initialExpand>
-            <RadioButtons
-              legend={
-                <>
-                  <b className="margin-right-05">File Format</b>
-                  <InfoTooltip text="Choose a file format for the result set." />
-                </>
-              }
-              onChange={formatHandler}
-              options={staticOptions.format}
-              selected={format}
-              styles={['margin-bottom-2']}
+          <InPageNavAnchor
+            id="download"
+            label={
+              <NumberedInPageNavLabel number={3}>
+                Download the Data
+              </NumberedInPageNavLabel>
+            }
+          >
+            <StepIndicator currentStep={3} totalSteps={3}>
+              Download the Data
+            </StepIndicator>
+          </InPageNavAnchor>
+          <RadioButtons
+            legend={
+              <>
+                <b className="margin-right-05">File Format</b>
+                <InfoTooltip text="Choose a file format for the result set." />
+              </>
+            }
+            onChange={formatHandler}
+            options={staticOptions.format}
+            selected={format}
+            styles={['margin-bottom-2']}
+          />
+          <button
+            className="display-flex flex-justify-center margin-bottom-1 usa-button"
+            onClick={openDownloadConfirmation}
+            type="button"
+          >
+            <Download
+              aria-hidden="true"
+              className="height-205 margin-right-1 usa-icon width-205"
             />
-            <button
-              className="display-flex flex-justify-center margin-bottom-1 usa-button"
-              onClick={openDownloadConfirmation}
-              type="button"
-            >
-              <Download
-                aria-hidden="true"
-                className="height-205 margin-right-1 usa-icon width-205"
-              />
-              <span className="margin-y-auto">Download</span>
-            </button>
-            {downloadStatus === 'success' && (
-              <Alert type="success">
-                Query executed successfully, please check your downloads folder
-                for the output file.
-              </Alert>
-            )}
-            {downloadStatus === 'failure' && (
-              <Alert type="error">
-                An error occurred while executing the current query, please try
-                again later.
-              </Alert>
-            )}
-          </AccordionItem>
+            <span className="margin-y-auto">Download</span>
+          </button>
+          {downloadStatus === 'success' && (
+            <Alert type="success">
+              Query executed successfully, please check your downloads folder
+              for the output file.
+            </Alert>
+          )}
+          {downloadStatus === 'failure' && (
+            <Alert type="error">
+              An error occurred while executing the current query, please try
+              again later.
+            </Alert>
+          )}
 
           <AccordionItem heading="Advanced Queries">
             Visit our{' '}
@@ -302,18 +329,14 @@ export function QueryBuilder() {
               API Documentation
             </a>{' '}
             page to learn more.
-            <NavHeading id="current-query" level={3}>
-              Current Query
-            </NavHeading>
+            <h3>Current Query</h3>
             <CopyBox
               testId="current-query-copy-box-container"
               text={`${window.location.origin}${
                 window.location.pathname
               }?${buildUrlQueryString(queryParams.filters)}`}
             />
-            <NavHeading id="webservice-query" level={3}>
-              {profiles[profile].label} API Query
-            </NavHeading>
+            <h3>{profiles[profile].label} API Query</h3>
             <CopyBox
               testId="api-query-copy-box-container"
               lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
@@ -336,7 +359,7 @@ export function QueryBuilder() {
               } -H "X-Api-Key: <YOUR_API_KEY>"`}
             />
           </AccordionItem>
-        </Accordion>
+        </div>
       )}
     </>
   );
@@ -510,66 +533,28 @@ function FilterGroups(props: FilterGroupsProps) {
 
   return (
     <>
-      {groupedFields.map((group, i) => (
-        <section
-          className={`margin-top-${i === 0 ? '2' : '6'}`}
-          key={group.key}
-        >
-          <hr />
-          <h3 className="text-primary">{filterGroupLabels[group.key]}</h3>
-          <FilterFields
-            {...props}
-            fields={group.fields as Array<(typeof filterFieldsConfig)[number]>}
-          />
-        </section>
-      ))}
+      {groupedFields.map((group, i) => {
+        const label = filterGroupLabels[group.key];
+        const id = camelToKebab(group.key);
+        return (
+          <section
+            className={`margin-top-${i === 0 ? '2' : '4'}`}
+            key={group.key}
+          >
+            <hr />
+            <InPageNavAnchor id={id} label={label} subItem>
+              <h3 className="text-primary">{label}</h3>
+            </InPageNavAnchor>
+            <FilterFields
+              {...props}
+              fields={
+                group.fields as Array<(typeof filterFieldsConfig)[number]>
+              }
+            />
+          </section>
+        );
+      })}
     </>
-  );
-}
-
-function Intro() {
-  const [visible, setVisible] = useState(
-    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
-  );
-
-  const closeIntro = useCallback(() => setVisible(false), []);
-
-  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
-
-  const toggleDontShowAgain = useCallback(
-    () => setDontShowAgain(!dontShowAgain),
-    [dontShowAgain],
-  );
-
-  useEffect(() => {
-    if (dontShowAgain === null) return;
-    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
-  }, [dontShowAgain]);
-
-  if (!visible) return null;
-
-  return (
-    <Summary heading="How to Use This Application">
-      <p>
-        Select a data profile, then build a query by selecting options from the
-        input fields.
-      </p>
-      <div className="display-flex flex-justify flex-wrap">
-        <Checkbox
-          checked={dontShowAgain ?? false}
-          label="Don't show again on this computer"
-          onChange={toggleDontShowAgain}
-          styles={['margin-right-1 margin-y-auto']}
-        />
-        <button
-          className="margin-top-2 usa-button"
-          onClick={closeIntro}
-          type="button"
-        >
-          Close Intro
-        </button>
-      </div>
-    </Summary>
   );
 }
 
@@ -1044,7 +1029,7 @@ function useQueryParams({
     options: {},
   });
 
-  const [_searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
 
   // Update URL when inputs change
   useEffect(() => {
@@ -1070,9 +1055,7 @@ function useQueryParams({
       },
     );
 
-    if (Object.keys(newFilterQueryParams).length) {
-      setSearchParams(newFilterQueryParams, { replace: true });
-    } else removeHash();
+    setSearchParams(newFilterQueryParams, { replace: true });
 
     setParameters({
       filters: newFilterQueryParams,
@@ -1168,6 +1151,17 @@ function buildUrlQueryString(
   return encodeURI(
     paramsList.reduce((a, b) => a + `&${b[0]}=${b[1]}`, '').replace('&', ''),
   ); // trim the leading ampersand
+}
+
+function camelToKebab(camel: string) {
+  return camel
+    .split('')
+    .map((letter) => {
+      return letter === letter.toUpperCase()
+        ? '-' + letter.toLowerCase()
+        : letter;
+    })
+    .join('');
 }
 
 // Returns a boolean, specifying if a value is found in the
@@ -1461,10 +1455,6 @@ function getInputValue(input: Option | ReadonlyArray<Option> | string) {
   }
   if (isOption(input)) return input.value;
   return input;
-}
-
-function getLocalStorageItem(item: string) {
-  return localStorage.getItem(item) ?? null;
 }
 
 function getMultiOptionFields(fields: typeof allFieldsConfig) {
@@ -1761,50 +1751,6 @@ function parseInitialParams(
   );
 
   return [params, paramErrors];
-}
-
-function removeHash() {
-  const location = window.location;
-  if ('pushState' in window.history)
-    window.history.replaceState(null, '', location.pathname);
-  else {
-    // Prevent scrolling by storing the page's current scroll offset
-    const scrollTop = document.body.scrollTop;
-    const scrollLeft = document.body.scrollLeft;
-
-    location.hash = '';
-
-    // Restore the scroll offset, should be flicker free
-    document.body.scrollTop = scrollTop;
-    document.body.scrollLeft = scrollLeft;
-  }
-}
-
-function setLocalStorageItem(item: string, value: string) {
-  storageAvailable() && localStorage.setItem(item, value);
-}
-
-function storageAvailable(
-  storageType: 'localStorage' | 'sessionStorage' = 'localStorage',
-) {
-  const storage: Storage = window[storageType];
-  try {
-    const x = '__storage_test__';
-    storage.setItem(x, x);
-    storage.removeItem(x);
-    return true;
-  } catch (e) {
-    return (
-      e instanceof DOMException &&
-      // everything except Firefox
-      (e.name === 'QuotaExceededError' ||
-        // Firefox
-        e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-      // acknowledge QuotaExceededError only if there's something already stored
-      storage &&
-      storage.length !== 0
-    );
-  }
 }
 
 /*

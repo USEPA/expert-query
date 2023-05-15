@@ -1,7 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import type { ReactNode } from 'react';
+// components
+import { InPageNavLayout } from 'components/inPageNav';
 // config
 import { serverUrl } from 'config';
+// types
+import type { ReactNode } from 'react';
 
 export default Page;
 
@@ -52,9 +55,11 @@ export function Page({ children }: PageProps) {
             </a>
           </div>
         </div>
-
-        <article className="article">{children}</article>
       </div>
+
+      <InPageNavLayout>
+        <article className="article">{children}</article>
+      </InPageNavLayout>
 
       <div className="l-page__footer">
         <div className="l-constrain">
