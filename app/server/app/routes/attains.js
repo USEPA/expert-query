@@ -524,6 +524,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
       .withSchema(req.activeSchema)
       .select(groupByColumns)
       .count()
+      .countDistinct('assessmentunitid as assessmentUnitIdCount')
       .from(profile.tableName)
       .groupBy(groupByColumns)
       .orderBy(orderByArray);
