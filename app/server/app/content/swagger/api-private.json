@@ -444,6 +444,230 @@
           }
         }
       }
+    },
+    "/attains/actions/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each organization of the Actions profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each organization of the Actions profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessments/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessments profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessments profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnits/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessment Units profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessment Units profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnitsMonitoringLocations/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessment Units with Monitoring Locations profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessment Units with Monitoring Locations profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/catchmentCorrespondence/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Catchment Correspondence profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Catchment Correspondence profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/sources/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Sources profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Sources profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/tmdl/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each organization of the TMDL profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each organization of the TMDL profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
     }
   },
   "externalDocs": {
@@ -566,16 +790,6 @@
             "type": "string"
           }
         }
-      },
-      "apiKeyHeader": {
-        "in": "header",
-        "name": "X-Api-Key",
-        "description": "The API key used to access EPA web service resources. The below default value key is used for testing purposes only. Web service consumers should <a target=\"_blank\" rel=\"noreferrer\" href=\"/api-key-signup\">obtain their own API key</a>.",
-        "schema": {
-          "type": "string",
-          "default": "53BVce47MQ3KXKibjx35g4ojaDQGh8qWfbdO8cE0"
-        },
-        "required": true
       },
       "assessmentBasisParam": {
         "name": "assessmentBasis",
@@ -1475,6 +1689,42 @@
       }
     },
     "responses": {
+      "ColumnNotFoundError": {
+        "description": "One or more of the columns specified does not exist on the selected profile.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            }
+          }
+        }
+      },
+      "InvalidRequestError": {
+        "description": "The request was invalid.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": 400
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["code", "message"]
+            }
+          }
+        }
+      },
       "LookupFilesSuccess": {
         "description": "A success response. A JSON object returning the content is returned.",
         "content": {
@@ -1549,18 +1799,52 @@
           }
         }
       },
-      "ColumnNotFoundError": {
-        "description": "One or more of the columns specified does not exist on the selected profile.",
+      "QueryCountPerOrgSuccess": {
+        "description": "The query evaluated successfully. The response contains the total record count for each distinct organization id.",
         "content": {
           "application/json": {
             "schema": {
               "type": "object",
               "properties": {
-                "message": {
-                  "type": "string"
+                "organizationId": {
+                  "type": "string",
+                  "example": "21AS"
+                },
+                "count": {
+                  "type": "integer",
+                  "example": 760
                 }
               },
-              "required": ["message"]
+              "required": ["count"]
+            }
+          }
+        }
+      },
+      "QueryCountPerOrgCycleSuccess": {
+        "description": "The query evaluated successfully. The response contains the total record count for each distinct combination of cycle id, organization id and reporting cycle.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "organizationid": {
+                  "type": "string",
+                  "example": "21AS"
+                },
+                "reportingcycle": {
+                  "type": "integer",
+                  "example": 2018
+                },
+                "cycleid": {
+                  "type": "integer",
+                  "example": 3182
+                },
+                "count": {
+                  "type": "integer",
+                  "example": 122
+                }
+              },
+              "required": ["count"]
             }
           }
         }
