@@ -247,6 +247,11 @@ export function QueryBuilder() {
       )}
       {profile && (
         <div>
+          <div className="margin-top-2">
+            <Button onClick={openClearConfirmation} color="white">
+              Clear Search
+            </Button>
+          </div>
           <InPageNavAnchor
             id="apply-filters"
             label={
@@ -259,11 +264,6 @@ export function QueryBuilder() {
               Apply Filters
             </StepIndicator>
           </InPageNavAnchor>
-          <div className="display-flex width-full flex-justify-center">
-            <Button onClick={openClearConfirmation} color="white">
-              Clear Search
-            </Button>
-          </div>
           <FilterGroups
             apiKey={apiKey}
             apiUrl={apiUrl}
@@ -334,14 +334,16 @@ export function QueryBuilder() {
               API Documentation
             </a>{' '}
             page to learn more.
-            <h3>Current Query</h3>
+            <h4 className="text-primary">Current Query</h4>
             <CopyBox
               testId="current-query-copy-box-container"
               text={`${window.location.origin}${
                 window.location.pathname
               }?${buildUrlQueryString(queryParams.filters)}`}
             />
-            <h3>{profiles[profile].label} API Query</h3>
+            <h4 className="text-primary">
+              {profiles[profile].label} API Query
+            </h4>
             <CopyBox
               testId="api-query-copy-box-container"
               lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
@@ -354,7 +356,7 @@ export function QueryBuilder() {
                 queryParams.columns,
               )}&api_key=<YOUR_API_KEY>`}
             />
-            <h3>cURL</h3>
+            <h4 className="text-primary">cURL</h4>
             <CopyBox
               testId="curl-copy-box-container"
               text={`curl -X POST --json "${JSON.stringify(
@@ -548,7 +550,9 @@ function FilterGroups(props: FilterGroupsProps) {
           >
             <hr />
             <InPageNavAnchor id={id} label={label} subItem>
-              <h3 className="text-primary">{label}</h3>
+              <h3 className="font-heading-md margin-bottom-0 text-primary">
+                {label}
+              </h3>
             </InPageNavAnchor>
             <FilterFields
               {...props}

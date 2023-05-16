@@ -201,7 +201,7 @@ export function NumberedInPageNavLabel({
 }: NumberedInPageNavLabelProps) {
   return (
     <>
-      <span className="bg-primary display-inline-block height-205 line-height-sans-3 margin-right-05 radius-pill text-center text-white width-205">
+      <span className="bg-primary display-inline-block font-family-mono height-205 line-height-sans-3 margin-right-05 radius-pill text-center text-white width-205">
         {number}
       </span>{' '}
       {children}
