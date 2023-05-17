@@ -154,6 +154,11 @@ export function Home() {
                 Pick a Data Profile
               </StepIndicator>
             </InPageNavAnchor>
+            <p>
+              Data are grouped into profiles according to the type of data they
+              describe. Select a data profile to determine the set of filterable
+              elements.
+            </p>
             <Select
               id="select-data-profile"
               classNames={{
@@ -296,6 +301,10 @@ export function QueryBuilder() {
               Apply Filters
             </StepIndicator>
           </InPageNavAnchor>
+          <p>
+            Select options from the fields below to apply filters to the query.
+            The options of some fields are filtered by previous selections.
+          </p>
           <FilterGroups
             apiKey={apiKey}
             apiUrl={apiUrl}
@@ -320,6 +329,10 @@ export function QueryBuilder() {
               Download the Data
             </StepIndicator>
           </InPageNavAnchor>
+          <p>
+            Choose an output file format for the result set, then click the
+            download button to proceed.
+          </p>
           <RadioButtons
             legend={
               <>
