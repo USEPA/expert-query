@@ -8,7 +8,11 @@ import { fileURLToPath } from 'node:url';
 import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema, protectRoutes } from '../middleware.js';
 import { appendToWhere, knex } from '../utilities/database.js';
-import { getEnvironment } from '../utilities/environment.js';
+import {
+  corsOptions,
+  corsOptionsDelegate,
+  getEnvironment,
+} from '../utilities/environment.js';
 import {
   formatLogMsg,
   log,
@@ -847,29 +851,6 @@ export default function (app, basePath) {
 
   router.use(protectRoutes);
   router.use(getActiveSchema);
-
-  // Cors config for public endpoints
-  const corsOptions = {
-    methods: 'GET,HEAD,POST',
-  };
-
-  // Cors config for private endpoints
-  // This is needed for private endpoints to work within EQ UI.
-  const allowlist = [
-    'https://owapps-dev.app.cloud.gov',
-    'https://owapps-stage.app.cloud.gov',
-    'https://owapps.app.cloud.gov',
-    'https://owapps.epa.gov',
-  ];
-  const corsOptionsDelegate = function (req, callback) {
-    const corsOptionsRes = { ...corsOptions };
-    if (allowlist.indexOf(req.header('Origin')) !== -1) {
-      corsOptionsRes.origin = true; // reflect (enable) the requested origin in the CORS response
-    } else {
-      corsOptionsRes.origin = false; // disable CORS for this request
-    }
-    callback(null, corsOptionsRes); // callback expects two parameters: error and options
-  };
 
   Object.entries(tableConfig).forEach(([profileName, profile]) => {
     // ****************************** //
