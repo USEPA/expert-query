@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useContext,
   useMemo,
   useState,
@@ -47,8 +46,8 @@ function InPageNavProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const observe = useCallback(
-    (item: InPageNavItem) => {
-      observer.observe(item.node);
+    (item: InPageNavItem, node: HTMLDivElement) => {
+      observer.observe(node);
       setNavItems((prev) => [...prev, item]);
     },
     [observer],
@@ -184,7 +183,7 @@ export function InPageNavAnchor({
       if (!node) {
         unobserve(id);
       } else {
-        observe({ id, label, node, subItem });
+        observe({ id, label, subItem }, node);
       }
     },
     [id, label, observe, unobserve, subItem],
@@ -218,7 +217,6 @@ export function NumberedInPageNavLabel({
 type InPageNavItem = {
   id: string;
   label: ReactNode;
-  node: HTMLDivElement;
   subItem: boolean;
 };
 
@@ -230,7 +228,7 @@ type InPageNavAnchorProps = {
 };
 
 type ObserverDispatch = {
-  observe: (item: InPageNavItem) => void;
+  observe: (item: InPageNavItem, node: HTMLDivElement) => void;
   unobserve: (itemId: string) => void;
 };
 
