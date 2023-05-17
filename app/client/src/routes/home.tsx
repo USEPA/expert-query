@@ -1082,6 +1082,15 @@ function useQueryParams({
 }) {
   const { getSignal } = useAbort();
 
+  const parameters: QueryData = useMemo(() => {
+    if (!profile) return { columns: [], filters: {}, options: {} };
+    return {
+      columns: Array.from(profiles[profile].columns),
+      options: { format },
+      filters: buildFilterData(filterState, profile),
+    };
+  }, [filterState, format, profile]);
+
   const [parameterErrors, setParameterErrors] =
     useState<ParameterErrors | null>(null);
   const [parametersLoaded, setParametersLoaded] = useState(false);
@@ -1103,34 +1112,17 @@ function useQueryParams({
       });
   }
 
-  // Track non-empty values relevant to the current profile
-  const [parameters, setParameters] = useState<QueryData>({
-    columns: [],
-    filters: {},
-    options: {},
-  });
-
   const navigate = useNavigate();
 
+  // Update URL when inputs change
   useEffect(() => {
+    if (!parametersLoaded) return;
+
     navigate(
       '?' + buildUrlQueryString(parameters.filters) + window.location.hash,
       { replace: true },
     );
-  }, [navigate, parameters]);
-
-  // Update URL when inputs change
-  const [prevFilterState, setPrevFilterState] = useState(filterState);
-
-  if (profile && parametersLoaded && filterState !== prevFilterState) {
-    setPrevFilterState(filterState);
-    // Get selected parameters, including multiselectable fields
-    setParameters({
-      filters: buildFilterData(filterState, profile),
-      options: { format },
-      columns: Array.from(profiles[profile].columns),
-    });
-  }
+  }, [navigate, parameters, parametersLoaded]);
 
   return { queryParams: parameters, queryParamErrors: parameterErrors };
 }
