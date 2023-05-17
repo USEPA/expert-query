@@ -65,10 +65,10 @@ function InPageNavProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const dispatch: ObserverDispatch = {
-    observe,
-    unobserve,
-  };
+  const dispatch: ObserverDispatch = useMemo(
+    () => ({ observe, unobserve }),
+    [observe, unobserve],
+  );
 
   useEffect(() => {
     return function cleanup() {

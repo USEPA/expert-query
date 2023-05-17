@@ -1125,27 +1125,8 @@ function useQueryParams({
   if (profile && parametersLoaded && filterState !== prevFilterState) {
     setPrevFilterState(filterState);
     // Get selected parameters, including multiselectable fields
-    const newFilterQueryParams: FilterQueryData = {};
-    Object.entries(filterState).forEach(
-      ([field, value]: [string, FilterFieldState[keyof FilterFieldState]]) => {
-        if (isEmpty(value)) return;
-
-        // Extract 'value' field from Option types
-        const flattenedValue = getInputValue(value);
-        const formattedValue =
-          (dateFields as string[]).includes(field) &&
-          typeof flattenedValue === 'string'
-            ? fromIsoDateString(flattenedValue)
-            : flattenedValue;
-
-        if (formattedValue && isProfileField(field, profile)) {
-          newFilterQueryParams[field as FilterField] = formattedValue;
-        }
-      },
-    );
-
     setParameters({
-      filters: newFilterQueryParams,
+      filters: buildFilterData(filterState, profile),
       options: { format },
       columns: Array.from(profiles[profile].columns),
     });
@@ -1187,6 +1168,28 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
     associatedActionType: values.actionType,
     pollutant: values.parameterName,
   };
+}
+
+function buildFilterData(filterState: FilterFieldState, profile: Profile) {
+  const newFilterQueryParams: FilterQueryData = {};
+  Object.entries(filterState).forEach(
+    ([field, value]: [string, FilterFieldState[keyof FilterFieldState]]) => {
+      if (isEmpty(value)) return;
+
+      // Extract 'value' field from Option types
+      const flattenedValue = getInputValue(value);
+      const formattedValue =
+        (dateFields as string[]).includes(field) &&
+        typeof flattenedValue === 'string'
+          ? fromIsoDateString(flattenedValue)
+          : flattenedValue;
+
+      if (formattedValue && isProfileField(field, profile)) {
+        newFilterQueryParams[field as FilterField] = formattedValue;
+      }
+    },
+  );
+  return newFilterQueryParams;
 }
 
 // Converts a JSON object into a parameter string
