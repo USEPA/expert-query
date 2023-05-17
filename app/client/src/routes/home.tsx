@@ -5,7 +5,6 @@ import {
   useNavigate,
   useOutletContext,
   useParams,
-  useSearchParams,
 } from 'react-router-dom';
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
@@ -38,7 +37,7 @@ import {
 import { isAbort, useAbort } from 'utils';
 // types
 import type { Profile } from 'config/profiles';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import type { DomainOptions, Option, Status } from 'types';
 
 /*
@@ -50,7 +49,25 @@ export default Home;
 export function Home() {
   const { content } = useContentState();
 
-  const staticOptions = useStaticOptions(content);
+  const staticOptions = useMemo(() => {
+    if (content.status !== 'success') return null;
+    const domainOptions = addDomainAliases(content.data.domainValues);
+    // Alphabetize all option lists by label
+    return Object.entries({ ...domainOptions, ...listOptions }).reduce(
+      (sorted, [name, options]) => {
+        return {
+          ...sorted,
+          [name]: (options as Option[]).sort((a, b) => {
+            if (typeof a.label === 'string' && typeof b.label === 'string') {
+              return a.label.localeCompare(b.label);
+            }
+            return 0;
+          }),
+        };
+      },
+      {},
+    ) as StaticOptions;
+  }, [content]);
 
   const { handleProfileChange, profile, profileOption } = useProfile();
 
@@ -95,7 +112,12 @@ export function Home() {
               </em>
             )}
           </div>
-          {description}
+          <span
+            className="display-inline-block overflow-hidden width-full"
+            style={{ textOverflow: 'ellipsis' }}
+          >
+            {description}
+          </span>
         </div>
       );
     },
@@ -216,12 +238,19 @@ export function QueryBuilder() {
     openDownloadConfirmation,
   } = useDownloadConfirmationVisibility();
 
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+  const [downloadStatus, setDownloadStatus] = useDownloadStatus(
+    profile,
+    filterState,
+    format,
+    downloadConfirmationVisible,
+  );
 
   const { content } = useContentState();
 
   const apiKey = content.data.services?.eqApiKey || '';
   const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
+
+  const navigate = useNavigate();
 
   return (
     <>
@@ -241,7 +270,10 @@ export function QueryBuilder() {
       )}
       {clearConfirmationVisible && (
         <ClearSearchModal
-          onContinue={resetFilters}
+          onContinue={() => {
+            resetFilters();
+            navigate('/attains', { replace: true });
+          }}
           onClose={closeClearConfirmation}
         />
       )}
@@ -775,12 +807,6 @@ function SelectFilter<
       ? fetchOptions(inputValue ?? '')
       : debouncedFetchOptions(inputValue);
 
-  // Reset default options when `sourceValue` changes
-  useEffect(() => {
-    if (!sourceValue) return;
-    setOptions(null);
-  }, [sourceValue]);
-
   const formatOptionLabel = useCallback(
     (option: Option) => {
       return secondaryFilterKey ? (
@@ -808,6 +834,7 @@ function SelectFilter<
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
       isMulti={isMultiOptionField(filterKey)}
+      key={sourceValue?.value}
       menuPortalTarget={document.body}
       onChange={filterHandler}
       onInputChange={(inputValue, actionMeta) => {
@@ -883,6 +910,45 @@ function useDownloadConfirmationVisibility() {
   };
 }
 
+function useDownloadStatus(
+  profile: Profile,
+  filterState: FilterFieldState,
+  format: FormatOption,
+  confirmationVisible: boolean,
+) {
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+
+  const [prevProfile, setPrevProfile] = useState(profile);
+  if (profile !== prevProfile) {
+    setPrevProfile(profile);
+    setDownloadStatus('idle');
+  }
+
+  const [prevFilterState, setPrevFilterState] = useState(filterState);
+  if (filterState !== prevFilterState) {
+    setPrevFilterState(filterState);
+    setDownloadStatus('idle');
+  }
+
+  const [prevFormat, setPrevFormat] = useState(format);
+  if (format !== prevFormat) {
+    setPrevFormat(format);
+    setDownloadStatus('idle');
+  }
+
+  const [prevConfirmationVisible, setPrevConfirmationVisible] =
+    useState(confirmationVisible);
+  if (confirmationVisible !== prevConfirmationVisible) {
+    setPrevConfirmationVisible(confirmationVisible);
+    if (confirmationVisible) setDownloadStatus('idle');
+  }
+
+  return [downloadStatus, setDownloadStatus] as [
+    Status,
+    Dispatch<SetStateAction<Status>>,
+  ];
+}
+
 function useFormat() {
   const [format, setFormat] = useState<FormatOption>({
     label: 'Comma-separated (CSV)',
@@ -951,26 +1017,13 @@ function useFilterState() {
 function useProfile() {
   const navigate = useNavigate();
 
-  const { profile: profileArg } = useParams();
+  const params = useParams();
+  const profileArg = params.profile ?? null;
 
   const [profileOption, setProfileOption] = useState<
     (typeof listOptions.dataProfile)[number] | null
   >(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-
-  useEffect(() => {
-    if (!profileArg) return;
-    if (!isProfile(profileArg)) {
-      navigate('/404');
-      return;
-    }
-
-    setProfile(profileArg);
-    setProfileOption(
-      listOptions.dataProfile.find((option) => option.value === profileArg) ??
-        null,
-    );
-  }, [navigate, profileArg]);
 
   const handleProfileChange = useCallback(
     (ev: Option | null) => {
@@ -981,6 +1034,18 @@ function useProfile() {
     },
     [navigate],
   );
+
+  if (profileArg !== profile) {
+    if (profileArg && !isProfile(profileArg)) {
+      navigate('/404');
+    } else {
+      setProfile(profileArg as Profile | null);
+      setProfileOption(
+        listOptions.dataProfile.find((option) => option.value === profileArg) ??
+          null,
+      );
+    }
+  }
 
   return { handleProfileChange, profile, profileOption };
 }
@@ -1009,8 +1074,7 @@ function useQueryParams({
   const [parametersLoaded, setParametersLoaded] = useState(false);
 
   // Populate the input fields with URL parameters, if any
-  useEffect(() => {
-    if (parametersLoaded || !profile || !staticOptions) return;
+  if (!parametersLoaded && profile && staticOptions) {
     getUrlInputs(apiKey, apiUrl, staticOptions, profile, getSignal())
       .then(({ filters, errors }) => {
         initializeFilters(filters);
@@ -1020,16 +1084,11 @@ function useQueryParams({
       .catch((err) => {
         console.error(`Error loading initial inputs: ${err}`);
       })
-      .finally(() => setParametersLoaded(true));
-  }, [
-    apiKey,
-    apiUrl,
-    getSignal,
-    initializeFilters,
-    parametersLoaded,
-    profile,
-    staticOptions,
-  ]);
+      .finally(() => {
+        setParametersLoaded(true);
+        scrollToHash();
+      });
+  }
 
   // Track non-empty values relevant to the current profile
   const [parameters, setParameters] = useState<QueryData>({
@@ -1038,12 +1097,20 @@ function useQueryParams({
     options: {},
   });
 
-  const [, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate(
+      '?' + buildUrlQueryString(parameters.filters) + window.location.hash,
+      { replace: true },
+    );
+  }, [navigate, parameters]);
 
   // Update URL when inputs change
-  useEffect(() => {
-    if (!profile || !parametersLoaded) return;
+  const [prevFilterState, setPrevFilterState] = useState(filterState);
 
+  if (profile && parametersLoaded && filterState !== prevFilterState) {
+    setPrevFilterState(filterState);
     // Get selected parameters, including multiselectable fields
     const newFilterQueryParams: FilterQueryData = {};
     Object.entries(filterState).forEach(
@@ -1064,14 +1131,12 @@ function useQueryParams({
       },
     );
 
-    setSearchParams(newFilterQueryParams, { replace: true });
-
     setParameters({
       filters: newFilterQueryParams,
       options: { format },
       columns: Array.from(profiles[profile].columns),
     });
-  }, [filterState, format, parametersLoaded, profile, setSearchParams]);
+  }
 
   return { queryParams: parameters, queryParamErrors: parameterErrors };
 }
@@ -1094,38 +1159,6 @@ function useSourceState() {
   }, []) as SourceFieldInputHandlers;
 
   return { sourceState, sourceHandlers };
-}
-
-function useStaticOptions(
-  content: ReturnType<typeof useContentState>['content'],
-) {
-  const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
-    null,
-  );
-
-  useEffect(() => {
-    if (content.status !== 'success') return;
-    const domainOptions = addDomainAliases(content.data.domainValues);
-    setStaticOptions(
-      // Alphabetize all option lists by label
-      Object.entries({ ...domainOptions, ...listOptions }).reduce(
-        (sorted, [name, options]) => {
-          return {
-            ...sorted,
-            [name]: (options as Option[]).sort((a, b) => {
-              if (typeof a.label === 'string' && typeof b.label === 'string') {
-                return a.label.localeCompare(b.label);
-              }
-              return 0;
-            }),
-          };
-        },
-        {},
-      ) as StaticOptions,
-    );
-  }, [content]);
-
-  return staticOptions;
 }
 
 /*
@@ -1760,6 +1793,14 @@ function parseInitialParams(
   );
 
   return [params, paramErrors];
+}
+
+function scrollToHash() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
+
+  const hashTag = document.getElementById(hash);
+  hashTag?.scrollIntoView({ behavior: 'smooth' });
 }
 
 /*

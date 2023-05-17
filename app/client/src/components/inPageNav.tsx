@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useContext,
   useMemo,
   useState,
@@ -30,13 +31,13 @@ function InPageNavProvider({ children }: { children: ReactNode }) {
   const observer = useMemo(() => {
     const options = {
       rootMargin: '48px 0px -80% 0px',
-      threshold: [1],
+      threshold: 1,
     };
     return new IntersectionObserver((entries: IntersectionObserverEntry[]) => {
       for (const entry of entries) {
         if (
           entry.isIntersecting &&
-          options.threshold.some((t) => entry.intersectionRatio >= t)
+          entry.intersectionRatio >= options.threshold
         ) {
           setActive(entry.target.id);
           return;
@@ -54,7 +55,6 @@ function InPageNavProvider({ children }: { children: ReactNode }) {
   );
 
   const unobserve = useCallback((itemId: string) => {
-    setActive((prev) => (prev === itemId ? '' : prev));
     setNavItems((prev) => {
       return prev.reduce<Array<InPageNavItem>>((current, next) => {
         if (next.id === itemId) {
@@ -127,10 +127,12 @@ function InPageNavLayoutInner({ children }: { children: ReactNode }) {
 
   const sortedNavItems = useMemo(() => {
     const sorted: InPageNavItem[] = [];
-    document.querySelectorAll('.in-page-nav-anchor').forEach((node) => {
-      const navItem = navItems.find((item) => item.id === node.id);
-      if (navItem) sorted.push(navItem);
-    });
+    document
+      .querySelectorAll('[data-role="in-page-nav-anchor"]')
+      .forEach((node) => {
+        const navItem = navItems.find((item) => item.id === node.id);
+        if (navItem) sorted.push(navItem);
+      });
     return sorted;
   }, [navItems]);
 
@@ -189,7 +191,7 @@ export function InPageNavAnchor({
   );
 
   return (
-    <div className="in-page-nav-anchor" id={id} ref={ref}>
+    <div data-role="in-page-nav-anchor" id={id} ref={ref}>
       {children}
     </div>
   );
@@ -201,9 +203,9 @@ export function NumberedInPageNavLabel({
 }: NumberedInPageNavLabelProps) {
   return (
     <>
-      <span className="bg-primary display-inline-block font-family-mono height-205 line-height-sans-3 margin-right-05 radius-pill text-center text-white width-205">
+      <span className="bg-primary display-inline-block font-family-mono height-205 line-height-sans-3 margin-right-1 radius-pill text-center text-white width-205">
         {number}
-      </span>{' '}
+      </span>
       {children}
     </>
   );
