@@ -247,7 +247,7 @@ export function QueryBuilder() {
     profile,
     filterState,
     format,
-    downloadConfirmationVisible,
+    downloadConfirmationVisible || clearConfirmationVisible,
   );
 
   const { content } = useContentState();
