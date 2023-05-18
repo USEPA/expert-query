@@ -26,7 +26,6 @@ export function Alert({
       break;
     case 'error':
       alertStyles.push('usa-alert--error');
-      role = 'alert';
       break;
     case 'success':
       alertStyles.push('usa-alert--success');
