@@ -62,9 +62,7 @@ type FetchSuccessState<Type> = {
 export type Option = {
   description?: ReactNode;
   label: ReactNode;
-  value: Primitive;
+  value: string;
 };
-
-export type Primitive = string | number | boolean;
 
 export type Status = 'idle' | 'pending' | 'failure' | 'success';

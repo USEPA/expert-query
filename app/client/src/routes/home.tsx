@@ -9,18 +9,18 @@ import {
 import Select from 'react-select';
 import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
 // components
-import { Accordion, AccordionItem } from 'components/accordion';
+import { AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
-import { Checkbox } from 'components/checkbox';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
 import { InfoTooltip } from 'components/infoTooltip';
+import { InPageNavAnchor, NumberedInPageNavLabel } from 'components/inPageNav';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
-import { Summary } from 'components/summary';
+import { StepIndicator } from 'components/stepIndicator';
 import { Button } from 'components/button';
 // contexts
 import { useContentState } from 'contexts/content';
@@ -37,8 +37,8 @@ import {
 import { isAbort, useAbort } from 'utils';
 // types
 import type { Profile } from 'config/profiles';
-import type { ChangeEvent } from 'react';
-import type { DomainOptions, Option, Primitive, Status } from 'types';
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import type { DomainOptions, Option, Status } from 'types';
 
 /*
 ## Components
@@ -49,7 +49,25 @@ export default Home;
 export function Home() {
   const { content } = useContentState();
 
-  const staticOptions = useStaticOptions(content);
+  const staticOptions = useMemo(() => {
+    if (content.status !== 'success') return null;
+    const domainOptions = addDomainAliases(content.data.domainValues);
+    // Alphabetize all option lists by label
+    return Object.entries({ ...domainOptions, ...listOptions }).reduce(
+      (sorted, [name, options]) => {
+        return {
+          ...sorted,
+          [name]: (options as Option[]).sort((a, b) => {
+            if (typeof a.label === 'string' && typeof b.label === 'string') {
+              return a.label.localeCompare(b.label);
+            }
+            return 0;
+          }),
+        };
+      },
+      {},
+    ) as StaticOptions;
+  }, [content]);
 
   const { handleProfileChange, profile, profileOption } = useProfile();
 
@@ -94,7 +112,12 @@ export function Home() {
               </em>
             )}
           </div>
-          {description}
+          <span
+            className="display-inline-block overflow-hidden width-full"
+            style={{ textOverflow: 'ellipsis' }}
+          >
+            {description}
+          </span>
         </div>
       );
     },
@@ -113,62 +136,80 @@ export function Home() {
 
   if (content.status === 'success') {
     return (
-      <>
-        <div>
-          <h2>Query ATTAINS Data</h2>
-          <hr />
-          <ParameterErrorAlert parameters={queryParamErrors} />
-          <Intro />
-          {staticOptions && (
-            <>
-              <h3>Data Profile</h3>
-              <Select
-                id="select-data-profile"
-                classNames={{
-                  option: () => 'border-bottom border-base-lighter',
-                }}
-                instanceId="instance-select-data-profile"
-                aria-label="Select a data profile"
-                formatOptionLabel={formatProfileOptionLabel}
-                onChange={handleProfileChange}
-                options={staticOptions.dataProfile}
-                placeholder="Select a data profile..."
-                styles={{
-                  menu: (baseStyles) => ({
-                    ...baseStyles,
-                    maxHeight: '75vh',
-                  }),
-                  menuList: (baseStyles) => ({
-                    ...baseStyles,
-                    maxHeight: '75vh',
-                  }),
-                }}
-                value={profileOption}
-              />
+      <div>
+        <h1>Query ATTAINS Data</h1>
+        <hr />
+        <ParameterErrorAlert parameters={queryParamErrors} />
+        {staticOptions && (
+          <>
+            <InPageNavAnchor
+              id="data-profile"
+              label={
+                <NumberedInPageNavLabel number={1}>
+                  Pick a Data Profile
+                </NumberedInPageNavLabel>
+              }
+            >
+              <StepIndicator currentStep={1} totalSteps={3}>
+                Pick a Data Profile
+              </StepIndicator>
+            </InPageNavAnchor>
+            <p>
+              Data are grouped into profiles according to the type of data they
+              describe. Select a data profile to determine the set of filterable
+              elements.
+            </p>
+            <Select
+              id="select-data-profile"
+              classNames={{
+                option: () => 'border-bottom border-base-lighter',
+              }}
+              instanceId="instance-select-data-profile"
+              aria-label="Select a data profile"
+              formatOptionLabel={formatProfileOptionLabel}
+              onChange={handleProfileChange}
+              options={staticOptions.dataProfile}
+              placeholder="Select a data profile..."
+              styles={{
+                container: (baseStyles) => ({
+                  ...baseStyles,
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr)',
+                }),
+                menu: (baseStyles) => ({
+                  ...baseStyles,
+                  maxHeight: '75vh',
+                }),
+                menuList: (baseStyles) => ({
+                  ...baseStyles,
+                  maxHeight: '75vh',
+                }),
+              }}
+              value={profileOption}
+            />
 
-              {profile && (
-                <>
-                  <Outlet
-                    context={{
-                      filterHandlers,
-                      filterState,
-                      format,
-                      formatHandler,
-                      profile,
-                      queryParams,
-                      queryUrl: apiUrl,
-                      resetFilters,
-                      sourceHandlers,
-                      sourceState,
-                      staticOptions,
-                    }}
-                  />
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </>
+            {profile && (
+              <>
+                <Outlet
+                  context={{
+                    filterHandlers,
+                    filterState,
+                    format,
+                    formatHandler,
+                    profile,
+                    queryParams,
+                    queryUrl: apiUrl,
+                    resetFilters,
+                    sourceHandlers,
+                    sourceState,
+                    staticOptions,
+                  }}
+                />
+              </>
+            )}
+          </>
+        )}
+      </div>
     );
   }
 
@@ -202,12 +243,19 @@ export function QueryBuilder() {
     openDownloadConfirmation,
   } = useDownloadConfirmationVisibility();
 
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+  const [downloadStatus, setDownloadStatus] = useDownloadStatus(
+    profile,
+    filterState,
+    format,
+    downloadConfirmationVisible || clearConfirmationVisible,
+  );
 
   const { content } = useContentState();
 
   const apiKey = content.data.services?.eqApiKey || '';
   const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
+
+  const navigate = useNavigate();
 
   return (
     <>
@@ -227,68 +275,99 @@ export function QueryBuilder() {
       )}
       {clearConfirmationVisible && (
         <ClearSearchModal
-          onContinue={resetFilters}
+          onContinue={() => {
+            resetFilters();
+            navigate('/attains', { replace: true });
+          }}
           onClose={closeClearConfirmation}
         />
       )}
       {profile && (
-        <Accordion>
-          <AccordionItem heading="Filters" initialExpand>
-            <div className="display-flex width-full flex-justify-center">
-              <Button onClick={openClearConfirmation} color="white">
-                Clear Search
-              </Button>
-            </div>
-            <FilterGroups
-              apiKey={apiKey}
-              apiUrl={apiUrl}
-              filterHandlers={filterHandlers}
-              filterState={filterState}
-              profile={profile}
-              queryParams={queryParams}
-              sourceHandlers={sourceHandlers}
-              sourceState={sourceState}
-              staticOptions={staticOptions}
-            />
-          </AccordionItem>
+        <div>
+          <div className="margin-top-2">
+            <Button onClick={openClearConfirmation} color="white">
+              Clear Search
+            </Button>
+          </div>
+          <InPageNavAnchor
+            id="apply-filters"
+            label={
+              <NumberedInPageNavLabel number={2}>
+                Apply Filters
+              </NumberedInPageNavLabel>
+            }
+          >
+            <StepIndicator currentStep={2} totalSteps={3}>
+              Apply Filters
+            </StepIndicator>
+          </InPageNavAnchor>
+          <p>
+            Select options from the fields below to apply filters to the query.
+            The options of some fields are filtered by previous selections.
+          </p>
+          <FilterGroups
+            apiKey={apiKey}
+            apiUrl={apiUrl}
+            filterHandlers={filterHandlers}
+            filterState={filterState}
+            profile={profile}
+            queryParams={queryParams}
+            sourceHandlers={sourceHandlers}
+            sourceState={sourceState}
+            staticOptions={staticOptions}
+          />
 
-          <AccordionItem heading="Download the Data" initialExpand>
-            <RadioButtons
-              legend={
-                <>
-                  <b className="margin-right-05">File Format</b>
-                  <InfoTooltip text="Choose a file format for the result set." />
-                </>
-              }
-              onChange={formatHandler}
-              options={staticOptions.format}
-              selected={format}
-              styles={['margin-bottom-2']}
+          <InPageNavAnchor
+            id="download"
+            label={
+              <NumberedInPageNavLabel number={3}>
+                Download the Data
+              </NumberedInPageNavLabel>
+            }
+          >
+            <StepIndicator currentStep={3} totalSteps={3}>
+              Download the Data
+            </StepIndicator>
+          </InPageNavAnchor>
+          <p>
+            Choose an output file format for the result set, then click the
+            download button to proceed.
+          </p>
+          <RadioButtons
+            legend={
+              <>
+                <b className="margin-right-05">File Format</b>
+                <InfoTooltip text="Choose a file format for the result set." />
+              </>
+            }
+            onChange={formatHandler}
+            options={staticOptions.format}
+            selected={format}
+            styles={['margin-bottom-2']}
+          />
+          <button
+            className="display-flex flex-justify-center margin-bottom-1 usa-button"
+            onClick={openDownloadConfirmation}
+            type="button"
+          >
+            <Download
+              aria-hidden="true"
+              className="height-205 margin-right-1 usa-icon width-205"
             />
-            <button
-              className="display-flex flex-justify-center margin-bottom-1 usa-button"
-              onClick={openDownloadConfirmation}
-              type="button"
-            >
-              <Download
-                aria-hidden="true"
-                className="height-205 margin-right-1 usa-icon width-205"
-              />
-              <span className="margin-y-auto">Download</span>
-            </button>
-            {downloadStatus === 'success' && (
-              <Alert type="success">
-                Query executed successfully, please check your downloads folder
-                for the output file.
-              </Alert>
-            )}
-            {downloadStatus === 'failure' && (
-              <Alert type="error">
-                An error occurred while executing the current query, please try
-                again later.
-              </Alert>
-            )}
-          </AccordionItem>
+            <span className="margin-y-auto">Download</span>
+          </button>
+          {downloadStatus === 'success' && (
+            <Alert type="success">
+              Query executed successfully, please check your downloads folder
+              for the output file.
+            </Alert>
+          )}
+          {downloadStatus === 'failure' && (
+            <Alert type="error">
+              An error occurred while executing the current query, please try
+              again later.
+            </Alert>
+          )}
 
           <AccordionItem heading="Advanced Queries">
             Visit our{' '}
@@ -300,14 +379,16 @@ export function QueryBuilder() {
               API Documentation
             </a>{' '}
             page to learn more.
-            <h4>Current Query</h4>
+            <h4 className="text-primary">Current Query</h4>
             <CopyBox
               testId="current-query-copy-box-container"
               text={`${window.location.origin}${
                 window.location.pathname
-              }#${buildUrlQueryString(queryParams.filters)}`}
+              }?${buildUrlQueryString(queryParams.filters)}`}
             />
-            <h4>{profiles[profile].label} API Query</h4>
+            <h4 className="text-primary">
+              {profiles[profile].label} API Query
+            </h4>
             <CopyBox
               testId="api-query-copy-box-container"
               lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
@@ -320,7 +401,7 @@ export function QueryBuilder() {
                 queryParams.columns,
               )}&api_key=<YOUR_API_KEY>`}
             />
-            <h4>cURL</h4>
+            <h4 className="text-primary">cURL</h4>
             <CopyBox
               testId="curl-copy-box-container"
               text={`curl -X POST --json "${JSON.stringify(
@@ -330,7 +411,7 @@ export function QueryBuilder() {
               } -H "X-Api-Key: <YOUR_API_KEY>"`}
             />
           </AccordionItem>
-        </Accordion>
+        </div>
       )}
     </>
   );
@@ -504,66 +585,30 @@ function FilterGroups(props: FilterGroupsProps) {
 
   return (
     <>
-      {groupedFields.map((group, i) => (
-        <section
-          className={`margin-top-${i === 0 ? '2' : '6'}`}
-          key={group.key}
-        >
-          <hr />
-          <h4 className="text-primary">{filterGroupLabels[group.key]}</h4>
-          <FilterFields
-            {...props}
-            fields={group.fields as Array<(typeof filterFieldsConfig)[number]>}
-          />
-        </section>
-      ))}
+      {groupedFields.map((group, i) => {
+        const label = filterGroupLabels[group.key];
+        const id = camelToKebab(group.key);
+        return (
+          <section
+            className={`margin-top-${i === 0 ? '2' : '4'}`}
+            key={group.key}
+          >
+            <hr />
+            <InPageNavAnchor id={id} label={label} subItem>
+              <h3 className="font-heading-md margin-bottom-0 text-primary">
+                {label}
+              </h3>
+            </InPageNavAnchor>
+            <FilterFields
+              {...props}
+              fields={
+                group.fields as Array<(typeof filterFieldsConfig)[number]>
+              }
+            />
+          </section>
+        );
+      })}
     </>
-  );
-}
-
-function Intro() {
-  const [visible, setVisible] = useState(
-    !!JSON.parse(getLocalStorageItem('showIntro') ?? 'true'),
-  );
-
-  const closeIntro = useCallback(() => setVisible(false), []);
-
-  const [dontShowAgain, setDontShowAgain] = useState<boolean | null>(null);
-
-  const toggleDontShowAgain = useCallback(
-    () => setDontShowAgain(!dontShowAgain),
-    [dontShowAgain],
-  );
-
-  useEffect(() => {
-    if (dontShowAgain === null) return;
-    setLocalStorageItem('showIntro', JSON.stringify(!dontShowAgain));
-  }, [dontShowAgain]);
-
-  if (!visible) return null;
-
-  return (
-    <Summary heading="How to Use This Application">
-      <p>
-        Select a data profile, then build a query by selecting options from the
-        input fields.
-      </p>
-      <div className="display-flex flex-justify flex-wrap">
-        <Checkbox
-          checked={dontShowAgain ?? false}
-          label="Don't show again on this computer"
-          onChange={toggleDontShowAgain}
-          styles={['margin-right-1 margin-y-auto']}
-        />
-        <button
-          className="margin-top-2 usa-button"
-          onClick={closeIntro}
-          type="button"
-        >
-          Close Intro
-        </button>
-      </div>
-    </Summary>
   );
 }
 
@@ -775,12 +820,6 @@ function SelectFilter<
       ? fetchOptions(inputValue ?? '')
       : debouncedFetchOptions(inputValue);
 
-  // Reset default options when `sourceValue` changes
-  useEffect(() => {
-    if (!sourceValue) return;
-    setOptions(null);
-  }, [sourceValue]);
-
   const formatOptionLabel = useCallback(
     (option: Option) => {
       return secondaryFilterKey ? (
@@ -808,6 +847,7 @@ function SelectFilter<
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
       isMulti={isMultiOptionField(filterKey)}
+      key={sourceValue?.value}
       menuPortalTarget={document.body}
       onChange={filterHandler}
       onInputChange={(inputValue, actionMeta) => {
@@ -883,6 +923,45 @@ function useDownloadConfirmationVisibility() {
   };
 }
 
+function useDownloadStatus(
+  profile: Profile,
+  filterState: FilterFieldState,
+  format: FormatOption,
+  confirmationVisible: boolean,
+) {
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle');
+
+  const [prevProfile, setPrevProfile] = useState(profile);
+  if (profile !== prevProfile) {
+    setPrevProfile(profile);
+    setDownloadStatus('idle');
+  }
+
+  const [prevFilterState, setPrevFilterState] = useState(filterState);
+  if (filterState !== prevFilterState) {
+    setPrevFilterState(filterState);
+    setDownloadStatus('idle');
+  }
+
+  const [prevFormat, setPrevFormat] = useState(format);
+  if (format !== prevFormat) {
+    setPrevFormat(format);
+    setDownloadStatus('idle');
+  }
+
+  const [prevConfirmationVisible, setPrevConfirmationVisible] =
+    useState(confirmationVisible);
+  if (confirmationVisible !== prevConfirmationVisible) {
+    setPrevConfirmationVisible(confirmationVisible);
+    if (confirmationVisible) setDownloadStatus('idle');
+  }
+
+  return [downloadStatus, setDownloadStatus] as [
+    Status,
+    Dispatch<SetStateAction<Status>>,
+  ];
+}
+
 function useFormat() {
   const [format, setFormat] = useState<FormatOption>({
     label: 'Comma-separated (CSV)',
@@ -951,36 +1030,35 @@ function useFilterState() {
 function useProfile() {
   const navigate = useNavigate();
 
-  const { profile: profileArg } = useParams();
+  const params = useParams();
+  const profileArg = params.profile ?? null;
 
   const [profileOption, setProfileOption] = useState<
     (typeof listOptions.dataProfile)[number] | null
   >(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  useEffect(() => {
-    if (!profileArg) return;
-    if (!isProfile(profileArg)) {
-      navigate('/404');
-      return;
-    }
-
-    setProfile(profileArg);
-    setProfileOption(
-      listOptions.dataProfile.find((option) => option.value === profileArg) ??
-        null,
-    );
-  }, [navigate, profileArg]);
-
   const handleProfileChange = useCallback(
     (ev: Option | null) => {
       const route = ev
-        ? `/attains/${ev.value}${window.location.hash}`
+        ? `/attains/${ev.value}${window.location.search}`
         : '/attains';
       navigate(route, { replace: true });
     },
     [navigate],
   );
+
+  if (profileArg !== profile) {
+    if (profileArg && !isProfile(profileArg)) {
+      navigate('/404');
+    } else {
+      setProfile(profileArg as Profile | null);
+      setProfileOption(
+        listOptions.dataProfile.find((option) => option.value === profileArg) ??
+          null,
+      );
+    }
+  }
 
   return { handleProfileChange, profile, profileOption };
 }
@@ -1004,13 +1082,21 @@ function useQueryParams({
 }) {
   const { getSignal } = useAbort();
 
+  const parameters: QueryData = useMemo(() => {
+    if (!profile) return { columns: [], filters: {}, options: {} };
+    return {
+      columns: Array.from(profiles[profile].columns),
+      options: { format },
+      filters: buildFilterData(filterState, profile),
+    };
+  }, [filterState, format, profile]);
+
   const [parameterErrors, setParameterErrors] =
     useState<ParameterErrors | null>(null);
   const [parametersLoaded, setParametersLoaded] = useState(false);
 
   // Populate the input fields with URL parameters, if any
-  useEffect(() => {
-    if (parametersLoaded || !profile || !staticOptions) return;
+  if (!parametersLoaded && profile && staticOptions) {
     getUrlInputs(apiKey, apiUrl, staticOptions, profile, getSignal())
       .then(({ filters, errors }) => {
         initializeFilters(filters);
@@ -1020,58 +1106,23 @@ function useQueryParams({
       .catch((err) => {
         console.error(`Error loading initial inputs: ${err}`);
       })
-      .finally(() => setParametersLoaded(true));
-  }, [
-    apiKey,
-    apiUrl,
-    getSignal,
-    initializeFilters,
-    parametersLoaded,
-    profile,
-    staticOptions,
-  ]);
+      .finally(() => {
+        setParametersLoaded(true);
+        scrollToHash();
+      });
+  }
 
-  // Track non-empty values relevant to the current profile
-  const [parameters, setParameters] = useState<QueryData>({
-    columns: [],
-    filters: {},
-    options: {},
-  });
+  const navigate = useNavigate();
 
   // Update URL when inputs change
   useEffect(() => {
-    if (!profile || !parametersLoaded) return;
+    if (!parametersLoaded) return;
 
-    // Get selected parameters, including multiselectable fields
-    const newFilterQueryParams: FilterQueryData = {};
-    Object.entries(filterState).forEach(
-      ([field, value]: [string, FilterFieldState[keyof FilterFieldState]]) => {
-        if (isEmpty(value)) return;
-
-        // Extract 'value' field from Option types
-        const flattenedValue = getInputValue(value);
-        const formattedValue =
-          (dateFields as string[]).includes(field) &&
-          typeof flattenedValue === 'string'
-            ? fromIsoDateString(flattenedValue)
-            : flattenedValue;
-
-        if (formattedValue && isProfileField(field, profile)) {
-          newFilterQueryParams[field as FilterField] = formattedValue;
-        }
-      },
+    navigate(
+      '?' + buildUrlQueryString(parameters.filters) + window.location.hash,
+      { replace: true },
     );
-
-    if (Object.keys(newFilterQueryParams).length) {
-      window.location.hash = buildUrlQueryString(newFilterQueryParams);
-    } else removeHash();
-
-    setParameters({
-      filters: newFilterQueryParams,
-      options: { format },
-      columns: Array.from(profiles[profile].columns),
-    });
-  }, [filterState, format, parametersLoaded, profile]);
+  }, [navigate, parameters, parametersLoaded]);
 
   return { queryParams: parameters, queryParamErrors: parameterErrors };
 }
@@ -1096,38 +1147,6 @@ function useSourceState() {
   return { sourceState, sourceHandlers };
 }
 
-function useStaticOptions(
-  content: ReturnType<typeof useContentState>['content'],
-) {
-  const [staticOptions, setStaticOptions] = useState<StaticOptions | null>(
-    null,
-  );
-
-  useEffect(() => {
-    if (content.status !== 'success') return;
-    const domainOptions = addDomainAliases(content.data.domainValues);
-    setStaticOptions(
-      // Alphabetize all option lists by label
-      Object.entries({ ...domainOptions, ...listOptions }).reduce(
-        (sorted, [name, options]) => {
-          return {
-            ...sorted,
-            [name]: (options as Option[]).sort((a, b) => {
-              if (typeof a.label === 'string' && typeof b.label === 'string') {
-                return a.label.localeCompare(b.label);
-              }
-              return 0;
-            }),
-          };
-        },
-        {},
-      ) as StaticOptions,
-    );
-  }, [content]);
-
-  return staticOptions;
-}
-
 /*
 ## Utils
 */
@@ -1141,6 +1160,28 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
     associatedActionType: values.actionType,
     pollutant: values.parameterName,
   };
+}
+
+function buildFilterData(filterState: FilterFieldState, profile: Profile) {
+  const newFilterQueryParams: FilterQueryData = {};
+  Object.entries(filterState).forEach(
+    ([field, value]: [string, FilterFieldState[keyof FilterFieldState]]) => {
+      if (isEmpty(value)) return;
+
+      // Extract 'value' field from Option types
+      const flattenedValue = getInputValue(value);
+      const formattedValue =
+        (dateFields as string[]).includes(field) &&
+        typeof flattenedValue === 'string'
+          ? fromIsoDateString(flattenedValue)
+          : flattenedValue;
+
+      if (formattedValue && isProfileField(field, profile)) {
+        newFilterQueryParams[field as FilterField] = formattedValue;
+      }
+    },
+  );
+  return newFilterQueryParams;
 }
 
 // Converts a JSON object into a parameter string
@@ -1162,17 +1203,28 @@ function buildUrlQueryString(
   ); // trim the leading ampersand
 }
 
+function camelToKebab(camel: string) {
+  return camel
+    .split('')
+    .map((letter) => {
+      return letter === letter.toUpperCase()
+        ? '-' + letter.toLowerCase()
+        : letter;
+    })
+    .join('');
+}
+
 // Returns a boolean, specifying if a value is found in the
 // specified table and column of the database
 async function checkColumnValue(
   apiKey: string,
   apiUrl: string,
-  value: Primitive,
+  value: string,
   fieldName: string,
   profile: string,
 ) {
   const url = `${apiUrl}/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
-  const res = await getData<Primitive[]>({ url, apiKey });
+  const res = await getData<string[]>({ url, apiKey });
   if (res.length) return true;
   return false;
 }
@@ -1455,10 +1507,6 @@ function getInputValue(input: Option | ReadonlyArray<Option> | string) {
   return input;
 }
 
-function getLocalStorageItem(item: string) {
-  return localStorage.getItem(item) ?? null;
-}
-
 function getMultiOptionFields(fields: typeof allFieldsConfig) {
   return removeNulls(
     fields.map((field) => {
@@ -1577,7 +1625,7 @@ function isNotEmpty<T>(v: T | null | undefined | [] | {}): v is T {
 }
 
 // Type narrowing
-function isOption(maybeOption: Option | Primitive): maybeOption is Option {
+function isOption(maybeOption: Option | string): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
@@ -1671,7 +1719,7 @@ async function matchOptions(
   profile: string | null = null,
   multiple = false,
 ) {
-  const valuesArray: Primitive[] = [];
+  const valuesArray: string[] = [];
   if (Array.isArray(values)) valuesArray.push(...values);
   else if (values !== null) valuesArray.push(values);
 
@@ -1708,40 +1756,39 @@ function matchYear(values: InputValue) {
   return matchDate(values, true);
 }
 
-// Parse parameters provided in the URL hash into a JSON object
+// Parse parameters provided in the URL search into a JSON object
 function parseInitialParams(
   profile: Profile,
 ): [FilterQueryData, ParameterErrors] {
-  const uniqueParams: { [field: string]: Primitive | Set<Primitive> } = {};
+  const uniqueParams: { [field: string]: string | Set<string> } = {};
   const paramErrors: ParameterErrors = {
     duplicate: new Set(),
     invalid: new Set(),
   };
 
-  const initialParamsList = window.location.hash.replace('#', '').split('&');
-  initialParamsList.forEach((param) => {
-    const parsedParam = param.split('=');
-    // Disregard invalid or empty parameters
-    if (parsedParam.length !== 2 || parsedParam[1] === '') return;
+  Array.from(new URLSearchParams(window.location.search)).forEach(
+    ([field, uriValue]) => {
+      // Disregard empty parameters
+      if (!uriValue) return;
 
-    const [field, uriValue] = parsedParam;
-    const newValue = decodeURI(uriValue);
+      const newValue = decodeURI(uriValue);
 
-    if (field in uniqueParams) {
-      if (!isMultiOptionField(field)) return paramErrors.duplicate.add(field);
-      // Multiple values, add to an array
-      const value = uniqueParams[field];
-      if (value instanceof Set) value.add(newValue);
-      else uniqueParams[field] = new Set([value, newValue]);
-    } else {
-      if (!isProfileField(field, profile)) {
-        paramErrors.invalid.add(field);
-        return;
+      if (field in uniqueParams) {
+        if (!isMultiOptionField(field)) return paramErrors.duplicate.add(field);
+        // Multiple values, add to an array
+        const value = uniqueParams[field];
+        if (value instanceof Set) value.add(newValue);
+        else uniqueParams[field] = new Set([value, newValue]);
+      } else {
+        if (!isProfileField(field, profile)) {
+          paramErrors.invalid.add(field);
+          return;
+        }
+        // Single value
+        uniqueParams[field] = newValue;
       }
-      // Single value
-      uniqueParams[field] = newValue;
-    }
-  });
+    },
+  );
 
   const params = Object.entries(uniqueParams).reduce(
     (current, [param, value]) => {
@@ -1756,48 +1803,12 @@ function parseInitialParams(
   return [params, paramErrors];
 }
 
-function removeHash() {
-  const location = window.location;
-  if ('pushState' in window.history)
-    window.history.replaceState(null, '', location.pathname);
-  else {
-    // Prevent scrolling by storing the page's current scroll offset
-    const scrollTop = document.body.scrollTop;
-    const scrollLeft = document.body.scrollLeft;
+function scrollToHash() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
 
-    location.hash = '';
-
-    // Restore the scroll offset, should be flicker free
-    document.body.scrollTop = scrollTop;
-    document.body.scrollLeft = scrollLeft;
-  }
-}
-
-function setLocalStorageItem(item: string, value: string) {
-  storageAvailable() && localStorage.setItem(item, value);
-}
-
-function storageAvailable(
-  storageType: 'localStorage' | 'sessionStorage' = 'localStorage',
-) {
-  const storage: Storage = window[storageType];
-  try {
-    const x = '__storage_test__';
-    storage.setItem(x, x);
-    storage.removeItem(x);
-    return true;
-  } catch (e) {
-    return (
-      e instanceof DOMException &&
-      // everything except Firefox
-      (e.name === 'QuotaExceededError' ||
-        // Firefox
-        e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-      // acknowledge QuotaExceededError only if there's something already stored
-      storage &&
-      storage.length !== 0
-    );
-  }
+  const hashTag = document.getElementById(hash);
+  hashTag?.scrollIntoView({ behavior: 'smooth' });
 }
 
 /*
@@ -1884,7 +1895,7 @@ type FilterGroupsProps = {
 };
 
 type FilterQueryData = Partial<{
-  [F in FilterField]: Primitive | Primitive[];
+  [F in FilterField]: string | string[];
 }>;
 
 type HomeContext = {
@@ -1901,7 +1912,7 @@ type HomeContext = {
   staticOptions: StaticOptions;
 };
 
-type InputValue = Primitive | Primitive[] | null;
+type InputValue = string | string[] | null;
 
 type MultiOptionField = (typeof multiOptionFields)[number];
 
@@ -2012,6 +2023,6 @@ type SourceSelectFilterProps<
 
 type StaticOptions = typeof listOptions & Required<DomainOptions>;
 
-type UrlQueryParam = [string, Primitive];
+type UrlQueryParam = [string, string];
 
 type YearField = (typeof yearFields)[number];

@@ -14,18 +14,22 @@ export function Alert({
 }: AlertProps) {
   const alertStyles = [...styles];
 
+  let role = 'alert';
   switch (type) {
     case 'info':
       alertStyles.push('usa-alert--info');
+      role = 'region';
       break;
     case 'warning':
       alertStyles.push('usa-alert--warning');
+      role = 'region';
       break;
     case 'error':
       alertStyles.push('usa-alert--error');
       break;
     case 'success':
       alertStyles.push('usa-alert--success');
+      role = 'status';
       break;
   }
 
@@ -35,7 +39,7 @@ export function Alert({
   return (
     <div
       className={`radius-md usa-alert ${alertStyles.join(' ')}`}
-      role="alert"
+      role={role}
     >
       <div className="usa-alert__body">
         {heading && <h4 className="usa-alert__heading">{heading}</h4>}

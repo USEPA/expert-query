@@ -25,7 +25,7 @@ export function NationalDownloads() {
   return (
     <>
       <div>
-        <h2>National Downloads</h2>
+        <h1>National Downloads</h1>
         <hr />
         <Summary heading="Description">
           <p>
@@ -60,7 +60,7 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
   if (status === 'success')
     return (
       <section className="margin-top-6" id="attains">
-        <h3 className="text-primary">ATTAINS Data</h3>
+        <h2 className="text-primary">ATTAINS Data</h2>
         Go to the <Link to="/attains">ATTAINS Query</Link> page.
         <table className="margin-x-auto usa-table usa-table--stacked width-full">
           <thead>
