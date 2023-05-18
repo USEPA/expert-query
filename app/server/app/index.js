@@ -135,7 +135,7 @@ routes(app, basePath);
 /****************************************************************
  Setup basic auth for non-production environments
 ****************************************************************/
-if (isLocal || isStaging) {
+if (isDevelopment || isStaging) {
   if (process.env.EQ_BASIC_USER_NAME) {
     log.info('EQ_BASIC_USER_NAME environmental variable found, continuing.');
   } else {
