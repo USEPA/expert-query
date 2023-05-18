@@ -111,9 +111,31 @@ requiredEnvVars.forEach((envVar) => {
 });
 
 /****************************************************************
+Enable CORS/Preflight/OPTIONS request
+****************************************************************/
+app.options(
+  '*',
+  cors({
+    methods: ['GET', 'POST', 'HEAD'],
+  }),
+);
+
+/****************************************************************
+ Setup server and routes
+****************************************************************/
+// parse json in body of post requests
+app.use(express.json());
+
+// If SERVER_BASE_PATH is provided, serve routes and static files from there (e.g. /csb)
+const basePath = `${process.env.SERVER_BASE_PATH || ''}/`;
+
+// setup server routes
+routes(app, basePath);
+
+/****************************************************************
  Setup basic auth for non-production environments
 ****************************************************************/
-if (isDevelopment || isStaging) {
+if (isLocal || isStaging) {
   if (process.env.EQ_BASIC_USER_NAME) {
     log.info('EQ_BASIC_USER_NAME environmental variable found, continuing.');
   } else {
@@ -142,28 +164,6 @@ if (isDevelopment || isStaging) {
     }),
   );
 }
-
-/****************************************************************
-Enable CORS/Preflight/OPTIONS request
-****************************************************************/
-app.options(
-  '*',
-  cors({
-    methods: ['GET', 'POST', 'HEAD'],
-  }),
-);
-
-/****************************************************************
- Setup server and routes
-****************************************************************/
-// parse json in body of post requests
-app.use(express.json());
-
-// If SERVER_BASE_PATH is provided, serve routes and static files from there (e.g. /csb)
-const basePath = `${process.env.SERVER_BASE_PATH || ''}/`;
-
-// setup server routes
-routes(app, basePath);
 
 // Use regex to add trailing slash on static requests (required when using sub path)
 const pathRegex = new RegExp(`^\\${process.env.SERVER_BASE_PATH || ''}$`);
