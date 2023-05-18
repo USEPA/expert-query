@@ -8,6 +8,10 @@
 }
 
 /* --- EPA/USWDS --- */
+.l-constrain {
+  max-width: 75rem;
+}
+
 .usa-site-alert .usa-alert {
   margin-top: 0 !important;
   max-width: 1400px;

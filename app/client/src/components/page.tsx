@@ -1,7 +1,10 @@
-import { NavLink } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+// components
+import { InPageNavLayout } from 'components/inPageNav';
 // config
 import { serverUrl } from 'config';
+// types
+import type { ReactNode } from 'react';
 
 export default Page;
 
@@ -10,7 +13,7 @@ type PageProps = {
 };
 
 export function Page({ children }: PageProps) {
-  const location = window.location;
+  const location = useLocation();
   const baseUrl =
     location.hostname === 'localhost'
       ? `${location.protocol}//${location.hostname}:9090`
@@ -21,9 +24,15 @@ export function Page({ children }: PageProps) {
       <div className="l-constrain">
         <div className="l-page__header">
           <div className="l-page__header-first usa-logo margin-top-0">
-            <h1 className="web-area-title usa-logo__text">
-              <NavLink to="/">Expert Query</NavLink>
-            </h1>
+            {location.pathname.includes('/api-documentation') ? (
+              <h1 className="web-area-title usa-logo__text">
+                <NavLink to="/">Expert Query</NavLink>
+              </h1>
+            ) : (
+              <div className="web-area-title usa-logo__text">
+                <NavLink to="/">Expert Query</NavLink>
+              </div>
+            )}
           </div>
           <div className="l-page__header-last grid-row">
             <a
@@ -53,7 +62,9 @@ export function Page({ children }: PageProps) {
           </div>
         </div>
 
-        <article className="article">{children}</article>
+        <InPageNavLayout>
+          <article className="article">{children}</article>
+        </InPageNavLayout>
       </div>
 
       <div className="l-page__footer">

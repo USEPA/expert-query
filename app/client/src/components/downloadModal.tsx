@@ -13,7 +13,7 @@ import { serverUrl } from 'config';
 // styles
 import '@reach/dialog/styles.css';
 // types
-import type { FetchState, Primitive, Status } from 'types';
+import type { FetchState, Status } from 'types';
 
 /*
 ## Components
@@ -143,7 +143,9 @@ export function DownloadModal<D extends PostData>({
                   <p>
                     Please refine the search, or visit the{' '}
                     <a
-                      href={`${serverUrl}/national-downloads${dataId ? '#' + dataId : ''}`}
+                      href={`${serverUrl}/national-downloads${
+                        dataId ? '#' + dataId : ''
+                      }`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -240,7 +242,7 @@ type DownloadModalProps<D extends PostData> = {
 type PostData = {
   columns: string[];
   filters: {
-    [field: string]: Primitive | Primitive[];
+    [field: string]: string | string[];
   };
   options: {
     [field: string]: string;
