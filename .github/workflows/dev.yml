@@ -67,6 +67,8 @@ jobs:
       DB_NAME: ${{ secrets.DB_NAME_DEV }}
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       DB_USERNAME: ${{ secrets.EQ_USER_DEV }}
+      EQ_BASIC_USER_NAME: ${{ secrets.EQ_BASIC_USER_NAME }}
+      EQ_BASIC_USER_PWD: ${{ secrets.EQ_BASIC_USER_PWD }}
       EQ_SECRET: ${{ secrets.EQ_SECRET_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
       JSON_PAGE_SIZE: 1000
@@ -128,6 +130,8 @@ jobs:
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
+          cf set-env $APP_NAME "EQ_BASIC_USER_NAME" "$EQ_BASIC_USER_NAME" > /dev/null
+          cf set-env $APP_NAME "EQ_BASIC_USER_PWD" "$EQ_BASIC_USER_PWD" > /dev/null
           cf set-env $APP_NAME "EQ_SECRET" "$EQ_SECRET" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
           cf set-env $APP_NAME "JSON_PAGE_SIZE" "$JSON_PAGE_SIZE" > /dev/null
