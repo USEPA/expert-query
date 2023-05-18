@@ -1,7 +1,6 @@
 import browserSync from 'browser-sync';
 import cors from 'cors';
 import express from 'express';
-import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -109,39 +108,6 @@ requiredEnvVars.forEach((envVar) => {
     process.exit();
   }
 });
-
-/****************************************************************
- Setup basic auth for non-production environments
-****************************************************************/
-if (isDevelopment || isStaging) {
-  if (process.env.EQ_BASIC_USER_NAME) {
-    log.info('EQ_BASIC_USER_NAME environmental variable found, continuing.');
-  } else {
-    let msg = 'EQ_BASIC_USER_NAME variable NOT set, exiting system.';
-    log.error(msg);
-    process.exit();
-  }
-
-  if (process.env.EQ_BASIC_USER_PWD) {
-    log.info('EQ_BASIC_USER_PWD environmental variable found, continuing.');
-  } else {
-    let msg = 'EQ_BASIC_USER_PWD variable NOT set, exiting system.';
-    log.error(msg);
-    process.exit();
-  }
-
-  let users = {};
-  users[process.env.EQ_BASIC_USER_NAME] = process.env.EQ_BASIC_USER_PWD;
-
-  app.use(
-    basicAuth({
-      users: users,
-      challenge: true,
-      unauthorizedResponse: (req) =>
-        req.auth ? 'Invalid credentials' : 'No credentials provided',
-    }),
-  );
-}
 
 /****************************************************************
 Enable CORS/Preflight/OPTIONS request
