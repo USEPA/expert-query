@@ -20,7 +20,7 @@ export function RadioButtons({
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
       {legend && (
-        <legend className="align-items-center display-flex usa-legend">
+        <legend className="align-items-center display-flex margin-top-0 usa-legend">
           {legend}
         </legend>
       )}

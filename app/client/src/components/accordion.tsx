@@ -29,8 +29,8 @@ export function AccordionItem({
   const toggleExpanded = useCallback(() => setExpanded(!expanded), [expanded]);
 
   return (
-    <div className="margin-top-2">
-      <h4 className="usa-accordion__heading">
+    <div className="margin-top-8">
+      <h3 className="usa-accordion__heading">
         <button
           type="button"
           className="usa-accordion__button"
@@ -39,7 +39,7 @@ export function AccordionItem({
         >
           {heading}
         </button>
-      </h4>
+      </h3>
       {expanded && (
         <div
           className="overflow-visible usa-accordion__content usa-prose"
