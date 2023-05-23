@@ -46,6 +46,7 @@ function formatLogMsg(app_metadata, app_message, app_otherinfo) {
 //request for logging/auditing purposes.
 function populateMetdataObjFromRequest(request) {
   let metadata = {};
+  log.info('request.header: ', request.headers);
 
   metadata.b3 =
     request.header('b3') === undefined ? null : request.header('b3');
