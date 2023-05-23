@@ -1,4 +1,3 @@
-import AWS from 'aws-sdk';
 import cors from 'cors';
 import express from 'express';
 import { statSync } from 'node:fs';
@@ -15,6 +14,7 @@ import {
   log,
   populateMetdataObjFromRequest,
 } from '../utilities/logger.js';
+import { getS3Bucket } from '../utilities/s3.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
@@ -62,13 +62,7 @@ export default function (app, basePath) {
           timeSinceLastUpdate = (Date.now() - stats.mtime) / (1000 * 60 * 60);
         } else {
           // setup public s3 bucket
-          const config = new AWS.Config({
-            accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
-            secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
-            region: process.env.CF_S3_PUB_REGION,
-          });
-          AWS.config.update(config);
-          const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+          const s3 = getS3Bucket();
 
           // get a list of files in the directory
           const data = await s3

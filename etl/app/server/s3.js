@@ -26,7 +26,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const environment = getEnvironment();
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)
-function setAwsConfig({
+function getS3Bucket({
   accessKeyId = process.env.CF_S3_PUB_ACCESS_KEY,
   secretAccessKey = process.env.CF_S3_PUB_SECRET_KEY,
   region = process.env.CF_S3_PUB_REGION,
@@ -37,6 +37,8 @@ function setAwsConfig({
     region,
   });
   AWS.config.update(config);
+
+  return new AWS.S3({ apiVersion: '2006-03-01' });
 }
 
 // Loads etl config from private S3 bucket
@@ -52,13 +54,11 @@ export async function loadConfig() {
     // setup private s3 bucket
     let s3;
     if (!environment.isLocal) {
-      setAwsConfig({
+      s3 = getS3Bucket({
         accessKeyId: process.env.CF_S3_PRIV_ACCESS_KEY,
         secretAccessKey: process.env.CF_S3_PRIV_SECRET_KEY,
         region: process.env.CF_S3_PRIV_REGION,
       });
-
-      s3 = new AWS.S3({ apiVersion: '2006-03-01' });
     }
 
     const promises = filenames.map((filename) => {
@@ -115,9 +115,7 @@ export async function uploadFilePublic(
       writeFileSync(`${subFolderPath}/${filePath}`, fileToUpload);
     } else {
       // setup public s3 bucket
-      setAwsConfig();
-
-      const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+      const s3 = getS3Bucket();
 
       // upload the file
       await s3
@@ -389,9 +387,7 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
       });
     } else {
       // setup public s3 bucket
-      setAwsConfig();
-
-      const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+      const s3 = getS3Bucket();
 
       // prepend directory to dirsToIgnore
       const fullPathDirsToIgnore = dirsToIgnore.map((item) => {
@@ -460,12 +456,11 @@ async function queryColumnValues(pool, colAlias) {
 }
 
 export async function readS3File({ bucketInfo, path }) {
-  setAwsConfig({
+  const s3 = getS3Bucket({
     accessKeyId: bucketInfo.accessKeyId,
     secretAccessKey: bucketInfo.secretAccessKey,
     region: bucketInfo.region,
   });
-  const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
   const res = await s3
     .getObject({
