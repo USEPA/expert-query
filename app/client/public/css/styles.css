@@ -12,6 +12,12 @@
   max-width: 75rem;
 }
 
+.l-page__header a,
+.l-page__header a:hover,
+.l-page__header a:visited {
+  color: white;
+}
+
 .usa-site-alert .usa-alert {
   margin-top: 0 !important;
   max-width: 1400px;
@@ -29,6 +35,10 @@
 .usa-checkbox__label,
 .usa-radio__label {
   text-indent: 0;
+}
+
+.usa-logo a {
+  color: white !important;
 }
 
 .usa-modal--lg .usa-modal__main {

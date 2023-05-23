@@ -20,23 +20,20 @@ export function Page({ children }: PageProps) {
       : serverUrl;
 
   return (
-    <div className="l-page has-footer">
-      <div className="l-constrain">
-        <div className="l-page__header">
-          <div className="l-page__header-first usa-logo margin-top-0">
-            {location.pathname.includes('/api-documentation') ? (
-              <h1 className="web-area-title usa-logo__text">
-                <NavLink to="/">Expert Query</NavLink>
-              </h1>
-            ) : (
-              <div className="web-area-title usa-logo__text">
-                <NavLink to="/">Expert Query</NavLink>
-              </div>
-            )}
-          </div>
-          <div className="l-page__header-last grid-row">
+    <div className="l-page has-footer desktop:padding-top-0">
+      <div
+        className="position-relative height-15 tablet:height-card"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(0, 0, 0, 0.875) 25%, rgba(0, 0, 0, 0.625) 50%, rgba(0, 0, 0, 0.375) 75%), url(/img/banner.jpg)',
+          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+        }}
+      >
+        <div className="l-constrain l-page__header display-flex flex-column height-full">
+          <div className="margin-top-1 flex-align-self-center tablet:flex-align-self-end">
             <a
-              className="margin-left-2 tablet:margin-left-0 margin-right-3 text-no-underline tablet:grid-col-auto"
+              className="margin-right-3 text-no-underline hover:text-underline"
               href={`${serverUrl}/national-downloads`}
               target="_blank"
               rel="noopener noreferrer"
@@ -44,7 +41,7 @@ export function Page({ children }: PageProps) {
               National Downloads
             </a>
             <a
-              className="margin-left-2 tablet:margin-left-0 margin-right-3 text-no-underline tablet:grid-col-auto"
+              className="margin-right-3 text-no-underline hover:text-underline"
               href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
               target="_blank"
               rel="noopener noreferrer"
@@ -52,7 +49,7 @@ export function Page({ children }: PageProps) {
               User's Guide (PDF)
             </a>
             <a
-              className="margin-left-2 tablet:margin-left-0 margin-right-3 text-no-underline tablet:grid-col-auto"
+              className="tablet:margin-right-3 text-no-underline hover:text-underline"
               href="https://www.epa.gov/waterdata/forms/contact-us-about-water-data-and-tools"
               target="_blank"
               rel="noopener noreferrer"
@@ -60,8 +57,23 @@ export function Page({ children }: PageProps) {
               Contact Us
             </a>
           </div>
+          <div className="display-flex flex-fill flex-justify-center">
+            <div className="flex-align-self-center flex-auto usa-logo margin-0 ">
+              {location.pathname.includes('/api-documentation') ? (
+                <h1 className="web-area-title usa-logo__text">
+                  <NavLink to="/">Expert Query</NavLink>
+                </h1>
+              ) : (
+                <div className="web-area-title usa-logo__text">
+                  <NavLink to="/">Expert Query</NavLink>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+      </div>
 
+      <div className="l-constrain">
         <InPageNavLayout>
           <article className="article">{children}</article>
         </InPageNavLayout>
