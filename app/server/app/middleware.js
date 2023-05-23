@@ -66,6 +66,12 @@ function protectRoutes(req, res, next) {
     return res.status(401).json(errJson);
   }
 
+  // For dev and stage only, check if user-id is authorized
+  if (environment.isDevelopment || environment.isStaging) {
+    const apiUserId = req.header('x-api-user-id');
+    log.info('apiUserId: ', apiUserId);
+  }
+
   next();
 }
 
