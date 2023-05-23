@@ -33,8 +33,7 @@ export async function getPrivateConfig() {
   if (privateConfig) return privateConfig;
 
   // NOTE: static content files found in `etl/app/content-private/` directory
-  const filenames = [];
-
+  const filenames = ['tableConfig.json'];
   const isDevOrStage = environment.isDevelopment || environment.isStaging;
   if (isDevOrStage) {
     filenames.push('approvedUsersDevStage.json');
@@ -76,8 +75,10 @@ export async function getPrivateConfig() {
         : JSON.parse(stringOrResponse.Body.toString('utf-8')),
     );
 
-    privateConfig = {};
-    if (isDevOrStage) privateConfig['approvedUsers'] = parsedData[0];
+    privateConfig = {
+      tableConfig: parsedData[0],
+    };
+    if (isDevOrStage) privateConfig['approvedUsers'] = parsedData[1];
 
     return privateConfig;
   } catch (err) {

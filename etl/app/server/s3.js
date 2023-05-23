@@ -13,7 +13,6 @@ import { setTimeout } from 'timers/promises';
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
 import { fileURLToPath } from 'url';
-import { tableConfig } from '../config/tableConfig.js';
 import {
   endConnPool,
   getActiveSchema,
@@ -46,8 +45,9 @@ export async function loadConfig() {
   // NOTE: static content files found in `etl/app/content-private/` directory
   const filenames = [
     'config.json',
-    'services.json',
     'domainValueMappings.json',
+    'services.json',
+    'tableConfig.json',
   ];
 
   try {
@@ -85,8 +85,9 @@ export async function loadConfig() {
 
     return {
       config: parsedData[0],
-      services: parsedData[1],
-      domainValueMappings: parsedData[2],
+      domainValueMappings: parsedData[1],
+      services: parsedData[2],
+      tableConfig: parsedData[3],
     };
   } catch (err) {
     log.warn('Error loading config from private S3 bucket');
@@ -178,7 +179,7 @@ function fetchSingleDomain(name, mapping, pool) {
 
       // Add any column values not represented by domain values service
       for (const colAlias of mapping.columns) {
-        const colValues = await queryColumnValues(pool, colAlias);
+        const colValues = await queryColumnValues(s3Config, pool, colAlias);
         colValues.forEach((value) => {
           if (valuesAdded.has(value)) return;
           // Warn about mismatch, since value added here may not have the desired label
@@ -276,7 +277,7 @@ function fetchStateValues(pool) {
             : valuesAdded.add(item.value);
         });
 
-      const colValues = await queryColumnValues(pool, 'state');
+      const colValues = await queryColumnValues(s3Config, pool, 'state');
       colValues.forEach((value) => {
         if (valuesAdded.has(value)) return;
         // Warn about mismatch, since value added here will not have a nice label
@@ -427,13 +428,13 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
   }
 }
 
-async function queryColumnValues(pool, colAlias) {
+async function queryColumnValues(s3Config, pool, colAlias) {
   const values = new Set();
   try {
     const schemaName = await getActiveSchema(pool);
     if (!schemaName) return [];
     await Promise.all(
-      Object.values(tableConfig).map(async (config) => {
+      Object.values(s3Config.tableConfig).map(async (config) => {
         const colConfig = config.columns.find((col) => col.alias === colAlias);
         if (!colConfig) return;
         const materializedView = config.materializedViews.find((mv) =>
