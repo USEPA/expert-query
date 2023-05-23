@@ -128,7 +128,7 @@ export function Home() {
 
   if (content.status === 'failure') {
     return (
-      <Alert type="error">
+      <Alert type="error" styles={['margin-top-6']}>
         Expert Query is currently unavailable, please try again later.
       </Alert>
     );
@@ -824,8 +824,7 @@ function SelectFilter<
     (option: Option) => {
       return secondaryFilterKey ? (
         <div>
-          <span style={{ fontWeight: 600 }}>{option.value}</span> (
-          {option.label})
+          <span className="text-semibold">{option.value}</span> ({option.label})
         </div>
       ) : (
         option.label

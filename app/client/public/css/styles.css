@@ -1,18 +1,10 @@
-/* --- Fonts --- */
-@font-face {
-  font-family: 'Source Sans Pro Web';
-  font-style: normal;
-  font-weight: 600;
-  font-display: fallback;
-  src: url(../fonts/sourcesanspro-semibold-webfont.woff2) format('woff2');
-}
-
 /* --- EPA/USWDS --- */
 .l-constrain {
   max-width: 75rem;
 }
 
 .l-page__header a,
+.l-page__header a:focus,
 .l-page__header a:hover,
 .l-page__header a:visited {
   color: white;

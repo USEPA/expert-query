@@ -1,10 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom';
 // components
+import { ReactComponent as Folder } from '@uswds/uswds/img/usa-icons/folder.svg';
+import { ReactComponent as Info } from '@uswds/uswds/img/usa-icons/info.svg';
+import { ReactComponent as Contact } from '@uswds/uswds/img/usa-icons/mail.svg';
 import { InPageNavLayout } from 'components/inPageNav';
 // config
 import { serverUrl } from 'config';
 // types
-import type { ReactNode } from 'react';
+import type { FunctionComponent, ReactNode, SVGProps } from 'react';
 
 export default Page;
 
@@ -22,7 +25,7 @@ export function Page({ children }: PageProps) {
   return (
     <div className="l-page has-footer desktop:padding-top-0">
       <div
-        className="position-relative height-15 tablet:height-card"
+        className="position-relative height-card desktop:height-card-lg"
         style={{
           backgroundImage:
             'linear-gradient(rgba(0, 0, 0, 0.875) 25%, rgba(0, 0, 0, 0.625) 50%, rgba(0, 0, 0, 0.375) 75%), url(/img/banner.jpg)',
@@ -31,40 +34,36 @@ export function Page({ children }: PageProps) {
         }}
       >
         <div className="l-constrain l-page__header display-flex flex-column height-full">
-          <div className="margin-top-1 flex-align-self-center tablet:flex-align-self-end">
-            <a
-              className="margin-right-3 text-no-underline hover:text-underline"
+          <div className="margin-top-2 flex-align-self-center tablet:flex-align-self-end">
+            <HeaderLink
+              className="margin-right-3"
+              icon={Folder}
               href={`${serverUrl}/national-downloads`}
-              target="_blank"
-              rel="noopener noreferrer"
             >
               National Downloads
-            </a>
-            <a
-              className="margin-right-3 text-no-underline hover:text-underline"
+            </HeaderLink>
+            <HeaderLink
+              className="margin-right-3"
+              icon={Info}
               href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
             >
               User's Guide (PDF)
-            </a>
-            <a
-              className="tablet:margin-right-3 text-no-underline hover:text-underline"
+            </HeaderLink>
+            <HeaderLink
+              icon={Contact}
               href="https://www.epa.gov/waterdata/forms/contact-us-about-water-data-and-tools"
-              target="_blank"
-              rel="noopener noreferrer"
             >
               Contact Us
-            </a>
+            </HeaderLink>
           </div>
           <div className="display-flex flex-fill flex-justify-center">
             <div className="flex-align-self-center flex-auto usa-logo margin-0 ">
               {location.pathname.includes('/api-documentation') ? (
-                <h1 className="web-area-title usa-logo__text">
+                <h1 className="web-area-title font-heading-xl usa-logo__text">
                   <NavLink to="/">Expert Query</NavLink>
                 </h1>
               ) : (
-                <div className="web-area-title usa-logo__text">
+                <div className="web-area-title font-heading-xl tablet:font-heading-2xl usa-logo__text">
                   <NavLink to="/">Expert Query</NavLink>
                 </div>
               )}
@@ -96,5 +95,33 @@ export function Page({ children }: PageProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+type HeaderLinkProps = {
+  children: string;
+  className?: string;
+  icon: FunctionComponent<SVGProps<SVGSVGElement>>;
+  href: string;
+};
+
+function HeaderLink({ className, children, icon, href }: HeaderLinkProps) {
+  const Icon = icon;
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`display-inline-flex flex-align-center font-ui-xs text-no-underline hover:text-underline ${className}`}
+    >
+      <Icon
+        aria-hidden="true"
+        className="height-205 tablet:height-2 tablet:margin-right-1 usa-icon width-205 tablet:width-2"
+        focusable="false"
+        role="img"
+      />
+      <span className="tablet-sr-only">{children}</span>
+    </a>
   );
 }
