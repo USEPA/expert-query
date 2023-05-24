@@ -13,8 +13,6 @@ import {
   retryRequest,
   syncDomainValues,
 } from './s3.js';
-// config
-import { tableConfig } from '../config/tableConfig.js';
 
 const { Client, Pool } = pg;
 
@@ -766,10 +764,10 @@ async function createIndividualIndex(
 }
 
 // Build the query for creating the indexes
-async function createIndexes(client, overrideWorkMemory, tableName) {
+async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
   const indexTableName = tableName.replaceAll('_', '');
 
-  const table = Object.values(tableConfig).find(
+  const table = Object.values(s3Config.tableConfig).find(
     (table) => table.tableName === tableName,
   );
   if (!table) return;
@@ -904,7 +902,7 @@ function getProfileEtl(
       }
 
       log.info(`${tableName}: Creating indexes`);
-      await createIndexes(client, overrideWorkMemory, tableName);
+      await createIndexes(s3Config, client, overrideWorkMemory, tableName);
       log.info(`${tableName}: Indexes created`);
     } catch (err) {
       log.warn(`Failed to load table ${tableName}! ${err}`);

@@ -100,6 +100,10 @@ if (isLocal) {
   requiredEnvVars.push('VCAP_SERVICES');
   requiredEnvVars.push('CF_S3_PUB_BUCKET_ID');
   requiredEnvVars.push('CF_S3_PUB_REGION');
+  requiredEnvVars.push('CF_S3_PRIV_ACCESS_KEY');
+  requiredEnvVars.push('CF_S3_PRIV_BUCKET_ID');
+  requiredEnvVars.push('CF_S3_PRIV_REGION');
+  requiredEnvVars.push('CF_S3_PRIV_SECRET_KEY');
 }
 
 requiredEnvVars.forEach((envVar) => {

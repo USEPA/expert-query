@@ -4,7 +4,6 @@ import express from 'express';
 import { readFile, stat } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
 import { knex } from '../utilities/database.js';
 import { getEnvironment } from '../utilities/environment.js';
@@ -13,6 +12,7 @@ import {
   log,
   populateMetdataObjFromRequest,
 } from '../utilities/logger.js';
+import { getPrivateConfig } from '../utilities/s3.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
@@ -70,26 +70,31 @@ async function fetchMetadata(req) {
 
   const latest = parseInt(parseResponse(latestRes).julian);
 
-  await Promise.all([
-    ...Object.entries(tableConfig).map(async ([profile, config]) => {
-      const basename = config.tableName;
-      const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
-      const filesize = await getFileSize(filename).catch((err) => {
-        logError(err, metadataObj);
-        return null;
-      });
-      const stats = profileStats.find(
-        (p) => p.profileName === config.tableName,
-      );
-      if (!stats) return;
+  // get config from private S3 bucket
+  const privateConfig = await getPrivateConfig();
 
-      data[profile] = {
-        numRows: stats.numRows,
-        size: filesize,
-        timestamp: stats.timestamp,
-        url: `${s3BucketUrl}/${filename}`,
-      };
-    }),
+  await Promise.all([
+    ...Object.entries(privateConfig.tableConfig).map(
+      async ([profile, config]) => {
+        const basename = config.tableName;
+        const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
+        const filesize = await getFileSize(filename).catch((err) => {
+          logError(err, metadataObj);
+          return null;
+        });
+        const stats = profileStats.find(
+          (p) => p.profileName === config.tableName,
+        );
+        if (!stats) return;
+
+        data[profile] = {
+          numRows: stats.numRows,
+          size: filesize,
+          timestamp: stats.timestamp,
+          url: `${s3BucketUrl}/${filename}`,
+        };
+      },
+    ),
   ]);
 
   return { metadata: data };

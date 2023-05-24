@@ -1,4 +1,4 @@
-import AWS from 'aws-sdk';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import cors from 'cors';
 import express from 'express';
 import { statSync } from 'node:fs';
@@ -15,6 +15,7 @@ import {
   log,
   populateMetdataObjFromRequest,
 } from '../utilities/logger.js';
+import { getS3Client } from '../utilities/s3.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
@@ -62,21 +63,14 @@ export default function (app, basePath) {
           timeSinceLastUpdate = (Date.now() - stats.mtime) / (1000 * 60 * 60);
         } else {
           // setup public s3 bucket
-          const config = new AWS.Config({
-            accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
-            secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
-            region: process.env.CF_S3_PUB_REGION,
-          });
-          AWS.config.update(config);
-          const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+          const s3 = getS3Client();
 
           // get a list of files in the directory
-          const data = await s3
-            .getObject({
-              Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-              Key: 'content-etl/glossary.json',
-            })
-            .promise();
+          const command = new GetObjectCommand({
+            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+            Key: 'content-etl/glossary.json',
+          });
+          const data = await (await s3.send(command)).Body.transformToString();
 
           timeSinceLastUpdate =
             (Date.now() - data.LastModified) / (1000 * 60 * 60);
