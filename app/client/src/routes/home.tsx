@@ -351,7 +351,7 @@ export function QueryBuilder() {
             styles={['margin-bottom-2']}
           />
           <button
-            className="display-flex flex-justify-center margin-bottom-1 usa-button"
+            className="display-flex flex-justify-center usa-button"
             onClick={openDownloadConfirmation}
             type="button"
           >
@@ -364,13 +364,19 @@ export function QueryBuilder() {
             <span className="margin-y-auto">Download</span>
           </button>
           {downloadStatus === 'success' && (
-            <Alert type="success">
+            <Alert
+              styles={['margin-top-3', 'tablet:margin-top-6']}
+              type="success"
+            >
               Query executed successfully, please check your downloads folder
               for the output file.
             </Alert>
           )}
           {downloadStatus === 'failure' && (
-            <Alert type="error">
+            <Alert
+              styles={['margin-top-3', 'tablet:margin-top-6']}
+              type="error"
+            >
               An error occurred while executing the current query, please try
               again later.
             </Alert>
