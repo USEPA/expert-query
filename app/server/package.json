@@ -21,7 +21,7 @@
     "start": "nodemon -r dotenv/config --inspect app/index.js dotenv_config_path=./.env.local"
   },
   "dependencies": {
-    "aws-sdk": "2.1369.0",
+    "@aws-sdk/client-s3": "3.338.0",
     "axios": "1.4.0",
     "browser-sync": "2.29.1",
     "cors": "2.8.5",

@@ -1,3 +1,4 @@
+import { ListObjectsCommand } from '@aws-sdk/client-s3';
 import cors from 'cors';
 import express from 'express';
 import Excel from 'exceljs';
@@ -16,7 +17,7 @@ import {
   log,
   populateMetdataObjFromRequest,
 } from '../utilities/logger.js';
-import { getPrivateConfig, getS3Bucket } from '../utilities/s3.js';
+import { getPrivateConfig, getS3Client } from '../utilities/s3.js';
 import StreamingService from '../utilities/streamingService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -812,15 +813,14 @@ async function checkDomainValuesHealth(req, res) {
         (Date.now() - oldestModifiedDate) / (1000 * 60 * 60);
     } else {
       // setup public s3 bucket
-      const s3 = getS3Bucket();
+      const s3 = getS3Client();
 
       // get a list of files in the directory
-      const data = await s3
-        .listObjects({
-          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-          Prefix: 'content-etl/domainValues',
-        })
-        .promise();
+      const command = new ListObjectsCommand({
+        Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+        Prefix: 'content-etl/domainValues',
+      });
+      const data = await s3.send(command);
 
       let oldestModifiedDate = maxDateTime;
       data.Contents.forEach((file) => {

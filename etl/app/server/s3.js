@@ -1,4 +1,10 @@
-import AWS from 'aws-sdk';
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  ListObjectsCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import axios from 'axios';
 import {
   existsSync,
@@ -25,19 +31,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const environment = getEnvironment();
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)
-function getS3Bucket({
+function getS3Client({
   accessKeyId = process.env.CF_S3_PUB_ACCESS_KEY,
   secretAccessKey = process.env.CF_S3_PUB_SECRET_KEY,
   region = process.env.CF_S3_PUB_REGION,
 } = {}) {
-  const config = new AWS.Config({
-    accessKeyId,
-    secretAccessKey,
+  return new S3Client({
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
     region,
   });
-  AWS.config.update(config);
-
-  return new AWS.S3({ apiVersion: '2006-03-01' });
 }
 
 // Loads etl config from private S3 bucket
@@ -54,33 +59,35 @@ export async function loadConfig() {
     // setup private s3 bucket
     let s3;
     if (!environment.isLocal) {
-      s3 = getS3Bucket({
+      s3 = getS3Client({
         accessKeyId: process.env.CF_S3_PRIV_ACCESS_KEY,
         secretAccessKey: process.env.CF_S3_PRIV_SECRET_KEY,
         region: process.env.CF_S3_PRIV_REGION,
       });
     }
 
-    const promises = filenames.map((filename) => {
+    const promises = [];
+    for (const filename of filenames) {
       // local development: read files directly from disk
       // Cloud.gov: fetch files from the public s3 bucket
-      return environment.isLocal
-        ? readFile(resolve(__dirname, '../content-private', filename), 'utf8')
-        : s3
-            .getObject({
-              Bucket: process.env.CF_S3_PRIV_BUCKET_ID,
-              Key: `content-private/${filename}`,
-            })
-            .promise();
-    });
+      if (environment.isLocal) {
+        promises.push(
+          readFile(resolve(__dirname, '../content-private', filename), 'utf8'),
+        );
+      } else {
+        const command = new GetObjectCommand({
+          Bucket: process.env.CF_S3_PRIV_BUCKET_ID,
+          Key: `content-private/${filename}`,
+        });
+        promises.push((await s3.send(command)).Body.transformToString());
+      }
+    }
 
     const stringsOrResponses = await Promise.all(promises);
 
     // convert to json
     const parsedData = stringsOrResponses.map((stringOrResponse) =>
-      environment.isLocal
-        ? JSON.parse(stringOrResponse)
-        : JSON.parse(stringOrResponse.Body.toString('utf-8')),
+      JSON.parse(stringOrResponse),
     );
 
     return {
@@ -116,18 +123,17 @@ export async function uploadFilePublic(
       writeFileSync(`${subFolderPath}/${filePath}`, fileToUpload);
     } else {
       // setup public s3 bucket
-      const s3 = getS3Bucket();
+      const s3 = getS3Client();
 
       // upload the file
-      await s3
-        .upload({
-          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-          Key: `${subFolder}/${filePath}`,
-          ACL: 'public-read',
-          ContentType: 'application/json',
-          Body: fileToUpload,
-        })
-        .promise();
+      const command = new PutObjectCommand({
+        Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+        Key: `${subFolder}/${filePath}`,
+        ACL: 'public-read',
+        ContentType: 'application/json',
+        Body: fileToUpload,
+      });
+      return s3.send(command);
     }
   } catch (err) {
     log.warn(`Error saving "${filePath}" to public S3 bucket`);
@@ -388,7 +394,7 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
       });
     } else {
       // setup public s3 bucket
-      const s3 = getS3Bucket();
+      const s3 = getS3Client();
 
       // prepend directory to dirsToIgnore
       const fullPathDirsToIgnore = dirsToIgnore.map((item) => {
@@ -396,12 +402,11 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
       });
 
       // get a list of files in the directory
-      const data = await s3
-        .listObjects({
-          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-          Prefix: directory,
-        })
-        .promise();
+      const listCommand = new ListObjectsCommand({
+        Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+        Prefix: directory,
+      });
+      const data = await s3.send(listCommand);
 
       data.Contents.forEach(async (file) => {
         // skip file if in dirsToIgnore
@@ -415,12 +420,11 @@ export async function deleteDirectory({ directory, dirsToIgnore }) {
         }
 
         // delete file from S3
-        await s3
-          .deleteObject({
-            Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-            Key: file.Key,
-          })
-          .promise();
+        const deleteCommand = new DeleteObjectCommand({
+          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+          Key: file.Key,
+        });
+        await s3.send(deleteCommand);
       });
     }
   } catch (err) {
@@ -457,20 +461,19 @@ async function queryColumnValues(s3Config, pool, colAlias) {
 }
 
 export async function readS3File({ bucketInfo, path }) {
-  const s3 = getS3Bucket({
+  const s3 = getS3Client({
     accessKeyId: bucketInfo.accessKeyId,
     secretAccessKey: bucketInfo.secretAccessKey,
     region: bucketInfo.region,
   });
 
-  const res = await s3
-    .getObject({
-      Bucket: bucketInfo.bucketId,
-      Key: path,
-    })
-    .promise();
+  const command = new GetObjectCommand({
+    Bucket: bucketInfo.bucketId,
+    Key: path,
+  });
+  const res = await (await s3.send(command)).Body.transformToString();
 
-  const parsedData = JSON.parse(res.Body.toString('utf-8'));
+  const parsedData = JSON.parse(res);
 
   return parsedData;
 }
