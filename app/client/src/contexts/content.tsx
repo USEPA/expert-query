@@ -25,11 +25,13 @@ export type Content = {
     };
   };
   domainValues: DomainOptions;
-  glossary: Array<{
-    term: string;
-    definition: string;
-    definitionHtml: string;
-  }>;
+  glossary: {
+    [term: string]: {
+      term: string;
+      definition: string;
+      definitionHtml: string;
+    };
+  };
   metadata: Partial<{
     [P in Profile]: {
       url: string;

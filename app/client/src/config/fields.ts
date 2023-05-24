@@ -573,11 +573,6 @@ export const filterFields = [
     contextFields: ['organizationType', 'region', 'state'],
   },
   {
-    key: 'organizationName',
-    label: 'Organization Name',
-    type: 'multiselect',
-  },
-  {
     key: 'otherIdentifier',
     label: 'Other Identifier',
     type: 'multiselect',

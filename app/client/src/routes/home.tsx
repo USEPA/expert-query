@@ -37,6 +37,7 @@ import {
 import { isAbort, useAbort } from 'utils';
 // types
 import type { Profile } from 'config/profiles';
+import type { Content } from 'contexts/content';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import type { DomainOptions, Option, Status } from 'types';
 
@@ -192,13 +193,15 @@ export function Home() {
               <>
                 <Outlet
                   context={{
+                    apiKey,
+                    apiUrl,
                     filterHandlers,
                     filterState,
                     format,
                     formatHandler,
+                    glossary: content.data.glossary,
                     profile,
                     queryParams,
-                    queryUrl: apiUrl,
                     resetFilters,
                     sourceHandlers,
                     sourceState,
@@ -218,12 +221,14 @@ export function Home() {
 
 export function QueryBuilder() {
   const {
+    apiKey,
+    apiUrl,
     queryParams,
-    queryUrl,
     filterHandlers,
     filterState,
     format,
     formatHandler,
+    glossary,
     profile,
     resetFilters,
     sourceHandlers,
@@ -250,11 +255,6 @@ export function QueryBuilder() {
     downloadConfirmationVisible || clearConfirmationVisible,
   );
 
-  const { content } = useContentState();
-
-  const apiKey = content.data.services?.eqApiKey || '';
-  const apiUrl = `${content.data.services?.eqDataApi || serverUrl}/api/attains`;
-
   const navigate = useNavigate();
 
   return (
@@ -267,9 +267,7 @@ export function QueryBuilder() {
           downloadStatus={downloadStatus}
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
-          queryUrl={
-            profile ? `${queryUrl}/${profiles[profile].resource}` : null
-          }
+          queryUrl={profile ? `${apiUrl}/${profiles[profile].resource}` : null}
           setDownloadStatus={setDownloadStatus}
         />
       )}
@@ -310,6 +308,7 @@ export function QueryBuilder() {
             apiUrl={apiUrl}
             filterHandlers={filterHandlers}
             filterState={filterState}
+            glossary={glossary}
             profile={profile}
             queryParams={queryParams}
             sourceHandlers={sourceHandlers}
@@ -334,16 +333,12 @@ export function QueryBuilder() {
             download button to proceed.
           </p>
           <RadioButtons
-            legend={
-              <>
-                <b className="margin-right-05">File Format</b>
-                <InfoTooltip text="Choose a file format for the result set." />
-              </>
-            }
+            label="File Format"
             onChange={formatHandler}
             options={staticOptions.format}
             selected={format}
             styles={['margin-bottom-2']}
+            tooltip="Choose a file format for the result set."
           />
           <button
             className="display-flex flex-justify-center margin-bottom-1 usa-button"
@@ -393,7 +388,7 @@ export function QueryBuilder() {
               testId="api-query-copy-box-container"
               lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
               maxLength={2048}
-              text={`${queryUrl}/${
+              text={`${apiUrl}/${
                 profiles[profile].resource
               }?${buildUrlQueryString(
                 queryParams.filters,
@@ -406,7 +401,7 @@ export function QueryBuilder() {
               testId="curl-copy-box-container"
               text={`curl -X POST --json "${JSON.stringify(
                 queryParams,
-              ).replaceAll('"', '\\"')}" ${queryUrl}/${
+              ).replaceAll('"', '\\"')}" ${apiUrl}/${
                 profiles[profile].resource
               } -H "X-Api-Key: <YOUR_API_KEY>"`}
             />
@@ -423,6 +418,7 @@ function FilterFields({
   fields,
   filterHandlers,
   filterState,
+  glossary,
   profile,
   queryParams,
   sourceHandlers,
@@ -435,6 +431,11 @@ function FilterFields({
       const sourceFieldConfig =
         'source' in fieldConfig
           ? sourceFieldsConfig.find((f) => f.id === fieldConfig.source)
+          : null;
+
+      const tooltip =
+        fieldConfig.label in glossary
+          ? glossary[fieldConfig.label].definition
           : null;
 
       switch (fieldConfig.type) {
@@ -454,11 +455,12 @@ function FilterFields({
             return [
               <Checkboxes
                 key={fieldConfig.key}
-                legend={<b>{fieldConfig.label}</b>}
+                label={fieldConfig.label}
                 onChange={filterHandlers[fieldConfig.key]}
                 options={initialOptions}
                 selected={filterState[fieldConfig.key] ?? []}
                 styles={['margin-top-3']}
+                tooltip={tooltip}
               />,
               fieldConfig.key,
             ];
@@ -498,8 +500,6 @@ function FilterFields({
           } as typeof fieldConfig.key extends MultiOptionField
             ? MultiSelectFilterProps
             : SingleSelectFilterProps;
-
-          const tooltip = 'tooltip' in fieldConfig ? fieldConfig.tooltip : null;
 
           return [
             <label
@@ -553,6 +553,7 @@ function FilterFields({
               lowHandler={filterHandlers[fieldConfig.key]}
               lowKey={fieldConfig.key}
               lowValue={filterState[fieldConfig.key]}
+              tooltip={tooltip}
               type={fieldConfig.type}
             />,
             fieldConfig.domain,
@@ -675,11 +676,15 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
   lowHandler,
   lowKey,
   lowValue,
+  tooltip,
   type,
 }: RangeFilterProps<F>) {
   return (
     <label className="usa-label" htmlFor={`input-${lowKey}`} key={domain}>
-      <b>{label}</b>
+      <span className="display-flex align-items-center">
+        <b>{label}</b>
+        {tooltip && <InfoTooltip text={tooltip} styles={['margin-left-05']} />}
+      </span>
       <div className="margin-top-1 usa-hint">from:</div>
       <input
         className="usa-input"
@@ -1887,6 +1892,7 @@ type FilterGroupsProps = {
   apiUrl: string;
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
+  glossary: Content['glossary'];
   profile: Profile;
   queryParams: QueryData;
   sourceHandlers: SourceFieldInputHandlers;
@@ -1903,9 +1909,11 @@ type HomeContext = {
   filterState: FilterFieldState;
   format: FormatOption;
   formatHandler: (format: Option) => void;
+  glossary: Content['glossary'];
   profile: Profile;
   queryParams: QueryData;
-  queryUrl: string;
+  apiKey: string;
+  apiUrl: string;
   resetFilters: () => void;
   sourceHandlers: SourceFieldInputHandlers;
   sourceState: SourceFieldState;
@@ -1950,6 +1958,7 @@ type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
   lowHandler: SingleValueInputHandler;
   lowKey: F;
   lowValue: string;
+  tooltip?: string | null;
   type: 'date' | 'year';
 };
 
@@ -1966,7 +1975,7 @@ type SelectFilterProps<
   filterValue: FilterFieldState[F];
   placeholder?: string | null;
   profile: Profile;
-  secondaryFilterKey: FilterField;
+  secondaryFilterKey: string;
   sortDirection?: SortDirection;
   sourceKey: (typeof sourceFieldsConfig)[number]['key'] | null;
   sourceValue: SourceFieldState[SourceField] | null;
