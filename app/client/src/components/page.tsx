@@ -59,7 +59,7 @@ export function Page({ children }: PageProps) {
           <div className="display-flex flex-fill flex-justify-center">
             <div className="flex-align-self-center flex-auto usa-logo margin-0 ">
               {location.pathname.includes('/api-documentation') ? (
-                <h1 className="web-area-title font-heading-xl usa-logo__text">
+                <h1 className="web-area-title font-heading-xl tablet:font-heading-2xl usa-logo__text">
                   <NavLink to="/">Expert Query</NavLink>
                 </h1>
               ) : (
