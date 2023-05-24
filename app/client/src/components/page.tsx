@@ -1,8 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom';
 // components
-import { ReactComponent as Folder } from '@uswds/uswds/img/usa-icons/folder.svg';
-import { ReactComponent as Info } from '@uswds/uswds/img/usa-icons/info.svg';
-import { ReactComponent as Contact } from '@uswds/uswds/img/usa-icons/mail.svg';
+import { ReactComponent as Folder } from 'images/folder.svg';
+import { ReactComponent as Info } from 'images/info.svg';
+import { ReactComponent as Contact } from 'images/mail.svg';
 import { InPageNavLayout } from 'components/inPageNav';
 // config
 import { serverUrl } from 'config';

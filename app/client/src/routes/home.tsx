@@ -7,7 +7,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
-import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
+import { ReactComponent as Download } from 'images/file_download.svg';
 // components
 import { AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -353,6 +353,8 @@ export function QueryBuilder() {
             <Download
               aria-hidden="true"
               className="height-205 margin-right-1 usa-icon width-205"
+              role="img"
+              focusable="false"
             />
             <span className="margin-y-auto">Download</span>
           </button>
