@@ -280,7 +280,8 @@ function getQueryParams(req) {
   };
   Object.entries(req.query).forEach(([name, value]) => {
     if (optionsParams.includes(name)) parameters.options[name] = value;
-    else if (name === 'columns') parameters.columns = value;
+    else if (name === 'columns')
+      parameters.columns = Array.isArray(value) ? value : [value];
     else parameters.filters[name] = value;
   });
 
