@@ -22,8 +22,10 @@ i.e.
 
 @use 'uswds-core' as *;
 
-.tablet-sr-only {
-  @include at-media-max('tablet') {
-    @include sr-only;
+.mobile-sr-only {
+  @include sr-only;
+
+  @include at-media('tablet') {
+    @include not-sr-only;
   }
 }

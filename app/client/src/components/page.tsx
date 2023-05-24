@@ -28,7 +28,7 @@ export function Page({ children }: PageProps) {
         className="position-relative height-card desktop:height-card-lg"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(0, 0, 0, 0.875) 25%, rgba(0, 0, 0, 0.625) 50%, rgba(0, 0, 0, 0.375) 75%), url(/img/banner.jpg)',
+            'linear-gradient(rgba(0, 0, 0, 0.775) 25%, rgba(0, 0, 0, 0.525) 50%, rgba(0, 0, 0, 0.275) 75%), url(/img/banner.jpg)',
           backgroundPosition: 'center',
           backgroundSize: 'cover',
         }}
@@ -121,7 +121,7 @@ function HeaderLink({ className, children, icon, href }: HeaderLinkProps) {
         focusable="false"
         role="img"
       />
-      <span className="tablet-sr-only">{children}</span>
+      <span className="mobile-sr-only">{children}</span>
     </a>
   );
 }

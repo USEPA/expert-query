@@ -93,7 +93,7 @@ export function SourceSelect({
       onChange?.(
         allSources[sourceCursor].value === Infinity
           ? null
-          : allSources[sourceCursor],
+          : (allSources[sourceCursor] as Option),
       );
       setSourceCursor(-1);
     }
@@ -170,7 +170,9 @@ export function SourceSelect({
                 tabIndex={-1}
                 key={`source-key-${source.value}`}
                 onClick={() => {
-                  onChange?.(source.value === Infinity ? null : source);
+                  onChange?.(
+                    source.value === Infinity ? null : (source as Option),
+                  );
                   setSourcesVisible(false);
                 }}
                 style={{ cursor: 'pointer' }}
