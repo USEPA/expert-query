@@ -105,7 +105,12 @@ export function Home() {
       return (
         <div className="margin-1">
           <div className="display-flex flex-justify flex-wrap margin-bottom-1">
-            <b className="font-ui-md margin-right-4">{option.label}</b>
+            <b
+              className="font-ui-md margin-right-4 overflow-hidden"
+              style={{ textOverflow: 'ellipsis' }}
+            >
+              {option.label}
+            </b>
             {refreshDate && (
               <em className="font-ui-xs">
                 <b>Refresh date:</b> {new Date(refreshDate).toLocaleString()}
