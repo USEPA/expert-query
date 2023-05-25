@@ -469,7 +469,7 @@ function executeQueryCountOnly(profile, req, res) {
       .count()
       .first()
       .then(({ count }) => {
-        res.status(200).json({ count, sizeExceeded: count > maxQuerySize });
+        res.status(200).json({ count, maxCount: maxQuerySize });
       });
   } catch (error) {
     log.error(

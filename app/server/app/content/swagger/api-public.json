@@ -4979,7 +4979,7 @@
         }
       },
       "QueryCountSuccess": {
-        "description": "The query evaluated successfully. The response contains the total count of the query and a flag indicating if the query would exceed the maximum size allowed by the server.",
+        "description": "The query evaluated successfully. The response contains the total count of the query along with the maximum count allowed by the server.",
         "content": {
           "application/json": {
             "schema": {
@@ -4989,9 +4989,9 @@
                   "type": "integer",
                   "example": 148220
                 },
-                "sizeExceeded": {
-                  "type": "boolean",
-                  "example": false
+                "maxCount": {
+                  "type": "integer",
+                  "example": 1000000
                 }
               },
               "required": ["count", "sizeExceeded"]

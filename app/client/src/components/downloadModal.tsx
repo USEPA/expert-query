@@ -42,7 +42,7 @@ export function DownloadModal<D extends PostData>({
     status: 'pending',
     data: null,
   });
-  const [sizeExceeded, setSizeExceeded] = useState(false);
+  const [maxCount, setMaxCount] = useState(0);
 
   // Get the row count for the current query
   useEffect(() => {
@@ -56,7 +56,7 @@ export function DownloadModal<D extends PostData>({
           status: 'success',
           data: res.count,
         });
-        setSizeExceeded(res.sizeExceeded);
+        setMaxCount(res.maxCount);
       })
       .catch((err) => {
         if (isAbort(err)) return;
@@ -147,12 +147,17 @@ export function DownloadModal<D extends PostData>({
                   </strong>{' '}
                   rows.
                 </p>
-                {!sizeExceeded && <p>Click continue to download the data.</p>}
+                {count.data <= maxCount && (
+                  <p>Click continue to download the data.</p>
+                )}
               </div>
               <div className="usa-modal__footer">
-                {sizeExceeded ? (
+                {count.data > maxCount ? (
                   <Alert type="warning">
-                    <p>The current query exceeds the maximum query size.</p>{' '}
+                    <p>
+                      The current query exceeds the maximum query size of{' '}
+                      <b>{maxCount.toLocaleString()}</b> rows.
+                    </p>{' '}
                     <p>
                       Please refine the search, or visit the{' '}
                       <a
