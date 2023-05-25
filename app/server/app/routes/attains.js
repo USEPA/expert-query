@@ -373,7 +373,7 @@ async function executeQuery(profile, req, res) {
     parseCriteria(req, query, profile, queryParams);
 
     // Check that the query doesn't exceed the MAX_QUERY_SIZE.
-    if ((await query.clone().count().first()).count > maxQuerySize) {
+    if (await exceedsMaxSize(query)) {
       return res.status(200).json({
         message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
       });
@@ -425,6 +425,25 @@ function validateQueryParams(queryParams, profile) {
         throw new DuplicateParameterException(name);
     }
   });
+}
+
+/**
+ * Checks if the query exceeds the configured `maxQuerySize`
+ * @param {Object} query KnexJS query object
+ * @returns {Promise<boolean>} true if the max query size is exceeded
+ */
+async function exceedsMaxSize(query) {
+  const count = await knex
+    .from(
+      query
+        .clone()
+        .limit(maxQuerySize + 1)
+        .as('q'),
+    )
+    .count()
+    .first();
+
+  return count.count > maxQuerySize;
 }
 
 /**
