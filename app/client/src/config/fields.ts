@@ -251,7 +251,7 @@ export const filterGroupLabels = {
   assessmentUnit: 'Search for a specific Assessment Unit',
   associatedAction: 'Search by Associated Action',
   catchmentAssessmentUnit: 'Search by Assessment Unit or NHDPlus Catchment',
-  impairmentCause: 'Seach by Cause of Impairment',
+  impairmentCause: 'Search by Cause of Impairment',
   impairmentSource: 'Search by Probable Source of Impairment',
   overallStatus: 'Search by Overall Status',
   parameter: 'Search by Parameter',
