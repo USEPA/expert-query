@@ -29,7 +29,7 @@ export function AccordionItem({
   const toggleExpanded = useCallback(() => setExpanded(!expanded), [expanded]);
 
   return (
-    <div className="margin-top-8">
+    <div className="margin-top-3 tablet:margin-top-6">
       <h3 className="usa-accordion__heading">
         <button
           type="button"

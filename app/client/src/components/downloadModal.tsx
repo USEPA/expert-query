@@ -1,7 +1,7 @@
 import { uniqueId } from 'lodash';
 import { Dialog } from '@reach/dialog';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ReactComponent as Close } from '@uswds/uswds/img/usa-icons/close.svg';
+import { ReactComponent as Close } from 'images/close.svg';
 // components
 import { Alert } from 'components/alert';
 import { Loading, LoadingButtonIcon } from 'components/loading';

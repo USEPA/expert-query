@@ -1,4 +1,4 @@
-import { ReactComponent as Info } from '@uswds/uswds/img/usa-icons/info.svg';
+import { ReactComponent as Info } from 'images/info.svg';
 import { Portal } from '@reach/portal';
 import { TooltipPopup, useTooltip } from '@reach/tooltip';
 import { cloneElement, useRef } from 'react';

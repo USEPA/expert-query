@@ -1,7 +1,7 @@
 import { uniqueId } from 'lodash';
 import { Dialog } from '@reach/dialog';
 import { useState } from 'react';
-import { ReactComponent as Close } from '@uswds/uswds/img/usa-icons/close.svg';
+import { ReactComponent as Close } from 'images/close.svg';
 // styles
 import '@reach/dialog/styles.css';
 // types

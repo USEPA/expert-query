@@ -1,6 +1,6 @@
 import { uniqueId } from 'lodash';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ReactComponent as Filter } from '@uswds/uswds/img/usa-icons/filter_list.svg';
+import { ReactComponent as Filter } from 'images/filter_list.svg';
 // types
 import type { MutableRefObject, ReactNode } from 'react';
 import type { Option } from 'types';
@@ -93,7 +93,7 @@ export function SourceSelect({
       onChange?.(
         allSources[sourceCursor].value === Infinity
           ? null
-          : allSources[sourceCursor],
+          : (allSources[sourceCursor] as Option),
       );
       setSourceCursor(-1);
     }
@@ -125,6 +125,7 @@ export function SourceSelect({
         >
           <Filter
             aria-hidden="true"
+            focusable="false"
             className="height-3 width-3 text-gray-50 top-2px usa-icon"
             role="presentation"
           />
@@ -170,7 +171,9 @@ export function SourceSelect({
                 tabIndex={-1}
                 key={`source-key-${source.value}`}
                 onClick={() => {
-                  onChange?.(source.value === Infinity ? null : source);
+                  onChange?.(
+                    source.value === Infinity ? null : (source as Option),
+                  );
                   setSourcesVisible(false);
                 }}
                 style={{ cursor: 'pointer' }}
