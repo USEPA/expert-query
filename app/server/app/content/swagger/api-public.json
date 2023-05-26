@@ -4979,25 +4979,22 @@
         }
       },
       "QueryCountSuccess": {
-        "description": "The query evaluated successfully. The response contains the total count of the query or a message indicating that the maximum query size was exceeded.",
+        "description": "The query evaluated successfully. The response contains the total count of the query along with the maximum count allowed by the server.",
         "content": {
           "application/json": {
             "schema": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "count": {
-                      "type": "integer",
-                      "example": 148220
-                    }
-                  },
-                  "required": ["count"]
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "example": 148220
                 },
-                {
-                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                "maxCount": {
+                  "type": "integer",
+                  "example": 1000000
                 }
-              ]
+              },
+              "required": ["count", "sizeExceeded"]
             }
           }
         }
