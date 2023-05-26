@@ -118,6 +118,7 @@ export async function checkLogTables() {
       `CREATE TABLE IF NOT EXISTS logging.etl_log
         (
           id SERIAL PRIMARY KEY,
+          schema_id INTEGER,
           end_time TIMESTAMP,
           load_error VARCHAR,
           start_time TIMESTAMP NOT NULL
@@ -319,7 +320,7 @@ export async function createEqDb(client) {
 }
 
 // Create a fresh schema for new data
-async function createNewSchema(pool, schemaName, s3Julian) {
+async function createNewSchema(pool, schemaName, s3Julian, etlLogId) {
   const client = await getClient(pool);
   try {
     // Create new schema
@@ -334,6 +335,12 @@ async function createNewSchema(pool, schemaName, s3Julian) {
       [schemaName, '0', s3Julian],
     );
     const schemaId = result.rows[0].id;
+
+    await client.query(
+      'UPDATE logging.etl_log SET schema_id = $1 WHERE id = $2',
+      [schemaId, etlLogId],
+    );
+
     log.info(`Schema ${schemaName} created`);
     await client.query('COMMIT');
     return schemaId;
@@ -548,7 +555,7 @@ export async function runLoad(pool, s3Config, s3Julian) {
   const schemaName = `schema_${now.valueOf()}`;
 
   try {
-    const schemaId = await createNewSchema(pool, schemaName, s3Julian);
+    const schemaId = await createNewSchema(pool, schemaName, s3Julian, logId);
 
     // Load tables first that will be used when creating profile materialized views
     await loadUtilityTables(pool, s3Config, schemaName);
