@@ -25,16 +25,9 @@ import { Button } from 'components/button';
 // contexts
 import { useContentState } from 'contexts/content';
 // config
-import {
-  fields,
-  getData,
-  options as listOptions,
-  postData,
-  profiles,
-  serverUrl,
-} from 'config';
+import { fields, options as listOptions, profiles, serverUrl } from 'config';
 // utils
-import { isAbort, useAbort } from 'utils';
+import { getData, isAbort, postData, useAbort } from 'utils';
 // types
 import type { Profile } from 'config/profiles';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
@@ -48,6 +41,7 @@ export default Home;
 
 export function Home() {
   const { content } = useContentState();
+  console.log(content);
 
   const staticOptions = useMemo(() => {
     if (content.status !== 'success') return null;

@@ -5,8 +5,7 @@ import {
   useContext,
   useReducer,
 } from 'react';
-import type { DomainOptions } from 'types';
-import type { Profile } from '../config/profiles';
+import type { DomainOptions, Option, Profile } from 'types';
 
 type Props = {
   children: ReactNode;
@@ -25,11 +24,42 @@ export type Content = {
     };
   };
   domainValues: DomainOptions;
+  filterConfig: {
+    filterFields: Array<{
+      boundary?: 'low' | 'high';
+      default?: Option;
+      contextFields?: string[];
+      direction?: 'asc' | 'desc';
+      domain?: string;
+      key: string;
+      label: string;
+      placeholder?: string;
+      secondaryKey?: string;
+      source?: string;
+      type: 'date' | 'multiselect' | 'select' | 'year';
+    }>;
+    filterGroupLabels: {
+      [key: string]: string;
+    };
+    filterGroups: {
+      [P in Profile]: Array<{
+        key: string;
+        fields: string[];
+      }>;
+    };
+    sourceFields: Array<{
+      id: string;
+      key: string;
+      label: string;
+      type: 'select';
+    }>;
+  };
   glossary: Array<{
     term: string;
     definition: string;
     definitionHtml: string;
   }>;
+  listOptions: Option[];
   metadata: Partial<{
     [P in Profile]: {
       url: string;
@@ -41,6 +71,25 @@ export type Content = {
   parameters: {
     debounceMilliseconds: number;
     selectOptionsPageSize: number;
+  };
+  profileConfig: {
+    [P in Profile]: {
+      description: string;
+      columns: Set<string>;
+      label: string;
+      resource: string;
+    };
+  };
+};
+
+export type JsonContent = Omit<Content, 'profileConfig'> & {
+  profileConfig: {
+    [P in Profile]: {
+      description: string;
+      columns: string[];
+      label: string;
+      resource: string;
+    };
   };
 };
 

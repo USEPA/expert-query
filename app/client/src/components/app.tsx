@@ -12,9 +12,11 @@ import Page from 'components/page';
 // contexts
 import { useContentState, useContentDispatch } from 'contexts/content';
 // config
-import { cloudSpace, getData, serverBasePath, serverUrl } from '../config';
+import { cloudSpace, serverBasePath, serverUrl } from 'config';
+// utils
+import { getData } from 'utils';
 // types
-import type { Content } from 'contexts/content';
+import type { Content, JsonContent } from 'contexts/content';
 
 declare global {
   interface Window {
@@ -32,14 +34,29 @@ function useFetchedContent() {
     const controller = new AbortController();
 
     contentDispatch({ type: 'FETCH_CONTENT_REQUEST' });
-    getData<Content>({
+    getData<JsonContent>({
       url: `${serverUrl}/api/lookupFiles`,
       signal: controller.signal,
     })
       .then((res) => {
         contentDispatch({
           type: 'FETCH_CONTENT_SUCCESS',
-          payload: res,
+          payload: {
+            ...res,
+            // Map profile columns arrays to Sets for performance
+            profileConfig: Object.entries(res.profileConfig).reduce(
+              (current, [key, config]) => {
+                return {
+                  ...current,
+                  [key]: {
+                    ...config,
+                    columns: new Set(config.columns),
+                  },
+                };
+              },
+              {},
+            ) as Content['profileConfig'],
+          },
         });
       })
       .catch((err: Error) => {

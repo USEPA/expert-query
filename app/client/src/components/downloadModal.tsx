@@ -6,8 +6,7 @@ import { ReactComponent as Close } from 'images/close.svg';
 import { Alert } from 'components/alert';
 import { Loading, LoadingButtonIcon } from 'components/loading';
 // utils
-import { postData } from 'config';
-import { isAbort, useAbort } from 'utils';
+import { isAbort, postData, useAbort } from 'utils';
 // config
 import { serverUrl } from 'config';
 // styles

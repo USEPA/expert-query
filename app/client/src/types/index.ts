@@ -65,4 +65,13 @@ export type Option = {
   value: string;
 };
 
+export type Profile =
+  | 'actions'
+  | 'assessments'
+  | 'assessmentUnits'
+  | 'assessmentUnitsMonitoringLocations'
+  | 'catchmentCorrespondence'
+  | 'sources'
+  | 'tmdl';
+
 export type Status = 'idle' | 'pending' | 'failure' | 'success';
