@@ -19,6 +19,31 @@ export type AliasedOptions = {
   [key in AliasedField]: Array<Option>;
 };
 
+type BaseFilterFieldConfig = {
+  default?: Option;
+  contextFields?: string[];
+  direction?: 'asc' | 'desc';
+  key: string;
+  label: string;
+  placeholder?: string;
+  secondaryKey?: string;
+  source?: string;
+  type: 'date' | 'multiselect' | 'select' | 'year';
+};
+
+export type MultiOptionField = BaseFilterFieldConfig & {
+  type: 'multiselect';
+};
+
+export type SingleOptionField = BaseFilterFieldConfig & {
+  type: 'select';
+};
+
+export type SingleValueField = BaseFilterFieldConfig & {
+  boundary?: 'low' | 'high';
+  domain?: string;
+  type: 'date' | 'year';
+};
 // Fields provided in the `domainValues` of the Content context
 export type ConcreteField =
   | 'actionAgency'
@@ -73,5 +98,7 @@ export type Profile =
   | 'catchmentCorrespondence'
   | 'sources'
   | 'tmdl';
+
+export type StaticOptions = { [key: string]: Option[] };
 
 export type Status = 'idle' | 'pending' | 'failure' | 'success';

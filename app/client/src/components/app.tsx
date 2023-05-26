@@ -26,6 +26,19 @@ declare global {
   }
 }
 
+// Map profile columns arrays to Sets
+function parseProfileConfig(jsonConfig: JsonContent['profileConfig']) {
+  return Object.entries(jsonConfig).reduce((current, [key, config]) => {
+    return {
+      ...current,
+      [key]: {
+        ...config,
+        columns: new Set(config.columns),
+      },
+    };
+  }, {}) as Content['profileConfig'];
+}
+
 /** Custom hook to fetch static content */
 function useFetchedContent() {
   const contentDispatch = useContentDispatch();
@@ -43,19 +56,7 @@ function useFetchedContent() {
           type: 'FETCH_CONTENT_SUCCESS',
           payload: {
             ...res,
-            // Map profile columns arrays to Sets for performance
-            profileConfig: Object.entries(res.profileConfig).reduce(
-              (current, [key, config]) => {
-                return {
-                  ...current,
-                  [key]: {
-                    ...config,
-                    columns: new Set(config.columns),
-                  },
-                };
-              },
-              {},
-            ) as Content['profileConfig'],
+            profileConfig: parseProfileConfig(res.profileConfig),
           },
         });
       })

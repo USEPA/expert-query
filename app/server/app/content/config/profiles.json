@@ -1,5 +1,6 @@
 {
   "actions": {
+    "key": "actions",
     "description": "Contains detailed information on plans to restore and protect water quality including Total Maximum Daily Loads (TMDLs), 4b Plans, 5R Plans, Protection Approaches, and other plans.",
     "columns": [
       "objectId",
@@ -27,6 +28,7 @@
     "resource": "actions"
   },
   "assessments": {
+    "key": "assessments",
     "description": "Contains detailed information on waters assessed under Section 305(b) of the Clean Water Act and waters listed as impaired under Section 303(d) of the Clean Water Act. This includes assessed uses and parameter attainments.",
     "columns": [
       "objectId",
@@ -90,6 +92,7 @@
     "resource": "assessments"
   },
   "assessmentUnits": {
+    "key": "assessmentUnits",
     "description": "Contains detailed information on assessment unit location and waterbody types. Please note, some waters may contain more than one water type.",
     "columns": [
       "objectId",
@@ -117,6 +120,7 @@
     "resource": "assessmentUnits"
   },
   "assessmentUnitsMonitoringLocations": {
+    "key": "assessmentUnitsMonitoringLocations",
     "description": "Contains information on the monitoring locations used to make assessment determinations at specific assessment units.",
     "columns": [
       "objectId",
@@ -145,6 +149,7 @@
     "resource": "assessmentUnitsMonitoringLocations"
   },
   "catchmentCorrespondence": {
+    "key": "catchmentCorrespondence",
     "description": "Contains the association between assessment units and National Hydrography Dataset Plus (NHDPlus) high resolution catchments.",
     "columns": [
       "objectId",
@@ -163,6 +168,7 @@
     "resource": "catchmentCorrespondence"
   },
   "sources": {
+    "key": "sources",
     "description": "Identifies sources of impairment for assessed waters.",
     "columns": [
       "objectId",
@@ -191,6 +197,7 @@
     "resource": "sources"
   },
   "tmdl": {
+    "key": "tmdl",
     "description": "Contains detailed information on Total Maximum Daily Load (TMDL) plans.",
     "columns": [
       "objectId",
