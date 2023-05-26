@@ -375,7 +375,9 @@ async function executeQuery(profile, req, res) {
     // Check that the query doesn't exceed the MAX_QUERY_SIZE.
     if (await exceedsMaxSize(query)) {
       return res.status(200).json({
-        message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
+        message: `The current query exceeds the maximum query size of ${maxQuerySize.toLocaleString()} rows. Please refine the search, or visit ${
+          process.env.SERVER_URL
+        }/national-downloads to download a compressed dataset`,
       });
     }
 
