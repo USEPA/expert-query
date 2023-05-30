@@ -1834,15 +1834,7 @@ const staticOptionLimit = 100;
 ## Types
 */
 
-type FilterFieldsAction =
-  | FilterFieldAction
-  | { type: 'initialize'; payload: FilterFieldState }
-  | { type: 'reset' };
-
-type FilterFieldAction = {
-  type: string;
-  payload: FilterFieldState[string];
-};
+type FilterField = FilterFields[string];
 
 type FilterFieldActionHandlers = {
   [field: string]: (
@@ -1851,14 +1843,17 @@ type FilterFieldActionHandlers = {
   ) => FilterFieldState;
 };
 
+type FilterFieldsAction =
+  | FilterFieldAction
+  | { type: 'initialize'; payload: FilterFieldState }
+  | { type: 'reset' };
+
 type FilterFields = Content['filterConfig']['filterFields'];
-type FilterField = FilterFields[string];
-type FilterGroup = Content['filterConfig']['filterGroups'][string][number];
-type FilterGroupLabels = Content['filterConfig']['filterGroupLabels'];
-type SourceFields = Content['filterConfig']['sourceFields'];
-type SourceField = SourceFields[string];
-type Profiles = Content['profileConfig'];
-type Profile = Profiles[string];
+
+type FilterFieldAction = {
+  type: string;
+  payload: FilterFieldState[string];
+};
 
 type FilterFieldInputHandlers = {
   [field: string]: OptionInputHandler | SingleValueInputHandler;
@@ -1890,6 +1885,10 @@ type FilterFieldGroupsProps = {
   sourceState: SourceFieldState;
   staticOptions: StaticOptions;
 };
+
+type FilterGroup = Content['filterConfig']['filterGroups'][string][number];
+
+type FilterGroupLabels = Content['filterConfig']['filterGroupLabels'];
 
 type FilterQueryData = {
   [field: string]: string | string[];
@@ -1929,6 +1928,10 @@ type ParameterErrors = {
   duplicate: Set<string>;
   invalid: Set<string>;
 };
+
+type Profile = Profiles[string];
+
+type Profiles = Content['profileConfig'];
 
 type QueryData = {
   columns: string[];
@@ -1977,6 +1980,10 @@ type SingleOptionState = Option | null;
 type SingleValueInputHandler = (ev: ChangeEvent<HTMLInputElement>) => void;
 
 type SortDirection = 'asc' | 'desc';
+
+type SourceField = SourceFields[string];
+
+type SourceFields = Content['filterConfig']['sourceFields'];
 
 type SourceFieldState = {
   [field: string]: SingleOptionState;

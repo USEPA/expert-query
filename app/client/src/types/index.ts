@@ -32,19 +32,6 @@ type BaseFilterFieldConfig = {
   type: 'date' | 'multiselect' | 'select' | 'year';
 };
 
-export type MultiOptionField = BaseFilterFieldConfig & {
-  type: 'multiselect';
-};
-
-export type SingleOptionField = BaseFilterFieldConfig & {
-  type: 'select';
-};
-
-export type SingleValueField = BaseFilterFieldConfig & {
-  boundary: 'low' | 'high';
-  domain: string;
-  type: 'date' | 'year';
-};
 // Fields provided in the `domainValues` of the Content context
 export type ConcreteField =
   | 'actionAgency'
@@ -85,20 +72,25 @@ type FetchSuccessState<Type> = {
   data: Type;
 };
 
+export type MultiOptionField = BaseFilterFieldConfig & {
+  type: 'multiselect';
+};
+
 export type Option = {
   description?: ReactNode;
   label: ReactNode;
   value: string;
 };
 
-export type Profile =
-  | 'actions'
-  | 'assessments'
-  | 'assessmentUnits'
-  | 'assessmentUnitsMonitoringLocations'
-  | 'catchmentCorrespondence'
-  | 'sources'
-  | 'tmdl';
+export type SingleOptionField = BaseFilterFieldConfig & {
+  type: 'select';
+};
+
+export type SingleValueField = BaseFilterFieldConfig & {
+  boundary: 'low' | 'high';
+  domain: string;
+  type: 'date' | 'year';
+};
 
 export type StaticOptions = { [key: string]: Option[] };
 
