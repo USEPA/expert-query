@@ -41,8 +41,8 @@ export type SingleOptionField = BaseFilterFieldConfig & {
 };
 
 export type SingleValueField = BaseFilterFieldConfig & {
-  boundary?: 'low' | 'high';
-  domain?: string;
+  boundary: 'low' | 'high';
+  domain: string;
   type: 'date' | 'year';
 };
 // Fields provided in the `domainValues` of the Content context

@@ -31,9 +31,9 @@ export type Content = {
   };
   domainValues: DomainOptions;
   filterConfig: {
-    filterFields: Array<
-      MultiOptionField | SingleOptionField | SingleValueField
-    >;
+    filterFields: {
+      [key: string]: MultiOptionField | SingleOptionField | SingleValueField;
+    };
     filterGroupLabels: {
       [key: string]: string;
     };
@@ -43,12 +43,14 @@ export type Content = {
         fields: string[];
       }>;
     };
-    sourceFields: Array<{
-      id: string;
-      key: string;
-      label: string;
-      type: 'select';
-    }>;
+    sourceFields: {
+      [id: string]: {
+        id: string;
+        key: string;
+        label: string;
+        type: 'select';
+      };
+    };
   };
   glossary: Array<{
     term: string;

@@ -448,10 +448,11 @@ export function QueryBuilder() {
   );
 }
 
-function FilterFields({
+function FilterFieldInputs({
   apiKey,
   apiUrl,
   fields,
+  filterFields,
   filterHandlers,
   filterState,
   profile,
@@ -460,13 +461,14 @@ function FilterFields({
   sourceHandlers,
   sourceState,
   staticOptions,
-}: FilterFieldsProps) {
+}: FilterFieldInputsProps) {
   // Store each field's element in a tuple with its key
   const fieldsJsx: Array<[JSX.Element, string]> = removeNulls(
     fields.map((fieldConfig) => {
       const sourceFieldConfig =
-        'source' in fieldConfig
-          ? sourceFields.find((f) => f.id === fieldConfig.source)
+        'source' in fieldConfig &&
+        (fieldConfig.source as string) in sourceFields
+          ? sourceFields[fieldConfig.source as string]
           : null;
 
       switch (fieldConfig.type) {
@@ -505,12 +507,17 @@ function FilterFields({
           const selectProps = {
             apiKey,
             apiUrl,
-            contextFilters: getContextFilters(fieldConfig, fields, profile, {
-              ...queryParams.filters,
-              ...(sourceKey && sourceValue
-                ? { [sourceKey]: sourceValue.value }
-                : {}),
-            }),
+            contextFilters: getContextFilters(
+              fieldConfig,
+              Object.values(filterFields).concat(Object.values(sourceFields)),
+              profile,
+              {
+                ...queryParams.filters,
+                ...(sourceKey && sourceValue
+                  ? { [sourceKey]: sourceValue.value }
+                  : {}),
+              },
+            ),
             defaultOption:
               'default' in fieldConfig ? fieldConfig.default : null,
             filterHandler: filterHandlers[fieldConfig.key],
@@ -612,12 +619,13 @@ function FilterFields({
 }
 
 function FilterFieldGroups(props: FilterFieldGroupsProps) {
-  const { filterFields, filterGroupLabels, filterGroups, ...restProps } = props;
+  const { filterGroupLabels, filterGroups, ...filterFieldsProps } = props;
+  const { filterFields } = filterFieldsProps;
   const groupedFields = filterGroups.map((group) => ({
     ...group,
     fields: group.fields
-      .map((field) => filterFields.find((f) => f.key === field))
-      .filter((field) => field !== undefined),
+      .map((field) => (field in filterFields ? filterFields[field] : null))
+      .filter((field) => field !== null),
   }));
 
   return (
@@ -636,8 +644,8 @@ function FilterFieldGroups(props: FilterFieldGroupsProps) {
                 {label}
               </h3>
             </InPageNavAnchor>
-            <FilterFields
-              {...restProps}
+            <FilterFieldInputs
+              {...filterFieldsProps}
               fields={group.fields as FilterField[]}
             />
           </section>
@@ -995,7 +1003,7 @@ function useHomeContext() {
   return useOutletContext<HomeContext>();
 }
 
-function useFilterState(filterFields: FilterField[]) {
+function useFilterState(filterFields: FilterFields) {
   const [filterState, filterDispatch] = useReducer(
     createFilterReducer(filterFields),
     getDefaultFilterState(filterFields),
@@ -1004,7 +1012,7 @@ function useFilterState(filterFields: FilterField[]) {
   // Memoize individual dispatch functions
   const filterHandlers = useMemo(() => {
     const newHandlers: Partial<FilterFieldInputHandlers> = {};
-    filterFields.forEach((field) => {
+    Object.values(filterFields).forEach((field) => {
       if (isMultiOptionField(field)) {
         newHandlers[field.key] = (ev: MultiOptionState | SingleOptionState) => {
           if (!Array.isArray(ev)) return;
@@ -1099,7 +1107,7 @@ function useQueryParams({
   apiKey: string;
   apiUrl: string;
   profile: Profile | null;
-  filterFields: FilterField[];
+  filterFields: FilterFields;
   filterState: FilterFieldState;
   format: string;
   initializeFilters: (state: FilterFieldState) => void;
@@ -1159,7 +1167,7 @@ function useQueryParams({
   return { queryParams: parameters, queryParamErrors: parameterErrors };
 }
 
-function useSourceState(sourceFields: SourceField[]) {
+function useSourceState(sourceFields: SourceFields) {
   const [sourceState, sourceDispatch] = useReducer(
     createSourceReducer(sourceFields),
     getDefaultSourceState(sourceFields),
@@ -1167,7 +1175,7 @@ function useSourceState(sourceFields: SourceField[]) {
 
   // Memoize individual dispatch functions
   const sourceHandlers = useMemo(() => {
-    return sourceFields.reduce((handlers, source) => {
+    return Object.values(sourceFields).reduce((handlers, source) => {
       return {
         ...handlers,
         [source.id]: (ev: Option | null) =>
@@ -1195,7 +1203,7 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
 }
 
 function buildFilterData(
-  filterFields: FilterField[],
+  filterFields: FilterFields,
   filterState: FilterFieldState,
   profile: Profile,
 ) {
@@ -1203,7 +1211,7 @@ function buildFilterData(
   Object.entries(filterState).forEach(
     ([field, value]: [string, FilterFieldState[keyof FilterFieldState]]) => {
       if (isEmpty(value)) return;
-      const fieldConfig = filterFields.find((f) => f.key === field);
+      const fieldConfig = field in filterFields ? filterFields[field] : null;
       if (!fieldConfig) return;
 
       // Extract 'value' field from Option types
@@ -1268,7 +1276,7 @@ async function checkColumnValue(
 }
 
 // Creates a reducer to manage the state of all query field inputs
-function createFilterReducer(filterFields: FilterField[]) {
+function createFilterReducer(filterFields: FilterFields) {
   const handlers: FilterFieldActionHandlers = {};
   for (const field in getDefaultFilterState(filterFields)) {
     handlers[field] = (state, action) => {
@@ -1292,18 +1300,21 @@ function createFilterReducer(filterFields: FilterField[]) {
   };
 }
 
-function createSourceReducer(sourceFields: SourceField[]) {
-  const actionHandlers = sourceFields.reduce((current, field) => {
-    return {
-      ...current,
-      [field.key]: (state: SourceFieldState, action: SourceFieldAction) => {
-        return {
-          ...state,
-          [field.key]: action.payload,
-        };
-      },
-    };
-  }, {}) as SourceFieldActionHandlers;
+function createSourceReducer(sourceFields: SourceFields) {
+  const actionHandlers = Object.values(sourceFields).reduce(
+    (current, field) => {
+      return {
+        ...current,
+        [field.id]: (state: SourceFieldState, action: SourceFieldAction) => {
+          return {
+            ...state,
+            [field.id]: action.payload,
+          };
+        },
+      };
+    },
+    {},
+  ) as SourceFieldActionHandlers;
 
   return function reducer(state: SourceFieldState, action: SourceFieldAction) {
     if (actionHandlers.hasOwnProperty(action.type)) {
@@ -1460,7 +1471,7 @@ function getArticle(noun: string) {
 
 function getContextFilters(
   fieldConfig: FilterField,
-  fieldConfigs: FilterField[],
+  fieldConfigs: Array<FilterField | SourceField>,
   profile: Profile,
   filters: FilterQueryData,
 ) {
@@ -1486,8 +1497,8 @@ function getContextFilters(
 }
 
 // Returns the default state for inputs
-function getDefaultFilterState(filterFields: FilterField[]) {
-  return filterFields.reduce((a, b) => {
+function getDefaultFilterState(filterFields: FilterFields) {
+  return Object.values(filterFields).reduce((a, b) => {
     const defaultValue = getDefaultValue(b);
     const defaultState =
       defaultValue && isMultiOptionField(b) ? [defaultValue] : defaultValue;
@@ -1495,8 +1506,8 @@ function getDefaultFilterState(filterFields: FilterField[]) {
   }, {}) as FilterFieldState;
 }
 
-function getDefaultSourceState(sourceFields: SourceField[]) {
-  return sourceFields.reduce((sourceState, field) => {
+function getDefaultSourceState(sourceFields: SourceFields) {
+  return Object.values(sourceFields).reduce((sourceState, field) => {
     return {
       ...sourceState,
       [field.key]: getDefaultValue(field),
@@ -1552,7 +1563,7 @@ function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
 async function getUrlInputs(
   apiKey: string,
   apiUrl: string,
-  filterFields: FilterField[],
+  filterFields: FilterFields,
   staticOptions: StaticOptions,
   profile: Profile,
   _signal: AbortSignal,
@@ -1564,7 +1575,7 @@ async function getUrlInputs(
   // Match query parameters
   await Promise.all([
     ...Object.keys(params).map(async (key) => {
-      const filterField = filterFields.find((f) => f.key === key);
+      const filterField = key in filterFields ? filterFields[key] : null;
       if (!filterField) return;
       if (isMultiOptionField(filterField)) {
         newState[key] = await matchMultipleOptions(
@@ -1753,7 +1764,7 @@ function matchYear(values: InputValue) {
 // Parse parameters provided in the URL search into a JSON object
 function parseInitialParams(
   profile: Profile,
-  filterFields: FilterField[],
+  filterFields: FilterFields,
 ): [FilterQueryData, ParameterErrors] {
   const uniqueParams: { [field: string]: string | Set<string> } = {};
   const paramErrors: ParameterErrors = {
@@ -1768,7 +1779,7 @@ function parseInitialParams(
 
       const newValue = decodeURI(uriValue);
 
-      const fieldConfig = filterFields.find((f) => f.key === field);
+      const fieldConfig = field in filterFields ? filterFields[field] : null;
       if (!fieldConfig) {
         paramErrors.invalid.add(field);
         return;
@@ -1840,10 +1851,12 @@ type FilterFieldActionHandlers = {
   ) => FilterFieldState;
 };
 
-type FilterField = Content['filterConfig']['filterFields'][number];
+type FilterFields = Content['filterConfig']['filterFields'];
+type FilterField = FilterFields[string];
 type FilterGroup = Content['filterConfig']['filterGroups'][string][number];
 type FilterGroupLabels = Content['filterConfig']['filterGroupLabels'];
-type SourceField = Content['filterConfig']['sourceFields'][number];
+type SourceFields = Content['filterConfig']['sourceFields'];
+type SourceField = SourceFields[string];
 type Profiles = Content['profileConfig'];
 type Profile = Profiles[string];
 
@@ -1851,9 +1864,9 @@ type FilterFieldInputHandlers = {
   [field: string]: OptionInputHandler | SingleValueInputHandler;
 };
 
-type FilterFieldsProps = Omit<
+type FilterFieldInputsProps = Omit<
   FilterFieldGroupsProps,
-  'filterFields' | 'filterGroupLabels' | 'filterGroups'
+  'filterGroupLabels' | 'filterGroups'
 > & {
   fields: FilterField[];
 };
@@ -1865,14 +1878,14 @@ type FilterFieldState = {
 type FilterFieldGroupsProps = {
   apiKey: string;
   apiUrl: string;
-  filterFields: FilterField[];
+  filterFields: FilterFields;
   filterGroupLabels: FilterGroupLabels;
   filterGroups: FilterGroup[];
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
   profile: Profile;
   queryParams: QueryData;
-  sourceFields: SourceField[];
+  sourceFields: SourceFields;
   sourceHandlers: SourceFieldInputHandlers;
   sourceState: SourceFieldState;
   staticOptions: StaticOptions;
@@ -1883,7 +1896,7 @@ type FilterQueryData = {
 };
 
 type HomeContext = {
-  filterFields: FilterField[];
+  filterFields: FilterFields;
   filterGroups: FilterGroup[];
   filterGroupLabels: FilterGroupLabels;
   filterHandlers: FilterFieldInputHandlers;
@@ -1894,7 +1907,7 @@ type HomeContext = {
   queryParams: QueryData;
   queryUrl: string;
   resetFilters: () => void;
-  sourceFields: SourceField[];
+  sourceFields: SourceFields;
   sourceHandlers: SourceFieldInputHandlers;
   sourceState: SourceFieldState;
   staticOptions: StaticOptions;
