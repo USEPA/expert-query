@@ -271,7 +271,7 @@ export const filterFields = [
   },
   {
     key: 'actionId',
-    label: 'Action ID (Action Name)',
+    label: 'Action ID (Name)',
     placeholder: 'Select an Action...',
     type: 'multiselect',
     contextFields: ['organizationId', 'region', 'state'],
@@ -323,7 +323,7 @@ export const filterFields = [
   },
   {
     key: 'assessmentUnitId',
-    label: 'Assessment Unit ID (Assessment Unit Name)',
+    label: 'Assessment Unit ID (Name)',
     placeholder: 'Select an Assessment Unit...',
     type: 'multiselect',
     contextFields: ['organizationId', 'region', 'state'],
@@ -345,7 +345,7 @@ export const filterFields = [
   },
   {
     key: 'associatedActionId',
-    label: 'Associated Action ID (Associated Action Name)',
+    label: 'Associated Action ID (Name)',
     placeholder: 'Select an Associated Action...',
     type: 'multiselect',
     secondaryKey: 'associatedActionName',
@@ -565,7 +565,7 @@ export const filterFields = [
   },
   {
     key: 'organizationId',
-    label: 'Organization ID (Organization Name)',
+    label: 'Organization ID (Name)',
     placeholder: 'Select an Organization...',
     type: 'multiselect',
     source: 'organizationId_organizationType',
@@ -606,8 +606,6 @@ export const filterFields = [
     key: 'parameterName',
     label: 'Parameter Name',
     type: 'multiselect',
-    tooltip:
-      'The dropdown list contains only active (non-retired) parameter names.',
     contextFields: ['parameterGroup'],
   },
   {

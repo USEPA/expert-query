@@ -11,7 +11,6 @@ declare global {
 // Columns that share values with those in the `domainValues` object
 export type AliasedField =
   | 'associatedActionAgency'
-  | 'associatedActionStatus'
   | 'associatedActionType'
   | 'pollutant';
 
@@ -25,6 +24,7 @@ export type ConcreteField =
   | 'actionType'
   | 'assessmentTypes'
   | 'assessmentUnitStatus'
+  | 'associatedActionStatus'
   | 'delistedReason'
   | 'locationTypeCode'
   | 'parameterGroup'
