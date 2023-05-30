@@ -1,0 +1,32 @@
+/*
+----------------------------------------
+USWDS with settings overrides
+----------------------------------------
+Uncomment the following lines and add a list of changed settings
+in the form $setting: value,
+----------------------------------------
+*/
+
+@use 'uswds-core' with (
+  $align-self-settings: (
+    'output': true,
+    'responsive': true,
+  ),
+  $height-settings: (
+    'output': true,
+    'responsive': true,
+  ),
+  $theme-font-weight-semibold: 600,
+  $theme-show-notifications: false,
+  $theme-utility-breakpoints: (
+    'card': false,
+    'card-lg': false,
+    'mobile': false,
+    'mobile-lg': true,
+    'tablet': true,
+    'tablet-lg': false,
+    'desktop': true,
+    'desktop-lg': false,
+    'widescreen': false,
+  )
+);

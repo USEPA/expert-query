@@ -63,6 +63,10 @@ jobs:
       CF_S3_PUB_BUCKET_ID: ${{ secrets.CF_STAGING_S3_PUB_BUCKET_ID }}
       CF_S3_PUB_REGION: ${{ secrets.CF_STAGING_S3_PUB_REGION }}
       CF_S3_PUB_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PUB_SECRET_KEY }}
+      CF_S3_PRIV_ACCESS_KEY: ${{ secrets.CF_STAGING_S3_PRIV_ACCESS_KEY }}
+      CF_S3_PRIV_BUCKET_ID: ${{ secrets.CF_STAGING_S3_PRIV_BUCKET_ID }}
+      CF_S3_PRIV_REGION: ${{ secrets.CF_STAGING_S3_PRIV_REGION }}
+      CF_S3_PRIV_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PRIV_SECRET_KEY }}
       DB_POOL_MAX: 20
       DB_POOL_MIN: 5
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
@@ -96,7 +100,9 @@ jobs:
           restore-keys: v1-npm-client-deps-
 
       - name: Install front-end dependencies
-        run: npm install --legacy-peer-deps
+        run: |
+          npm install --legacy-peer-deps
+          npx gulp init
         working-directory: app/client
 
       - name: Build front-end files and move to server
@@ -126,6 +132,10 @@ jobs:
           cf set-env $APP_NAME "CF_S3_PUB_BUCKET_ID" "$CF_S3_PUB_BUCKET_ID" > /dev/null
           cf set-env $APP_NAME "CF_S3_PUB_REGION" "$CF_S3_PUB_REGION" > /dev/null
           cf set-env $APP_NAME "CF_S3_PUB_SECRET_KEY" "$CF_S3_PUB_SECRET_KEY" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_ACCESS_KEY" "$CF_S3_PRIV_ACCESS_KEY" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_BUCKET_ID" "$CF_S3_PRIV_BUCKET_ID" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_REGION" "$CF_S3_PRIV_REGION" > /dev/null
+          cf set-env $APP_NAME "CF_S3_PRIV_SECRET_KEY" "$CF_S3_PRIV_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MAX" "$DB_POOL_MAX" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MIN" "$DB_POOL_MIN" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null

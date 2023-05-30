@@ -1,6 +1,6 @@
 import { uniqueId } from 'lodash';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ReactComponent as Filter } from '@uswds/uswds/img/usa-icons/filter_list.svg';
+import { ReactComponent as Filter } from 'images/filter_list.svg';
 // types
 import type { MutableRefObject, ReactNode } from 'react';
 import type { Option } from 'types';
@@ -125,6 +125,7 @@ export function SourceSelect({
         >
           <Filter
             aria-hidden="true"
+            focusable="false"
             className="height-3 width-3 text-gray-50 top-2px usa-icon"
             role="presentation"
           />

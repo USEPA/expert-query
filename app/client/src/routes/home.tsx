@@ -7,7 +7,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
-import { ReactComponent as Download } from '@uswds/uswds/img/usa-icons/file_download.svg';
+import { ReactComponent as Download } from 'images/file_download.svg';
 // components
 import { AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -106,7 +106,12 @@ export function Home() {
       return (
         <div className="margin-1">
           <div className="display-flex flex-justify flex-wrap margin-bottom-1">
-            <b className="font-ui-md margin-right-4">{option.label}</b>
+            <b
+              className="font-ui-md margin-right-4 overflow-hidden"
+              style={{ textOverflow: 'ellipsis' }}
+            >
+              {option.label}
+            </b>
             {refreshDate && (
               <em className="font-ui-xs">
                 <b>Refresh date:</b> {new Date(refreshDate).toLocaleString()}
@@ -129,7 +134,7 @@ export function Home() {
 
   if (content.status === 'failure') {
     return (
-      <Alert type="error">
+      <Alert type="error" styles={['margin-top-6']}>
         Expert Query is currently unavailable, please try again later.
       </Alert>
     );
@@ -341,24 +346,32 @@ export function QueryBuilder() {
             tooltip="Choose a file format for the result set."
           />
           <button
-            className="display-flex flex-justify-center margin-bottom-1 usa-button"
+            className="display-flex flex-justify-center usa-button"
             onClick={openDownloadConfirmation}
             type="button"
           >
             <Download
               aria-hidden="true"
               className="height-205 margin-right-1 usa-icon width-205"
+              role="img"
+              focusable="false"
             />
             <span className="margin-y-auto">Download</span>
           </button>
           {downloadStatus === 'success' && (
-            <Alert type="success">
+            <Alert
+              styles={['margin-top-3', 'tablet:margin-top-6']}
+              type="success"
+            >
               Query executed successfully, please check your downloads folder
               for the output file.
             </Alert>
           )}
           {downloadStatus === 'failure' && (
-            <Alert type="error">
+            <Alert
+              styles={['margin-top-3', 'tablet:margin-top-6']}
+              type="error"
+            >
               An error occurred while executing the current query, please try
               again later.
             </Alert>
@@ -829,8 +842,7 @@ function SelectFilter<
     (option: Option) => {
       return secondaryFilterKey ? (
         <div>
-          <span style={{ fontWeight: 600 }}>{option.value}</span> (
-          {option.label})
+          <span className="text-semibold">{option.value}</span> ({option.label})
         </div>
       ) : (
         option.label
