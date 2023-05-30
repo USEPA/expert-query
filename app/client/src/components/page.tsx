@@ -27,8 +27,7 @@ export function Page({ children }: PageProps) {
       <div
         className="position-relative height-card desktop:height-card-lg"
         style={{
-          backgroundImage:
-            `linear-gradient(rgba(0, 0, 0, 0.775) 25%, rgba(0, 0, 0, 0.525) 50%, rgba(0, 0, 0, 0.275) 75%), url(${serverBasePath}/img/banner.jpg)`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.775) 25%, rgba(0, 0, 0, 0.525) 50%, rgba(0, 0, 0, 0.275) 75%), url(${serverBasePath}/img/banner.jpg)`,
           backgroundPosition: 'center',
           backgroundSize: 'cover',
         }}
@@ -82,7 +81,7 @@ export function Page({ children }: PageProps) {
         <div className="l-constrain">
           <span>
             <a
-              href="https://www.epa.gov/expertquery/forms/contact-us-about-expert-query"
+              href="https://www.epa.gov/waterdata/forms/contact-us-about-water-data-and-tools"
               target="_blank"
               rel="noopener noreferrer"
             >
