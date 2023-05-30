@@ -294,7 +294,7 @@ export function QueryBuilder() {
         <DownloadModal
           apiKey={apiKey}
           dataId="attains"
-          filename={profile && format ? `${profile}.${format.value}` : null}
+          filename={profile && format ? `${profile.key}.${format.value}` : null}
           downloadStatus={downloadStatus}
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
