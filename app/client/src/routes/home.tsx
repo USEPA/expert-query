@@ -63,15 +63,16 @@ function HomeContent({ content }: { content: Content }) {
     return Object.entries({
       ...domainOptions,
       ...listOptions,
-    }).reduce<StaticOptions>((sorted, [name, options]) => {
+    }).reduce<StaticOptions>((current, [name, options]) => {
+      const sortedOptions = [...options].sort((a, b) => {
+        if (typeof a.label === 'string' && typeof b.label === 'string') {
+          return a.label.localeCompare(b.label);
+        }
+        return 0;
+      });
       return {
-        ...sorted,
-        [name]: options.sort((a, b) => {
-          if (typeof a.label === 'string' && typeof b.label === 'string') {
-            return a.label.localeCompare(b.label);
-          }
-          return 0;
-        }),
+        ...current,
+        [name]: sortedOptions,
       };
     }, {});
   }, [domainValues, listOptions]);
