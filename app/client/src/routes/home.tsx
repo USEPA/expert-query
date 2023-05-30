@@ -66,7 +66,7 @@ function HomeContent({ content }: { content: Content }) {
     }).reduce<StaticOptions>((sorted, [name, options]) => {
       return {
         ...sorted,
-        [name]: (options as Option[]).sort((a, b) => {
+        [name]: options.sort((a, b) => {
           if (typeof a.label === 'string' && typeof b.label === 'string') {
             return a.label.localeCompare(b.label);
           }
@@ -584,7 +584,7 @@ function FilterFieldInputs({
 
           return [
             <RangeFilter
-              domain={fieldConfig.domain!}
+              domain={fieldConfig.domain}
               highHandler={
                 filterHandlers[pairedField.key] as SingleValueInputHandler
               }
@@ -599,7 +599,7 @@ function FilterFieldInputs({
               lowValue={filterState[fieldConfig.key] as string}
               type={fieldConfig.type}
             />,
-            fieldConfig.domain as string,
+            fieldConfig.domain,
           ];
         default:
           return null;
@@ -1644,8 +1644,7 @@ function isOption(maybeOption: Option | string): maybeOption is Option {
 function isProfileField(field: FilterField, profile: Profile) {
   const profileColumns = profile.columns;
   if (profileColumns.has(field.key)) return true;
-  if ('domain' in field && profileColumns.has(field.domain as string))
-    return true;
+  if ('domain' in field && profileColumns.has(field.domain)) return true;
   return false;
 }
 
