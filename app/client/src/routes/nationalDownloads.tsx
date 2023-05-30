@@ -4,12 +4,9 @@ import { Link } from 'react-router-dom';
 import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
 import { Summary } from 'components/summary';
-// config
-import { profiles } from 'config';
 // contexts
 import { useContentState } from 'contexts/content';
 // types
-import type { Profile } from 'config/profiles';
 import type { Content } from 'contexts/content';
 import type { FetchState } from 'types';
 
@@ -79,7 +76,7 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
                 <tr key={profile}>
                   <th scope="row" data-label="Download link">
                     <a href={fileInfo.url}>
-                      {profiles[profile as Profile].label} Profile
+                      {content.data.profileConfig[profile].label} Profile
                       <Exit
                         aria-hidden="true"
                         className="height-2 margin-left-05 text-primary top-05 usa-icon width-2"

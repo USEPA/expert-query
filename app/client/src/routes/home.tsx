@@ -25,7 +25,7 @@ import { Button } from 'components/button';
 // contexts
 import { useContentState } from 'contexts/content';
 // config
-import { fields, profiles, serverUrl } from 'config';
+import { serverUrl } from 'config';
 // utils
 import { getData, isAbort, postData, useAbort } from 'utils';
 // types
@@ -51,11 +51,11 @@ function HomeContent({ content }: { content: Content }) {
   const {
     domainValues,
     filterConfig,
-    glossary,
     listOptions,
     profileConfig: profiles,
   } = content;
-  const { filterFields, sourceFields } = filterConfig;
+  const { filterFields, filterGroups, filterGroupLabels, sourceFields } =
+    filterConfig;
 
   const staticOptions = useMemo(() => {
     const domainOptions = addDomainAliases(domainValues);
@@ -197,6 +197,9 @@ function HomeContent({ content }: { content: Content }) {
             <>
               <Outlet
                 context={{
+                  filterFields,
+                  filterGroupLabels,
+                  filterGroups: filterGroups[profile.key],
                   filterHandlers,
                   filterState,
                   format,
@@ -205,6 +208,7 @@ function HomeContent({ content }: { content: Content }) {
                   queryParams,
                   queryUrl: apiUrl,
                   resetFilters,
+                  sourceFields,
                   sourceHandlers,
                   sourceState,
                   staticOptions,
@@ -242,12 +246,16 @@ export function QueryBuilder() {
   const {
     queryParams,
     queryUrl,
+    filterFields,
+    filterGroupLabels,
+    filterGroups,
     filterHandlers,
     filterState,
     format,
     formatHandler,
     profile,
     resetFilters,
+    sourceFields,
     sourceHandlers,
     sourceState,
     staticOptions,
@@ -289,9 +297,7 @@ export function QueryBuilder() {
           downloadStatus={downloadStatus}
           onClose={closeDownloadConfirmation}
           queryData={queryParams}
-          queryUrl={
-            profile ? `${queryUrl}/${profiles[profile].resource}` : null
-          }
+          queryUrl={profile ? `${queryUrl}/${profile.resource}` : null}
           setDownloadStatus={setDownloadStatus}
         />
       )}
@@ -304,145 +310,140 @@ export function QueryBuilder() {
           onClose={closeClearConfirmation}
         />
       )}
-      {profile && (
-        <div>
-          <div className="margin-top-2">
-            <Button onClick={openClearConfirmation} color="white">
-              Clear Search
-            </Button>
-          </div>
-          <InPageNavAnchor
-            id="apply-filters"
-            label={
-              <NumberedInPageNavLabel number={2}>
-                Apply Filters
-              </NumberedInPageNavLabel>
-            }
-          >
-            <StepIndicator currentStep={2} totalSteps={3}>
-              Apply Filters
-            </StepIndicator>
-          </InPageNavAnchor>
-          <p>
-            Select options from the fields below to apply filters to the query.
-            The options of some fields are filtered by previous selections.
-          </p>
-          <FilterGroups
-            apiKey={apiKey}
-            apiUrl={apiUrl}
-            filterHandlers={filterHandlers}
-            filterState={filterState}
-            profile={profile}
-            queryParams={queryParams}
-            sourceHandlers={sourceHandlers}
-            sourceState={sourceState}
-            staticOptions={staticOptions}
-          />
-
-          <InPageNavAnchor
-            id="download"
-            label={
-              <NumberedInPageNavLabel number={3}>
-                Download the Data
-              </NumberedInPageNavLabel>
-            }
-          >
-            <StepIndicator currentStep={3} totalSteps={3}>
-              Download the Data
-            </StepIndicator>
-          </InPageNavAnchor>
-          <p>
-            Choose an output file format for the result set, then click the
-            download button to proceed.
-          </p>
-          <RadioButtons
-            legend={
-              <>
-                <b className="margin-right-05">File Format</b>
-                <InfoTooltip text="Choose a file format for the result set." />
-              </>
-            }
-            onChange={formatHandler}
-            options={staticOptions.format}
-            selected={format}
-            styles={['margin-bottom-2']}
-          />
-          <button
-            className="display-flex flex-justify-center usa-button"
-            onClick={openDownloadConfirmation}
-            type="button"
-          >
-            <Download
-              aria-hidden="true"
-              className="height-205 margin-right-1 usa-icon width-205"
-              role="img"
-              focusable="false"
-            />
-            <span className="margin-y-auto">Download</span>
-          </button>
-          {downloadStatus === 'success' && (
-            <Alert
-              styles={['margin-top-3', 'tablet:margin-top-6']}
-              type="success"
-            >
-              Query executed successfully, please check your downloads folder
-              for the output file.
-            </Alert>
-          )}
-          {downloadStatus === 'failure' && (
-            <Alert
-              styles={['margin-top-3', 'tablet:margin-top-6']}
-              type="error"
-            >
-              An error occurred while executing the current query, please try
-              again later.
-            </Alert>
-          )}
-
-          <AccordionItem heading="Advanced Queries">
-            Visit our{' '}
-            <a
-              href={`${serverUrl}/api-documentation`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              API Documentation
-            </a>{' '}
-            page to learn more.
-            <h4 className="text-primary">Current Query</h4>
-            <CopyBox
-              testId="current-query-copy-box-container"
-              text={`${window.location.origin}${
-                window.location.pathname
-              }?${buildUrlQueryString(queryParams.filters)}`}
-            />
-            <h4 className="text-primary">
-              {profiles[profile].label} API Query
-            </h4>
-            <CopyBox
-              testId="api-query-copy-box-container"
-              lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
-              maxLength={2048}
-              text={`${queryUrl}/${
-                profiles[profile].resource
-              }?${buildUrlQueryString(
-                queryParams.filters,
-                queryParams.options,
-                queryParams.columns,
-              )}&api_key=<YOUR_API_KEY>`}
-            />
-            <h4 className="text-primary">cURL</h4>
-            <CopyBox
-              testId="curl-copy-box-container"
-              text={`curl -X POST --json "${JSON.stringify(
-                queryParams,
-              ).replaceAll('"', '\\"')}" ${queryUrl}/${
-                profiles[profile].resource
-              } -H "X-Api-Key: <YOUR_API_KEY>"`}
-            />
-          </AccordionItem>
+      <div>
+        <div className="margin-top-2">
+          <Button onClick={openClearConfirmation} color="white">
+            Clear Search
+          </Button>
         </div>
-      )}
+        <InPageNavAnchor
+          id="apply-filters"
+          label={
+            <NumberedInPageNavLabel number={2}>
+              Apply Filters
+            </NumberedInPageNavLabel>
+          }
+        >
+          <StepIndicator currentStep={2} totalSteps={3}>
+            Apply Filters
+          </StepIndicator>
+        </InPageNavAnchor>
+        <p>
+          Select options from the fields below to apply filters to the query.
+          The options of some fields are filtered by previous selections.
+        </p>
+        <FilterFieldGroups
+          apiKey={apiKey}
+          apiUrl={apiUrl}
+          filterFields={filterFields}
+          filterGroupLabels={filterGroupLabels}
+          filterGroups={filterGroups}
+          filterHandlers={filterHandlers}
+          filterState={filterState}
+          profile={profile}
+          queryParams={queryParams}
+          sourceFields={sourceFields}
+          sourceHandlers={sourceHandlers}
+          sourceState={sourceState}
+          staticOptions={staticOptions}
+        />
+
+        <InPageNavAnchor
+          id="download"
+          label={
+            <NumberedInPageNavLabel number={3}>
+              Download the Data
+            </NumberedInPageNavLabel>
+          }
+        >
+          <StepIndicator currentStep={3} totalSteps={3}>
+            Download the Data
+          </StepIndicator>
+        </InPageNavAnchor>
+        <p>
+          Choose an output file format for the result set, then click the
+          download button to proceed.
+        </p>
+        <RadioButtons
+          legend={
+            <>
+              <b className="margin-right-05">File Format</b>
+              <InfoTooltip text="Choose a file format for the result set." />
+            </>
+          }
+          onChange={formatHandler}
+          options={staticOptions.format}
+          selected={format}
+          styles={['margin-bottom-2']}
+        />
+        <button
+          className="display-flex flex-justify-center usa-button"
+          onClick={openDownloadConfirmation}
+          type="button"
+        >
+          <Download
+            aria-hidden="true"
+            className="height-205 margin-right-1 usa-icon width-205"
+            role="img"
+            focusable="false"
+          />
+          <span className="margin-y-auto">Download</span>
+        </button>
+        {downloadStatus === 'success' && (
+          <Alert
+            styles={['margin-top-3', 'tablet:margin-top-6']}
+            type="success"
+          >
+            Query executed successfully, please check your downloads folder for
+            the output file.
+          </Alert>
+        )}
+        {downloadStatus === 'failure' && (
+          <Alert styles={['margin-top-3', 'tablet:margin-top-6']} type="error">
+            An error occurred while executing the current query, please try
+            again later.
+          </Alert>
+        )}
+
+        <AccordionItem heading="Advanced Queries">
+          Visit our{' '}
+          <a
+            href={`${serverUrl}/api-documentation`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            API Documentation
+          </a>{' '}
+          page to learn more.
+          <h4 className="text-primary">Current Query</h4>
+          <CopyBox
+            testId="current-query-copy-box-container"
+            text={`${window.location.origin}${
+              window.location.pathname
+            }?${buildUrlQueryString(queryParams.filters)}`}
+          />
+          <h4 className="text-primary">{profile.label} API Query</h4>
+          <CopyBox
+            testId="api-query-copy-box-container"
+            lengthExceededMessage="The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below)."
+            maxLength={2048}
+            text={`${queryUrl}/${profile.resource}?${buildUrlQueryString(
+              queryParams.filters,
+              queryParams.options,
+              queryParams.columns,
+            )}&api_key=<YOUR_API_KEY>`}
+          />
+          <h4 className="text-primary">cURL</h4>
+          <CopyBox
+            testId="curl-copy-box-container"
+            text={`curl -X POST --json "${JSON.stringify(
+              queryParams,
+            ).replaceAll('"', '\\"')}" ${queryUrl}/${
+              profile.resource
+            } -H "X-Api-Key: <YOUR_API_KEY>"`}
+          />
+        </AccordionItem>
+      </div>
     </>
   );
 }
@@ -455,6 +456,7 @@ function FilterFields({
   filterState,
   profile,
   queryParams,
+  sourceFields,
   sourceHandlers,
   sourceState,
   staticOptions,
@@ -464,7 +466,7 @@ function FilterFields({
     fields.map((fieldConfig) => {
       const sourceFieldConfig =
         'source' in fieldConfig
-          ? sourceFieldsConfig.find((f) => f.id === fieldConfig.source)
+          ? sourceFields.find((f) => f.id === fieldConfig.source)
           : null;
 
       switch (fieldConfig.type) {
@@ -485,9 +487,11 @@ function FilterFields({
               <Checkboxes
                 key={fieldConfig.key}
                 legend={<b>{fieldConfig.label}</b>}
-                onChange={filterHandlers[fieldConfig.key]}
+                onChange={filterHandlers[fieldConfig.key] as OptionInputHandler}
                 options={initialOptions}
-                selected={filterState[fieldConfig.key] ?? []}
+                selected={
+                  (filterState[fieldConfig.key] as MultiOptionState) ?? []
+                }
                 styles={['margin-top-3']}
               />,
               fieldConfig.key,
@@ -501,7 +505,7 @@ function FilterFields({
           const selectProps = {
             apiKey,
             apiUrl,
-            contextFilters: getContextFilters(fieldConfig, profile, {
+            contextFilters: getContextFilters(fieldConfig, fields, profile, {
               ...queryParams.filters,
               ...(sourceKey && sourceValue
                 ? { [sourceKey]: sourceValue.value }
@@ -513,6 +517,7 @@ function FilterFields({
             filterKey: fieldConfig.key,
             filterLabel: fieldConfig.label,
             filterValue: filterState[fieldConfig.key],
+            isMulti: isMultiOptionField(fieldConfig),
             placeholder:
               'placeholder' in fieldConfig ? fieldConfig.placeholder : null,
             profile,
@@ -525,9 +530,7 @@ function FilterFields({
             sourceKey,
             sourceValue,
             staticOptions,
-          } as typeof fieldConfig.key extends MultiOptionField
-            ? MultiSelectFilterProps
-            : SingleSelectFilterProps;
+          } as SelectFilterProps;
 
           const tooltip = 'tooltip' in fieldConfig ? fieldConfig.tooltip : null;
 
@@ -563,29 +566,33 @@ function FilterFields({
           // Prevents range fields from rendering twice
           if (fieldConfig.boundary === 'high') return null;
 
-          const pairedField = filterFieldsConfig.find(
+          const pairedField = fields.find(
             (otherField) =>
               otherField.key !== fieldConfig.key &&
-              'domain' in otherField &&
+              otherField.type === fieldConfig.type &&
               otherField.domain === fieldConfig.domain,
           );
           // All range inputs should have a high and a low boundary field
-          if (!pairedField || !isSingleValueField(pairedField.key)) return null;
+          if (!pairedField || !isSingleValueField(pairedField)) return null;
 
           return [
             <RangeFilter
-              domain={fieldConfig.domain}
-              highHandler={filterHandlers[pairedField.key]}
+              domain={fieldConfig.domain!}
+              highHandler={
+                filterHandlers[pairedField.key] as SingleValueInputHandler
+              }
               highKey={pairedField.key}
-              highValue={filterState[pairedField.key]}
+              highValue={filterState[pairedField.key] as string}
               key={fieldConfig.key}
               label={fieldConfig.label}
-              lowHandler={filterHandlers[fieldConfig.key]}
+              lowHandler={
+                filterHandlers[fieldConfig.key] as SingleValueInputHandler
+              }
               lowKey={fieldConfig.key}
-              lowValue={filterState[fieldConfig.key]}
+              lowValue={filterState[fieldConfig.key] as string}
               type={fieldConfig.type}
             />,
-            fieldConfig.domain,
+            fieldConfig.domain as string,
           ];
         default:
           return null;
@@ -604,12 +611,12 @@ function FilterFields({
   );
 }
 
-function FilterGroups(props: FilterGroupsProps) {
-  const { profile } = props;
-  const groupedFields = filterGroupsConfig[profile].map((group) => ({
+function FilterFieldGroups(props: FilterFieldGroupsProps) {
+  const { filterFields, filterGroupLabels, filterGroups, ...restProps } = props;
+  const groupedFields = filterGroups.map((group) => ({
     ...group,
     fields: group.fields
-      .map((field) => filterFieldsConfig.find((f) => f.key === field))
+      .map((field) => filterFields.find((f) => f.key === field))
       .filter((field) => field !== undefined),
   }));
 
@@ -630,10 +637,8 @@ function FilterGroups(props: FilterGroupsProps) {
               </h3>
             </InPageNavAnchor>
             <FilterFields
-              {...props}
-              fields={
-                group.fields as Array<(typeof filterFieldsConfig)[number]>
-              }
+              {...restProps}
+              fields={group.fields as FilterField[]}
             />
           </section>
         );
@@ -696,7 +701,7 @@ function ParameterErrorAlert({
   );
 }
 
-function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
+function RangeFilter({
   domain,
   highHandler,
   highKey,
@@ -706,7 +711,7 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
   lowKey,
   lowValue,
   type,
-}: RangeFilterProps<F>) {
+}: RangeFilterProps) {
   return (
     <label className="usa-label" htmlFor={`input-${lowKey}`} key={domain}>
       <b>{label}</b>
@@ -738,11 +743,7 @@ function RangeFilter<F extends Extract<FilterField, SingleValueField>>({
   );
 }
 
-function SourceSelectFilter(
-  props: SourceSelectFilterProps<
-    MultiSelectFilterProps | SingleSelectFilterProps
-  >,
-) {
+function SourceSelectFilter(props: SourceSelectFilterProps) {
   const { sourceLabel, sourceHandler, ...selectFilterProps } = props;
   const { sourceKey, sourceValue, staticOptions } = selectFilterProps;
 
@@ -758,9 +759,7 @@ function SourceSelectFilter(
   );
 }
 
-function SelectFilter<
-  P extends SingleSelectFilterProps | MultiSelectFilterProps,
->({
+function SelectFilter({
   apiKey,
   apiUrl,
   contextFilters,
@@ -769,6 +768,7 @@ function SelectFilter<
   filterKey,
   filterLabel,
   filterValue,
+  isMulti = false,
   placeholder,
   profile,
   secondaryFilterKey,
@@ -776,7 +776,7 @@ function SelectFilter<
   sourceKey,
   sourceValue,
   staticOptions,
-}: P) {
+}: SelectFilterProps) {
   const { content } = useContentState();
   const { abort, getSignal } = useAbort();
 
@@ -787,7 +787,7 @@ function SelectFilter<
       apiUrl,
       defaultOption,
       filters: contextFilters,
-      profile,
+      profile: profile.key,
       fieldName: filterKey,
       direction: sortDirection,
       dynamicOptionLimit: content.data?.parameters.selectOptionsPageSize,
@@ -875,7 +875,7 @@ function SelectFilter<
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
-      isMulti={isMultiOptionField(filterKey)}
+      isMulti={isMulti}
       key={sourceValue?.value}
       menuPortalTarget={document.body}
       onChange={filterHandler}
@@ -1065,7 +1065,7 @@ function useProfile(
     [navigate],
   );
 
-  if (profileArg !== profile?.key) {
+  if (profileArg !== (profile?.key ?? null)) {
     if (!profileArg) {
       setProfile(null);
       setProfileOption(null);
@@ -1112,9 +1112,9 @@ function useQueryParams({
     return {
       columns: Array.from(profile.columns),
       options: { format },
-      filters: buildFilterData(filterState, profile),
+      filters: buildFilterData(filterFields, filterState, profile),
     };
-  }, [filterState, format, profile]);
+  }, [filterFields, filterState, format, profile]);
 
   const [parameterErrors, setParameterErrors] =
     useState<ParameterErrors | null>(null);
@@ -1194,21 +1194,26 @@ function addDomainAliases(values: DomainOptions): Required<DomainOptions> {
   };
 }
 
-function buildFilterData(filterState: FilterFieldState, profile: Profile) {
+function buildFilterData(
+  filterFields: FilterField[],
+  filterState: FilterFieldState,
+  profile: Profile,
+) {
   const newFilterQueryParams: FilterQueryData = {};
   Object.entries(filterState).forEach(
     ([field, value]: [string, FilterFieldState[keyof FilterFieldState]]) => {
       if (isEmpty(value)) return;
+      const fieldConfig = filterFields.find((f) => f.key === field);
+      if (!fieldConfig) return;
 
       // Extract 'value' field from Option types
       const flattenedValue = getInputValue(value);
       const formattedValue =
-        (dateFields as string[]).includes(field) &&
-        typeof flattenedValue === 'string'
+        isDateField(fieldConfig) && typeof flattenedValue === 'string'
           ? fromIsoDateString(flattenedValue)
           : flattenedValue;
 
-      if (formattedValue && isProfileField(field, profile)) {
+      if (formattedValue && isProfileField(fieldConfig, profile)) {
         newFilterQueryParams[field] = formattedValue;
       }
     },
@@ -1226,7 +1231,8 @@ function buildUrlQueryString(
   columns?.forEach((column) => paramsList.push(['columns', column]));
   Object.entries({ ...filters, ...options }).forEach(([field, value]) => {
     // Duplicate the query parameter for an array of values
-    if (Array.isArray(value)) value.forEach((v) => paramsList.push([field, v]));
+    if (Array.isArray(value))
+      (value as string[]).forEach((v) => paramsList.push([field, v]));
     // Else push a single parameter
     else paramsList.push([field, value]);
   });
@@ -1453,7 +1459,8 @@ function getArticle(noun: string) {
 }
 
 function getContextFilters(
-  fieldConfig: (typeof filterFieldsConfig)[number],
+  fieldConfig: FilterField,
+  fieldConfigs: FilterField[],
   profile: Profile,
   filters: FilterQueryData,
 ) {
@@ -1461,8 +1468,10 @@ function getContextFilters(
 
   return Object.entries(filters).reduce<FilterQueryData>(
     (current, [key, value]) => {
+      const filterFieldConfig = fieldConfigs.find((f) => f.key === key);
       if (
-        isProfileField(key, profile) &&
+        filterFieldConfig &&
+        isProfileField(filterFieldConfig, profile) &&
         (fieldConfig.contextFields as readonly string[]).includes(key)
       ) {
         return {
@@ -1473,12 +1482,6 @@ function getContextFilters(
       return current;
     },
     {},
-  );
-}
-
-function getDateFields(fields: typeof allFieldsConfig) {
-  return removeNulls(
-    fields.map((field) => (field.type === 'date' ? field.key : null)),
   );
 }
 
@@ -1507,10 +1510,7 @@ function getDefaultValue(field: FilterField | SourceField) {
 }
 
 // Returns unfiltered options for a field, up to a maximum length
-function getInitialOptions(
-  staticOptions: StaticOptions,
-  fieldName: FilterField,
-) {
+function getInitialOptions(staticOptions: StaticOptions, fieldName: string) {
   if (staticOptions.hasOwnProperty(fieldName)) {
     const fieldOptions = staticOptions[fieldName as keyof StaticOptions] ?? [];
 
@@ -1531,28 +1531,6 @@ function getInputValue(input: Option | ReadonlyArray<Option> | string) {
   }
   if (isOption(input)) return input.value;
   return input;
-}
-
-function getMultiOptionFields(fields: typeof allFieldsConfig) {
-  return removeNulls(
-    fields.map((field) => {
-      return field.type === 'multiselect' ? field.key : null;
-    }),
-  );
-}
-
-function getSingleOptionFields(fields: typeof allFieldsConfig) {
-  return removeNulls(
-    fields.map((field) => {
-      return field.type === 'select' ? field.key : null;
-    }),
-  );
-}
-
-function getYearFields(fields: typeof allFieldsConfig) {
-  return removeNulls(
-    fields.map((field) => (field.type === 'year' ? field.key : null)),
-  );
 }
 
 function removeNulls<T>(fields: Array<T | null>) {
@@ -1579,35 +1557,36 @@ async function getUrlInputs(
   profile: Profile,
   _signal: AbortSignal,
 ): Promise<{ filters: FilterFieldState; errors: ParameterErrors }> {
-  const [params, errors] = parseInitialParams(profile);
+  const [params, errors] = parseInitialParams(profile, filterFields);
 
   const newState = getDefaultFilterState(filterFields);
 
   // Match query parameters
   await Promise.all([
     ...Object.keys(params).map(async (key) => {
-      if (!isFilterField(key)) return;
-      if (isMultiOptionField(key)) {
+      const filterField = filterFields.find((f) => f.key === key);
+      if (!filterField) return;
+      if (isMultiOptionField(filterField)) {
         newState[key] = await matchMultipleOptions(
           apiKey,
           apiUrl,
           params[key] ?? null,
-          key,
+          filterField,
           getStaticOptions(key, staticOptions),
           profile.key,
         );
-      } else if (isSingleOptionField(key)) {
+      } else if (isSingleOptionField(filterField)) {
         newState[key] = await matchSingleOption(
           apiKey,
           apiUrl,
           params[key] ?? null,
-          key,
+          filterField,
           getStaticOptions(key, staticOptions),
           profile.key,
         );
-      } else if (isDateField(key)) {
+      } else if (isDateField(filterField)) {
         newState[key] = matchDate(params[key] ?? null);
-      } else if (isYearField(key)) {
+      } else if (isYearField(filterField)) {
         newState[key] = matchYear(params[key] ?? null);
       }
     }),
@@ -1617,8 +1596,8 @@ async function getUrlInputs(
 }
 
 // Type narrowing
-function isDateField(field: string): field is DateField {
-  return (dateFields as string[]).includes(field);
+function isDateField(field: FilterField) {
+  return field.type === 'date';
 }
 
 // Utility
@@ -1626,11 +1605,6 @@ function isEmpty<T>(
   v: T | null | undefined | [] | {},
 ): v is null | undefined | [] | {} {
   return !isNotEmpty(v);
-}
-
-// Type narrowing
-function isFilterField(field: string): field is FilterField {
-  return (filterFields as string[]).includes(field);
 }
 
 // Type narrowing
@@ -1656,12 +1630,10 @@ function isOption(maybeOption: Option | string): maybeOption is Option {
   return typeof maybeOption === 'object' && 'value' in maybeOption;
 }
 
-function isProfileField(field: string, profile: Profile) {
-  const profileColumns = profiles[profile].columns;
-  const fieldConfig = allFieldsConfig.find((config) => config.key === field);
-  if (!fieldConfig) return false;
-  if (profileColumns.has(fieldConfig.key)) return true;
-  if ('domain' in fieldConfig && profileColumns.has(fieldConfig.domain))
+function isProfileField(field: FilterField, profile: Profile) {
+  const profileColumns = profile.columns;
+  if (profileColumns.has(field.key)) return true;
+  if ('domain' in field && profileColumns.has(field.domain as string))
     return true;
   return false;
 }
@@ -1677,8 +1649,8 @@ function isSingleValueField(field: FilterField): field is SingleValueField {
 }
 
 // Type narrowing
-function isYearField(field: string): field is YearField {
-  return (yearFields as string[]).includes(field);
+function isYearField(field: FilterField) {
+  return field.type === 'year';
 }
 
 // Verify that a given string matches a parseable date format
@@ -1697,7 +1669,7 @@ async function matchMultipleOptions(
   apiKey: string,
   apiUrl: string,
   values: InputValue,
-  fieldName: MultiOptionField,
+  field: FilterField | SourceField,
   options: ReadonlyArray<Option> | null = null,
   profile: string | null = null,
 ) {
@@ -1705,7 +1677,7 @@ async function matchMultipleOptions(
     apiKey,
     apiUrl,
     values,
-    fieldName,
+    field,
     options,
     profile,
     true,
@@ -1717,7 +1689,7 @@ async function matchSingleOption(
   apiKey: string,
   apiUrl: string,
   values: InputValue,
-  fieldName: SingleOptionField,
+  field: FilterField | SourceField,
   options: ReadonlyArray<Option> | null = null,
   profile: string | null = null,
 ) {
@@ -1725,7 +1697,7 @@ async function matchSingleOption(
     apiKey,
     apiUrl,
     values,
-    fieldName,
+    field,
     options,
     profile,
   )) as Option | null;
@@ -1736,7 +1708,7 @@ async function matchOptions(
   apiKey: string,
   apiUrl: string,
   values: InputValue,
-  fieldName: MultiOptionField | SingleOptionField,
+  field: FilterField | SourceField,
   options: ReadonlyArray<Option> | null = null,
   profile: string | null = null,
   multiple = false,
@@ -1757,7 +1729,7 @@ async function matchOptions(
           apiKey,
           apiUrl,
           value,
-          fieldName,
+          field.key,
           profile,
         );
         if (isValid) matches.add({ label: value, value });
@@ -1766,7 +1738,7 @@ async function matchOptions(
   );
 
   if (matches.size === 0) {
-    const defaultOption = getDefaultValue(fieldName);
+    const defaultOption = getDefaultValue(field);
     defaultOption && matches.add(defaultOption);
   }
 
@@ -1781,6 +1753,7 @@ function matchYear(values: InputValue) {
 // Parse parameters provided in the URL search into a JSON object
 function parseInitialParams(
   profile: Profile,
+  filterFields: FilterField[],
 ): [FilterQueryData, ParameterErrors] {
   const uniqueParams: { [field: string]: string | Set<string> } = {};
   const paramErrors: ParameterErrors = {
@@ -1795,14 +1768,21 @@ function parseInitialParams(
 
       const newValue = decodeURI(uriValue);
 
+      const fieldConfig = filterFields.find((f) => f.key === field);
+      if (!fieldConfig) {
+        paramErrors.invalid.add(field);
+        return;
+      }
+
       if (field in uniqueParams) {
-        if (!isMultiOptionField(field)) return paramErrors.duplicate.add(field);
+        if (!isMultiOptionField(fieldConfig))
+          return paramErrors.duplicate.add(field);
         // Multiple values, add to an array
         const value = uniqueParams[field];
         if (value instanceof Set) value.add(newValue);
         else uniqueParams[field] = new Set([value, newValue]);
       } else {
-        if (!isProfileField(field, profile)) {
+        if (!isProfileField(fieldConfig, profile)) {
           paramErrors.invalid.add(field);
           return;
         }
@@ -1839,26 +1819,9 @@ function scrollToHash() {
 
 const staticOptionLimit = 100;
 
-const {
-  filterFields: filterFieldsConfig,
-  filterGroupLabels,
-  filterGroups: filterGroupsConfig,
-  sourceFields: sourceFieldsConfig,
-} = fields;
-const allFieldsConfig = [...filterFieldsConfig, ...sourceFieldsConfig];
-const filterFields = filterFieldsConfig.map((f) => f.key);
-const sourceFields = sourceFieldsConfig.map((fieldConfig) => fieldConfig.id);
-const multiOptionFields = getMultiOptionFields(allFieldsConfig);
-const singleOptionFields = getSingleOptionFields(allFieldsConfig);
-const dateFields = getDateFields(allFieldsConfig);
-const yearFields = getYearFields(allFieldsConfig);
-const singleValueFields = [...dateFields, ...yearFields];
-
 /*
 ## Types
 */
-
-type DateField = (typeof dateFields)[number];
 
 type FilterFieldsAction =
   | FilterFieldAction
@@ -1877,9 +1840,9 @@ type FilterFieldActionHandlers = {
   ) => FilterFieldState;
 };
 
-// type FilterField = (typeof filterFields)[number];
-
 type FilterField = Content['filterConfig']['filterFields'][number];
+type FilterGroup = Content['filterConfig']['filterGroups'][string][number];
+type FilterGroupLabels = Content['filterConfig']['filterGroupLabels'];
 type SourceField = Content['filterConfig']['sourceFields'][number];
 type Profiles = Content['profileConfig'];
 type Profile = Profiles[string];
@@ -1888,31 +1851,41 @@ type FilterFieldInputHandlers = {
   [field: string]: OptionInputHandler | SingleValueInputHandler;
 };
 
-type FilterFieldsProps = FilterGroupsProps & {
-  fields: Array<(typeof filterFieldsConfig)[number]>;
+type FilterFieldsProps = Omit<
+  FilterFieldGroupsProps,
+  'filterFields' | 'filterGroupLabels' | 'filterGroups'
+> & {
+  fields: FilterField[];
 };
 
 type FilterFieldState = {
   [field: string]: MultiOptionState | SingleOptionState | string;
 };
 
-type FilterGroupsProps = {
+type FilterFieldGroupsProps = {
   apiKey: string;
   apiUrl: string;
+  filterFields: FilterField[];
+  filterGroupLabels: FilterGroupLabels;
+  filterGroups: FilterGroup[];
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
   profile: Profile;
   queryParams: QueryData;
+  sourceFields: SourceField[];
   sourceHandlers: SourceFieldInputHandlers;
   sourceState: SourceFieldState;
   staticOptions: StaticOptions;
 };
 
-type FilterQueryData = Partial<{
+type FilterQueryData = {
   [field: string]: string | string[];
-}>;
+};
 
 type HomeContext = {
+  filterFields: FilterField[];
+  filterGroups: FilterGroup[];
+  filterGroupLabels: FilterGroupLabels;
   filterHandlers: FilterFieldInputHandlers;
   filterState: FilterFieldState;
   format: Option;
@@ -1921,6 +1894,7 @@ type HomeContext = {
   queryParams: QueryData;
   queryUrl: string;
   resetFilters: () => void;
+  sourceFields: SourceField[];
   sourceHandlers: SourceFieldInputHandlers;
   sourceState: SourceFieldState;
   staticOptions: StaticOptions;
@@ -1928,13 +1902,7 @@ type HomeContext = {
 
 type InputValue = string | string[] | null;
 
-// type MultiOptionField = (typeof multiOptionFields)[number];
-
 type MultiOptionState = ReadonlyArray<Option> | null;
-
-type MultiSelectFilterProps = SelectFilterProps<
-  Extract<FilterField, MultiOptionField>
->;
 
 type OptionInputHandler = (
   option: SingleOptionState | MultiOptionState,
@@ -1955,55 +1923,47 @@ type QueryData = {
   options: OptionQueryData;
 };
 
-type RangeFilterProps<F extends Extract<FilterField, SingleValueField>> = {
+type RangeFilterProps = {
   domain: string;
   highHandler: SingleValueInputHandler;
-  highKey: F;
+  highKey: string;
   highValue: string;
   label: string;
   lowHandler: SingleValueInputHandler;
-  lowKey: F;
+  lowKey: string;
   lowValue: string;
   type: 'date' | 'year';
 };
 
-type SelectFilterProps<
-  F extends Extract<FilterField, MultiOptionField | SingleOptionField>,
-> = {
+type SelectFilterProps = {
   apiKey: string;
   apiUrl: string;
   contextFilters: FilterQueryData;
   defaultOption?: Option | null;
-  filterHandler: FilterFieldInputHandlers[F];
-  filterKey: F;
+  filterHandler: Exclude<
+    FilterFieldInputHandlers[string],
+    SingleValueInputHandler
+  >;
+  filterKey: string;
   filterLabel: string;
-  filterValue: FilterFieldState[F];
+  filterValue: MultiOptionState | SingleOptionState;
+  isMulti?: boolean;
   placeholder?: string | null;
   profile: Profile;
-  secondaryFilterKey: FilterField;
+  secondaryFilterKey: string;
   sortDirection?: SortDirection;
-  sourceKey: (typeof sourceFieldsConfig)[number]['key'] | null;
-  sourceValue: SourceFieldState[SourceField] | null;
+  sourceKey: string | null;
+  sourceValue: SourceFieldState[string] | null;
   staticOptions: StaticOptions;
 };
-
-// type SingleOptionField = (typeof singleOptionFields)[number];
 
 type SingleOptionInputHandler = (ev: SingleOptionState) => void;
 
 type SingleOptionState = Option | null;
 
-type SingleSelectFilterProps = SelectFilterProps<
-  Extract<FilterField, SingleOptionField>
->;
-
-// type SingleValueField = (typeof singleValueFields)[number];
-
 type SingleValueInputHandler = (ev: ChangeEvent<HTMLInputElement>) => void;
 
 type SortDirection = 'asc' | 'desc';
-
-// type SourceField = (typeof sourceFields)[number];
 
 type SourceFieldState = {
   [field: string]: SingleOptionState;
@@ -2022,17 +1982,13 @@ type SourceFieldActionHandlers = {
 };
 
 type SourceFieldInputHandlers = {
-  [F in SourceField]: SingleOptionInputHandler;
+  [field: string]: SingleOptionInputHandler;
 };
 
-type SourceSelectFilterProps<
-  P extends SingleSelectFilterProps | MultiSelectFilterProps,
-> = P & {
-  sourceHandler: SourceFieldInputHandlers[SourceField];
-  sourceKey: (typeof sourceFieldsConfig)[number]['key'];
+type SourceSelectFilterProps = SelectFilterProps & {
+  sourceHandler: SourceFieldInputHandlers[string];
+  sourceKey: string;
   sourceLabel: string;
 };
 
 type UrlQueryParam = [string, string];
-
-type YearField = (typeof yearFields)[number];

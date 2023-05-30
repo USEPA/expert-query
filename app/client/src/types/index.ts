@@ -28,6 +28,7 @@ type BaseFilterFieldConfig = {
   placeholder?: string;
   secondaryKey?: string;
   source?: string;
+  tooltip?: string;
   type: 'date' | 'multiselect' | 'select' | 'year';
 };
 
