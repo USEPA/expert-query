@@ -210,6 +210,9 @@ export default function (app, basePath) {
       'content/alerts/config.json',
       'content-etl/glossary.json',
       'content/config/parameters.json',
+      'content/config/fields.json',
+      'content/config/listOptions.json',
+      'content/config/profiles.json',
     ];
 
     const filePromises = Promise.all(
@@ -226,6 +229,9 @@ export default function (app, basePath) {
           alertsConfig: data[1],
           glossary: data[2],
           parameters: data[3],
+          filterConfig: data[4],
+          listOptions: data[5],
+          profileConfig: data[6],
         };
       });
 

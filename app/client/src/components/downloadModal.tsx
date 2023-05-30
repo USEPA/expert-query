@@ -6,8 +6,7 @@ import { ReactComponent as Close } from 'images/close.svg';
 import { Alert } from 'components/alert';
 import { Loading, LoadingButtonIcon } from 'components/loading';
 // utils
-import { postData } from 'config';
-import { isAbort, useAbort } from 'utils';
+import { isAbort, postData, useAbort } from 'utils';
 // config
 import { serverUrl } from 'config';
 // styles
@@ -38,10 +37,11 @@ export function DownloadModal<D extends PostData>({
 
   const focusRef = useRef<HTMLButtonElement>(null);
 
-  const [count, setCount] = useState<FetchState<number | null>>({
+  const [count, setCount] = useState<FetchState<number>>({
     status: 'pending',
     data: null,
   });
+  const [maxCount, setMaxCount] = useState(0);
 
   // Get the row count for the current query
   useEffect(() => {
@@ -53,8 +53,9 @@ export function DownloadModal<D extends PostData>({
       .then((res) => {
         setCount({
           status: 'success',
-          data: 'count' in res ? res.count : null,
+          data: res.count,
         });
+        setMaxCount(res.maxCount);
       })
       .catch((err) => {
         if (isAbort(err)) return;
@@ -137,72 +138,75 @@ export function DownloadModal<D extends PostData>({
           )}
           {count.status === 'success' && (
             <>
-              {count.data === null ? (
-                <Alert type="warning">
-                  <p>The current query exceeds the maximum query size.</p>{' '}
-                  <p>
-                    Please refine the search, or visit the{' '}
-                    <a
-                      href={`${serverUrl}/national-downloads${
-                        dataId ? '#' + dataId : ''
-                      }`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      National Downloads
-                    </a>{' '}
-                    page to download a compressed dataset.
-                  </p>
-                </Alert>
-              ) : (
-                <>
-                  <div className="usa-prose">
+              <div className="usa-prose">
+                <p>
+                  Your query will return{' '}
+                  <strong data-testid="downloadfile-length">
+                    {count.data.toLocaleString()}
+                  </strong>{' '}
+                  rows.
+                </p>
+                {count.data <= maxCount && (
+                  <p>Click continue to download the data.</p>
+                )}
+              </div>
+              <div className="usa-modal__footer">
+                {count.data > maxCount ? (
+                  <Alert type="warning">
                     <p>
-                      Your query will return{' '}
-                      <strong data-testid="downloadfile-length">
-                        {count.data.toLocaleString()}
-                      </strong>{' '}
-                      rows.
+                      The current query exceeds the maximum query size of{' '}
+                      <b>{maxCount.toLocaleString()}</b> rows.
+                    </p>{' '}
+                    <p>
+                      Please refine the search, or visit the{' '}
+                      <a
+                        href={`${serverUrl}/national-downloads${
+                          dataId ? '#' + dataId : ''
+                        }`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        National Downloads
+                      </a>{' '}
+                      page to download a compressed dataset.
                     </p>
-                    <p>Click continue to download the data.</p>
-                  </div>
-                  <div className="usa-modal__footer">
-                    <ul className="flex-justify-center usa-button-group">
-                      <li className="usa-button-group__item mobile-lg:margin-right-5 mobile-lg:margin-y-auto">
+                  </Alert>
+                ) : (
+                  <ul className="flex-justify-center usa-button-group">
+                    <li className="usa-button-group__item mobile-lg:margin-right-5 mobile-lg:margin-y-auto">
+                      <button
+                        type="button"
+                        className="height-5 usa-button"
+                        onClick={closeModal}
+                        ref={focusRef}
+                      >
+                        Cancel
+                      </button>
+                    </li>
+                    <li className="usa-button-group__item mobile-lg:margin-y-auto">
+                      {downloadStatus === 'pending' ? (
                         <button
+                          className="display-flex flex-justify-center height-5 usa-button hover:bg-primary mobile-lg:width-15"
+                          onClick={undefined}
+                          style={{ cursor: 'initial' }}
                           type="button"
-                          className="height-5 usa-button"
-                          onClick={closeModal}
-                          ref={focusRef}
                         >
-                          Cancel
+                          Working <LoadingButtonIcon />
                         </button>
-                      </li>
-                      <li className="usa-button-group__item mobile-lg:margin-y-auto">
-                        {downloadStatus === 'pending' ? (
-                          <button
-                            className="display-flex flex-justify-center height-5 usa-button hover:bg-primary mobile-lg:width-15"
-                            onClick={undefined}
-                            style={{ cursor: 'initial' }}
-                            type="button"
-                          >
-                            Working <LoadingButtonIcon />
-                          </button>
-                        ) : (
-                          <button
-                            className="height-5 usa-button mobile-lg:width-15"
-                            disabled={count.data === 0}
-                            onClick={executeQuery}
-                            type="button"
-                          >
-                            Continue
-                          </button>
-                        )}
-                      </li>
-                    </ul>
-                  </div>
-                </>
-              )}
+                      ) : (
+                        <button
+                          className="height-5 usa-button mobile-lg:width-15"
+                          disabled={count.data === 0}
+                          onClick={executeQuery}
+                          type="button"
+                        >
+                          Continue
+                        </button>
+                      )}
+                    </li>
+                  </ul>
+                )}
+              </div>
             </>
           )}
         </div>
