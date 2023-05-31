@@ -130,7 +130,7 @@
   margin-top: 0;
 }
 
-/* --- Overrides --- */
+/* --- Source select --- */
 [data-node-ref='_sourceListNode'] {
   margin-bottom: 0 !important;
 }
