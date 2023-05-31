@@ -72,20 +72,31 @@ export async function endConnPool(pool) {
   log.info('EqPool connection pool ended');
 }
 
-async function cacheProfileStats(pool, schemaName, profileStats) {
+async function cacheProfileStats(pool, schemaName, profileStats, s3Stats) {
   const client = await getClient(pool);
   try {
     await client.query('BEGIN');
     for (const profile of profileStats) {
+      const profileName = profile['name'].replace('attains_app.profile_', '');
+
+      // lookup the file size from s3Stats
+      const s3Metadata = s3Stats.files.find(
+        (f) =>
+          f.name.replace('profile_', '').replace('.csv', '') === profileName,
+      );
+
       await client.query(
-        'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, last_refresh_elapsed, creation_date)' +
-          ' VALUES ($1, $2, $3, $4, $5, current_timestamp)',
+        'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, last_refresh_elapsed, csv_size, gz_size, zip_size, creation_date)' +
+          ' VALUES ($1, $2, $3, $4, $5, $6, $7, $8, current_timestamp)',
         [
-          profile['name'].replace('attains_app.profile_', ''),
+          profileName,
           schemaName,
-          profile['num_rows'],
-          profile['last_refresh_end_time'],
-          profile['last_refresh_elapsed'],
+          profile.num_rows,
+          profile.last_refresh_end_time,
+          profile.last_refresh_elapsed,
+          s3Metadata.csv_size,
+          s3Metadata.gz_size,
+          s3Metadata.zip_size,
         ],
       );
     }
@@ -154,6 +165,9 @@ export async function checkLogTables() {
           num_rows INTEGER NOT NULL,
           last_refresh_end_time TIMESTAMP WITH TIME ZONE NOT NULL,
           last_refresh_elapsed VARCHAR(20) NOT NULL,
+          csv_size BIGINT,
+          gz_size BIGINT,
+          zip_size BIGINT,
           creation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
           PRIMARY KEY (profile_name, schema_name)
         )`,
@@ -452,17 +466,14 @@ export async function runJob(s3Config, checkIfReady = true) {
   const pool = startConnPool();
 
   // check if the MV data is available in s3 and ready to be loaded
-  let s3Julian = null;
-  if (!environment.isLocal) {
-    const readyResult = await isDataReady(pool);
-    s3Julian = readyResult.julian;
-    log.info(`Are MVs ready: ${readyResult.ready} | Julian ${s3Julian}`);
+  const readyResult = await isDataReady(pool);
+  const s3Julian = readyResult.julian;
+  log.info(`Are MVs ready: ${readyResult.ready} | Julian ${s3Julian}`);
 
-    // exit early if we aren't ready to run etl
-    if (checkIfReady && !readyResult.ready) {
-      await endConnPool(pool);
-      return;
-    }
+  // exit early if we aren't ready to run etl
+  if (checkIfReady && !readyResult.ready) {
+    await endConnPool(pool);
+    return;
   }
 
   await updateEtlStatus(pool, 'database', 'running');
@@ -566,7 +577,12 @@ export async function runLoad(pool, s3Config, s3Julian) {
     });
     await Promise.all(loadTasks);
 
-    const profileStats = await getProfileStats(pool, s3Config, schemaName);
+    const profileStats = await getProfileStats(
+      pool,
+      schemaName,
+      s3Config,
+      s3Julian,
+    );
 
     // Verify the etl was successfull and the data matches what we expect.
     // We skip this when running locally, since the row counts will never match.
@@ -585,7 +601,13 @@ export async function runLoad(pool, s3Config, s3Julian) {
   }
 }
 
-async function getProfileStats(pool, s3Config, schemaName, retryCount = 0) {
+async function getProfileStats(
+  pool,
+  schemaName,
+  s3Config,
+  s3Julian,
+  retryCount = 0,
+) {
   const url = `${s3Config.services.materializedViews}/profile_stats`;
   const res = await axios.get(url, {
     headers: { 'API-key': process.env.MV_API_KEY },
@@ -601,13 +623,30 @@ async function getProfileStats(pool, s3Config, schemaName, retryCount = 0) {
     log.info('Non-200 response returned from profile_stats service, retrying');
     if (retryCount < s3Config.config.retryLimit) {
       await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
-      return await getProfileStats(pool, s3Config, schemaName, retryCount + 1);
+      return await getProfileStats(
+        pool,
+        schemaName,
+        s3Config,
+        s3Julian,
+        retryCount + 1,
+      );
     } else {
       throw new Error('Retry count exceeded');
     }
   }
 
-  await cacheProfileStats(pool, schemaName, res.data.details);
+  // get file sizes from s3
+  const s3Stats = await readS3File({
+    bucketInfo: {
+      accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+      bucketId: process.env.CF_S3_PUB_BUCKET_ID,
+      region: process.env.CF_S3_PUB_REGION,
+      secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
+    },
+    path: `national-downloads/${s3Julian}/status.json`,
+  });
+
+  await cacheProfileStats(pool, schemaName, res.data.details, s3Stats);
 
   return res.data.details;
 }
