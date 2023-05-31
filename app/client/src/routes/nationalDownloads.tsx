@@ -20,20 +20,17 @@ export function NationalDownloads() {
   const { content } = useContentState();
 
   return (
-    <>
-      <div>
-        <h1>National Downloads</h1>
-        <hr />
-        <Summary heading="Description">
-          <p>
-            Datasets provided on this page are available as prepackaged national
-            downloads. They are produced and periodically updated by EPA using
-            state-submitted data.
-          </p>
-        </Summary>
-        <NationalDownloadsData content={content} />
-      </div>
-    </>
+    <div>
+      <h1>National Downloads</h1>
+      <Summary heading="Description">
+        <p>
+          Datasets provided on this page are available as prepackaged national
+          downloads. They are produced and periodically updated by EPA using
+          state-submitted data.
+        </p>
+      </Summary>
+      <NationalDownloadsData content={content} />
+    </div>
   );
 }
 

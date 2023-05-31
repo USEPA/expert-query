@@ -26,13 +26,14 @@ export function InfoTooltip({
           ...styles,
           'usa-button',
           'border-0',
+          'bg-inherit',
+          'cursor-help',
           'margin-0',
           'padding-0',
           'width-auto',
           'hover:bg-white',
         ].join(' ')}
         ref={triggerRef}
-        style={{ background: 'inherit', cursor: 'help' }}
         type="button"
       >
         <Info

@@ -186,9 +186,8 @@ export function DownloadModal<D extends PostData>({
                     <li className="usa-button-group__item mobile-lg:margin-y-auto">
                       {downloadStatus === 'pending' ? (
                         <button
-                          className="display-flex flex-justify-center height-5 usa-button hover:bg-primary mobile-lg:width-15"
+                          className="cursor-default display-flex flex-justify-center height-5 usa-button hover:bg-primary mobile-lg:width-15"
                           onClick={undefined}
-                          style={{ cursor: 'initial' }}
                           type="button"
                         >
                           Working <LoadingButtonIcon />

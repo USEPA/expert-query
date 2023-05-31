@@ -116,12 +116,9 @@ function HomeContent({ content }: { content: Content }) {
         ([id, _metadata]) => id === option.value,
       )?.[1].timestamp;
       return (
-        <div className="margin-1">
-          <div className="display-flex flex-justify flex-wrap margin-bottom-1">
-            <b
-              className="font-ui-md margin-right-4 overflow-hidden"
-              style={{ textOverflow: 'ellipsis' }}
-            >
+        <div className="line-height-sans-3">
+          <div className="display-flex flex-justify flex-wrap margin-bottom-05">
+            <b className="font-ui-md margin-right-4 overflow-hidden text-ellipsis">
               {option.label}
             </b>
             {refreshDate && (
@@ -130,10 +127,7 @@ function HomeContent({ content }: { content: Content }) {
               </em>
             )}
           </div>
-          <span
-            className="display-inline-block overflow-hidden width-full"
-            style={{ textOverflow: 'ellipsis' }}
-          >
+          <span className="display-inline-block font-ui-xs overflow-hidden text-ellipsis width-full">
             {description}
           </span>
         </div>
@@ -145,7 +139,6 @@ function HomeContent({ content }: { content: Content }) {
   return (
     <div>
       <h1>Query ATTAINS Data</h1>
-      <hr />
       <ParameterErrorAlert parameters={queryParamErrors} />
       {staticOptions && (
         <>
@@ -170,8 +163,10 @@ function HomeContent({ content }: { content: Content }) {
             id="select-data-profile"
             classNames={{
               option: () => 'border-bottom border-base-lighter',
+              singleValue: () => 'padding-05',
             }}
             instanceId="instance-select-data-profile"
+            isSearchable={false}
             aria-label="Select a data profile"
             formatOptionLabel={formatProfileOptionLabel}
             onChange={handleProfileChange}
@@ -233,7 +228,7 @@ export function Home() {
 
   if (content.status === 'failure') {
     return (
-      <Alert type="error" styles={['margin-top-6']}>
+      <Alert type="error">
         Expert Query is currently unavailable, please try again later.
       </Alert>
     );
@@ -498,7 +493,7 @@ function FilterFieldInputs({
                 selected={
                   (filterState[fieldConfig.key] as MultiOptionState) ?? []
                 }
-                styles={['margin-top-3']}
+                styles={['margin-top-2']}
                 tooltip={tooltip}
               />,
               fieldConfig.key,
@@ -530,8 +525,6 @@ function FilterFieldInputs({
             filterLabel: fieldConfig.label,
             filterValue: filterState[fieldConfig.key],
             isMulti: isMultiOptionField(fieldConfig),
-            placeholder:
-              'placeholder' in fieldConfig ? fieldConfig.placeholder : null,
             profile,
             secondaryFilterKey:
               'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
@@ -546,12 +539,12 @@ function FilterFieldInputs({
 
           return [
             <label
-              className="usa-label"
+              className="usa-label margin-top-2"
               key={fieldConfig.key}
               htmlFor={`input-${fieldConfig.key}`}
             >
-              <span className="display-flex align-items-center">
-                <b>{fieldConfig.label}</b>{' '}
+              <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 text-bold text-uppercase">
+                {fieldConfig.label}{' '}
                 {tooltip && (
                   <InfoTooltip text={tooltip} styles={['margin-left-05']} />
                 )}
@@ -587,6 +580,7 @@ function FilterFieldInputs({
 
           return [
             <RangeFilter
+              className="margin-top-2"
               domain={fieldConfig.domain}
               highHandler={
                 filterHandlers[pairedField.key] as SingleValueInputHandler
@@ -714,6 +708,7 @@ function ParameterErrorAlert({
 }
 
 function RangeFilter({
+  className = '',
   domain,
   highHandler,
   highKey,
@@ -726,9 +721,13 @@ function RangeFilter({
   type,
 }: RangeFilterProps) {
   return (
-    <label className="usa-label" htmlFor={`input-${lowKey}`} key={domain}>
-      <span className="display-flex align-items-center">
-        <b>{label}</b>
+    <label
+      className={`usa-label ${className}`}
+      htmlFor={`input-${lowKey}`}
+      key={domain}
+    >
+      <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 text-bold text-uppercase">
+        {label}{' '}
         {tooltip && <InfoTooltip text={tooltip} styles={['margin-left-05']} />}
       </span>
       <div className="margin-top-1 usa-hint">from:</div>
@@ -785,7 +784,6 @@ function SelectFilter({
   filterLabel,
   filterValue,
   isMulti = false,
-  placeholder,
   profile,
   secondaryFilterKey,
   sortDirection,
@@ -906,10 +904,6 @@ function SelectFilter({
       }}
       onMenuOpen={loadOptions}
       options={options ?? undefined}
-      placeholder={
-        placeholder ??
-        `Select ${getArticle(filterLabel.split(' ')[0])} ${filterLabel}...`
-      }
       styles={{
         control: (base) => ({
           ...base,
@@ -1465,17 +1459,6 @@ function fromIsoDateString(dateString: string) {
     .padStart(2, '0')}-${date.getUTCFullYear().toString().padStart(4, '0')}`;
 }
 
-// Utility function to choose between 'a' or 'an'
-function getArticle(noun: string) {
-  if (!noun.length) return '';
-  const aExceptions = ['use'];
-  if (aExceptions.includes(noun.toLowerCase())) return 'a';
-  if (['a', 'e', 'i', 'o', 'u'].includes(noun.charAt(0).toLowerCase())) {
-    return 'an';
-  }
-  return 'a';
-}
-
 function getContextFilters(
   fieldConfig: FilterField,
   fieldConfigs: Array<FilterField | SourceField>,
@@ -1949,6 +1932,7 @@ type QueryData = {
 };
 
 type RangeFilterProps = {
+  className?: string;
   domain: string;
   highHandler: SingleValueInputHandler;
   highKey: string;
@@ -1974,7 +1958,6 @@ type SelectFilterProps = {
   filterLabel: string;
   filterValue: MultiOptionState | SingleOptionState;
   isMulti?: boolean;
-  placeholder?: string | null;
   profile: Profile;
   secondaryFilterKey: string;
   sortDirection?: SortDirection;

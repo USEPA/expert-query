@@ -56,7 +56,7 @@ export function Page({ children }: PageProps) {
             </HeaderLink>
           </div>
           <div className="display-flex flex-fill flex-justify-center">
-            <div className="flex-align-self-center flex-auto usa-logo margin-0 ">
+            <div className="flex-align-self-center flex-auto usa-logo margin-0 text-shadow">
               {location.pathname.includes('/api-documentation') ? (
                 <h1 className="web-area-title font-heading-xl tablet:font-heading-2xl usa-logo__text">
                   <NavLink to="/">Expert Query</NavLink>
@@ -73,11 +73,13 @@ export function Page({ children }: PageProps) {
 
       <div className="l-constrain">
         <InPageNavLayout>
-          <article className="article">{children}</article>
+          <article className="article margin-y-4 tablet:margin-y-8">
+            {children}
+          </article>
         </InPageNavLayout>
       </div>
 
-      <div className="l-page__footer">
+      <div className="l-page__footer margin-top-0">
         <div className="l-constrain">
           <span>
             <a
