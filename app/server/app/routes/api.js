@@ -1,7 +1,7 @@
 import axios from 'axios';
 import cors from 'cors';
 import express from 'express';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getActiveSchema } from '../middleware.js';
