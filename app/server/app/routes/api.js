@@ -136,7 +136,7 @@ export default function (app, basePath) {
   router.get('/openapi', cors(corsOptions), (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
-    getFile('content/swagger/api-private.json', 'utf-8')
+    getFile('content/swagger/api-public.json', 'utf-8')
       .then((stringsOrResponses) => {
         let responseJson = parseResponse(stringsOrResponses);
 
