@@ -54,6 +54,8 @@ async function fetchMetadata(req) {
         profileName: 'profile_name',
         numRows: 'num_rows',
         timestamp: 'last_refresh_end_time',
+        csvSize: 'csv_size',
+        zipSize: 'zip_size',
       })
       .from('mv_profile_stats')
       .where('schema_name', req.activeSchema)
@@ -73,29 +75,20 @@ async function fetchMetadata(req) {
   // get config from private S3 bucket
   const privateConfig = await getPrivateConfig();
 
-  await Promise.all([
-    ...Object.entries(privateConfig.tableConfig).map(
-      async ([profile, config]) => {
-        const basename = config.tableName;
-        const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
-        const filesize = await getFileSize(filename).catch((err) => {
-          logError(err, metadataObj);
-          return null;
-        });
-        const stats = profileStats.find(
-          (p) => p.profileName === config.tableName,
-        );
-        if (!stats) return;
+  Object.entries(privateConfig.tableConfig).map(([profile, config]) => {
+    const basename = config.tableName;
+    const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
+    const stats = profileStats.find((p) => p.profileName === config.tableName);
+    if (!stats) return;
 
-        data[profile] = {
-          numRows: stats.numRows,
-          size: filesize,
-          timestamp: stats.timestamp,
-          url: `${s3BucketUrl}/${filename}`,
-        };
-      },
-    ),
-  ]);
+    data[profile] = {
+      csvSize: stats.csvSize,
+      numRows: stats.numRows,
+      timestamp: stats.timestamp,
+      url: `${s3BucketUrl}/${filename}`,
+      zipSize: stats.zipSize,
+    };
+  });
 
   return { metadata: data };
 }
