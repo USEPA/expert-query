@@ -24,10 +24,8 @@ type BaseFilterFieldConfig = {
   direction?: 'asc' | 'desc';
   key: string;
   label: string;
-  placeholder?: string;
   secondaryKey?: string;
   source?: string;
-  tooltip?: string;
   type: 'date' | 'multiselect' | 'select' | 'year';
 };
 
