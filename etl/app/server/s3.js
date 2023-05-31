@@ -333,7 +333,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
     }
 
     // build the glossary json output
-    const terms = [];
+    const terms = {};
     res.data.forEach((term) => {
       if (term.ActiveStatus === 'Deleted') return;
 
@@ -344,11 +344,11 @@ export async function syncGlossary(s3Config, retryCount = 0) {
         if (attr.Name === 'Editorial Note') definitionHtml = attr.Value;
       });
 
-      terms.push({
+      terms[term.Name] = {
         term: term.Name,
         definition,
         definitionHtml,
-      });
+      };
     });
 
     // upload the glossary.json file

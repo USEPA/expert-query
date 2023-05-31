@@ -52,11 +52,13 @@ export type Content = {
       };
     };
   };
-  glossary: Array<{
-    term: string;
-    definition: string;
-    definitionHtml: string;
-  }>;
+  glossary: {
+    [term: string]: {
+      term: string;
+      definition: string;
+      definitionHtml: string;
+    };
+  };
   listOptions: StaticOptions;
   metadata: {
     [key: string]: {
