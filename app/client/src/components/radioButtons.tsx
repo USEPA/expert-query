@@ -21,8 +21,8 @@ export function RadioButtons({
   const [id] = useState(uniqueId('radio-'));
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
-      <legend className="display-flex flex-align-center margin-top-0 usa-legend">
-        <b>{label}</b>
+      <legend className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-legend">
+        {label}{' '}
         {tooltip && <InfoTooltip text={tooltip} styles={['margin-left-05']} />}
       </legend>
       {options.map((option) => {
