@@ -109,18 +109,6 @@ async function getFile(
       });
 }
 
-async function getFileSize(filename) {
-  return environment.isLocal
-    ? stat(resolve(__dirname, '../', filename), 'utf8').then(
-        (stats) => stats.size,
-      )
-    : axios({
-        method: 'head',
-        url: `${s3BucketUrl}/${filename}`,
-        timeout: 10000,
-      }).then((res) => parseInt(res.headers['content-length']));
-}
-
 // local development: no further processing of strings needed
 // Cloud.gov: get data from responses
 function parseResponse(res) {

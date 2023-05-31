@@ -78,7 +78,6 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
           </thead>
           <tbody>
             {Object.entries(content.data.metadata)
-              .filter(([_profile, fileInfo]) => fileInfo.csvSize !== null)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([profile, fileInfo]) => (
                 <tr key={profile}>
@@ -100,8 +99,8 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
                   <td data-label="Number of rows">
                     {fileInfo.numRows.toLocaleString()}
                   </td>
-                  <td data-label="Zipped File size">{formatBytes(fileInfo.zipSize!)}</td>
-                  <td data-label="Unzipped File size">{formatBytes(fileInfo.csvSize!)}</td>
+                  <td data-label="Zipped File size">{formatBytes(fileInfo.zipSize)}</td>
+                  <td data-label="Unzipped File size">{formatBytes(fileInfo.csvSize)}</td>
                 </tr>
               ))}
           </tbody>
