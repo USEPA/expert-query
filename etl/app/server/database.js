@@ -462,7 +462,7 @@ export async function updateEtlStatus(pool, columnName, value) {
 }
 
 // Load new data into a fresh schema, then discard old schemas
-export async function runJob(s3Config, checkIfReady = true) {
+export async function runJob(s3Config) {
   const pool = startConnPool();
 
   // check if the MV data is available in s3 and ready to be loaded
@@ -471,7 +471,7 @@ export async function runJob(s3Config, checkIfReady = true) {
   log.info(`Are MVs ready: ${readyResult.ready} | Julian ${s3Julian}`);
 
   // exit early if we aren't ready to run etl
-  if (checkIfReady && !readyResult.ready) {
+  if (!environment.isLocal && !readyResult.ready) {
     await endConnPool(pool);
     return;
   }
