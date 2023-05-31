@@ -136,6 +136,8 @@ function HomeContent({ content }: { content: Content }) {
     [content, profiles],
   );
 
+  const [profileInputActive, setProfileInputActive] = useState(false);
+
   return (
     <div>
       <h1>Query ATTAINS Data</h1>
@@ -161,17 +163,19 @@ function HomeContent({ content }: { content: Content }) {
           </p>
           <Select
             id="select-data-profile"
+            blurInputOnSelect={true}
             classNames={{
               option: () => 'border-bottom border-base-lighter',
               singleValue: () => 'padding-05',
             }}
             instanceId="instance-select-data-profile"
-            isSearchable={false}
+            controlShouldRenderValue={!profileInputActive}
             aria-label="Select a data profile"
             formatOptionLabel={formatProfileOptionLabel}
             onChange={handleProfileChange}
+            onFocus={() => setProfileInputActive(true)}
+            onBlur={() => setProfileInputActive(false)}
             options={staticOptions.dataProfile}
-            placeholder="Select a data profile..."
             styles={{
               container: (baseStyles) => ({
                 ...baseStyles,
