@@ -15,9 +15,9 @@ export function Summary({ children, heading, styles = [] }: SummaryProps) {
       role="region"
     >
       {heading && (
-        <h3 className="usa-summary-box__heading" id={id}>
+        <h2 className="usa-summary-box__heading" id={id}>
           {heading}
-        </h3>
+        </h2>
       )}
       <div className="usa-summary-box__text">{children}</div>
     </div>

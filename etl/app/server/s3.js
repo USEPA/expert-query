@@ -10,6 +10,7 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -461,19 +462,25 @@ async function queryColumnValues(s3Config, pool, colAlias) {
 }
 
 export async function readS3File({ bucketInfo, path }) {
-  const s3 = getS3Client({
-    accessKeyId: bucketInfo.accessKeyId,
-    secretAccessKey: bucketInfo.secretAccessKey,
-    region: bucketInfo.region,
-  });
+  let res = null;
 
-  const command = new GetObjectCommand({
-    Bucket: bucketInfo.bucketId,
-    Key: path,
-  });
-  const res = await (await s3.send(command)).Body.transformToString();
+  if (environment.isLocal) {
+    const fullPath = resolve(__dirname, `../../../app/server/app/${path}`);
 
-  const parsedData = JSON.parse(res);
+    res = readFileSync(fullPath, 'utf8');
+  } else {
+    const s3 = getS3Client({
+      accessKeyId: bucketInfo.accessKeyId,
+      secretAccessKey: bucketInfo.secretAccessKey,
+      region: bucketInfo.region,
+    });
 
-  return parsedData;
+    const command = new GetObjectCommand({
+      Bucket: bucketInfo.bucketId,
+      Key: path,
+    });
+    res = await (await s3.send(command)).Body.transformToString();
+  }
+
+  return JSON.parse(res);
 }
