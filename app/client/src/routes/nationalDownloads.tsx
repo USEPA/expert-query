@@ -60,17 +60,25 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
         <h2 className="text-primary">ATTAINS Data</h2>
         Go to the <Link to="/attains">ATTAINS Query</Link> page.
         <table className="margin-x-auto usa-table usa-table--stacked width-full">
+          <colgroup span={1}></colgroup>
+          <colgroup span={1}></colgroup>
+          <colgroup span={1}></colgroup>
+          <colgroup span={2}></colgroup>
           <thead>
             <tr>
-              <th scope="col">Download link</th>
-              <th scope="col">Time last refreshed</th>
-              <th scope="col">Number of rows</th>
-              <th scope="col">File size</th>
+              <th scope="col" rowSpan={2}>Download link</th>
+              <th scope="col" rowSpan={2}>Time last refreshed</th>
+              <th scope="col" rowSpan={2}>Number of rows</th>
+              <th scope="colgroup" colSpan={2} className="text-center">File size</th>
+            </tr>
+            <tr>
+              <th scope="col">Zipped</th>
+              <th scope="col">Unzipped</th>
             </tr>
           </thead>
           <tbody>
             {Object.entries(content.data.metadata)
-              .filter(([_profile, fileInfo]) => fileInfo.size !== null)
+              .filter(([_profile, fileInfo]) => fileInfo.csvSize !== null)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([profile, fileInfo]) => (
                 <tr key={profile}>
@@ -92,7 +100,8 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
                   <td data-label="Number of rows">
                     {fileInfo.numRows.toLocaleString()}
                   </td>
-                  <td data-label="File size">{formatBytes(fileInfo.size!)}</td>
+                  <td data-label="Zipped File size">{formatBytes(fileInfo.zipSize!)}</td>
+                  <td data-label="Unzipped File size">{formatBytes(fileInfo.csvSize!)}</td>
                 </tr>
               ))}
           </tbody>

@@ -61,7 +61,8 @@ export type Content = {
   metadata: {
     [key: string]: {
       url: string;
-      size: number | null;
+      csvSize: number | null;
+      zipSize: number | null;
       numRows: number;
       timestamp: string;
     };
