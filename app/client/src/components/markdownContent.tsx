@@ -1,5 +1,5 @@
-import ReactMarkdown, { Components } from "react-markdown";
-import remarkGfm from "remark-gfm";
+import ReactMarkdown, { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 type Props = {
   className?: string;
@@ -17,7 +17,7 @@ type Props = {
 export function MarkdownContent({ className, children, components }: Props) {
   return (
     <ReactMarkdown
-      className={className || ""}
+      className={className || ''}
       children={children}
       remarkPlugins={[remarkGfm]}
       components={{
@@ -33,14 +33,13 @@ export function MarkdownContent({ className, children, components }: Props) {
           // the code below will use the title set in the markdown as the
           // rendered anchor link's title attribute.
           const title = node?.properties?.title;
-          const externalLink = title === "external";
           return (
             <a
               {...props}
               className="usa-link"
-              title={title ? (externalLink ? "" : title.toString()) : ""}
-              target={externalLink ? "_blank" : ""}
-              rel={externalLink ? "noopener noreferrer" : ""}
+              title={title?.toString() || ''}
+              target={'_blank'}
+              rel={'noopener noreferrer'}
             >
               {props.children}
             </a>
