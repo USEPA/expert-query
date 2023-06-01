@@ -9,6 +9,7 @@ import { Summary } from 'components/summary';
 import { useContentState } from 'contexts/content';
 // types
 import type { Content } from 'contexts/content';
+import type { ReactMarkdownProps } from 'react-markdown/lib/complex-types';
 import type { FetchState } from 'types';
 
 /*
@@ -47,7 +48,7 @@ export function NationalDownloads() {
               <MarkdownContent
                 children={message.content}
                 components={{
-                  p: (props) => <p className="margin-0">{props.children}</p>,
+                  p: ParagraphNoMargin,
                 }}
               />
             </Alert>
@@ -132,6 +133,10 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
       </table>
     </section>
   );
+}
+
+function ParagraphNoMargin(props: ReactMarkdownProps) {
+  return <p className="margin-0">{props.children}</p>;
 }
 
 /*
