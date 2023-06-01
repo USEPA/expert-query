@@ -33,13 +33,14 @@ export function MarkdownContent({ className, children, components }: Props) {
           // the code below will use the title set in the markdown as the
           // rendered anchor link's title attribute.
           const title = node?.properties?.title;
+          const externalLink = title === "external";
           return (
             <a
               {...props}
               className="usa-link"
-              title={title?.toString() || ''}
-              target={'_blank'}
-              rel={'noopener noreferrer'}
+              title={title ? (externalLink ? "" : title.toString()) : ""}
+              target={externalLink ? "_blank" : ""}
+              rel={externalLink ? "noopener noreferrer" : ""}
             >
               {props.children}
             </a>
