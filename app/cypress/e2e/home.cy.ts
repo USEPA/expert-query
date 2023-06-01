@@ -156,12 +156,24 @@ describe('Home Page', () => {
     );
   });
 
-  it.only('Tooltip displays when hovering over info icon', () => {
-    cy.selectProfile('Actions');
+  it('Tooltip displays when hovering over info icon', () => {
+    cy.selectProfile('Assessment Units');
 
     cy.findByRole('button', { name: 'Region tooltip' }).focus();
     cy.findByText(
       'The geographic region or area to which a particular Assessment Unit belongs.',
     ).should('be.visible');
+  });
+
+  it.only('Source select menu filters corresponding options', () => {
+    cy.selectProfile('Actions');
+    cy.findByRole('button', { name: 'Select Organization Type' }).click();
+    cy.findByRole('menuitem', { name: 'Tribe' }).click();
+    cy.findByRole('combobox', { name: 'Organization ID (Name) input' }).type(
+      'Arizona',
+    );
+
+    cy.findByText('Loading...').should('not.exist');
+    cy.findByText('No options').should('exist');
   });
 });

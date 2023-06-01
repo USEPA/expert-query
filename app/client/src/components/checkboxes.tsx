@@ -1,3 +1,5 @@
+import { uniqueId } from 'lodash';
+import { useState } from 'react';
 // components
 import { Checkbox } from 'components/checkbox';
 import { InfoTooltip } from 'components/infoTooltip';
@@ -17,10 +19,14 @@ export function Checkboxes({
   tile = false,
   tooltip,
 }: CheckboxesProps) {
+  const [id] = useState(uniqueId('checkboxes-'));
   return (
-    <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
-      <legend className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-legend">
-        {label}{' '}
+    <fieldset
+      aria-labelledby={`${id}-legend`}
+      className={`usa-fieldset ${styles.join(' ')}`}
+    >
+      <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-legend">
+        <legend id={`${id}-legend`}>{label}</legend>{' '}
         {tooltip && (
           <InfoTooltip
             description={`${label} tooltip`}
@@ -28,7 +34,7 @@ export function Checkboxes({
             styles={['margin-left-05']}
           />
         )}
-      </legend>
+      </span>
       {options.map((option, i) => {
         return (
           <Checkbox

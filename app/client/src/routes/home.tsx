@@ -542,13 +542,11 @@ function FilterFieldInputs({
           } as SelectFilterProps;
 
           return [
-            <label
-              className="usa-label margin-top-2"
-              key={fieldConfig.key}
-              htmlFor={`input-${fieldConfig.key}`}
-            >
-              <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 text-bold text-uppercase">
-                {fieldConfig.label}{' '}
+            <div className="margin-top-2" key={fieldConfig.key}>
+              <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-label">
+                <label htmlFor={`input-${fieldConfig.key}`}>
+                  {fieldConfig.label}
+                </label>{' '}
                 {tooltip && (
                   <InfoTooltip
                     description={`${fieldConfig.label} tooltip`}
@@ -569,7 +567,7 @@ function FilterFieldInputs({
                   <SelectFilter {...selectProps} />
                 )}
               </div>
-            </label>,
+            </div>,
             fieldConfig.key,
           ];
         case 'date':
@@ -729,13 +727,11 @@ function RangeFilter({
   type,
 }: RangeFilterProps) {
   return (
-    <label
-      className={`usa-label ${className}`}
-      htmlFor={`input-${lowKey}`}
-      key={domain}
-    >
-      <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 text-bold text-uppercase">
-        {label}{' '}
+    <div className={className} key={domain}>
+      <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-label">
+        <label id={`input-${domain}-label`} htmlFor={`input-${lowKey}`}>
+          {label}
+        </label>{' '}
         {tooltip && (
           <InfoTooltip
             description={`${label} tooltip`}
@@ -758,6 +754,7 @@ function RangeFilter({
       />
       <div className="margin-top-1 usa-hint">to:</div>
       <input
+        aria-labelledby={`input-${domain}-label`}
         className="usa-input"
         id={`input-${highKey}`}
         min={type === 'year' ? 1900 : undefined}
@@ -768,7 +765,7 @@ function RangeFilter({
         type={type === 'date' ? 'date' : 'number'}
         value={highValue}
       />
-    </label>
+    </div>
   );
 }
 
