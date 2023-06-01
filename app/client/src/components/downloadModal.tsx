@@ -51,6 +51,7 @@ export function DownloadModal<D extends PostData>({
     setCount({ status: 'pending', data: null });
     postData({ url: countUrl, apiKey, data: queryData, signal: getSignal() })
       .then((res) => {
+        console.log(res);
         setCount({
           status: 'success',
           data: res.count,
@@ -146,7 +147,7 @@ export function DownloadModal<D extends PostData>({
                   </strong>{' '}
                   rows.
                 </p>
-                {count.data <= maxCount && (
+                {count.data > 0 && count.data <= maxCount && (
                   <p>Click continue to download the data.</p>
                 )}
               </div>

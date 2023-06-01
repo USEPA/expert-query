@@ -24,7 +24,7 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-import "@testing-library/cypress/add-commands";
+import '@testing-library/cypress/add-commands';
 
 declare global {
   namespace Cypress {
@@ -47,8 +47,8 @@ declare global {
  * @param profile - Profile to select
  */
 
-Cypress.Commands.add("selectProfile", (profile: string) => {
-  cy.get("#select-data-profile").within(($el) => {
+Cypress.Commands.add('selectProfile', (profile: string) => {
+  cy.get('#select-data-profile').within(($el) => {
     cy.wrap($el).click();
     cy.findByText(profile).click();
   });
@@ -61,7 +61,7 @@ Cypress.Commands.add("selectProfile", (profile: string) => {
  * @param option - option to select
  */
 
-Cypress.Commands.add("selectOption", (id: string, option: string) => {
+Cypress.Commands.add('selectOption', (id: string, option: string) => {
   cy.get(`#${id}`).type(option);
 
   cy.wait(500);
@@ -71,7 +71,7 @@ Cypress.Commands.add("selectOption", (id: string, option: string) => {
     .children()
     .children()
     .first()
-    .click({force: true});
+    .click({ force: true });
 });
 
 /**
@@ -80,7 +80,7 @@ Cypress.Commands.add("selectOption", (id: string, option: string) => {
  * @param value - string to examine
  */
 
-Cypress.Commands.add("clipboardValue", (value: string) => {
+Cypress.Commands.add('clipboardValue', (value: string) => {
   cy.window().then((win) => {
     win.navigator.clipboard.readText().then((text) => {
       expect(text).to.eq(value);
@@ -95,10 +95,10 @@ Cypress.Commands.add("clipboardValue", (value: string) => {
  * @param value - string to examine
  */
 
-Cypress.Commands.add("selectCopyBox", (id: string, value: string) => {
+Cypress.Commands.add('selectCopyBox', (id: string, value: string) => {
   cy.findByTestId(id)
-    .should("exist")
+    .should('exist')
     .should(($elem) => {
-      expect($elem.find("span").first().text().trim()).equal(value);
+      expect($elem.find('span').first().text().trim()).equal(value);
     });
 });

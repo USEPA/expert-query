@@ -550,7 +550,11 @@ function FilterFieldInputs({
               <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 text-bold text-uppercase">
                 {fieldConfig.label}{' '}
                 {tooltip && (
-                  <InfoTooltip text={tooltip} styles={['margin-left-05']} />
+                  <InfoTooltip
+                    description={`${fieldConfig.label} tooltip`}
+                    text={tooltip}
+                    styles={['margin-left-05']}
+                  />
                 )}
               </span>
               <div className="margin-top-1">
@@ -732,7 +736,13 @@ function RangeFilter({
     >
       <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 text-bold text-uppercase">
         {label}{' '}
-        {tooltip && <InfoTooltip text={tooltip} styles={['margin-left-05']} />}
+        {tooltip && (
+          <InfoTooltip
+            description={`${label} tooltip`}
+            text={tooltip}
+            styles={['margin-left-05']}
+          />
+        )}
       </span>
       <div className="margin-top-1 usa-hint">from:</div>
       <input
@@ -1124,9 +1134,9 @@ function useQueryParams({
   const parameters: QueryData = useMemo(() => {
     if (!profile) return { columns: [], filters: {}, options: {} };
     return {
-      columns: Array.from(profile.columns),
-      options: { format },
       filters: buildFilterData(filterFields, filterState, profile),
+      options: { format },
+      columns: Array.from(profile.columns),
     };
   }, [filterFields, filterState, format, profile]);
 

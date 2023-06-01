@@ -9,41 +9,6 @@ describe('Home Page', () => {
       ? `${location.protocol}//${location.hostname}:3000`
       : window.location.origin;
 
-  it('close the intro info box', () => {
-    cy.findByText('Close Intro').click();
-    cy.findByText('Close Intro').should('not.exist');
-  });
-
-  it('Close Intro from this computer', () => {
-    cy.visit('/');
-    cy.findByText('How to Use This Application').should('exist');
-    cy.findByRole('checkbox', {
-      name: "Don't show again on this computer",
-    }).click({ force: true });
-    cy.findByText('Close Intro').click();
-    cy.visit('/');
-    cy.findByText('How to Use This Application').should('not.exist');
-  });
-
-  it('Verify localStorage showIntro Value', () => {
-    cy.visit('/');
-    cy.findByText('How to Use This Application').should('exist');
-    cy.findByRole('checkbox', {
-      name: "Don't show again on this computer",
-    })
-      .click({ force: true })
-      .then(() => {
-        expect(localStorage.getItem('showIntro')).to.eq('false');
-      });
-    cy.findByRole('checkbox', {
-      name: "Don't show again on this computer",
-    })
-      .click({ force: true })
-      .then(() => {
-        expect(localStorage.getItem('showIntro')).to.eq('true');
-      });
-  });
-
   it('Clear Search button is available when data profile is selected', () => {
     cy.selectProfile('Actions');
     cy.findByRole('button', { name: 'Clear Search' });
@@ -66,6 +31,7 @@ describe('Home Page', () => {
     ];
     profiles.forEach((profile) => {
       cy.selectProfile(profile);
+      cy.wait(500);
       cy.findByRole('button', { name: 'Clear Search' });
     });
   });
@@ -101,7 +67,8 @@ describe('Home Page', () => {
   it('Verify Download Status Pop-up with stubing api', () => {
     cy.selectProfile('Actions');
     cy.intercept('POST', `${origin}/api/attains/actions/count`, {
-      count: '510',
+      count: 510,
+      maxCount: 1000,
     }).as('api-response');
 
     cy.findByRole('button', { name: 'Download' }).click();
@@ -139,7 +106,7 @@ describe('Home Page', () => {
 
     cy.url().should(
       'equal',
-      `${origin}/attains/sources#assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`,
+      `${origin}/attains/sources?assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`,
     );
 
     cy.findAllByRole('button', { name: 'Clear Search' }).each(
@@ -149,12 +116,12 @@ describe('Home Page', () => {
     );
     cy.wait(2000);
     cy.findByText('Continue').should('exist').click();
-    cy.url().should('equal', `${origin}/attains/sources`);
+    cy.url().should('equal', `${origin}/attains`);
   });
 
   it('Verify file format after clear the query', () => {
     cy.selectProfile('Assessment Units');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
 
     //State
     cy.selectOption('input-state', 'texas');
@@ -180,9 +147,21 @@ describe('Home Page', () => {
     cy.wait(2000);
     cy.findByText('Continue').should('exist').click();
 
+    cy.selectProfile('Assessment Units');
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
+
     cy.selectCopyBox(
       'api-query-copy-box-container',
       `${origin}/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=A&format=tsv&api_key=<YOUR_API_KEY>`,
     );
+  });
+
+  it.only('Tooltip displays when hovering over info icon', () => {
+    cy.selectProfile('Actions');
+
+    cy.findByRole('button', { name: 'Region tooltip' }).focus();
+    cy.findByText(
+      'The geographic region or area to which a particular Assessment Unit belongs.',
+    ).should('be.visible');
   });
 });

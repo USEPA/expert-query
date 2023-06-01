@@ -2,11 +2,13 @@ describe('Data Profile Total Maximum Daily Load', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Total Maximum Daily Load');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
 
-  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=pollutant&columns=addressedParameter&columns=sourceType&columns=npdesIdentifier&columns=otherIdentifier&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=explicitMarginOfSafety&columns=implicitMarginOfSafety&columns=includeInMeasure&columns=completionDate&columns=tmdlDate&columns=fiscalYearEstablished&columns=assessmentUnitId&columns=assessmentUnitName&columns=loadAllocation&columns=loadAllocationUnits&columns=locationDescription&columns=waterSize&columns=waterSizeUnits&columns=wasteLoadAllocation';
-  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"pollutant\",\"addressedParameter\",\"sourceType\",\"npdesIdentifier\",\"otherIdentifier\",\"actionId\",\"actionName\",\"actionAgency\",\"inIndianCountry\",\"explicitMarginOfSafety\",\"implicitMarginOfSafety\",\"includeInMeasure\",\"completionDate\",\"tmdlDate\",\"fiscalYearEstablished\",\"assessmentUnitId\",\"assessmentUnitName\",\"loadAllocation\",\"loadAllocationUnits\",\"locationDescription\",\"waterSize\",\"waterSizeUnits\",\"wasteLoadAllocation\"]';
+  const columnsValue =
+    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=pollutant&columns=addressedParameter&columns=sourceType&columns=npdesIdentifier&columns=otherIdentifier&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=explicitMarginOfSafety&columns=implicitMarginOfSafety&columns=includeInMeasure&columns=completionDate&columns=tmdlDate&columns=fiscalYearEstablished&columns=assessmentUnitId&columns=assessmentUnitName&columns=loadAllocation&columns=loadAllocationUnits&columns=locationDescription&columns=waterSize&columns=waterSizeUnits&columns=wasteLoadAllocation';
+  const columnsValueCurl =
+    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","pollutant","addressedParameter","sourceType","npdesIdentifier","otherIdentifier","actionId","actionName","actionAgency","inIndianCountry","explicitMarginOfSafety","implicitMarginOfSafety","includeInMeasure","completionDate","tmdlDate","fiscalYearEstablished","assessmentUnitId","assessmentUnitName","loadAllocation","loadAllocationUnits","locationDescription","waterSize","waterSizeUnits","wasteLoadAllocation"]';
 
   const location = window.location;
   const origin =
@@ -17,7 +19,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
   it('Verify copy box text flavor 1', () => {
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/tmdl#`,
+      `${origin}/attains/tmdl?`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -42,7 +44,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/tmdl#${queryValue}`,
+      `${origin}/attains/tmdl?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -91,7 +93,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/tmdl#${queryValue}`,
+      `${origin}/attains/tmdl?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -150,7 +152,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/tmdl#${queryValue}`,
+      `${origin}/attains/tmdl?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -234,7 +236,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/tmdl#${queryValue}`,
+      `${origin}/attains/tmdl?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
