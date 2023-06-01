@@ -1,10 +1,9 @@
 import axios from 'axios';
 import cors from 'cors';
 import express from 'express';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema } from '../middleware.js';
 import { knex } from '../utilities/database.js';
 import { getEnvironment } from '../utilities/environment.js';
@@ -13,6 +12,7 @@ import {
   log,
   populateMetdataObjFromRequest,
 } from '../utilities/logger.js';
+import { getPrivateConfig } from '../utilities/s3.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
@@ -54,6 +54,8 @@ async function fetchMetadata(req) {
         profileName: 'profile_name',
         numRows: 'num_rows',
         timestamp: 'last_refresh_end_time',
+        csvSize: 'csv_size',
+        zipSize: 'zip_size',
       })
       .from('mv_profile_stats')
       .where('schema_name', req.activeSchema)
@@ -70,27 +72,23 @@ async function fetchMetadata(req) {
 
   const latest = parseInt(parseResponse(latestRes).julian);
 
-  await Promise.all([
-    ...Object.entries(tableConfig).map(async ([profile, config]) => {
-      const basename = config.tableName;
-      const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
-      const filesize = await getFileSize(filename).catch((err) => {
-        logError(err, metadataObj);
-        return null;
-      });
-      const stats = profileStats.find(
-        (p) => p.profileName === config.tableName,
-      );
-      if (!stats) return;
+  // get config from private S3 bucket
+  const privateConfig = await getPrivateConfig();
 
-      data[profile] = {
-        numRows: stats.numRows,
-        size: filesize,
-        timestamp: stats.timestamp,
-        url: `${s3BucketUrl}/${filename}`,
-      };
-    }),
-  ]);
+  Object.entries(privateConfig.tableConfig).map(([profile, config]) => {
+    const basename = config.tableName;
+    const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
+    const stats = profileStats.find((p) => p.profileName === config.tableName);
+    if (!stats) return;
+
+    data[profile] = {
+      csvSize: stats.csvSize,
+      numRows: stats.numRows,
+      timestamp: stats.timestamp,
+      url: `${s3BucketUrl}/${filename}`,
+      zipSize: stats.zipSize,
+    };
+  });
 
   return { metadata: data };
 }
@@ -109,18 +107,6 @@ async function getFile(
         timeout: 10000,
         responseType,
       });
-}
-
-async function getFileSize(filename) {
-  return environment.isLocal
-    ? stat(resolve(__dirname, '../', filename), 'utf8').then(
-        (stats) => stats.size,
-      )
-    : axios({
-        method: 'head',
-        url: `${s3BucketUrl}/${filename}`,
-        timeout: 10000,
-      }).then((res) => parseInt(res.headers['content-length']));
 }
 
 // local development: no further processing of strings needed
@@ -205,6 +191,9 @@ export default function (app, basePath) {
       'content/alerts/config.json',
       'content-etl/glossary.json',
       'content/config/parameters.json',
+      'content/config/fields.json',
+      'content/config/listOptions.json',
+      'content/config/profiles.json',
     ];
 
     const filePromises = Promise.all(
@@ -221,6 +210,9 @@ export default function (app, basePath) {
           alertsConfig: data[1],
           glossary: data[2],
           parameters: data[3],
+          filterConfig: data[4],
+          listOptions: data[5],
+          profileConfig: data[6],
         };
       });
 

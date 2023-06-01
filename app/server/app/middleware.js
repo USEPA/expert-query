@@ -1,5 +1,6 @@
 import { knex } from './utilities/database.js';
 import { getEnvironment } from './utilities/environment.js';
+import { getPrivateConfig } from './utilities/s3.js';
 import {
   formatLogMsg,
   log,
@@ -48,7 +49,7 @@ async function getActiveSchema(req, res, next) {
  * @param {express.Response} res
  * @param {express.NextFunction} next
  */
-function protectRoutes(req, res, next) {
+async function protectRoutes(req, res, next) {
   if (environment.isLocal) {
     next();
     return;
@@ -56,14 +57,31 @@ function protectRoutes(req, res, next) {
 
   const eqSecret = req.header('EQ-SECRET');
 
-  const metadataObj = populateMetdataObjFromRequest(req);
-
-  if (!eqSecret || eqSecret !== process.env.EQ_SECRET) {
-    const errJson = {
-      message: 'Unauthorized',
-    };
+  function handleError(message = 'Unauthorized', status = 401) {
+    const metadataObj = populateMetdataObjFromRequest(req);
+    const errJson = { message };
     log.warn(formatLogMsg(metadataObj, errJson));
-    return res.status(401).json(errJson);
+    return res.status(status).json(errJson);
+  }
+
+  if (!eqSecret || eqSecret !== process.env.EQ_SECRET) handleError();
+
+  // For dev and stage only, check if user-id is authorized
+  if (environment.isDevelopment || environment.isStaging) {
+    const apiUserId = req.header('x-api-user-id');
+
+    // get config from private S3 bucket
+    const privateConfig = await getPrivateConfig();
+    if (!privateConfig?.approvedUsers) {
+      handleError('Server failed to load configuration', 500);
+    }
+
+    const approvedUserIds = privateConfig.approvedUsers.map(
+      (user) => user.userId,
+    );
+
+    // check if apiUserId is approved
+    if (!approvedUserIds.includes(apiUserId)) handleError();
   }
 
   next();

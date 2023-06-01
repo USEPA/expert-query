@@ -5,8 +5,13 @@ import {
   useContext,
   useReducer,
 } from 'react';
-import type { DomainOptions } from 'types';
-import type { Profile } from '../config/profiles';
+import type {
+  DomainOptions,
+  MultiOptionField,
+  SingleOptionField,
+  SingleValueField,
+  StaticOptions,
+} from 'types';
 
 type Props = {
   children: ReactNode;
@@ -25,22 +30,68 @@ export type Content = {
     };
   };
   domainValues: DomainOptions;
-  glossary: Array<{
-    term: string;
-    definition: string;
-    definitionHtml: string;
-  }>;
-  metadata: Partial<{
-    [P in Profile]: {
+  filterConfig: {
+    filterFields: {
+      [key: string]: MultiOptionField | SingleOptionField | SingleValueField;
+    };
+    filterGroupLabels: {
+      [key: string]: string;
+    };
+    filterGroups: {
+      [key: string]: Array<{
+        key: string;
+        fields: string[];
+      }>;
+    };
+    sourceFields: {
+      [id: string]: {
+        id: string;
+        key: string;
+        label: string;
+        type: 'select';
+      };
+    };
+  };
+  glossary: {
+    [term: string]: {
+      term: string;
+      definition: string;
+      definitionHtml: string;
+    };
+  };
+  listOptions: StaticOptions;
+  metadata: {
+    [key: string]: {
       url: string;
-      size: number | null;
+      csvSize: number;
+      zipSize: number;
       numRows: number;
       timestamp: string;
     };
-  }>;
+  };
   parameters: {
     debounceMilliseconds: number;
     selectOptionsPageSize: number;
+  };
+  profileConfig: {
+    [key: string]: {
+      key: string;
+      description: string;
+      columns: Set<string>;
+      label: string;
+      resource: string;
+    };
+  };
+};
+
+export type JsonContent = Omit<Content, 'profileConfig'> & {
+  profileConfig: {
+    [key: string]: {
+      description: string;
+      columns: string[];
+      label: string;
+      resource: string;
+    };
   };
 };
 

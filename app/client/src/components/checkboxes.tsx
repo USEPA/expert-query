@@ -1,7 +1,7 @@
 // components
 import { Checkbox } from 'components/checkbox';
+import { InfoTooltip } from 'components/infoTooltip';
 // types
-import type { ReactNode } from 'react';
 import type { Option } from 'types';
 
 /*
@@ -9,16 +9,20 @@ import type { Option } from 'types';
 */
 
 export function Checkboxes({
-  legend,
+  label,
   onChange,
   options,
   selected = [],
   styles = [],
   tile = false,
+  tooltip,
 }: CheckboxesProps) {
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
-      {legend && <legend className="margin-top-0 usa-legend">{legend}</legend>}
+      <legend className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-legend">
+        {label}{' '}
+        {tooltip && <InfoTooltip text={tooltip} styles={['margin-left-05']} />}
+      </legend>
       {options.map((option, i) => {
         return (
           <Checkbox
@@ -55,10 +59,11 @@ function isSelected(option: Option, selected: ReadonlyArray<Option>) {
 */
 
 type CheckboxesProps = {
-  legend?: ReactNode;
+  label: string;
   onChange: (selected: ReadonlyArray<Option>) => void;
   options: ReadonlyArray<Option>;
   selected?: ReadonlyArray<Option>;
   styles?: string[];
   tile?: boolean;
+  tooltip?: string | null;
 };

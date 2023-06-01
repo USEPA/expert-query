@@ -686,13 +686,27 @@
         },
         "required": ["status"]
       },
+      "OptionList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ProfileMetadata": {
         "type": "object",
         "properties": {
           "numRows": {
             "type": "integer"
           },
-          "size": {
+          "csvSize": {
             "type": "integer",
             "format": "int64"
           },
@@ -702,6 +716,10 @@
           },
           "url": {
             "type": "string"
+          },
+          "zipSize": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       }
@@ -1738,23 +1756,119 @@
                 "domainValues": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "array",
-                    "items": {
+                    "$ref": "#/components/schemas/OptionList"
+                  }
+                },
+                "filterConfig": {
+                  "type": "object",
+                  "properties": {
+                    "filterFields": {
                       "type": "object",
-                      "properties": {
-                        "label": {
-                          "type": "string"
-                        },
-                        "value": {
-                          "type": "string"
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "boundary": {
+                            "type": "string",
+                            "required": false
+                          },
+                          "contextFields": {
+                            "type": "array",
+                            "required": false,
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "default": {
+                            "type": "object",
+                            "required": false,
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "direction": {
+                            "type": "string",
+                            "required": false
+                          },
+                          "domain": {
+                            "type": "string",
+                            "required": false
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "secondaryKey": {
+                            "type": "string",
+                            "required": false
+                          },
+                          "source": {
+                            "type": "string",
+                            "required": false
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "filterGroupLabels": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "filterGroups": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "fields": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "sourceFields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
                         }
                       }
                     }
                   }
                 },
                 "glossary": {
-                  "type": "array",
-                  "items": {
+                  "type": "object",
+                  "additionalProperties": {
                     "type": "object",
                     "properties": {
                       "term": {
@@ -1767,6 +1881,12 @@
                         "type": "string"
                       }
                     }
+                  }
+                },
+                "listOptions": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/OptionList"
                   }
                 },
                 "metadata": {
@@ -1783,6 +1903,32 @@
                     },
                     "selectOptionsPageSize": {
                       "type": "integer"
+                    }
+                  }
+                },
+                "profileConfig": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "key": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "resource": {
+                        "type": "string"
+                      }
                     }
                   }
                 },

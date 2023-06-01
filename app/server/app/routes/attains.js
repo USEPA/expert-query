@@ -1,11 +1,10 @@
-import AWS from 'aws-sdk';
+import { ListObjectsCommand } from '@aws-sdk/client-s3';
 import cors from 'cors';
 import express from 'express';
 import Excel from 'exceljs';
 import { readdirSync, statSync } from 'node:fs';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tableConfig } from '../config/tableConfig.js';
 import { getActiveSchema, protectRoutes } from '../middleware.js';
 import { appendToWhere, knex } from '../utilities/database.js';
 import {
@@ -18,6 +17,7 @@ import {
   log,
   populateMetdataObjFromRequest,
 } from '../utilities/logger.js';
+import { getPrivateConfig, getS3Client } from '../utilities/s3.js';
 import StreamingService from '../utilities/streamingService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,6 +28,9 @@ const minDateTime = new Date(-8640000000000000);
 const maxDateTime = new Date(8640000000000000);
 
 const environment = getEnvironment();
+
+// get config from private S3 bucket
+const privateConfig = await getPrivateConfig();
 
 class DuplicateParameterException extends Error {
   constructor(parameter) {
@@ -277,7 +280,8 @@ function getQueryParams(req) {
   };
   Object.entries(req.query).forEach(([name, value]) => {
     if (optionsParams.includes(name)) parameters.options[name] = value;
-    else if (name === 'columns') parameters.columns = value;
+    else if (name === 'columns')
+      parameters.columns = Array.isArray(value) ? value : [value];
     else parameters.filters[name] = value;
   });
 
@@ -308,7 +312,6 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
       : null;
 
   // build select statement of the query
-  let selectText = undefined;
   if (!countOnly) {
     // filter down to requested columns, if the user provided that option
     const columnsToReturn = [];
@@ -322,11 +325,11 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     // build the select query
     const selectColumns =
       columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
-    selectText = selectColumns.map((col) =>
+    const selectText = selectColumns.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
     );
+    query.select(selectText).orderBy('objectid', 'asc');
   }
-  query.select(selectText).orderBy('objectid', 'asc');
 
   // build where clause of the query
   profile.columns.forEach((col) => {
@@ -370,9 +373,11 @@ async function executeQuery(profile, req, res) {
     parseCriteria(req, query, profile, queryParams);
 
     // Check that the query doesn't exceed the MAX_QUERY_SIZE.
-    if ((await checkQueryCount(query)) === null) {
+    if (await exceedsMaxSize(query)) {
       return res.status(200).json({
-        message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
+        message: `The current query exceeds the maximum query size of ${maxQuerySize.toLocaleString()} rows. Please refine the search, or visit ${
+          process.env.SERVER_URL
+        }/national-downloads to download a compressed dataset`,
       });
     }
 
@@ -425,12 +430,11 @@ function validateQueryParams(queryParams, profile) {
 }
 
 /**
- * Counts the number of rows returned be a specified
- * query without modifying the query object
+ * Checks if the query exceeds the configured `maxQuerySize`
  * @param {Object} query KnexJS query object
- * @returns {Object | null} object with 'count' property, or null if limit exceeded
+ * @returns {Promise<boolean>} true if the max query size is exceeded
  */
-async function checkQueryCount(query) {
+async function exceedsMaxSize(query) {
   const count = await knex
     .from(
       query
@@ -441,8 +445,7 @@ async function checkQueryCount(query) {
     .count()
     .first();
 
-  if (count.count > maxQuerySize) return null;
-  return count.count;
+  return count.count > maxQuerySize;
 }
 
 /**
@@ -464,15 +467,12 @@ function executeQueryCountOnly(profile, req, res) {
 
     parseCriteria(req, query, profile, queryParams, true);
 
-    checkQueryCount(query).then((count) => {
-      if (count === null) {
-        res.status(200).json({
-          message: `The current query exceeds the maximum query size. Please refine the search, or visit ${process.env.SERVER_URL}/national-downloads to download a compressed dataset`,
-        });
-      } else {
-        res.status(200).json({ count });
-      }
-    });
+    query
+      .count()
+      .first()
+      .then(({ count }) => {
+        res.status(200).json({ count, maxCount: maxQuerySize });
+      });
   } catch (error) {
     log.error(
       formatLogMsg(
@@ -559,7 +559,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
 function executeValuesQuery(req, res) {
   const metadataObj = populateMetdataObjFromRequest(req);
 
-  const profile = tableConfig[req.params.profile];
+  const profile = privateConfig.tableConfig[req.params.profile];
   if (!profile) {
     return res
       .status(404)
@@ -706,6 +706,11 @@ async function checkDatabaseHealth(req, res) {
   const metadataObj = populateMetdataObjFromRequest(req);
 
   try {
+    let status = 'UP';
+    function setStatus(newStatus) {
+      if (status === 'UP') status = newStatus;
+    }
+
     // check etl status in db
     let query = knex
       .withSchema('logging')
@@ -713,43 +718,38 @@ async function checkDatabaseHealth(req, res) {
       .select('database')
       .first();
     const statusResults = await query;
-    if (statusResults.database === 'failed') {
-      res.status(200).json({ status: 'FAILED-DB' });
-      return;
-    }
+    if (statusResults.database === 'failed') setStatus('FAILED-DB');
 
     // verify the latest entry in the schema table is active
     query = knex
       .withSchema('logging')
-      .from('etl_schemas')
-      .select('active', 'creation_date')
+      .from('etl_schemas as s')
+      .leftJoin('etl_log as l', 's.id', 'l.schema_id')
+      .select(
+        's.*',
+        'l.start_time',
+        'l.end_time',
+        knex.raw('l.end_time - l.start_time as duration'),
+        'l.load_error',
+      )
       .orderBy('creation_date', 'desc')
       .first();
     const schemaResults = await query;
     if (!schemaResults.active && statusResults.database !== 'running') {
-      res.status(200).json({ status: 'FAILED-SCHEMA' });
-      return;
+      setStatus('FAILED-SCHEMA');
     }
 
-    query = knex
-      .withSchema('logging')
-      .from('etl_schemas')
-      .select('active', 'creation_date')
-      .where('active', true)
-      .orderBy('creation_date', 'desc')
-      .first();
+    query = query.clone();
+    query.where('active', true);
     const activeSchemaResults = await query;
 
     // verify database updated in the last week, with 1 hour buffer
     const timeSinceLastUpdate =
       (Date.now() - activeSchemaResults.creation_date) / (1000 * 60 * 60);
-    if (timeSinceLastUpdate >= 169) {
-      res.status(200).json({ status: 'FAILED-TIME' });
-      return;
-    }
+    if (timeSinceLastUpdate >= 169) setStatus('FAILED-TIME');
 
     // verify a query can be ran against each table in the active db
-    for (const profile of Object.values(tableConfig)) {
+    for (const profile of Object.values(privateConfig.tableConfig)) {
       query = knex
         .withSchema(req.activeSchema)
         .from(profile.tableName)
@@ -757,14 +757,31 @@ async function checkDatabaseHealth(req, res) {
         .limit(1)
         .first();
       const dataResults = await query;
-      if (!dataResults[profile.idColumn]) {
-        res.status(200).json({ status: 'FAILED-QUERY' });
-        return;
-      }
+      if (!dataResults[profile.idColumn]) setStatus('FAILED-QUERY');
+    }
+
+    const output = {
+      status,
+      zLastSuccess: {
+        completed: activeSchemaResults.end_time.toLocaleString(),
+        duration: activeSchemaResults.duration,
+        s3Uuid: activeSchemaResults.s3_julian,
+        schema: activeSchemaResults.schema_name,
+      },
+    };
+
+    // if ids of schemaResults and activeSchemaResults don't match then add zFailed
+    if (schemaResults.id !== activeSchemaResults.id) {
+      output.zFailed = {
+        completed: schemaResults.end_time.toLocaleString(),
+        duration: schemaResults.duration,
+        s3Uuid: schemaResults.s3_julian,
+        schema: schemaResults.schema_name,
+      };
     }
 
     // everything passed
-    res.status(200).json({ status: 'UP' });
+    res.status(200).json(output);
   } catch (error) {
     log.error(formatLogMsg(metadataObj, 'Error!', error));
     res.status(500).send('Error!' + error);
@@ -810,21 +827,14 @@ async function checkDomainValuesHealth(req, res) {
         (Date.now() - oldestModifiedDate) / (1000 * 60 * 60);
     } else {
       // setup public s3 bucket
-      const config = new AWS.Config({
-        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
-        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
-        region: process.env.CF_S3_PUB_REGION,
-      });
-      AWS.config.update(config);
-      const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+      const s3 = getS3Client();
 
       // get a list of files in the directory
-      const data = await s3
-        .listObjects({
-          Bucket: process.env.CF_S3_PUB_BUCKET_ID,
-          Prefix: 'content-etl/domainValues',
-        })
-        .promise();
+      const command = new ListObjectsCommand({
+        Bucket: process.env.CF_S3_PUB_BUCKET_ID,
+        Prefix: 'content-etl/domainValues',
+      });
+      const data = await s3.send(command);
 
       let oldestModifiedDate = maxDateTime;
       data.Contents.forEach((file) => {
@@ -852,87 +862,97 @@ export default function (app, basePath) {
   router.use(protectRoutes);
   router.use(getActiveSchema);
 
-  Object.entries(tableConfig).forEach(([profileName, profile]) => {
-    // ****************************** //
-    // Public / CORS Enabled          //
-    // ****************************** //
+  Object.entries(privateConfig.tableConfig).forEach(
+    ([profileName, profile]) => {
+      // ****************************** //
+      // Public / CORS Enabled          //
+      // ****************************** //
 
-    // create get requests
-    router.get(`/${profileName}`, cors(corsOptions), async function (req, res) {
-      await executeQuery(profile, req, res);
-    });
-    router.get(`/${profileName}/count`, cors(corsOptions), function (req, res) {
-      executeQueryCountOnly(profile, req, res);
-    });
+      // create get requests
+      router.get(
+        `/${profileName}`,
+        cors(corsOptions),
+        async function (req, res) {
+          await executeQuery(profile, req, res);
+        },
+      );
+      router.get(
+        `/${profileName}/count`,
+        cors(corsOptions),
+        function (req, res) {
+          executeQueryCountOnly(profile, req, res);
+        },
+      );
 
-    // create post requests
-    router.post(
-      `/${profileName}`,
-      cors(corsOptions),
-      async function (req, res) {
-        await executeQuery(profile, req, res);
-      },
-    );
-    router.post(
-      `/${profileName}/count`,
-      cors(corsOptions),
-      function (req, res) {
-        executeQueryCountOnly(profile, req, res);
-      },
-    );
+      // create post requests
+      router.post(
+        `/${profileName}`,
+        cors(corsOptions),
+        async function (req, res) {
+          await executeQuery(profile, req, res);
+        },
+      );
+      router.post(
+        `/${profileName}/count`,
+        cors(corsOptions),
+        function (req, res) {
+          executeQueryCountOnly(profile, req, res);
+        },
+      );
 
-    // ****************************** //
-    // Private / NOT CORS Enabled     //
-    // ****************************** //
+      // ****************************** //
+      // Private / NOT CORS Enabled     //
+      // ****************************** //
 
-    // get column domain values
-    router.get(
-      '/:profile/values/:column',
-      cors(corsOptionsDelegate),
-      function (req, res) {
-        executeValuesQuery(req, res);
-      },
-    );
-    router.post(
-      '/:profile/values/:column',
-      cors(corsOptionsDelegate),
-      function (req, res) {
-        executeValuesQuery(req, res);
-      },
-    );
+      // get column domain values
+      router.get(
+        '/:profile/values/:column',
+        cors(corsOptionsDelegate),
+        function (req, res) {
+          executeValuesQuery(req, res);
+        },
+      );
+      router.post(
+        '/:profile/values/:column',
+        cors(corsOptionsDelegate),
+        function (req, res) {
+          executeValuesQuery(req, res);
+        },
+      );
 
-    // get bean counts
-    router.get(
-      `/${profileName}/countPerOrgCycle`,
-      cors(corsOptionsDelegate),
-      async function (req, res) {
-        await executeQueryCountPerOrgCycle(profile, req, res);
-      },
-    );
-    router.post(
-      `/${profileName}/countPerOrgCycle`,
-      cors(corsOptionsDelegate),
-      async function (req, res) {
-        await executeQueryCountPerOrgCycle(profile, req, res);
-      },
-    );
+      // get bean counts
+      router.get(
+        `/${profileName}/countPerOrgCycle`,
+        cors(corsOptionsDelegate),
+        async function (req, res) {
+          await executeQueryCountPerOrgCycle(profile, req, res);
+        },
+      );
+      router.post(
+        `/${profileName}/countPerOrgCycle`,
+        cors(corsOptionsDelegate),
+        async function (req, res) {
+          await executeQueryCountPerOrgCycle(profile, req, res);
+        },
+      );
 
-    router.get(
-      '/health/etlDatabase',
-      cors(corsOptionsDelegate),
-      async function (req, res) {
-        await checkDatabaseHealth(req, res);
-      },
-    );
+      router.get(
+        '/health/etlDatabase',
+        cors(corsOptionsDelegate),
+        async function (req, res) {
+          await checkDatabaseHealth(req, res);
+        },
+      );
 
-    router.get(
-      '/health/etlDomainValues',
-      cors(corsOptionsDelegate),
-      async function (req, res) {
-        await checkDomainValuesHealth(req, res);
-      },
-    );
-  });
+      router.get(
+        '/health/etlDomainValues',
+        cors(corsOptionsDelegate),
+        async function (req, res) {
+          await checkDomainValuesHealth(req, res);
+        },
+      );
+    },
+  );
 
   app.use(`${basePath}api/attains`, router);
 }

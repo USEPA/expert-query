@@ -1,15 +1,12 @@
-import { ReactComponent as Exit } from '@uswds/uswds/img/usa-icons/launch.svg';
+import { ReactComponent as Exit } from 'images/launch.svg';
 import { Link } from 'react-router-dom';
 // components
 import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
 import { Summary } from 'components/summary';
-// config
-import { profiles } from 'config';
 // contexts
 import { useContentState } from 'contexts/content';
 // types
-import type { Profile } from 'config/profiles';
 import type { Content } from 'contexts/content';
 import type { FetchState } from 'types';
 
@@ -23,20 +20,17 @@ export function NationalDownloads() {
   const { content } = useContentState();
 
   return (
-    <>
-      <div>
-        <h1>National Downloads</h1>
-        <hr />
-        <Summary heading="Description">
-          <p>
-            Datasets provided on this page are available as prepackaged national
-            downloads. They are produced and periodically updated by EPA using
-            state-submitted data.
-          </p>
-        </Summary>
-        <NationalDownloadsData content={content} />
-      </div>
-    </>
+    <div>
+      <h1>National Downloads</h1>
+      <Summary heading="Description">
+        <p>
+          Datasets provided on this page are available as prepackaged national
+          downloads. They are produced and periodically updated by EPA using
+          state-submitted data.
+        </p>
+      </Summary>
+      <NationalDownloadsData content={content} />
+    </div>
   );
 }
 
@@ -63,23 +57,30 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
         <h2 className="text-primary">ATTAINS Data</h2>
         Go to the <Link to="/attains">ATTAINS Query</Link> page.
         <table className="margin-x-auto usa-table usa-table--stacked width-full">
+          <colgroup span={1}></colgroup>
+          <colgroup span={1}></colgroup>
+          <colgroup span={1}></colgroup>
+          <colgroup span={2}></colgroup>
           <thead>
             <tr>
-              <th scope="col">Download link</th>
-              <th scope="col">Time last refreshed</th>
-              <th scope="col">Number of rows</th>
-              <th scope="col">File size</th>
+              <th scope="col" rowSpan={2}>Download link</th>
+              <th scope="col" rowSpan={2}>Time last refreshed</th>
+              <th scope="col" rowSpan={2}>Number of rows</th>
+              <th scope="colgroup" colSpan={2} className="text-center">File size</th>
+            </tr>
+            <tr>
+              <th scope="col">Zipped</th>
+              <th scope="col">Unzipped</th>
             </tr>
           </thead>
           <tbody>
             {Object.entries(content.data.metadata)
-              .filter(([_profile, fileInfo]) => fileInfo.size !== null)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([profile, fileInfo]) => (
                 <tr key={profile}>
                   <th scope="row" data-label="Download link">
                     <a href={fileInfo.url}>
-                      {profiles[profile as Profile].label} Profile
+                      {content.data.profileConfig[profile].label} Profile
                       <Exit
                         aria-hidden="true"
                         className="height-2 margin-left-05 text-primary top-05 usa-icon width-2"
@@ -95,7 +96,8 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
                   <td data-label="Number of rows">
                     {fileInfo.numRows.toLocaleString()}
                   </td>
-                  <td data-label="File size">{formatBytes(fileInfo.size!)}</td>
+                  <td data-label="Zipped File size">{formatBytes(fileInfo.zipSize)}</td>
+                  <td data-label="Unzipped File size">{formatBytes(fileInfo.csvSize)}</td>
                 </tr>
               ))}
           </tbody>

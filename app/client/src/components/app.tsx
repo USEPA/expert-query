@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
-import '@uswds/uswds/css/uswds.css';
 // components
 import ApiDocs from 'routes/apiDocs';
 import ApiKeySignup from 'routes/apiKeySignup';
@@ -13,9 +12,11 @@ import Page from 'components/page';
 // contexts
 import { useContentState, useContentDispatch } from 'contexts/content';
 // config
-import { cloudSpace, getData, serverBasePath, serverUrl } from '../config';
+import { cloudSpace, serverBasePath, serverUrl } from 'config';
+// utils
+import { getData } from 'utils';
 // types
-import type { Content } from 'contexts/content';
+import type { Content, JsonContent } from 'contexts/content';
 
 declare global {
   interface Window {
@@ -23,6 +24,19 @@ declare global {
     gaTarget: string;
     logToGa: Function;
   }
+}
+
+// Map profile columns arrays to Sets
+function parseProfileConfig(jsonConfig: JsonContent['profileConfig']) {
+  return Object.entries(jsonConfig).reduce((current, [key, config]) => {
+    return {
+      ...current,
+      [key]: {
+        ...config,
+        columns: new Set(config.columns),
+      },
+    };
+  }, {}) as Content['profileConfig'];
 }
 
 /** Custom hook to fetch static content */
@@ -33,14 +47,17 @@ function useFetchedContent() {
     const controller = new AbortController();
 
     contentDispatch({ type: 'FETCH_CONTENT_REQUEST' });
-    getData<Content>({
+    getData<JsonContent>({
       url: `${serverUrl}/api/lookupFiles`,
       signal: controller.signal,
     })
       .then((res) => {
         contentDispatch({
           type: 'FETCH_CONTENT_SUCCESS',
-          payload: res,
+          payload: {
+            ...res,
+            profileConfig: parseProfileConfig(res.profileConfig),
+          },
         });
       })
       .catch((err: Error) => {

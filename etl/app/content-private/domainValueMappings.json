@@ -17,6 +17,11 @@
     "domainName": "StatusIndicator",
     "columns": ["assessmentUnitStatus"]
   },
+  "associatedActionStatus": {
+    "domainName": "ActionStatusType",
+    "labelField": "code",
+    "columns": ["associatedActionStatus"]
+  },
   "delistedReason": {
     "domainName": "DelistingReasonCode",
     "columns": ["delistedReason"],
