@@ -21,9 +21,6 @@ export function MarkdownContent({ className, children, components }: Props) {
       children={children}
       remarkPlugins={[remarkGfm]}
       components={{
-        p: ({ node, ...props }) => {
-          return <p className="margin-0">{props.children}</p>
-        },
         ...components,
         a: ({ node, ...props }) => {
           // NOTE: The only attribute GFM allows you to set on hyperlinks is
@@ -36,14 +33,14 @@ export function MarkdownContent({ className, children, components }: Props) {
           // the code below will use the title set in the markdown as the
           // rendered anchor link's title attribute.
           const title = node?.properties?.title;
-          const externalLink = title === "external";
+          const externalLink = title === 'external';
           return (
             <a
               {...props}
               className="usa-link"
-              title={title ? (externalLink ? "" : title.toString()) : ""}
-              target={externalLink ? "_blank" : ""}
-              rel={externalLink ? "noopener noreferrer" : ""}
+              title={title ? (externalLink ? '' : title.toString()) : ''}
+              target={externalLink ? '_blank' : ''}
+              rel={externalLink ? 'noopener noreferrer' : ''}
             >
               {props.children}
             </a>

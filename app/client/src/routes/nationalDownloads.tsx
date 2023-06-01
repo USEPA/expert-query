@@ -44,7 +44,12 @@ export function NationalDownloads() {
             </Summary>
           ) : (
             <Alert type={message.type} heading={message.heading}>
-              <MarkdownContent children={message.content} />
+              <MarkdownContent
+                children={message.content}
+                components={{
+                  p: (props) => <p className="margin-0">{props.children}</p>,
+                }}
+              />
             </Alert>
           );
         })}
