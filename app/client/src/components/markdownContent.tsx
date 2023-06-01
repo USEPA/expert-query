@@ -21,6 +21,9 @@ export function MarkdownContent({ className, children, components }: Props) {
       children={children}
       remarkPlugins={[remarkGfm]}
       components={{
+        p: ({ node, ...props }) => {
+          return <p className="margin-0">{props.children}</p>
+        },
         ...components,
         a: ({ node, ...props }) => {
           // NOTE: The only attribute GFM allows you to set on hyperlinks is

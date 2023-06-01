@@ -87,6 +87,7 @@ export type Content = {
     infoMessages: Array<{
       heading: string;
       content: string;
+      type: 'error' | 'info' | 'success' | 'summary' | 'warning';
     }>;
   };
 };

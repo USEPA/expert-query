@@ -32,18 +32,26 @@ export function NationalDownloads() {
 
   if (status === 'pending') return <Loading />;
 
-  if (status === 'success')
+  if (status === 'success') {
+    const settings = content.data.nationalDownloads;
     return (
       <div>
-        <h1>{content.data.nationalDownloads.heading}</h1>
-        {content.data.nationalDownloads.infoMessages.map((message) => (
-          <Summary heading={message.heading}>
-            <MarkdownContent children={message.content} />
-          </Summary>
-        ))}
+        <h1>{settings.heading}</h1>
+        {settings.infoMessages.map((message) => {
+          return message.type === 'summary' ? (
+            <Summary heading={message.heading}>
+              <MarkdownContent children={message.content} />
+            </Summary>
+          ) : (
+            <Alert type={message.type} heading={message.heading}>
+              <MarkdownContent children={message.content} />
+            </Alert>
+          );
+        })}
         <NationalDownloadsData content={content} />
       </div>
     );
+  }
 
   return null;
 }
