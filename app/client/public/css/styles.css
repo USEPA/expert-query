@@ -42,7 +42,7 @@
   color: inherit;
 }
 
-/* --- React UI --- */
+/* --- Reach UI --- */
 [data-reach-dialog-overlay] {
   /* match USWDS modal */
   z-index: 99999;
@@ -72,6 +72,26 @@
 }
 
 /* --- Utilities --- */
+.bg-inherit {
+  background: inherit;
+}
+
+.break-word {
+  word-break: break-word;
+}
+
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-help {
+  cursor: help;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
 .sr-only {
   border: 0;
   clip: rect(0, 0, 0, 0);
@@ -83,6 +103,22 @@
   width: 1px;
 }
 
+.text-ellipsis {
+  text-overflow: ellipsis;
+}
+
+.top-full {
+  top: 100%;
+}
+
+.text-shadow {
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.width-fit {
+  width: fit-content;
+}
+
 /* --- SwaggerUI --- */
 .swagger-ui td,
 .swagger-ui th {
@@ -92,4 +128,9 @@
 
 .swagger-ui .info {
   margin-top: 0;
+}
+
+/* --- Source select --- */
+[data-node-ref='_sourceListNode'] {
+  margin-bottom: 0 !important;
 }

@@ -18,10 +18,7 @@ export function Checkbox({
 }: CheckboxProps) {
   const [id] = useState(uniqueId('checkbox-'));
   return (
-    <div
-      className={`usa-checkbox ${styles.join(' ')}`}
-      style={{ backgroundColor: 'inherit' }}
-    >
+    <div className={`usa-checkbox bg-inherit ${styles.join(' ')}`}>
       <input
         className={`usa-checkbox__input ${tile && 'usa-checkbox__input--tile'}`}
         id={id}

@@ -21,16 +21,15 @@ export function RadioButtons({
   const [id] = useState(uniqueId('radio-'));
   return (
     <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
-      <legend className="align-items-center display-flex margin-top-0 usa-legend">
-        <b>{label}</b>
+      <legend className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-legend">
+        {label}{' '}
         {tooltip && <InfoTooltip text={tooltip} styles={['margin-left-05']} />}
       </legend>
       {options.map((option) => {
         return (
           <div
             key={option.value.toString()}
-            className="usa-radio"
-            style={{ background: 'inherit', width: 'fit-content' }}
+            className="usa-radio bg-inherit width-fit"
           >
             <input
               className={`usa-radio__input ${tile && 'usa-radio__input--tile'}`}

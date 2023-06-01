@@ -8,7 +8,6 @@
     "actionId": {
       "key": "actionId",
       "label": "Action ID (Name)",
-      "placeholder": "Select an Action...",
       "type": "multiselect",
       "contextFields": ["organizationId", "region", "state"],
       "secondaryKey": "actionName"
@@ -60,7 +59,6 @@
     "assessmentUnitId": {
       "key": "assessmentUnitId",
       "label": "Assessment Unit ID (Name)",
-      "placeholder": "Select an Assessment Unit...",
       "type": "multiselect",
       "contextFields": ["organizationId", "region", "state"],
       "secondaryKey": "assessmentUnitName"
@@ -79,7 +77,6 @@
     "associatedActionId": {
       "key": "associatedActionId",
       "label": "Associated Action ID (Name)",
-      "placeholder": "Select an Associated Action...",
       "type": "multiselect",
       "secondaryKey": "associatedActionName"
     },
@@ -299,7 +296,6 @@
     "organizationId": {
       "key": "organizationId",
       "label": "Organization ID (Name)",
-      "placeholder": "Select an Organization...",
       "type": "multiselect",
       "source": "organizationId_organizationType",
       "secondaryKey": "organizationName",

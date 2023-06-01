@@ -55,16 +55,8 @@ export function CopyBox({
     return (
       <div className="bg-base-lightest radius-md" data-testid={testId}>
         <p className="display-flex flex-justify margin-bottom-0 padding-2">
-          <span
-            className="font-mono-sm margin-right-1"
-            style={{ wordBreak: 'break-word' }}
-          >
-            {text}
-          </span>
-          <span
-            className="display-flex flex-justify-end flex-align-center"
-            style={{ width: '12rem' }}
-          >
+          <span className="break-word font-mono-sm margin-right-1">{text}</span>
+          <span className="display-flex flex-justify-end flex-align-start width-card">
             <span
               className={`margin-right-1 font-sans-2xs ${
                 statusVisible ? 'display-inline' : 'display-none'

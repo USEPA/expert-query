@@ -116,10 +116,9 @@ export function SourceSelect({
           data-node-ref="_sourceMenuButtonNode"
           aria-haspopup="true"
           aria-controls={`${id}-source-menu`}
-          className="bg-white border-gray-30 border-1px radius-left-md hover:bg-base-lightest"
+          className="bg-white border-gray-30 border-1px border-right-0 radius-left-md hover:bg-base-lightest cursor-pointer"
           ref={sourceList}
           onClick={() => setSourcesVisible(!sourcesVisible)}
-          style={{ cursor: 'pointer' }}
           title="Search in"
           type="button"
         >
@@ -137,17 +136,15 @@ export function SourceSelect({
       <div
         id={`${id}-source-menu-div`}
         tabIndex={-1}
-        className={`bg-white position-absolute shadow-2 width-full z-top ${
+        className={`bg-white position-absolute shadow-2 width-full z-top top-full ${
           sourcesVisible ? '' : 'display-none'
         }`}
-        style={{ top: '100%' }}
       >
         <ul
           id={`${id}-source-menu`}
           role="menu"
           data-node-ref="_sourceListNode"
-          className="maxh-mobile overflow-y-scroll padding-left-0"
-          style={{ marginBottom: 0 }}
+          className="font-ui-xs maxh-mobile overflow-y-scroll padding-left-0"
         >
           {allSources?.map((source, sourceIndex) => {
             let bgClass = 'hover:bg-base-lightest';
@@ -167,7 +164,7 @@ export function SourceSelect({
               <li
                 id={`${id}-source-${source.value}`}
                 role="menuitem"
-                className={`add-list-reset ${bgClass}`}
+                className={`add-list-reset cursor-pointer ${bgClass}`}
                 tabIndex={-1}
                 key={`source-key-${source.value}`}
                 onClick={() => {
@@ -176,7 +173,6 @@ export function SourceSelect({
                   );
                   setSourcesVisible(false);
                 }}
-                style={{ cursor: 'pointer' }}
               >
                 <div className={`margin-x-1 ${border} padding-y-1`}>
                   {source.label}
