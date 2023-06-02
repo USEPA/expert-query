@@ -183,7 +183,7 @@ export function Tooltip({
       'usa-tooltip__body--bottom': effectivePosition === 'bottom',
       'usa-tooltip__body--right': effectivePosition === 'right',
       'usa-tooltip__body--left': effectivePosition === 'left',
-      'is-visible': isShown, // isShown is set after positioning updated, to prevent jitter when position changes
+      'opacity-0': !isShown,
       'usa-tooltip__body--wrap': isVisible && wrapTooltip,
     },
   );
