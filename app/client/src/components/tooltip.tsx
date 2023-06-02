@@ -89,8 +89,6 @@ export function Tooltip({
     [],
   );
 
-  const maxAttempts = positions.length;
-
   useEffect(() => {
     // When position/styles change, check if in viewport
     if (isVisible && triggerElementRef.current && tooltipBodyRef.current) {
@@ -104,6 +102,7 @@ export function Tooltip({
         setIsShown(true);
       } else {
         // Try the next position
+        const maxAttempts = positions.length;
         const attempt = positioningAttempts;
         if (attempt < maxAttempts || wrapTooltip === false) {
           setPositionAttempts((a) => a + 1);
@@ -121,7 +120,13 @@ export function Tooltip({
         }
       }
     }
-  }, [maxAttempts, isVisible, positioningAttempts, positions, wrapTooltip]);
+  }, [
+    effectivePosition,
+    isVisible,
+    positioningAttempts,
+    positions,
+    wrapTooltip,
+  ]);
 
   useEffect(() => {
     if (!isVisible) {
