@@ -117,9 +117,7 @@ export function Tooltip({
             setPositionAttempts(0);
           }
         } else {
-          console.warn(
-            'No visible position found - this may mean your tooltip content is too long!',
-          );
+          console.warn('Tooltip content does not fit on the current screen.');
         }
       }
     }
