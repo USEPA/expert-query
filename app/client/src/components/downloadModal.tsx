@@ -12,7 +12,7 @@ import { serverUrl } from 'config';
 // styles
 import '@reach/dialog/styles.css';
 // types
-import type { FetchState, Status } from 'types';
+import type { FetchState, Status, Value } from 'types';
 
 /*
 ## Components
@@ -246,9 +246,9 @@ type DownloadModalProps<D extends PostData> = {
 type PostData = {
   columns: string[];
   filters: {
-    [field: string]: string | string[];
+    [field: string]: Value | Value[];
   };
   options: {
-    [field: string]: string;
+    [field: string]: Value;
   };
 };

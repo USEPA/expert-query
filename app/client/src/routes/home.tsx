@@ -39,6 +39,7 @@ import type {
   SingleValueField,
   StaticOptions,
   Status,
+  Value,
 } from 'types';
 
 /*
@@ -1129,7 +1130,7 @@ function useQueryParams({
   profile: Profile | null;
   filterFields: FilterFields;
   filterState: FilterFieldState;
-  format: string;
+  format: Value;
   initializeFilters: (state: FilterFieldState) => void;
   staticOptions: StaticOptions | null;
 }) {
@@ -1284,7 +1285,7 @@ function camelToKebab(camel: string) {
 async function checkColumnValue(
   apiKey: string,
   apiUrl: string,
-  value: string,
+  value: Value,
   fieldName: string,
   profile: string,
 ) {
@@ -1731,7 +1732,7 @@ async function matchOptions(
   profile: string | null = null,
   multiple = false,
 ) {
-  const valuesArray: string[] = [];
+  const valuesArray: Value[] = [];
   if (Array.isArray(values)) valuesArray.push(...values);
   else if (values !== null) valuesArray.push(values);
 
@@ -1899,7 +1900,7 @@ type FilterGroup = Content['filterConfig']['filterGroups'][string][number];
 type FilterGroupLabels = Content['filterConfig']['filterGroupLabels'];
 
 type FilterQueryData = {
-  [field: string]: string | string[];
+  [field: string]: Value | Value[];
 };
 
 type HomeContext = {
@@ -1922,7 +1923,7 @@ type HomeContext = {
   staticOptions: StaticOptions;
 };
 
-type InputValue = string | string[] | null;
+type InputValue = Value | Value[] | null;
 
 type MultiOptionState = ReadonlyArray<Option> | null;
 
@@ -1931,7 +1932,7 @@ type OptionInputHandler = (
 ) => void;
 
 type OptionQueryData = Partial<{
-  format: string;
+  format: Value;
 }>;
 
 type ParameterErrors = {
@@ -2022,4 +2023,4 @@ type SourceSelectFilterProps = SelectFilterProps & {
   sourceLabel: string;
 };
 
-type UrlQueryParam = [string, string];
+type UrlQueryParam = [Value, Value];
