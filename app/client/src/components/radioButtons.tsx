@@ -1,7 +1,7 @@
 import { uniqueId } from 'lodash';
 import { useState } from 'react';
 // components
-import { InfoTooltip } from 'components/infoTooltip';
+import { InfoTooltip } from 'components/tooltip';
 // types
 import type { Option } from 'types';
 
@@ -10,27 +10,32 @@ import type { Option } from 'types';
 */
 
 export function RadioButtons({
+  className = '',
   label,
   onChange,
   options,
   selected = null,
-  styles = [],
   tile = false,
   tooltip,
 }: RadioButtonsProps) {
   const [id] = useState(uniqueId('radio-'));
   return (
     <fieldset
-      aria-labelledby={`${id}-label`}
-      className={`usa-fieldset ${styles.join(' ')}`}
+      aria-labelledby={`${id}-legend`}
+      className={`usa-fieldset ${className}`}
     >
-      <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-legend">
-        <legend id={`${id}-label`}>{label}</legend>{' '}
+      <span className="display-flex flex-align-center line-height-sans-1">
+        <legend
+          className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-legend"
+          id={`${id}-legend`}
+        >
+          {label}
+        </legend>
         {tooltip && (
           <InfoTooltip
             description={`${label} tooltip`}
             text={tooltip}
-            styles={['margin-left-05']}
+            className="margin-left-05"
           />
         )}
       </span>
@@ -66,11 +71,11 @@ export function RadioButtons({
 */
 
 type RadioButtonsProps = {
+  className?: string;
   label: string;
   onChange: (selected: RadioOption) => void;
   options: readonly RadioOption[];
   selected?: RadioOption | null;
-  styles?: string[];
   tile?: boolean;
   tooltip?: string | null;
 };

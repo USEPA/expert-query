@@ -13,7 +13,7 @@ import { AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
 import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
-import { InfoTooltip } from 'components/infoTooltip';
+import { InfoTooltip } from 'components/tooltip';
 import { InPageNavAnchor, NumberedInPageNavLabel } from 'components/inPageNav';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
@@ -370,7 +370,7 @@ export function QueryBuilder() {
           onChange={formatHandler}
           options={staticOptions.format}
           selected={format}
-          styles={['margin-bottom-2']}
+          className="margin-bottom-2"
           tooltip="Choose a file format for the result set."
         />
         <button
@@ -497,7 +497,7 @@ function FilterFieldInputs({
                 selected={
                   (filterState[fieldConfig.key] as MultiOptionState) ?? []
                 }
-                styles={['margin-top-2']}
+                className="margin-top-2"
                 tooltip={tooltip}
               />,
               fieldConfig.key,
@@ -543,15 +543,18 @@ function FilterFieldInputs({
 
           return [
             <div className="margin-top-2" key={fieldConfig.key}>
-              <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-label">
-                <label htmlFor={`input-${fieldConfig.key}`}>
+              <span className="display-flex flex-align-center line-height-sans-1">
+                <label
+                  className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
+                  htmlFor={`input-${fieldConfig.key}`}
+                >
                   {fieldConfig.label}
-                </label>{' '}
+                </label>
                 {tooltip && (
                   <InfoTooltip
                     description={`${fieldConfig.label} tooltip`}
                     text={tooltip}
-                    styles={['margin-left-05']}
+                    className="margin-left-05"
                   />
                 )}
               </span>
@@ -727,16 +730,20 @@ function RangeFilter({
   type,
 }: RangeFilterProps) {
   return (
-    <div className={className} key={domain}>
-      <span className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-label">
-        <label id={`input-${domain}-label`} htmlFor={`input-${lowKey}`}>
+    <div className={className}>
+      <span className="display-flex flex-align-center line-height-sans-1">
+        <label
+          className="usa-label font-sans-2xs margin-top-0 text-bold text-uppercase"
+          id={`input-${domain}-label`}
+          htmlFor={`input-${lowKey}`}
+        >
           {label}
-        </label>{' '}
+        </label>
         {tooltip && (
           <InfoTooltip
             description={`${label} tooltip`}
             text={tooltip}
-            styles={['margin-left-05']}
+            className="margin-left-05"
           />
         )}
       </span>

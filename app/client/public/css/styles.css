@@ -73,7 +73,7 @@
 
 /* --- Utilities --- */
 .bg-inherit {
-  background: inherit;
+  background-color: inherit !important;
 }
 
 .break-word {
