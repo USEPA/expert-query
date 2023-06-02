@@ -51,7 +51,6 @@ export function DownloadModal<D extends PostData>({
     setCount({ status: 'pending', data: null });
     postData({ url: countUrl, apiKey, data: queryData, signal: getSignal() })
       .then((res) => {
-        console.log(res);
         setCount({
           status: 'success',
           data: res.count,
