@@ -293,7 +293,7 @@ type InfoTooltipProps = Omit<TooltipProps, 'children'> & {
 
 type TooltipProps = {
   text: string;
-  position?: 'top' | 'bottom' | 'left' | 'right' | undefined;
+  position?: 'top' | 'bottom' | 'left' | 'right';
   className?: string;
   children: ReactNode;
 };
