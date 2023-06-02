@@ -88,6 +88,7 @@ export function Tooltip({
     () => [positionTop, positionBottom, positionRight, positionLeft],
     [],
   );
+
   const maxAttempts = positions.length;
 
   useEffect(() => {
@@ -116,22 +117,13 @@ export function Tooltip({
             setPositionAttempts(0);
           }
         } else {
-          // No visible position found - this may mean your tooltip contents is too long!
           console.warn(
-            'No visible position found - this may mean your tooltip contents is too long!',
+            'No visible position found - this may mean your tooltip content is too long!',
           );
         }
       }
     }
-  }, [
-    maxAttempts,
-    effectivePosition,
-    isVisible,
-    positionStyles,
-    positioningAttempts,
-    positions,
-    wrapTooltip,
-  ]);
+  }, [maxAttempts, isVisible, positioningAttempts, positions, wrapTooltip]);
 
   useEffect(() => {
     if (!isVisible) {
@@ -176,6 +168,7 @@ export function Tooltip({
 
   const tooltipBodyClasses = classNames(
     'line-height-sans-3',
+    'font-sans-2xs',
     'usa-tooltip__body',
     {
       'is-set': isVisible,
@@ -252,12 +245,11 @@ export function InfoTooltip({
 ## Utils
 */
 
-function isElementInViewport(
-  el: HTMLElement,
-  win = window,
-  docEl = document.documentElement,
-) {
+function isElementInViewport(el: HTMLElement) {
   const rect = el.getBoundingClientRect();
+  const win = window;
+  const docEl = document.documentElement;
+
   return (
     rect.top >= 0 &&
     rect.left >= 0 &&
