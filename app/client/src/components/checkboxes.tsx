@@ -1,6 +1,6 @@
 // components
 import { Checkbox } from 'components/checkbox';
-import { InfoTooltip } from 'components/infoTooltip';
+import { InfoTooltip } from 'components/tooltip';
 // types
 import type { Option } from 'types';
 
@@ -9,20 +9,22 @@ import type { Option } from 'types';
 */
 
 export function Checkboxes({
+  className = '',
   label,
   onChange,
   options,
   selected = [],
-  styles = [],
   tile = false,
   tooltip,
 }: CheckboxesProps) {
   return (
-    <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
-      <legend className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-legend">
-        {label}{' '}
-        {tooltip && <InfoTooltip text={tooltip} styles={['margin-left-05']} />}
-      </legend>
+    <fieldset className={`usa-fieldset ${className}`}>
+      <span className="display-flex flex-align-center line-height-sans-1">
+        <legend className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-legend">
+          {label}
+        </legend>
+        {tooltip && <InfoTooltip text={tooltip} className="margin-left-05" />}
+      </span>
       {options.map((option, i) => {
         return (
           <Checkbox
@@ -59,11 +61,11 @@ function isSelected(option: Option, selected: ReadonlyArray<Option>) {
 */
 
 type CheckboxesProps = {
+  className?: string;
   label: string;
   onChange: (selected: ReadonlyArray<Option>) => void;
   options: ReadonlyArray<Option>;
   selected?: ReadonlyArray<Option>;
-  styles?: string[];
   tile?: boolean;
   tooltip?: string | null;
 };
