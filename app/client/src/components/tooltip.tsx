@@ -12,12 +12,7 @@ const TRIANGLE_SIZE = 5;
 ## Components
 */
 
-export function Tooltip({
-  children,
-  className,
-  text,
-  position = 'top',
-}: TooltipProps) {
+export function Tooltip({ children, className, text }: TooltipProps) {
   const triggerElementRef = useRef<HTMLElement & HTMLButtonElement>(null);
   const tooltipBodyRef = useRef<HTMLElement>(null);
   const tooltipId = useRef(uniqueId('tooltip-'));
@@ -140,27 +135,10 @@ export function Tooltip({
         const tooltipTrigger = triggerElementRef.current;
         const tooltipBody = tooltipBodyRef.current;
 
-        switch (position) {
-          case 'top':
-            positionTop(tooltipBody, tooltipTrigger);
-            break;
-          case 'bottom':
-            positionBottom(tooltipBody, tooltipTrigger);
-            break;
-          case 'right':
-            positionRight(tooltipBody, tooltipTrigger);
-            break;
-          case 'left':
-            positionLeft(tooltipBody, tooltipTrigger);
-            break;
-
-          default:
-            // skip default case
-            break;
-        }
+        positionTop(tooltipBody, tooltipTrigger);
       }
     }
-  }, [isVisible, position]);
+  }, [isVisible]);
 
   const showTooltip = () => {
     setVisible(true);
@@ -256,8 +234,8 @@ function isElementInViewport(el: HTMLElement) {
   return (
     rect.top >= 0 &&
     rect.left >= 0 &&
-    rect.bottom <= (win.innerHeight || docEl.clientHeight) &&
-    rect.right <= (win.innerWidth || docEl.clientWidth)
+    rect.right <= win.innerWidth &&
+    rect.right <= docEl.clientWidth
   );
 }
 
@@ -293,7 +271,6 @@ type InfoTooltipProps = Omit<TooltipProps, 'children'> & {
 
 type TooltipProps = {
   text: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
   className?: string;
   children: ReactNode;
 };
