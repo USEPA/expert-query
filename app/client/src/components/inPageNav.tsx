@@ -138,9 +138,16 @@ function InPageNavLayoutInner({ children }: { children: ReactNode }) {
   return (
     <div className="usa-in-page-nav-container">
       {sortedNavItems.length > 0 && (
-        <aside className="usa-in-page-nav">
+        <aside
+          aria-labelledby="in-page-nav-heading"
+          className="usa-in-page-nav"
+        >
           <nav className="usa-in-page-nav__nav">
-            <h4 className="usa-in-page-nav__heading" tabIndex={0}>
+            <h4
+              className="usa-in-page-nav__heading"
+              id="in-page-nav-heading"
+              tabIndex={0}
+            >
               On this page
             </h4>
             <ul className="usa-in-page-nav__list">

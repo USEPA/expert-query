@@ -190,6 +190,10 @@ function HomeContent({ content }: { content: Content }) {
                 ...baseStyles,
                 maxHeight: '75vh',
               }),
+              placeholder: (baseStyles) => ({
+                ...baseStyles,
+                color: '#71767a',
+              }),
             }}
             value={profileOption}
           />
@@ -921,6 +925,10 @@ function SelectFilter({
         menuPortal: (base) => ({
           ...base,
           zIndex: 9999,
+        }),
+        placeholder: (base) => ({
+          ...base,
+          color: '#71767a',
         }),
       }}
       value={filterValue}

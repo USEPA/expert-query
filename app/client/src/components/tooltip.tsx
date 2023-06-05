@@ -150,6 +150,7 @@ export function Tooltip({ children, className, text }: TooltipProps) {
   const tooltipBodyClasses = classNames(
     'line-height-sans-3',
     'font-sans-2xs',
+    'text-semibold',
     'usa-tooltip__body',
     {
       'is-set': isVisible,
