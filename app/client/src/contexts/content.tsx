@@ -85,6 +85,7 @@ export type Content = {
   nationalDownloads: {
     heading: string;
     infoMessages: Array<{
+      id: string;
       heading: string;
       content: string;
       type: 'error' | 'info' | 'success' | 'summary' | 'warning';

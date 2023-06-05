@@ -38,13 +38,13 @@ export function NationalDownloads() {
     return (
       <div>
         <h1>{settings.heading}</h1>
-        {settings.infoMessages.map((message, index) => {
+        {settings.infoMessages.map((message) => {
           return message.type === 'summary' ? (
-            <Summary key={index} heading={message.heading}>
+            <Summary key={message.id} heading={message.heading}>
               <MarkdownContent children={message.content} />
             </Summary>
           ) : (
-            <Alert key={index} type={message.type} heading={message.heading}>
+            <Alert key={message.id} type={message.type} heading={message.heading}>
               <MarkdownContent
                 children={message.content}
                 components={{
