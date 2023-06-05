@@ -20,9 +20,15 @@ export function RadioButtons({
 }: RadioButtonsProps) {
   const [id] = useState(uniqueId('radio-'));
   return (
-    <fieldset className={`usa-fieldset ${className}`}>
+    <fieldset
+      aria-labelledby={`${id}-legend`}
+      className={`usa-fieldset ${className}`}
+    >
       <span className="display-flex flex-align-center line-height-sans-1">
-        <legend className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-legend">
+        <legend
+          className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-legend"
+          id={`${id}-legend`}
+        >
           {label}
         </legend>
         {tooltip && <InfoTooltip text={tooltip} className="margin-left-05" />}

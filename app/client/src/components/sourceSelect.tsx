@@ -116,7 +116,7 @@ export function SourceSelect({
           data-node-ref="_sourceMenuButtonNode"
           aria-haspopup="true"
           aria-controls={`${id}-source-menu`}
-          className="bg-white border-gray-30 border-1px border-right-0 radius-left-md hover:bg-base-lightest cursor-pointer"
+          className={`bg-white border-gray-30 border-1px border-right-0 radius-left-md hover:bg-base-lightest cursor-pointer focus:z-top`}
           ref={sourceList}
           onClick={() => setSourcesVisible(!sourcesVisible)}
           title="Search in"

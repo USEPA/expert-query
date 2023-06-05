@@ -143,11 +143,7 @@ function InPageNavLayoutInner({ children }: { children: ReactNode }) {
           className="usa-in-page-nav"
         >
           <nav className="usa-in-page-nav__nav">
-            <h4
-              className="usa-in-page-nav__heading"
-              id="in-page-nav-heading"
-              tabIndex={0}
-            >
+            <h4 className="usa-in-page-nav__heading" id="in-page-nav-heading">
               On this page
             </h4>
             <ul className="usa-in-page-nav__list">

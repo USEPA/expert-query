@@ -170,7 +170,7 @@ function HomeContent({ content }: { content: Content }) {
             }}
             instanceId="instance-select-data-profile"
             controlShouldRenderValue={!profileInputActive}
-            aria-label="Select a data profile"
+            aria-labelledby="data-profile"
             formatOptionLabel={formatProfileOptionLabel}
             onChange={handleProfileChange}
             onFocus={() => setProfileInputActive(true)}
@@ -743,7 +743,7 @@ function RangeFilter({
       </span>
       <div className="margin-top-1 usa-hint">from:</div>
       <input
-        className="usa-input"
+        className="border border-gray-30 radius-md usa-input"
         id={`input-${lowKey}`}
         min={type === 'year' ? 1900 : undefined}
         max={type === 'year' ? 2100 : undefined}
@@ -756,7 +756,7 @@ function RangeFilter({
       <div className="margin-top-1 usa-hint">to:</div>
       <input
         aria-labelledby={`label-${domain}`}
-        className="usa-input"
+        className="border border-gray-30 radius-md usa-input"
         id={`input-${highKey}`}
         min={type === 'year' ? 1900 : undefined}
         max={type === 'year' ? 2100 : undefined}
