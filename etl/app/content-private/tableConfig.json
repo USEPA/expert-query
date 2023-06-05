@@ -40,6 +40,10 @@
         "type": "timestamptz",
         "indexOrder": "desc"
       },
+      { 
+        "name": "fiscalyearestablished",
+        "alias": "fiscalYearEstablished"
+      },
       {
         "name": "includeinmeasure",
         "alias": "includeInMeasure"
@@ -69,6 +73,10 @@
       {
         "name": "parameter",
         "alias": "parameter"
+      },
+      {
+        "name": "parametergroup",
+        "alias": "parameterGroup"
       },
       {
         "name": "region",
@@ -170,6 +178,9 @@
         "columns": [
           {
             "name": "parameter"
+          },
+          {
+            "name": "parametergroup"
           }
         ]
       }
@@ -349,8 +360,7 @@
       },
       {
         "name": "parameterircategory",
-        "alias": "parameterIrCategory",
-        "type": "numeric"
+        "alias": "parameterIrCategory"
       },
       {
         "name": "parametername",
@@ -358,8 +368,7 @@
       },
       {
         "name": "parameterstateircategory",
-        "alias": "parameterStateIrCategory",
-        "type": "numeric"
+        "alias": "parameterStateIrCategory"
       },
       {
         "name": "parameterstatus",
@@ -424,8 +433,7 @@
       },
       {
         "name": "useircategory",
-        "alias": "useIrCategory",
-        "type": "numeric"
+        "alias": "useIrCategory"
       },
       {
         "name": "usename",
@@ -433,8 +441,7 @@
       },
       {
         "name": "usestateircategory",
-        "alias": "useStateIrCategory",
-        "type": "numeric"
+        "alias": "useStateIrCategory"
       },
       {
         "name": "usesupport",
@@ -1324,6 +1331,10 @@
         "alias": "addressedParameter"
       },
       {
+        "name": "addressedparametergroup",
+        "alias": "addressedParameterGroup"
+      },
+      {
         "name": "assessmentunitid",
         "alias": "assessmentUnitId"
       },
@@ -1402,6 +1413,10 @@
       {
         "name": "pollutant",
         "alias": "pollutant"
+      },
+      {
+        "name": "pollutantgroup",
+        "alias": "pollutantGroup"
       },
       {
         "name": "region",

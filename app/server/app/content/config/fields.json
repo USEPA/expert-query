@@ -22,6 +22,11 @@
       "label": "Addressed Parameter",
       "type": "multiselect"
     },
+    "addressedParameterGroup": {
+      "key": "addressedParameterGroup",
+      "label": "Addressed Parameter Group",
+      "type": "multiselect"
+    },
     "alternateListingIdentifier": {
       "key": "alternateListingIdentifier",
       "label": "Alternate Listing ID",
@@ -357,6 +362,11 @@
       "label": "Pollutant",
       "type": "multiselect"
     },
+    "pollutantGroup": {
+      "key": "pollutantGroup",
+      "label": "Pollutant Group",
+      "type": "multiselect"
+    },
     "pollutantIndicator": {
       "key": "pollutantIndicator",
       "label": "Pollutant Indicator",
@@ -503,7 +513,7 @@
           "waterType"
         ]
       },
-      { "key": "parameter", "fields": ["parameter"] },
+      { "key": "parameter", "fields": ["parameterGroup", "parameter"] },
       {
         "key": "action",
         "fields": [
@@ -516,7 +526,14 @@
           "completionDateHi"
         ]
       },
-      { "key": "actionsAssessmentUnit", "fields": ["assessmentUnitId"] }
+      { "key": "actionsAssessmentUnit", "fields": ["assessmentUnitId"] },
+      {
+        "key": "timeFrame",
+        "fields": [
+          "fiscalYearEstablishedLo",
+          "fiscalYearEstablishedHi"
+        ]
+      }
     ],
     "assessments": [
       {
@@ -686,7 +703,7 @@
       },
       {
         "key": "pollutantParameter",
-        "fields": ["pollutant", "addressedParameter", "sourceType"]
+        "fields": ["pollutantGroup", "pollutant", "addressedParameterGroup", "addressedParameter", "sourceType"]
       },
       { "key": "permitId", "fields": ["npdesIdentifier", "otherIdentifier"] },
       {
