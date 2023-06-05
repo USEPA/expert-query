@@ -2,11 +2,13 @@ describe('Data Profile Sources', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Sources');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
 
-  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=assessmentUnitId&columns=assessmentUnitName&columns=reportingCycle&columns=overallStatus&columns=epaIrCategory&columns=stateIrCategory&columns=parameterGroup&columns=causeName&columns=sourceName&columns=confirmed&columns=cycleId&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
-  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"assessmentUnitId\",\"assessmentUnitName\",\"reportingCycle\",\"overallStatus\",\"epaIrCategory\",\"stateIrCategory\",\"parameterGroup\",\"causeName\",\"sourceName\",\"confirmed\",\"cycleId\",\"locationDescription\",\"waterSize\",\"waterSizeUnits\"]';
+  const columnsValue =
+    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=assessmentUnitId&columns=assessmentUnitName&columns=reportingCycle&columns=overallStatus&columns=epaIrCategory&columns=stateIrCategory&columns=parameterGroup&columns=causeName&columns=sourceName&columns=confirmed&columns=cycleId&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
+  const columnsValueCurl =
+    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","assessmentUnitId","assessmentUnitName","reportingCycle","overallStatus","epaIrCategory","stateIrCategory","parameterGroup","causeName","sourceName","confirmed","cycleId","locationDescription","waterSize","waterSizeUnits"]';
 
   const location = window.location;
   const origin =
@@ -17,7 +19,7 @@ describe('Data Profile Sources', () => {
   it('Verify copy box text flavor 1', () => {
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/sources#`,
+      `${origin}/attains/sources?`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -42,7 +44,7 @@ describe('Data Profile Sources', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/sources#${queryValue}`,
+      `${origin}/attains/sources?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -90,7 +92,7 @@ describe('Data Profile Sources', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/sources#${queryValue}`,
+      `${origin}/attains/sources?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -99,7 +101,7 @@ describe('Data Profile Sources', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"assessmentUnitId":["TN06020002001_0100"],"confirmed":["N"],"organizationId":["PUEBLOOFTESUQUE","DOEE"],"overallStatus":["Fully Supporting"],"parameterGroup":["PESTICIDES"],"reportingCycle":"2017","sourceName":["BASEFLOW DEPLETION FROM GROUNDWATER WITHDRAWALS"],"waterType":["WETLANDS, TIDAL"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
+        `{"filters":{"assessmentUnitId":["TN06020002001_0100"],"confirmed":["N"],"organizationId":["PUEBLOOFTESUQUE","DOEE"],"overallStatus":["Fully Supporting"],"parameterGroup":["PESTICIDES"],"reportingCycle":2017,"sourceName":["BASEFLOW DEPLETION FROM GROUNDWATER WITHDRAWALS"],"waterType":["WETLANDS, TIDAL"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/sources -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
@@ -141,7 +143,7 @@ describe('Data Profile Sources', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/sources#${queryValue}`,
+      `${origin}/attains/sources?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -150,12 +152,15 @@ describe('Data Profile Sources', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"assessmentUnitId":["MT40Q001_011","AL03130004-0405-100"],"confirmed":["N"],"organizationId":["WIDNR"],"overallStatus":["Not Supporting"],"parameterGroup":["NUTRIENTS"],"reportingCycle":"2018","sourceName":["MANURE LAGOONS"],"state":["HI"],"waterType":["WASH"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+        `{"filters":{"assessmentUnitId":["MT40Q001_011","AL03130004-0405-100"],"confirmed":["N"],"organizationId":["WIDNR"],"overallStatus":["Not Supporting"],"parameterGroup":["NUTRIENTS"],"reportingCycle":2018,"sourceName":["MANURE LAGOONS"],"state":["HI"],"waterType":["WASH"]},"options":{"format":"csv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/sources -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
   it('Verify copy box text flavor 5', () => {
+    //Reporting Cycle
+    cy.selectOption('input-reportingCycle', '2016{downArrow}');
+
     //Assessment Unit ID
     cy.selectOption('input-assessmentUnitId', 'AL-Gulf-of-Mexico-2');
     cy.selectOption('input-assessmentUnitId', 'American Fork');
@@ -185,9 +190,6 @@ describe('Data Profile Sources', () => {
     //Region
     cy.selectOption('input-region', '06');
 
-    //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2016{downArrow}');
-
     //Source Name
     cy.selectOption('input-sourceName', 'pipeline');
 
@@ -205,7 +207,7 @@ describe('Data Profile Sources', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/sources#${queryValue}`,
+      `${origin}/attains/sources?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -214,7 +216,7 @@ describe('Data Profile Sources', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2","MT40A002_120"],"causeName":["AMMONIA"],"confirmed":["Y"],"epaIrCategory":["4A"],"organizationId":["21PA","SDDENR"],"overallStatus":["Fully Supporting"],"parameterGroup":["TRASH"],"region":["06"],"reportingCycle":"2016","sourceName":["PIPELINE BREAKS"],"state":["FL"],"stateIrCategory":["5b-t"],"waterType":["INLAND BEACH"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
+        `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2","MT40A002_120"],"causeName":["AMMONIA"],"confirmed":["Y"],"epaIrCategory":["4A"],"organizationId":["21PA","SDDENR"],"overallStatus":["Fully Supporting"],"parameterGroup":["TRASH"],"region":["06"],"reportingCycle":2016,"sourceName":["PIPELINE BREAKS"],"state":["FL"],"stateIrCategory":["5b-t"],"waterType":["INLAND BEACH"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/sources -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });

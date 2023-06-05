@@ -39,6 +39,7 @@ import type {
   SingleValueField,
   StaticOptions,
   Status,
+  Value,
 } from 'types';
 
 /*
@@ -551,7 +552,11 @@ function FilterFieldInputs({
                   {fieldConfig.label}
                 </label>
                 {tooltip && (
-                  <InfoTooltip text={tooltip} className="margin-left-05" />
+                  <InfoTooltip
+                    description={`${fieldConfig.label} tooltip`}
+                    text={tooltip}
+                    className="margin-left-05"
+                  />
                 )}
               </span>
               <div className="margin-top-1">
@@ -730,12 +735,18 @@ function RangeFilter({
       <span className="display-flex flex-align-center line-height-sans-1">
         <label
           className="usa-label font-sans-2xs margin-top-0 text-bold text-uppercase"
-          id={`label-${domain}`}
+          id={`input-${domain}-label`}
           htmlFor={`input-${lowKey}`}
         >
           {label}
         </label>
-        {tooltip && <InfoTooltip text={tooltip} className="margin-left-05" />}
+        {tooltip && (
+          <InfoTooltip
+            description={`${label} tooltip`}
+            text={tooltip}
+            className="margin-left-05"
+          />
+        )}
       </span>
       <div className="margin-top-1 usa-hint">from:</div>
       <input
@@ -751,7 +762,7 @@ function RangeFilter({
       />
       <div className="margin-top-1 usa-hint">to:</div>
       <input
-        aria-labelledby={`label-${domain}`}
+        aria-labelledby={`input-${domain}-label`}
         className="usa-input"
         id={`input-${highKey}`}
         min={type === 'year' ? 1900 : undefined}
@@ -1119,7 +1130,7 @@ function useQueryParams({
   profile: Profile | null;
   filterFields: FilterFields;
   filterState: FilterFieldState;
-  format: string;
+  format: Value;
   initializeFilters: (state: FilterFieldState) => void;
   staticOptions: StaticOptions | null;
 }) {
@@ -1128,9 +1139,9 @@ function useQueryParams({
   const parameters: QueryData = useMemo(() => {
     if (!profile) return { columns: [], filters: {}, options: {} };
     return {
-      columns: Array.from(profile.columns),
-      options: { format },
       filters: buildFilterData(filterFields, filterState, profile),
+      options: { format },
+      columns: Array.from(profile.columns),
     };
   }, [filterFields, filterState, format, profile]);
 
@@ -1274,7 +1285,7 @@ function camelToKebab(camel: string) {
 async function checkColumnValue(
   apiKey: string,
   apiUrl: string,
-  value: string,
+  value: Value,
   fieldName: string,
   profile: string,
 ) {
@@ -1721,7 +1732,7 @@ async function matchOptions(
   profile: string | null = null,
   multiple = false,
 ) {
-  const valuesArray: string[] = [];
+  const valuesArray: Value[] = [];
   if (Array.isArray(values)) valuesArray.push(...values);
   else if (values !== null) valuesArray.push(values);
 
@@ -1889,7 +1900,7 @@ type FilterGroup = Content['filterConfig']['filterGroups'][string][number];
 type FilterGroupLabels = Content['filterConfig']['filterGroupLabels'];
 
 type FilterQueryData = {
-  [field: string]: string | string[];
+  [field: string]: Value | Value[];
 };
 
 type HomeContext = {
@@ -1912,7 +1923,7 @@ type HomeContext = {
   staticOptions: StaticOptions;
 };
 
-type InputValue = string | string[] | null;
+type InputValue = Value | Value[] | null;
 
 type MultiOptionState = ReadonlyArray<Option> | null;
 
@@ -1921,7 +1932,7 @@ type OptionInputHandler = (
 ) => void;
 
 type OptionQueryData = Partial<{
-  format: string;
+  format: Value;
 }>;
 
 type ParameterErrors = {
@@ -2012,4 +2023,4 @@ type SourceSelectFilterProps = SelectFilterProps & {
   sourceLabel: string;
 };
 
-type UrlQueryParam = [string, string];
+type UrlQueryParam = [Value, Value];

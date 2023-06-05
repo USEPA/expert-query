@@ -4,7 +4,7 @@ describe('Download file', () => {
   });
 
   let count = '0';
-  it('Download and Verify Alert message visible when download and hidden after 10 second', () => {
+  it('Download and Verify Alert message visible when download and dismissed after other interaction', () => {
     cy.selectProfile('Assessments');
     cy.selectOption('input-state', 'north carolina');
     cy.selectOption('input-assessmentUnitId', 'NC10-1-35-(2)b');
@@ -16,8 +16,15 @@ describe('Download file', () => {
       count = $el.text();
     });
     cy.findByText('Continue').click();
-    cy.findByText('Query executed successfully.').should('exist');
-    cy.wait(10000);
-    cy.findByText('Query executed successfully.').should('not.exist');
+    cy.findByText('Query executed successfully', { exact: false }).should(
+      'exist',
+    );
+
+    // Change an option to clear the success message
+    cy.findByText('Tab-separated (TSV)').click();
+
+    cy.findByText('Query executed successfully', { exact: false }).should(
+      'not.exist',
+    );
   });
 });

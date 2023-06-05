@@ -2,11 +2,13 @@ describe('Data Profile Catchment Correspondence', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Catchment Correspondence');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
 
-  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=assessmentUnitId&columns=assessmentUnitName&columns=catchmentNhdPlusId&columns=reportingCycle&columns=cycleId';
-  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"assessmentUnitId\",\"assessmentUnitName\",\"catchmentNhdPlusId\",\"reportingCycle\",\"cycleId\"]';
+  const columnsValue =
+    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=assessmentUnitId&columns=assessmentUnitName&columns=catchmentNhdPlusId&columns=reportingCycle&columns=cycleId';
+  const columnsValueCurl =
+    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","assessmentUnitId","assessmentUnitName","catchmentNhdPlusId","reportingCycle","cycleId"]';
 
   const location = window.location;
   const origin =
@@ -17,7 +19,7 @@ describe('Data Profile Catchment Correspondence', () => {
   it('Verify copy box text flavor 1', () => {
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence#`,
+      `${origin}/attains/catchmentCorrespondence?`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -42,7 +44,7 @@ describe('Data Profile Catchment Correspondence', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence#${queryValue}`,
+      `${origin}/attains/catchmentCorrespondence?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -71,7 +73,7 @@ describe('Data Profile Catchment Correspondence', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence#${queryValue}`,
+      `${origin}/attains/catchmentCorrespondence?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -93,17 +95,17 @@ describe('Data Profile Catchment Correspondence', () => {
     cy.selectOption('input-organizationId', 'montana');
 
     //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2016{downArrow}');
+    cy.selectOption('input-reportingCycle', '2018{downArrow}');
 
     //File Format
     cy.findByText('Microsoft Excel (XLSX)').click();
 
     const queryValue =
-      'assessmentUnitId=AS-04O&organizationId=MTDEQ&reportingCycle=2016';
+      'assessmentUnitId=AS-04O&organizationId=MTDEQ&reportingCycle=2018';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence#${queryValue}`,
+      `${origin}/attains/catchmentCorrespondence?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -112,12 +114,15 @@ describe('Data Profile Catchment Correspondence', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"assessmentUnitId":["AS-04O"],"organizationId":["MTDEQ"],"reportingCycle":"2016"},"options":{"format":"xlsx"},${columnsValueCurl}}`,
+        `{"filters":{"assessmentUnitId":["AS-04O"],"organizationId":["MTDEQ"],"reportingCycle":2018},"options":{"format":"xlsx"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
   it('Verify copy box text flavor 5', () => {
+    //Reporting Cycle
+    cy.selectOption('input-reportingCycle', '2016{downArrow}');
+
     //Assessment Unit ID
     cy.selectOption('input-assessmentUnitId', 'as-01o');
     cy.selectOption('input-assessmentUnitId', 'aasu-ocean');
@@ -132,9 +137,6 @@ describe('Data Profile Catchment Correspondence', () => {
     //Region
     cy.selectOption('input-region', '06');
 
-    //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2016{downArrow}');
-
     //File Format
     cy.findByText('Tab-separated (TSV)').click();
 
@@ -143,7 +145,7 @@ describe('Data Profile Catchment Correspondence', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence#${queryValue}`,
+      `${origin}/attains/catchmentCorrespondence?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -152,7 +154,7 @@ describe('Data Profile Catchment Correspondence', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"assessmentUnitId":["AS-01O","AS-07O"],"organizationId":["21PA","CA_SWRCB"],"region":["06"],"reportingCycle":"2016","state":["TX"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
+        `{"filters":{"assessmentUnitId":["AS-01O","AS-07O"],"organizationId":["21PA","CA_SWRCB"],"region":["06"],"reportingCycle":2016,"state":["TX"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
