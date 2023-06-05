@@ -82,6 +82,15 @@ export type Content = {
       resource: string;
     };
   };
+  nationalDownloads: {
+    heading: string;
+    infoMessages: Array<{
+      id: string;
+      heading: string;
+      content: string;
+      type: 'error' | 'info' | 'success' | 'summary' | 'warning';
+    }>;
+  };
 };
 
 export type JsonContent = Omit<Content, 'profileConfig'> & {
