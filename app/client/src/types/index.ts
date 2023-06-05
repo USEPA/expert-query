@@ -77,7 +77,7 @@ export type MultiOptionField = BaseFilterFieldConfig & {
 export type Option = {
   description?: ReactNode;
   label: ReactNode;
-  value: string;
+  value: Value;
 };
 
 export type SingleOptionField = BaseFilterFieldConfig & {
@@ -93,3 +93,5 @@ export type SingleValueField = BaseFilterFieldConfig & {
 export type StaticOptions = { [key: string]: Option[] };
 
 export type Status = 'idle' | 'pending' | 'failure' | 'success';
+
+export type Value = string | number;

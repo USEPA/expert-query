@@ -22,8 +22,8 @@ export function Checkboxes({
   const [id] = useState(uniqueId('checkboxes-'));
   return (
     <fieldset
-      className={`usa-fieldset ${className}`}
       aria-labelledby={`${id}-legend`}
+      className={`usa-fieldset ${className}`}
     >
       <span className="display-flex flex-align-center line-height-sans-1">
         <legend
@@ -32,7 +32,13 @@ export function Checkboxes({
         >
           {label}
         </legend>
-        {tooltip && <InfoTooltip text={tooltip} className="margin-left-05" />}
+        {tooltip && (
+          <InfoTooltip
+            description={`${label} tooltip`}
+            text={tooltip}
+            className="margin-left-05"
+          />
+        )}
       </span>
       {options.map((option, i) => {
         return (

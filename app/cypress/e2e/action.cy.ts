@@ -2,11 +2,13 @@ describe('Data Profile Action', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Actions');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
 
-  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
-  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"parameter\",\"actionType\",\"actionId\",\"actionName\",\"actionAgency\",\"inIndianCountry\",\"includeInMeasure\",\"completionDate\",\"assessmentUnitId\",\"assessmentUnitName\",\"locationDescription\",\"waterSize\",\"waterSizeUnits\"]';
+  const columnsValue =
+    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
+  const columnsValueCurl =
+    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","parameter","actionType","actionId","actionName","actionAgency","inIndianCountry","includeInMeasure","completionDate","assessmentUnitId","assessmentUnitName","locationDescription","waterSize","waterSizeUnits"]';
 
   const location = window.location;
   const origin =
@@ -17,7 +19,7 @@ describe('Data Profile Action', () => {
   it('Verify copy box text flavor 1', () => {
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/actions#`,
+      `${origin}/attains/actions?`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -43,7 +45,7 @@ describe('Data Profile Action', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/actions#${queryValue}`,
+      `${origin}/attains/actions?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -72,7 +74,7 @@ describe('Data Profile Action', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/actions#${queryValue}`,
+      `${origin}/attains/actions?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -106,7 +108,7 @@ describe('Data Profile Action', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/actions#${queryValue}`,
+      `${origin}/attains/actions?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -151,7 +153,7 @@ describe('Data Profile Action', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/actions#${queryValue}`,
+      `${origin}/attains/actions?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',

@@ -31,7 +31,13 @@ export function RadioButtons({
         >
           {label}
         </legend>
-        {tooltip && <InfoTooltip text={tooltip} className="margin-left-05" />}
+        {tooltip && (
+          <InfoTooltip
+            description={`${label} tooltip`}
+            text={tooltip}
+            className="margin-left-05"
+          />
+        )}
       </span>
       {options.map((option) => {
         return (

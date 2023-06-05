@@ -2,7 +2,7 @@ describe('CopyBox', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Actions');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
 
   const location = window.location;
@@ -56,8 +56,11 @@ describe('CopyBox', () => {
     () => {
       grantPermissions();
       cy.wait(1000);
-      cy.findAllByRole('button', { name: 'Copy content' }).first().focus().realClick();
-      cy.clipboardValue(`${origin}/attains/actions#`);
+      cy.findAllByRole('button', { name: 'Copy content' })
+        .first()
+        .focus()
+        .realClick();
+      cy.clipboardValue(`${origin}/attains/actions?`);
     },
   );
 
@@ -67,9 +70,15 @@ describe('CopyBox', () => {
     () => {
       grantPermissions();
       cy.wait(1000);
-      cy.findAllByRole('button', { name: 'Copy content' }).eq(1).focus().realClick();
-      const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
-      cy.clipboardValue(`${origin}/api/attains/actions?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`);
+      cy.findAllByRole('button', { name: 'Copy content' })
+        .eq(1)
+        .focus()
+        .realClick();
+      const columnsValue =
+        'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
+      cy.clipboardValue(
+        `${origin}/api/attains/actions?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      );
     },
   );
 
@@ -79,8 +88,12 @@ describe('CopyBox', () => {
     () => {
       grantPermissions();
       cy.wait(1000);
-      cy.findAllByRole('button', { name: 'Copy content' }).last().focus().realClick();
-      const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"parameter\",\"actionType\",\"actionId\",\"actionName\",\"actionAgency\",\"inIndianCountry\",\"includeInMeasure\",\"completionDate\",\"assessmentUnitId\",\"assessmentUnitName\",\"locationDescription\",\"waterSize\",\"waterSizeUnits\"]';
+      cy.findAllByRole('button', { name: 'Copy content' })
+        .last()
+        .focus()
+        .realClick();
+      const columnsValueCurl =
+        '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","parameter","actionType","actionId","actionName","actionAgency","inIndianCountry","includeInMeasure","completionDate","assessmentUnitId","assessmentUnitName","locationDescription","waterSize","waterSizeUnits"]';
       cy.clipboardValue(
         `curl -X POST --json ${JSON.stringify(
           `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,

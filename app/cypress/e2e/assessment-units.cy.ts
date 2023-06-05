@@ -2,11 +2,13 @@ describe('Data Profile Assessment Units', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Assessment Units');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
 
-  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
-  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"locationTypeCode\",\"locationText\",\"useClassName\",\"assessmentUnitId\",\"assessmentUnitName\",\"assessmentUnitStatus\",\"reportingCycle\",\"cycleId\",\"locationDescription\",\"sizeSource\",\"sourceScale\",\"waterSize\",\"waterSizeUnits\"]';
+  const columnsValue =
+    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
+  const columnsValueCurl =
+    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","locationTypeCode","locationText","useClassName","assessmentUnitId","assessmentUnitName","assessmentUnitStatus","reportingCycle","cycleId","locationDescription","sizeSource","sourceScale","waterSize","waterSizeUnits"]';
 
   const location = window.location;
   const origin =
@@ -19,7 +21,7 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits#${queryValue}`,
+      `${origin}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -49,7 +51,7 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits#${queryValue}`,
+      `${origin}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -82,7 +84,7 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits#${queryValue}`,
+      `${origin}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -119,7 +121,7 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits#${queryValue}`,
+      `${origin}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -169,7 +171,7 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits#${queryValue}`,
+      `${origin}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',

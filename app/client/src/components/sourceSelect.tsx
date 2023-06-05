@@ -10,7 +10,7 @@ import type { Option } from 'types';
 */
 
 export function SourceSelect({
-  label = null,
+  label,
   sources,
   children,
   onChange,
@@ -25,7 +25,7 @@ export function SourceSelect({
   const [sourceCursor, setSourceCursor] = useState(-1);
 
   const allSources = useMemo(() => {
-    const allSourcesLabel = label ? `All ${label}s` : 'All';
+    const allSourcesLabel = `All ${label}s`;
     return sources
       ? [{ label: allSourcesLabel, value: Infinity }, ...sources]
       : null;
@@ -119,7 +119,7 @@ export function SourceSelect({
           className={`bg-white border-gray-30 border-1px border-right-0 radius-left-md hover:bg-base-lightest cursor-pointer focus:z-top`}
           ref={sourceList}
           onClick={() => setSourcesVisible(!sourcesVisible)}
-          title="Search in"
+          title={`Select ${label}`}
           type="button"
         >
           <Filter
@@ -232,7 +232,7 @@ function useKeyPress(
 */
 
 type SourceSelectProps = {
-  label?: string | null;
+  label: string;
   sources?: ReadonlyArray<Option> | null;
   children: ReactNode;
   onChange?: ((selected: Option | null) => void) | null;
