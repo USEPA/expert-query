@@ -90,7 +90,7 @@ export function Tooltip({ children, className, text }: TooltipProps) {
       const tooltipTrigger = triggerElementRef.current;
       const tooltipBody = tooltipBodyRef.current;
 
-      const isInViewport = isElementInViewport(tooltipBody);
+      const isInViewport = isElementInViewport(tooltipBody, effectivePosition);
 
       if (isInViewport) {
         // We're good, show the tooltip
@@ -103,7 +103,7 @@ export function Tooltip({ children, className, text }: TooltipProps) {
           setPositionAttempts((a) => a + 1);
 
           if (attempt < maxAttempts) {
-            const pos = positions[parseInt(`${attempt}`)];
+            const pos = positions[attempt];
             pos(tooltipBody, tooltipTrigger);
           } else {
             // Try wrapping
@@ -226,17 +226,29 @@ export function InfoTooltip({
 ## Utils
 */
 
-function isElementInViewport(el: HTMLElement) {
-  const rect = el.getBoundingClientRect();
-  const win = window;
-  const docEl = document.documentElement;
+function getViewportHeight() {
+  return window.innerHeight && document.documentElement.clientHeight
+    ? Math.min(window.innerHeight, document.documentElement.clientHeight)
+    : window.innerHeight || document.documentElement.clientHeight;
+}
 
-  return (
-    rect.top >= 0 &&
-    rect.left >= 0 &&
-    rect.right <= win.innerWidth &&
-    rect.right <= docEl.clientWidth
-  );
+function getViewportWidth() {
+  return window.innerWidth && document.documentElement.clientWidth
+    ? Math.min(window.innerWidth, document.documentElement.clientWidth)
+    : window.innerWidth || document.documentElement.clientWidth;
+}
+
+function isElementInViewport(
+  el: HTMLElement,
+  pos?: 'top' | 'bottom' | 'left' | 'right',
+) {
+  const rect = el.getBoundingClientRect();
+
+  let verticalInView = true;
+  if (pos === 'top') verticalInView = rect.top >= 0;
+  if (pos === 'bottom') verticalInView = rect.bottom <= getViewportHeight();
+
+  return verticalInView && rect.left >= 0 && rect.right <= getViewportWidth();
 }
 
 // Get margin offset calculations
