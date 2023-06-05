@@ -165,7 +165,7 @@ describe('Home Page', () => {
     ).should('be.visible');
   });
 
-  it.only('Source select menu filters corresponding options', () => {
+  it('Source select menu filters corresponding options', () => {
     cy.selectProfile('Actions');
     cy.findByRole('button', { name: 'Select Organization Type' }).click();
     cy.findByRole('menuitem', { name: 'Tribe' }).click();
