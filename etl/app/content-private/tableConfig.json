@@ -2,6 +2,7 @@
   "actions": {
     "tableName": "actions",
     "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS actions ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, fiscalyearestablished VARCHAR (4), parameter VARCHAR(240) NOT NULL, parametergroup VARCHAR(60) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, actiontype VARCHAR(50) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, actionagency VARCHAR(10) NOT NULL, inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1) )",
     "columns": [
       {
         "name": "objectid",
@@ -41,6 +42,13 @@
         "indexOrder": "desc"
       },
       {
+        "name": "fiscalyearestablished",
+        "alias": "fiscalYearEstablished",
+        "lowParam": "fiscalYearEstablishedLo",
+        "highParam": "fiscalYearEstablishedHi",
+        "indexOrder": "desc"
+      },
+      {
         "name": "includeinmeasure",
         "alias": "includeInMeasure"
       },
@@ -69,6 +77,10 @@
       {
         "name": "parameter",
         "alias": "parameter"
+      },
+      {
+        "name": "parametergroup",
+        "alias": "parameterGroup"
       },
       {
         "name": "region",
@@ -170,6 +182,9 @@
         "columns": [
           {
             "name": "parameter"
+          },
+          {
+            "name": "parametergroup"
           }
         ]
       }
@@ -178,6 +193,7 @@
   "assessments": {
     "tableName": "assessments",
     "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS assessments ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, cyclelastassessed NUMERIC(4,0) NOT NULL, overallstatus VARCHAR(4000), epaircategory VARCHAR(5), stateircategory VARCHAR(5), parametergroup VARCHAR(60), parametername VARCHAR(240) NOT NULL, parameterstatus VARCHAR(240) NOT NULL, usegroup VARCHAR(500), usename VARCHAR(255), useircategory VARCHAR(5), usestateircategory VARCHAR(5), usesupport VARCHAR(1), parameterattainment VARCHAR(240) NOT NULL, parameterircategory VARCHAR(5), parameterstateircategory VARCHAR(5), cyclefirstlisted NUMERIC(4,0), associatedactionid VARCHAR(45), associatedactionname VARCHAR(255), associatedactiontype VARCHAR(50), locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40), watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, sizesource VARCHAR(100), sourcescale VARCHAR(30), assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), assessmentdate DATE, assessmentbasis VARCHAR(30), monitoringstartdate DATE, monitoringenddate DATE, assessmentmethods VARCHAR(150), assessmenttypes VARCHAR(30), delisted VARCHAR(1), delistedreason VARCHAR(100), seasonstartdate DATE, seasonenddate DATE, pollutantindicator VARCHAR(1), cyclescheduledfortmdl NUMERIC(4,0), cycleexpectedtoattain NUMERIC(4,0), cwa303dpriorityranking VARCHAR(25), vision303dpriority VARCHAR(1), alternatelistingidentifier VARCHAR(50), consentdecreecycle NUMERIC(4,0), associatedactionstatus VARCHAR(30), associatedactionagency VARCHAR(10) )",
     "columns": [
       {
         "name": "objectid",
@@ -349,8 +365,7 @@
       },
       {
         "name": "parameterircategory",
-        "alias": "parameterIrCategory",
-        "type": "numeric"
+        "alias": "parameterIrCategory"
       },
       {
         "name": "parametername",
@@ -358,8 +373,7 @@
       },
       {
         "name": "parameterstateircategory",
-        "alias": "parameterStateIrCategory",
-        "type": "numeric"
+        "alias": "parameterStateIrCategory"
       },
       {
         "name": "parameterstatus",
@@ -424,8 +438,7 @@
       },
       {
         "name": "useircategory",
-        "alias": "useIrCategory",
-        "type": "numeric"
+        "alias": "useIrCategory"
       },
       {
         "name": "usename",
@@ -433,8 +446,7 @@
       },
       {
         "name": "usestateircategory",
-        "alias": "useStateIrCategory",
-        "type": "numeric"
+        "alias": "useStateIrCategory"
       },
       {
         "name": "usesupport",
@@ -657,6 +669,8 @@
   "assessmentUnits": {
     "tableName": "assessment_units",
     "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30), locationtypecode VARCHAR(22), locationtext VARCHAR(100) )",
+    "overrideWorkMemory": "1GB",
     "columns": [
       {
         "name": "objectid",
@@ -823,6 +837,7 @@
   "assessmentUnitsMonitoringLocations": {
     "tableName": "assessment_units_monitoring_locations",
     "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units_monitoring_locations ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, monitoringlocationorgid VARCHAR(30), monitoringlocationid VARCHAR(35), monitoringlocationdatalink VARCHAR(255), assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30) )",
     "columns": [
       {
         "name": "objectid",
@@ -995,6 +1010,8 @@
   "catchmentCorrespondence": {
     "tableName": "catchment_correspondence",
     "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS catchment_correspondence ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, catchmentnhdplusid NUMERIC(38,0) )",
+    "overrideWorkMemory": "790MB",
     "columns": [
       {
         "name": "objectid",
@@ -1119,6 +1136,7 @@
   "sources": {
     "tableName": "sources",
     "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS sources ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, overallstatus VARCHAR(4000), epaircategory VARCHAR(5), stateircategory VARCHAR(5), sourcename VARCHAR(240) NOT NULL, confirmed VARCHAR(1) NOT NULL, parametergroup VARCHAR(60) NOT NULL, causename VARCHAR(240) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL )",
     "columns": [
       {
         "name": "objectid",
@@ -1301,6 +1319,7 @@
   "tmdl": {
     "tableName": "tmdl",
     "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS tmdl ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, tmdldate DATE, fiscalyearestablished VARCHAR(4), pollutant VARCHAR(240) NOT NULL, pollutantgroup VARCHAR(60) NOT NULL, sourcetype VARCHAR(40) NOT NULL, addressedparameter VARCHAR(240) NOT NULL, addressedparametergroup VARCHAR(60) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, actionagency VARCHAR(10) NOT NULL, loadallocation NUMERIC(21,3) NOT NULL, loadallocationunits VARCHAR(40) NOT NULL, explicitmarginofsafety VARCHAR(255), implicitmarginofsafety VARCHAR(255), npdesidentifier VARCHAR(60), otheridentifier VARCHAR(4000), wasteloadallocation NUMERIC(24,3), inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1) )",
     "columns": [
       {
         "name": "objectid",
@@ -1322,6 +1341,10 @@
       {
         "name": "addressedparameter",
         "alias": "addressedParameter"
+      },
+      {
+        "name": "addressedparametergroup",
+        "alias": "addressedParameterGroup"
       },
       {
         "name": "assessmentunitid",
@@ -1402,6 +1425,10 @@
       {
         "name": "pollutant",
         "alias": "pollutant"
+      },
+      {
+        "name": "pollutantgroup",
+        "alias": "pollutantGroup"
       },
       {
         "name": "region",

@@ -83,6 +83,12 @@
             "$ref": "#/components/parameters/completionDateHiParam"
           },
           {
+            "$ref": "#/components/parameters/fiscalYearEstablishedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedHiParam"
+          },
+          {
             "$ref": "#/components/parameters/includeInMeasureParam"
           },
           {
@@ -96,6 +102,9 @@
           },
           {
             "$ref": "#/components/parameters/parameterParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterGroupParam"
           },
           {
             "$ref": "#/components/parameters/regionParam"
@@ -181,6 +190,12 @@
             "$ref": "#/components/parameters/completionDateHiParam"
           },
           {
+            "$ref": "#/components/parameters/fiscalYearEstablishedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedHiParam"
+          },
+          {
             "$ref": "#/components/parameters/includeInMeasureParam"
           },
           {
@@ -194,6 +209,9 @@
           },
           {
             "$ref": "#/components/parameters/parameterParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterGroupParam"
           },
           {
             "$ref": "#/components/parameters/regionParam"
@@ -1496,6 +1514,9 @@
             "$ref": "#/components/parameters/actionNameParam"
           },
           {
+            "$ref": "#/components/parameters/addressedParameterGroupParam"
+          },
+          {
             "$ref": "#/components/parameters/addressedParameterParam"
           },
           {
@@ -1539,6 +1560,9 @@
           },
           {
             "$ref": "#/components/parameters/otherIdentifierParam"
+          },
+          {
+            "$ref": "#/components/parameters/pollutantGroupParam"
           },
           {
             "$ref": "#/components/parameters/pollutantParam"
@@ -1621,6 +1645,9 @@
             "$ref": "#/components/parameters/actionNameParam"
           },
           {
+            "$ref": "#/components/parameters/addressedParameterGroupParam"
+          },
+          {
             "$ref": "#/components/parameters/addressedParameterParam"
           },
           {
@@ -1664,6 +1691,9 @@
           },
           {
             "$ref": "#/components/parameters/otherIdentifierParam"
+          },
+          {
+            "$ref": "#/components/parameters/pollutantGroupParam"
           },
           {
             "$ref": "#/components/parameters/pollutantParam"
@@ -1799,6 +1829,12 @@
             "type": "string",
             "format": "date"
           },
+          "fiscalYearEstablishedLo": {
+            "type": "integer"
+          },
+          "fiscalYearEstablishedHi": {
+            "type": "integer"
+          },
           "includeInMeasure": {
             "type": "array",
             "items": {
@@ -1830,6 +1866,12 @@
             }
           },
           "parameter": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterGroup": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1888,6 +1930,9 @@
                   "type": "string",
                   "format": "date"
                 },
+                "fiscalYearEstablished": {
+                  "type": "string"
+                },
                 "includeInMeasure": {
                   "type": "string"
                 },
@@ -1910,6 +1955,9 @@
                   "type": "string"
                 },
                 "parameter": {
+                  "type": "string"
+                },
+                "parameterGroup": {
                   "type": "string"
                 },
                 "region": {
@@ -2132,7 +2180,7 @@
           "parameterIrCategory": {
             "type": "array",
             "items": {
-              "type": "integer"
+              "type": "string"
             }
           },
           "parameterName": {
@@ -2144,7 +2192,7 @@
           "parameterStateIrCategory": {
             "type": "array",
             "items": {
-              "type": "integer"
+              "type": "string"
             }
           },
           "parameterStatus": {
@@ -2214,7 +2262,7 @@
           "useIrCategory": {
             "type": "array",
             "items": {
-              "type": "integer"
+              "type": "string"
             }
           },
           "useName": {
@@ -2226,7 +2274,7 @@
           "useStateIrCategory": {
             "type": "array",
             "items": {
-              "type": "integer"
+              "type": "string"
             }
           },
           "useSupport": {
@@ -2363,13 +2411,13 @@
                   "type": "string"
                 },
                 "parameterIrCategory": {
-                  "type": "integer"
+                  "type": "string"
                 },
                 "parameterName": {
                   "type": "string"
                 },
                 "parameterStateIrCategory": {
-                  "type": "integer"
+                  "type": "string"
                 },
                 "parameterStatus": {
                   "type": "string"
@@ -2408,13 +2456,13 @@
                   "type": "string"
                 },
                 "useIrCategory": {
-                  "type": "integer"
+                  "type": "string"
                 },
                 "useName": {
                   "type": "string"
                 },
                 "useStateIrCategory": {
-                  "type": "integer"
+                  "type": "string"
                 },
                 "useSupport": {
                   "type": "string"
@@ -3144,6 +3192,12 @@
               "type": "string"
             }
           },
+          "addressedParameterGroup": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "assessmentUnitId": {
             "type": "array",
             "items": {
@@ -3229,6 +3283,12 @@
               "type": "string"
             }
           },
+          "pollutantGroup": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "region": {
             "type": "array",
             "items": {
@@ -3289,6 +3349,9 @@
                 "addressedParameter": {
                   "type": "string"
                 },
+                "addressedParameterGroup": {
+                  "type": "string"
+                },
                 "assessmentUnitId": {
                   "type": "string"
                 },
@@ -3340,6 +3403,9 @@
                   "type": "string"
                 },
                 "pollutant": {
+                  "type": "string"
+                },
+                "pollutantGroup": {
                   "type": "string"
                 },
                 "region": {
@@ -3418,6 +3484,18 @@
         "in": "query",
         "explode": true,
         "example": ["Implementation Completed"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "addressedParameterGroupParam": {
+        "name": "addressedParameterGroup",
+        "in": "query",
+        "explode": true,
+        "example": ["AMMONIA"],
         "schema": {
           "type": "array",
           "items": {
@@ -4087,11 +4165,11 @@
         "name": "parameterIrCategory",
         "in": "query",
         "explode": true,
-        "example": [23],
+        "example": ["4A"],
         "schema": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "string"
           }
         }
       },
@@ -4123,11 +4201,11 @@
         "name": "parameterStateIrCategory",
         "in": "query",
         "explode": true,
-        "example": [23],
+        "example": ["5"],
         "schema": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "string"
           }
         }
       },
@@ -4136,6 +4214,18 @@
         "in": "query",
         "explode": true,
         "example": ["Observed effect"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "pollutantGroupParam": {
+        "name": "pollutantGroup",
+        "in": "query",
+        "explode": true,
+        "example": ["AMMONIA"],
         "schema": {
           "type": "array",
           "items": {
@@ -4335,11 +4425,11 @@
         "name": "useIrCategory",
         "in": "query",
         "explode": true,
-        "example": [23],
+        "example": ["4A"],
         "schema": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "string"
           }
         }
       },
@@ -4359,11 +4449,11 @@
         "name": "useStateIrCategory",
         "in": "query",
         "explode": true,
-        "example": [23],
+        "example": ["5"],
         "schema": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "string"
           }
         }
       },

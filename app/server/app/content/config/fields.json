@@ -20,6 +20,12 @@
     "addressedParameter": {
       "key": "addressedParameter",
       "label": "Addressed Parameter",
+      "type": "multiselect",
+      "contextFields": ["addressedParameterGroup"]
+    },
+    "addressedParameterGroup": {
+      "key": "addressedParameterGroup",
+      "label": "Addressed Parameter Group",
       "type": "multiselect"
     },
     "alternateListingIdentifier": {
@@ -319,7 +325,8 @@
     "parameter": {
       "key": "parameter",
       "label": "Parameter",
-      "type": "multiselect"
+      "type": "multiselect",
+      "contextFields": ["parameterGroup"]
     },
     "parameterAttainment": {
       "key": "parameterAttainment",
@@ -355,6 +362,12 @@
     "pollutant": {
       "key": "pollutant",
       "label": "Pollutant",
+      "type": "multiselect",
+      "contextFields": ["pollutantGroup"]
+    },
+    "pollutantGroup": {
+      "key": "pollutantGroup",
+      "label": "Pollutant Group",
       "type": "multiselect"
     },
     "pollutantIndicator": {
@@ -503,7 +516,7 @@
           "waterType"
         ]
       },
-      { "key": "parameter", "fields": ["parameter"] },
+      { "key": "parameter", "fields": ["parameterGroup", "parameter"] },
       {
         "key": "action",
         "fields": [
@@ -516,7 +529,14 @@
           "completionDateHi"
         ]
       },
-      { "key": "actionsAssessmentUnit", "fields": ["assessmentUnitId"] }
+      { "key": "actionsAssessmentUnit", "fields": ["assessmentUnitId"] },
+      {
+        "key": "timeFrame",
+        "fields": [
+          "fiscalYearEstablishedLo",
+          "fiscalYearEstablishedHi"
+        ]
+      }
     ],
     "assessments": [
       {
@@ -686,7 +706,7 @@
       },
       {
         "key": "pollutantParameter",
-        "fields": ["pollutant", "addressedParameter", "sourceType"]
+        "fields": ["pollutantGroup", "pollutant", "addressedParameterGroup", "addressedParameter", "sourceType"]
       },
       { "key": "permitId", "fields": ["npdesIdentifier", "otherIdentifier"] },
       {
