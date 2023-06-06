@@ -2,11 +2,11 @@ import axios from 'axios';
 import crypto from 'crypto';
 import https from 'https';
 import pg from 'pg';
+import pgPromise from 'pg-promise';
 import { setTimeout } from 'timers/promises';
 // utils
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
-import * as profiles from './profiles/index.js';
 import {
   deleteDirectory,
   readS3File,
@@ -15,6 +15,7 @@ import {
 } from './s3.js';
 
 const { Client, Pool } = pg;
+const pgp = pgPromise({ capSQL: true });
 
 const environment = getEnvironment();
 
@@ -572,7 +573,7 @@ export async function runLoad(pool, s3Config, s3Julian) {
     await loadUtilityTables(pool, s3Config, schemaName);
 
     // Add tables to schema and import new data
-    const loadTasks = Object.values(profiles).map((profile) => {
+    const loadTasks = Object.values(s3Config.tableConfig).map((profile) => {
       return loadProfile(profile, pool, schemaName, s3Config, s3Julian);
     });
     await Promise.all(loadTasks);
@@ -874,16 +875,60 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
   }
 }
 
+// Extracts data from ordspub services
+async function extract(profileName, s3Config, next = 0, retryCount = 0) {
+  const chunkSize = s3Config.config.chunkSize;
+
+  const url =
+    `${s3Config.services.materializedViews}/${profileName}` +
+    `?p_limit=${chunkSize}&p_offset=${next}`;
+
+  const res = await axios.get(url, {
+    headers: { 'API-key': process.env.MV_API_KEY },
+    httpsAgent: new https.Agent({
+      // TODO - Remove this when ordspub supports OpenSSL 3.0
+      // This is needed to allow node 18 to talk with ordspub, which does
+      //   not support OpenSSL 3.0
+      secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
+    }),
+  });
+  if (res.status !== 200) {
+    log.info(`Non-200 response returned from ${profileName} service, retrying`);
+    if (retryCount < s3Config.config.retryLimit) {
+      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
+      return await extract(s3Config, next, retryCount + 1);
+    } else {
+      throw new Error('Retry count exceeded');
+    }
+  }
+
+  const data = res.data.records;
+  return { data: data.length ? data : null, next: next + chunkSize };
+}
+
+// Transforms data from ordspub services into postgres tables
+async function transform(tableName, columns, data) {
+  const colList = columns.map((col) => ({
+    name: col.name,
+  }));
+
+  const insertColumns = new pgp.helpers.ColumnSet(colList);
+
+  const rows = [];
+  data.forEach((datum) => {
+    rows.push(
+      colList.reduce(
+        (acc, cur) => ({ ...acc, [cur.name]: datum[cur.name] }),
+        {},
+      ),
+    );
+  });
+  return pgp.helpers.insert(rows, insertColumns, tableName);
+}
+
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  {
-    createQuery,
-    extract,
-    maxChunksOverride,
-    overrideWorkMemory,
-    tableName,
-    transform,
-  },
+  { createQuery, columns, maxChunksOverride, overrideWorkMemory, tableName },
   s3Config,
   s3Julian,
 ) {
@@ -904,17 +949,18 @@ function getProfileEtl(
     // Extract, transform, and load the new data
     try {
       if (environment.isLocal) {
-        let res = await extract(s3Config);
+        const profileName = `profile_${tableName}`;
+        let res = await extract(profileName, s3Config);
         let chunksProcessed = 0;
         const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
         while (
           res.data !== null &&
           (!maxChunks || chunksProcessed < maxChunks)
         ) {
-          const query = await transform(res.data, chunksProcessed === 0);
+          const query = await transform(tableName, columns, res.data);
           await client.query(query);
           log.info(`Next record offset for table ${tableName}: ${res.next}`);
-          res = await extract(s3Config, res.next);
+          res = await extract(profileName, s3Config, res.next);
           chunksProcessed += 1;
         }
       } else {
