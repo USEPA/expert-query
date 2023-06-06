@@ -20,7 +20,8 @@
     "addressedParameter": {
       "key": "addressedParameter",
       "label": "Addressed Parameter",
-      "type": "multiselect"
+      "type": "multiselect",
+      "contextFields": ["addressedParameterGroup"]
     },
     "addressedParameterGroup": {
       "key": "addressedParameterGroup",
@@ -324,7 +325,8 @@
     "parameter": {
       "key": "parameter",
       "label": "Parameter",
-      "type": "multiselect"
+      "type": "multiselect",
+      "contextFields": ["parameterGroup"]
     },
     "parameterAttainment": {
       "key": "parameterAttainment",
@@ -360,7 +362,8 @@
     "pollutant": {
       "key": "pollutant",
       "label": "Pollutant",
-      "type": "multiselect"
+      "type": "multiselect",
+      "contextFields": ["pollutantGroup"]
     },
     "pollutantGroup": {
       "key": "pollutantGroup",

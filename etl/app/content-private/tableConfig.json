@@ -40,9 +40,12 @@
         "type": "timestamptz",
         "indexOrder": "desc"
       },
-      { 
+      {
         "name": "fiscalyearestablished",
-        "alias": "fiscalYearEstablished"
+        "alias": "fiscalYearEstablished",
+        "lowParam": "fiscalYearEstablishedLo",
+        "highParam": "fiscalYearEstablishedHi",
+        "indexOrder": "desc"
       },
       {
         "name": "includeinmeasure",
