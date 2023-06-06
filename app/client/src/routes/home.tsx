@@ -171,7 +171,7 @@ function HomeContent({ content }: { content: Content }) {
             }}
             instanceId="instance-select-data-profile"
             controlShouldRenderValue={!profileInputActive}
-            aria-label="Select a data profile"
+            aria-labelledby="data-profile"
             formatOptionLabel={formatProfileOptionLabel}
             onChange={handleProfileChange}
             onFocus={() => setProfileInputActive(true)}
@@ -190,6 +190,10 @@ function HomeContent({ content }: { content: Content }) {
               menuList: (baseStyles) => ({
                 ...baseStyles,
                 maxHeight: '75vh',
+              }),
+              placeholder: (baseStyles) => ({
+                ...baseStyles,
+                color: '#71767a',
               }),
             }}
             value={profileOption}
@@ -750,7 +754,7 @@ function RangeFilter({
       </span>
       <div className="margin-top-1 usa-hint">from:</div>
       <input
-        className="usa-input"
+        className="border border-gray-30 radius-md usa-input"
         id={`input-${lowKey}`}
         min={type === 'year' ? 1900 : undefined}
         max={type === 'year' ? 2100 : undefined}
@@ -763,7 +767,7 @@ function RangeFilter({
       <div className="margin-top-1 usa-hint">to:</div>
       <input
         aria-labelledby={`input-${domain}-label`}
-        className="usa-input"
+        className="border border-gray-30 radius-md usa-input"
         id={`input-${highKey}`}
         min={type === 'year' ? 1900 : undefined}
         max={type === 'year' ? 2100 : undefined}
@@ -932,6 +936,10 @@ function SelectFilter({
         menuPortal: (base) => ({
           ...base,
           zIndex: 9999,
+        }),
+        placeholder: (base) => ({
+          ...base,
+          color: '#71767a',
         }),
       }}
       value={filterValue}
