@@ -82,6 +82,8 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
           <tr>
             <th scope="col" rowSpan={2}>
               Download link
+              <br />
+              <i className="text-normal font-body-2xs">All downloads are zipped (ZIP) CSV files</i>
             </th>
             <th scope="col" rowSpan={2}>
               Time last refreshed
@@ -103,7 +105,7 @@ function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([profile, fileInfo]) => (
               <tr key={profile}>
-                <th scope="row" data-label="Download link">
+                <th scope="row" data-label="Download link (CSV ZIP)">
                   <a href={fileInfo.url}>
                     {content.data.profileConfig[profile].label} Profile
                     <Exit
