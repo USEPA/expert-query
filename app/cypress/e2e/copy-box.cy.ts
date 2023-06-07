@@ -75,7 +75,7 @@ describe('CopyBox', () => {
         .focus()
         .realClick();
       const columnsValue =
-        'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
+        'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameterGroup&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=fiscalYearEstablished&columns=locationDescription&columns=waterSize&columns=waterSizeUnits';
       cy.clipboardValue(
         `${origin}/api/attains/actions?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
       );
@@ -89,11 +89,11 @@ describe('CopyBox', () => {
       grantPermissions();
       cy.wait(1000);
       cy.findAllByRole('button', { name: 'Copy content' })
-        .last()
+        .first()
         .focus()
         .realClick();
       const columnsValueCurl =
-        '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","parameter","actionType","actionId","actionName","actionAgency","inIndianCountry","includeInMeasure","completionDate","assessmentUnitId","assessmentUnitName","locationDescription","waterSize","waterSizeUnits"]';
+        '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","parameterGroup","parameter","actionType","actionId","actionName","actionAgency","inIndianCountry","includeInMeasure","completionDate","assessmentUnitId","assessmentUnitName","fiscalYearEstablished","locationDescription","waterSize","waterSizeUnits"]';
       cy.clipboardValue(
         `curl -X POST --json ${JSON.stringify(
           `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
