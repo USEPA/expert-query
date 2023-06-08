@@ -775,7 +775,7 @@ async function checkDatabaseHealth(req, res) {
     const output = {
       status,
       zLastSuccess: {
-        completed: activeSchemaResults.end_time.toLocaleString(),
+        completed: activeSchemaResults.end_time?.toLocaleString(),
         duration: activeSchemaResults.duration,
         s3Uuid: activeSchemaResults.s3_julian,
         schema: activeSchemaResults.schema_name,
@@ -785,7 +785,7 @@ async function checkDatabaseHealth(req, res) {
     // if ids of schemaResults and activeSchemaResults don't match then add zFailed
     if (schemaResults.id !== activeSchemaResults.id) {
       output.zFailed = {
-        completed: schemaResults.end_time.toLocaleString(),
+        completed: schemaResults.end_time?.toLocaleString(),
         duration: schemaResults.duration,
         s3Uuid: schemaResults.s3_julian,
         schema: schemaResults.schema_name,
