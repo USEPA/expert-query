@@ -2,11 +2,13 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Assessment Units with Monitoring Locations');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
 
-  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=useClassName&columns=monitoringLocationId&columns=monitoringLocationOrgId&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=monitoringLocationDataLink&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
-  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"useClassName\",\"monitoringLocationId\",\"monitoringLocationOrgId\",\"assessmentUnitId\",\"assessmentUnitName\",\"assessmentUnitStatus\",\"reportingCycle\",\"cycleId\",\"locationDescription\",\"monitoringLocationDataLink\",\"sizeSource\",\"sourceScale\",\"waterSize\",\"waterSizeUnits\"]';
+  const columnsValue =
+    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=useClassName&columns=monitoringLocationId&columns=monitoringLocationOrgId&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=monitoringLocationDataLink&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
+  const columnsValueCurl =
+    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","useClassName","monitoringLocationId","monitoringLocationOrgId","assessmentUnitId","assessmentUnitName","assessmentUnitStatus","reportingCycle","cycleId","locationDescription","monitoringLocationDataLink","sizeSource","sourceScale","waterSize","waterSizeUnits"]';
 
   const location = window.location;
   const origin =
@@ -17,7 +19,7 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
   it('Verify copy box text flavor 1', () => {
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations#assessmentUnitStatus=A`,
+      `${origin}/attains/assessmentUnitsMonitoringLocations?assessmentUnitStatus=A`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -41,7 +43,7 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations#${queryValue}`,
+      `${origin}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -74,7 +76,7 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations#${queryValue}`,
+      `${origin}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -113,7 +115,7 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations#${queryValue}`,
+      `${origin}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -162,7 +164,7 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations#${queryValue}`,
+      `${origin}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',

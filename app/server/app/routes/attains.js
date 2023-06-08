@@ -79,9 +79,7 @@ function getColumnsFromAliases(columnAliases, profile) {
       .concat(profile.materializedViewColumns ?? [])
       .find((col) => col.alias === alias);
     if (!column) {
-      return res.status(404).json({
-        message: `The column ${alias} does not exist on the selected profile`,
-      });
+      throw new Error(alias);
     }
     columns.push(column);
   }
@@ -100,7 +98,14 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
 
   const columnAliases = ['organizationId', 'region', 'reportingCycle', 'state'];
 
-  const columns = getColumnsFromAliases(columnAliases, profile);
+  let columns;
+  try {
+    columns = getColumnsFromAliases(columnAliases, profile);
+  } catch (err) {
+    return res.status(404).json({
+      message: `The column ${err} does not exist on the selected profile`,
+    });
+  }
 
   // get columns for where clause
   const columnsForFilter = [];
@@ -573,7 +578,14 @@ function executeValuesQuery(req, res) {
     ...(Array.isArray(additionalColumns) ? additionalColumns : []),
   ];
 
-  const columns = getColumnsFromAliases(columnAliases, profile);
+  let columns;
+  try {
+    columns = getColumnsFromAliases(columnAliases, profile);
+  } catch (err) {
+    return res.status(404).json({
+      message: `The column ${err.message} does not exist on the selected profile`,
+    });
+  }
 
   queryColumnValues(profile, columns, params, req.activeSchema)
     .then((values) => res.status(200).json(values))
@@ -763,7 +775,7 @@ async function checkDatabaseHealth(req, res) {
     const output = {
       status,
       zLastSuccess: {
-        completed: activeSchemaResults.end_time.toLocaleString(),
+        completed: activeSchemaResults.end_time?.toLocaleString(),
         duration: activeSchemaResults.duration,
         s3Uuid: activeSchemaResults.s3_julian,
         schema: activeSchemaResults.schema_name,
@@ -773,7 +785,7 @@ async function checkDatabaseHealth(req, res) {
     // if ids of schemaResults and activeSchemaResults don't match then add zFailed
     if (schemaResults.id !== activeSchemaResults.id) {
       output.zFailed = {
-        completed: schemaResults.end_time.toLocaleString(),
+        completed: schemaResults.end_time?.toLocaleString(),
         duration: schemaResults.duration,
         s3Uuid: schemaResults.s3_julian,
         schema: schemaResults.schema_name,

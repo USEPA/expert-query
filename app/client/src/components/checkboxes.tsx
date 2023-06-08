@@ -1,6 +1,8 @@
+import { uniqueId } from 'lodash';
+import { useState } from 'react';
 // components
 import { Checkbox } from 'components/checkbox';
-import { InfoTooltip } from 'components/infoTooltip';
+import { InfoTooltip } from 'components/tooltip';
 // types
 import type { Option } from 'types';
 
@@ -9,20 +11,35 @@ import type { Option } from 'types';
 */
 
 export function Checkboxes({
+  className = '',
   label,
   onChange,
   options,
   selected = [],
-  styles = [],
   tile = false,
   tooltip,
 }: CheckboxesProps) {
+  const [id] = useState(uniqueId('checkboxes-'));
   return (
-    <fieldset className={`usa-fieldset ${styles.join(' ')}`}>
-      <legend className="display-flex flex-align-center font-sans-2xs line-height-sans-1 margin-top-0 text-bold text-uppercase usa-legend">
-        {label}{' '}
-        {tooltip && <InfoTooltip text={tooltip} styles={['margin-left-05']} />}
-      </legend>
+    <fieldset
+      aria-labelledby={`${id}-legend`}
+      className={`usa-fieldset ${className}`}
+    >
+      <span className="display-flex flex-align-center line-height-sans-1">
+        <legend
+          className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-legend"
+          id={`${id}-legend`}
+        >
+          {label}
+        </legend>
+        {tooltip && (
+          <InfoTooltip
+            description={`${label} tooltip`}
+            text={tooltip}
+            className="margin-left-05"
+          />
+        )}
+      </span>
       {options.map((option, i) => {
         return (
           <Checkbox
@@ -59,11 +76,11 @@ function isSelected(option: Option, selected: ReadonlyArray<Option>) {
 */
 
 type CheckboxesProps = {
+  className?: string;
   label: string;
   onChange: (selected: ReadonlyArray<Option>) => void;
   options: ReadonlyArray<Option>;
   selected?: ReadonlyArray<Option>;
-  styles?: string[];
   tile?: boolean;
   tooltip?: string | null;
 };

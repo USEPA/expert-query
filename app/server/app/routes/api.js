@@ -194,6 +194,7 @@ export default function (app, basePath) {
       'content/config/fields.json',
       'content/config/listOptions.json',
       'content/config/profiles.json',
+      'content/config/nationalDownloads.json',
     ];
 
     const filePromises = Promise.all(
@@ -213,6 +214,7 @@ export default function (app, basePath) {
           filterConfig: data[4],
           listOptions: data[5],
           profileConfig: data[6],
+          nationalDownloads: data[7],
         };
       });
 

@@ -2,11 +2,13 @@ describe('Data Profile Assessments', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Assessments');
-    cy.findByRole('button', { name: 'Advanced API Queries' }).click();
+    cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
 
-  const columnsValue = 'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=reportingCycle&columns=cycleLastAssessed&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=overallStatus&columns=epaIrCategory&columns=stateIrCategory&columns=useGroup&columns=useName&columns=useClassName&columns=useSupport&columns=useIrCategory&columns=useStateIrCategory&columns=monitoringStartDate&columns=monitoringEndDate&columns=assessmentDate&columns=assessmentTypes&columns=assessmentMethods&columns=assessmentBasis&columns=parameterGroup&columns=parameterName&columns=parameterStatus&columns=parameterAttainment&columns=parameterIrCategory&columns=parameterStateIrCategory&columns=delisted&columns=delistedReason&columns=pollutantIndicator&columns=cycleFirstListed&columns=alternateListingIdentifier&columns=vision303dPriority&columns=cwa303dPriorityRanking&columns=cycleScheduledForTmdl&columns=cycleExpectedToAttain&columns=consentDecreeCycle&columns=cycleId&columns=seasonStartDate&columns=seasonEndDate&columns=associatedActionId&columns=associatedActionName&columns=associatedActionType&columns=associatedActionStatus&columns=associatedActionAgency&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
-  const columnsValueCurl = '\"columns\":[\"objectId\",\"region\",\"state\",\"organizationType\",\"organizationId\",\"organizationName\",\"waterType\",\"reportingCycle\",\"cycleLastAssessed\",\"assessmentUnitId\",\"assessmentUnitName\",\"assessmentUnitStatus\",\"overallStatus\",\"epaIrCategory\",\"stateIrCategory\",\"useGroup\",\"useName\",\"useClassName\",\"useSupport\",\"useIrCategory\",\"useStateIrCategory\",\"monitoringStartDate\",\"monitoringEndDate\",\"assessmentDate\",\"assessmentTypes\",\"assessmentMethods\",\"assessmentBasis\",\"parameterGroup\",\"parameterName\",\"parameterStatus\",\"parameterAttainment\",\"parameterIrCategory\",\"parameterStateIrCategory\",\"delisted\",\"delistedReason\",\"pollutantIndicator\",\"cycleFirstListed\",\"alternateListingIdentifier\",\"vision303dPriority\",\"cwa303dPriorityRanking\",\"cycleScheduledForTmdl\",\"cycleExpectedToAttain\",\"consentDecreeCycle\",\"cycleId\",\"seasonStartDate\",\"seasonEndDate\",\"associatedActionId\",\"associatedActionName\",\"associatedActionType\",\"associatedActionStatus\",\"associatedActionAgency\",\"locationDescription\",\"sizeSource\",\"sourceScale\",\"waterSize\",\"waterSizeUnits\"]';
+  const columnsValue =
+    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=reportingCycle&columns=cycleLastAssessed&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=overallStatus&columns=epaIrCategory&columns=stateIrCategory&columns=useGroup&columns=useName&columns=useClassName&columns=useSupport&columns=useIrCategory&columns=useStateIrCategory&columns=monitoringStartDate&columns=monitoringEndDate&columns=assessmentDate&columns=assessmentTypes&columns=assessmentMethods&columns=assessmentBasis&columns=parameterGroup&columns=parameterName&columns=parameterStatus&columns=parameterAttainment&columns=parameterIrCategory&columns=parameterStateIrCategory&columns=delisted&columns=delistedReason&columns=pollutantIndicator&columns=cycleFirstListed&columns=alternateListingIdentifier&columns=vision303dPriority&columns=cwa303dPriorityRanking&columns=cycleScheduledForTmdl&columns=cycleExpectedToAttain&columns=consentDecreeCycle&columns=cycleId&columns=seasonStartDate&columns=seasonEndDate&columns=associatedActionId&columns=associatedActionName&columns=associatedActionType&columns=associatedActionStatus&columns=associatedActionAgency&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
+  const columnsValueCurl =
+    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","reportingCycle","cycleLastAssessed","assessmentUnitId","assessmentUnitName","assessmentUnitStatus","overallStatus","epaIrCategory","stateIrCategory","useGroup","useName","useClassName","useSupport","useIrCategory","useStateIrCategory","monitoringStartDate","monitoringEndDate","assessmentDate","assessmentTypes","assessmentMethods","assessmentBasis","parameterGroup","parameterName","parameterStatus","parameterAttainment","parameterIrCategory","parameterStateIrCategory","delisted","delistedReason","pollutantIndicator","cycleFirstListed","alternateListingIdentifier","vision303dPriority","cwa303dPriorityRanking","cycleScheduledForTmdl","cycleExpectedToAttain","consentDecreeCycle","cycleId","seasonStartDate","seasonEndDate","associatedActionId","associatedActionName","associatedActionType","associatedActionStatus","associatedActionAgency","locationDescription","sizeSource","sourceScale","waterSize","waterSizeUnits"]';
 
   const location = window.location;
   const origin =
@@ -17,7 +19,7 @@ describe('Data Profile Assessments', () => {
   it('Verify copy box Current Query text flavor 1', () => {
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessments#assessmentUnitStatus=A`,
+      `${origin}/attains/assessments?assessmentUnitStatus=A`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -43,7 +45,7 @@ describe('Data Profile Assessments', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessments#${queryValue}`,
+      `${origin}/attains/assessments?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -66,19 +68,17 @@ describe('Data Profile Assessments', () => {
     cy.selectOption('input-associatedActionId', 'indian fork');
 
     //Associated Action Status
-    cy.findAllByRole('checkbox', { name: 'Active' }).each(($elem, index) => {
-      index === 1 ? cy.wrap($elem).click({ force: true }) : '';
-    });
+    cy.selectOption('input-associatedActionStatus', 'Draft');
 
     //CWA 303d Priority Ranking
     cy.findByRole('checkbox', { name: 'Low' }).click({ force: true });
 
     const queryValue =
-      'assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023&assessmentUnitStatus=A&associatedActionId=51180&associatedActionStatus=A&cwa303dPriorityRanking=Low';
+      'assessmentDateLo=12-31-1999&assessmentDateHi=01-16-2023&assessmentUnitStatus=A&associatedActionId=51180&associatedActionStatus=Draft&cwa303dPriorityRanking=Low';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessments#${queryValue}`,
+      `${origin}/attains/assessments?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -87,7 +87,7 @@ describe('Data Profile Assessments', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"assessmentDateLo":"12-31-1999","assessmentDateHi":"01-16-2023","assessmentUnitStatus":["A"],"associatedActionId":["51180"],"associatedActionStatus":["A"],"cwa303dPriorityRanking":["Low"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+        `{"filters":{"assessmentDateLo":"12-31-1999","assessmentDateHi":"01-16-2023","assessmentUnitStatus":["A"],"associatedActionId":["51180"],"associatedActionStatus":["Draft"],"cwa303dPriorityRanking":["Low"]},"options":{"format":"csv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
@@ -104,17 +104,17 @@ describe('Data Profile Assessments', () => {
     cy.selectOption('input-stateIrCategory', '3x');
 
     //Use State IR Category
-    cy.selectOption('input-useStateIrCategory', '61');
+    cy.selectOption('input-useStateIrCategory', '1d');
 
     //File Format
     cy.findByText('Microsoft Excel (XLSX)').click();
 
     const queryValue =
-      'assessmentUnitStatus=A&cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022&state=IN&stateIrCategory=3x&useStateIrCategory=61';
+      'assessmentUnitStatus=A&cycleExpectedToAttainLo=2008&cycleExpectedToAttainHi=2022&state=IN&stateIrCategory=3x&useStateIrCategory=1d';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessments#${queryValue}`,
+      `${origin}/attains/assessments?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
@@ -123,7 +123,7 @@ describe('Data Profile Assessments', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"assessmentUnitStatus":["A"],"cycleExpectedToAttainLo":"2008","cycleExpectedToAttainHi":"2022","state":["IN"],"stateIrCategory":["3x"],"useStateIrCategory":["61"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
+        `{"filters":{"assessmentUnitStatus":["A"],"cycleExpectedToAttainLo":"2008","cycleExpectedToAttainHi":"2022","state":["IN"],"stateIrCategory":["3x"],"useStateIrCategory":["1d"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
@@ -164,9 +164,7 @@ describe('Data Profile Assessments', () => {
     cy.selectOption('input-associatedActionId', 'chartiers creek');
 
     //Associated Action Status
-    cy.findAllByRole('checkbox', { name: 'Active' }).each(($elem, index) => {
-      index === 1 ? cy.wrap($elem).click({ force: true }) : '';
-    });
+    cy.selectOption('input-associatedActionStatus', 'Draft');
 
     //Associated Action Type
     cy.selectOption('input-associatedActionType', 'Implementation Completed');
@@ -222,10 +220,10 @@ describe('Data Profile Assessments', () => {
     cy.selectOption('input-parameterGroup', 'other');
 
     //Parameter IR Category
-    cy.selectOption('input-parameterIrCategory', '19');
+    cy.selectOption('input-parameterIrCategory', '2');
 
     // //Parameter State IR Category
-    cy.selectOption('input-parameterStateIrCategory', '29');
+    cy.selectOption('input-parameterStateIrCategory', '1d');
 
     //Parameter Status
     cy.findByRole('checkbox', { name: 'Meeting Criteria' }).click({
@@ -238,7 +236,7 @@ describe('Data Profile Assessments', () => {
     });
 
     //Use Group
-    cy.selectOption('input-useGroup', 'AGRICULTURAL');
+    cy.selectOption('input-useGroup', 'CULTURAL_USE');
 
     //Organization ID
     cy.selectOption('input-organizationId', '21pa');
@@ -290,19 +288,21 @@ describe('Data Profile Assessments', () => {
     cy.findByText('Tab-separated (TSV)').click();
 
     const queryValue =
-      'alternateListingIdentifier=72992&assessmentBasis=Monitored%20Data&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&assessmentMethods=Fish%20surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A01R_PIA01A00&assessmentUnitId=AK-20401-004_00&assessmentUnitStatus=A&assessmentUnitStatus=H&associatedActionAgency=EPA&associatedActionId=1024&associatedActionId=257&associatedActionStatus=A&associatedActionType=Implementation%20Completed&cwa303dPriorityRanking=Medium&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&delisted=Y&delistedReason=Not%20specified&epaIrCategory=4A&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&organizationId=21PA&organizationId=21IOWA&overallStatus=Not%20Assessed&parameterAttainment=ALGAE&parameterGroup=METALS%20(OTHER%20THAN%20MERCURY)&parameterIrCategory=19&parameterName=RADIUM&parameterStateIrCategory=29&parameterStatus=Meeting%20Criteria&pollutantIndicator=N&region=08&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=AGRICULTURAL&useName=Scenic%20Value&useStateIrCategory=61&vision303dPriority=N&waterType=WASH';
+      'alternateListingIdentifier=72992&assessmentBasis=Monitored%20Data&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&assessmentMethods=Fish%20surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A01R_PIA01A00&assessmentUnitId=AK-20401-004_00&assessmentUnitStatus=A&assessmentUnitStatus=H&associatedActionAgency=EPA&associatedActionId=1024&associatedActionId=257&associatedActionStatus=Draft&associatedActionType=Implementation%20Completed&cwa303dPriorityRanking=Medium&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&delisted=Y&delistedReason=Not%20specified&epaIrCategory=4A&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&organizationId=21PA&organizationId=21IOWA&overallStatus=Not%20Assessed&parameterAttainment=ALGAE&parameterGroup=METALS%20(OTHER%20THAN%20MERCURY)&parameterIrCategory=2&parameterName=RADIUM&parameterStateIrCategory=1d&parameterStatus=Meeting%20Criteria&pollutantIndicator=N&region=08&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=CULTURAL_USE&useName=Scenic%20Value&useStateIrCategory=1&vision303dPriority=N&waterType=WASH';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessments#${queryValue}`,
+      `${origin}/attains/assessments?${queryValue}`,
     );
 
-    cy.findByText('The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below).');
+    cy.findByText(
+      'The GET request for this query exceeds the maximum URL character length. Please use a POST request instead (see the cURL query below).',
+    );
 
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A01R_PIA01A00","AK-20401-004_00"],"assessmentUnitStatus":["A","H"],"associatedActionAgency":["EPA"],"associatedActionId":["1024","257"],"associatedActionStatus":["A"],"associatedActionType":["Implementation Completed"],"cwa303dPriorityRanking":["Medium"],"cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","delisted":["Y"],"delistedReason":["Not specified"],"epaIrCategory":["4A"],"monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","organizationId":["21PA","21IOWA"],"overallStatus":["Not Assessed"],"parameterAttainment":["ALGAE"],"parameterGroup":["METALS (OTHER THAN MERCURY)"],"parameterIrCategory":["19"],"parameterName":["RADIUM"],"parameterStateIrCategory":["29"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["AGRICULTURAL"],"useName":["Scenic Value"],"useStateIrCategory":["61"],"vision303dPriority":["N"],"waterType":["WASH"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
+        `{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A01R_PIA01A00","AK-20401-004_00"],"assessmentUnitStatus":["A","H"],"associatedActionAgency":["EPA"],"associatedActionId":["1024","257"],"associatedActionStatus":["Draft"],"associatedActionType":["Implementation Completed"],"cwa303dPriorityRanking":["Medium"],"cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","delisted":["Y"],"delistedReason":["Not specified"],"epaIrCategory":["4A"],"monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","organizationId":["21PA","21IOWA"],"overallStatus":["Not Assessed"],"parameterAttainment":["ALGAE"],"parameterGroup":["METALS (OTHER THAN MERCURY)"],"parameterIrCategory":["2"],"parameterName":["RADIUM"],"parameterStateIrCategory":["1d"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["CULTURAL_USE"],"useName":["Scenic Value"],"useStateIrCategory":["1"],"vision303dPriority":["N"],"waterType":["WASH"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });

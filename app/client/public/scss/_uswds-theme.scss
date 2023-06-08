@@ -28,5 +28,13 @@ in the form $setting: value,
     'desktop': true,
     'desktop-lg': false,
     'widescreen': false,
+  ),
+  $z-index-settings: (
+    'output': true,
+    'responsive': false,
+    'active': false,
+    'focus': true,
+    'hover': true,
+    'visited': false,
   )
 );

@@ -2,11 +2,11 @@ import axios from 'axios';
 import crypto from 'crypto';
 import https from 'https';
 import pg from 'pg';
+import pgPromise from 'pg-promise';
 import { setTimeout } from 'timers/promises';
 // utils
 import { getEnvironment } from './utilities/environment.js';
 import { log } from './utilities/logger.js';
-import * as profiles from './profiles/index.js';
 import {
   deleteDirectory,
   readS3File,
@@ -15,6 +15,7 @@ import {
 } from './s3.js';
 
 const { Client, Pool } = pg;
+const pgp = pgPromise({ capSQL: true });
 
 const environment = getEnvironment();
 
@@ -132,7 +133,9 @@ export async function checkLogTables() {
           schema_id INTEGER,
           end_time TIMESTAMP,
           load_error VARCHAR,
-          start_time TIMESTAMP NOT NULL
+          start_time TIMESTAMP,
+          s3_julian VARCHAR(20),
+          extract_error VARCHAR
         )`,
     );
     await client.query(
@@ -413,6 +416,31 @@ async function loadProfile(
   }
 }
 
+async function logEtlExtractError(pool, etlLogId, extractError) {
+  try {
+    await pool.query(
+      'UPDATE logging.etl_log SET extract_error = $1 WHERE id = $2',
+      [JSON.stringify(extractError), etlLogId],
+    );
+    log.info('ETL extract errors logged');
+  } catch (err) {
+    log.warn(`Failed to log ETL extract errors: ${err}`);
+  }
+}
+
+async function logEtlExtractStart(pool, s3Julian) {
+  try {
+    const result = await pool.query(
+      'INSERT INTO logging.etl_log (s3_julian) VALUES ($1) RETURNING id',
+      [s3Julian],
+    );
+    log.info('ETL extract start logged');
+    return result.rows[0].id;
+  } catch (err) {
+    log.warn(`Failed to log ETL extract start: ${err}`);
+  }
+}
+
 async function logEtlLoadError(pool, etlLogId, loadError) {
   try {
     await pool.query(
@@ -437,14 +465,13 @@ async function logEtlLoadEnd(pool, etlLogId) {
   }
 }
 
-async function logEtlLoadStart(pool) {
+async function logEtlLoadStart(pool, etlLogId) {
   try {
-    const result = await pool.query(
-      'INSERT INTO logging.etl_log (start_time)' +
-        ' VALUES (current_timestamp) RETURNING id',
+    await pool.query(
+      'UPDATE logging.etl_log SET start_time = current_timestamp WHERE id = $1',
+      [etlLogId],
     );
     log.info('ETL process start logged');
-    return result.rows[0].id;
   } catch (err) {
     log.warn(`Failed to log ETL process start: ${err}`);
   }
@@ -471,14 +498,14 @@ export async function runJob(s3Config) {
   log.info(`Are MVs ready: ${readyResult.ready} | Julian ${s3Julian}`);
 
   // exit early if we aren't ready to run etl
-  if (!environment.isLocal && !readyResult.ready) {
+  if (!s3Julian || (!environment.isLocal && !readyResult.ready)) {
     await endConnPool(pool);
     return;
   }
 
   await updateEtlStatus(pool, 'database', 'running');
   try {
-    await runLoad(pool, s3Config, s3Julian);
+    await runLoad(pool, s3Config, s3Julian, readyResult.logId);
     await trimSchema(pool, s3Config);
     if (!environment.isLocal) await trimNationalDownloads(pool);
     await updateEtlStatus(pool, 'database', 'success');
@@ -557,10 +584,10 @@ async function loadUtilityTables(pool, s3Config, schemaName) {
   log.info('Utility tables finished updating');
 }
 
-export async function runLoad(pool, s3Config, s3Julian) {
+export async function runLoad(pool, s3Config, s3Julian, logId) {
   log.info('Running ETL process!');
 
-  const logId = await logEtlLoadStart(pool);
+  await logEtlLoadStart(pool, logId);
 
   const now = new Date();
   const schemaName = `schema_${now.valueOf()}`;
@@ -572,7 +599,7 @@ export async function runLoad(pool, s3Config, s3Julian) {
     await loadUtilityTables(pool, s3Config, schemaName);
 
     // Add tables to schema and import new data
-    const loadTasks = Object.values(profiles).map((profile) => {
+    const loadTasks = Object.values(s3Config.tableConfig).map((profile) => {
       return loadProfile(profile, pool, schemaName, s3Config, s3Julian);
     });
     await Promise.all(loadTasks);
@@ -874,16 +901,60 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
   }
 }
 
+// Extracts data from ordspub services
+async function extract(profileName, s3Config, next = 0, retryCount = 0) {
+  const chunkSize = s3Config.config.chunkSize;
+
+  const url =
+    `${s3Config.services.materializedViews}/${profileName}` +
+    `?p_limit=${chunkSize}&p_offset=${next}`;
+
+  const res = await axios.get(url, {
+    headers: { 'API-key': process.env.MV_API_KEY },
+    httpsAgent: new https.Agent({
+      // TODO - Remove this when ordspub supports OpenSSL 3.0
+      // This is needed to allow node 18 to talk with ordspub, which does
+      //   not support OpenSSL 3.0
+      secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
+    }),
+  });
+  if (res.status !== 200) {
+    log.info(`Non-200 response returned from ${profileName} service, retrying`);
+    if (retryCount < s3Config.config.retryLimit) {
+      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
+      return await extract(s3Config, next, retryCount + 1);
+    } else {
+      throw new Error('Retry count exceeded');
+    }
+  }
+
+  const data = res.data.records;
+  return { data: data.length ? data : null, next: next + chunkSize };
+}
+
+// Transforms data from ordspub services into postgres tables
+async function transform(tableName, columns, data) {
+  const colList = columns.map((col) => ({
+    name: col.name,
+  }));
+
+  const insertColumns = new pgp.helpers.ColumnSet(colList);
+
+  const rows = [];
+  data.forEach((datum) => {
+    rows.push(
+      colList.reduce(
+        (acc, cur) => ({ ...acc, [cur.name]: datum[cur.name] }),
+        {},
+      ),
+    );
+  });
+  return pgp.helpers.insert(rows, insertColumns, tableName);
+}
+
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  {
-    createQuery,
-    extract,
-    maxChunksOverride,
-    overrideWorkMemory,
-    tableName,
-    transform,
-  },
+  { createQuery, columns, maxChunksOverride, overrideWorkMemory, tableName },
   s3Config,
   s3Julian,
 ) {
@@ -904,17 +975,18 @@ function getProfileEtl(
     // Extract, transform, and load the new data
     try {
       if (environment.isLocal) {
-        let res = await extract(s3Config);
+        const profileName = `profile_${tableName}`;
+        let res = await extract(profileName, s3Config);
         let chunksProcessed = 0;
         const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
         while (
           res.data !== null &&
           (!maxChunks || chunksProcessed < maxChunks)
         ) {
-          const query = await transform(res.data, chunksProcessed === 0);
+          const query = await transform(tableName, columns, res.data);
           await client.query(query);
           log.info(`Next record offset for table ${tableName}: ${res.next}`);
-          res = await extract(s3Config, res.next);
+          res = await extract(profileName, s3Config, res.next);
           chunksProcessed += 1;
         }
       } else {
@@ -974,7 +1046,19 @@ export async function isDataReady(pool) {
 
     const julian = latest.julian;
 
-    // see if this julian has already been loaded into the db
+    const etlLog = await pool.query(
+      'SELECT id FROM logging.etl_log WHERE s3_julian = $1',
+      [julian],
+    );
+
+    let etlLogId;
+    if (etlLog.rows.length > 0) {
+      etlLogId = etlLog.rows[0].id;
+    } else {
+      etlLogId = await logEtlExtractStart(pool, julian);
+    }
+
+    // check etl status to ensure it isn't already running
     const etlRunning = await pool.query(
       'SELECT database FROM logging.etl_status',
     );
@@ -982,10 +1066,10 @@ export async function isDataReady(pool) {
       etlRunning.rows.length > 0 &&
       etlRunning.rows[0].database === 'running'
     ) {
-      return { ready: false, julian };
+      return { ready: false, julian, logId: etlLogId };
     }
 
-    // check etl status to ensure it isn't already running
+    // see if this julian has already been loaded into the db
     const result = await pool.query(
       `
         SELECT active FROM logging.etl_schemas WHERE s3_julian = $1
@@ -994,7 +1078,8 @@ export async function isDataReady(pool) {
     );
 
     // already been loaded in or is being loaded in
-    if (result.rows.length > 0) return { ready: false, julian };
+    if (result.rows.length > 0)
+      return { ready: false, julian, logId: etlLogId };
 
     const ready = await readS3File({
       bucketInfo: {
@@ -1007,13 +1092,14 @@ export async function isDataReady(pool) {
     });
 
     if (ready.problems.length > 0) {
+      await logEtlExtractError(pool, etlLogId, ready.problems);
       ready.problems.forEach((problem) => {
         log.error(`Error Building MV Backups: ${problem}`);
       });
     }
 
-    if (ready.ready === 'go') return { ready: true, julian };
-    else return { ready: false, julian };
+    if (ready.ready === 'go') return { ready: true, julian, logId: etlLogId };
+    else return { ready: false, julian, logId: etlLogId };
   } catch (ex) {
     log.error(`Error checking if MVs are ready: ${ex}`);
   }
