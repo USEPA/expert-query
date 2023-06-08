@@ -89,7 +89,7 @@ describe('CopyBox', () => {
       grantPermissions();
       cy.wait(1000);
       cy.findAllByRole('button', { name: 'Copy content' })
-        .first()
+        .last()
         .focus()
         .realClick();
       const columnsValueCurl =
