@@ -38,7 +38,7 @@ describe('Home Page', () => {
 
   it('searching with a <script> tag displays no option', () => {
     const search = '<script>var j = 1;</script>';
-    cy.get(`[aria-label="Select a data profile"]`).type(search);
+    cy.get('#react-select-instance-select-data-profile-input').type(search);
     cy.get('#react-select-instance-select-data-profile-listbox')
       .children('div')
       .should('contain.text', 'No options');

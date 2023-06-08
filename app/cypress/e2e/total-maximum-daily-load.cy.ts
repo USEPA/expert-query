@@ -6,9 +6,9 @@ describe('Data Profile Total Maximum Daily Load', () => {
   });
 
   const columnsValue =
-    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=pollutant&columns=addressedParameter&columns=sourceType&columns=npdesIdentifier&columns=otherIdentifier&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=explicitMarginOfSafety&columns=implicitMarginOfSafety&columns=includeInMeasure&columns=completionDate&columns=tmdlDate&columns=fiscalYearEstablished&columns=assessmentUnitId&columns=assessmentUnitName&columns=loadAllocation&columns=loadAllocationUnits&columns=locationDescription&columns=waterSize&columns=waterSizeUnits&columns=wasteLoadAllocation';
+    'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=pollutantGroup&columns=pollutant&columns=addressedParameterGroup&columns=addressedParameter&columns=sourceType&columns=npdesIdentifier&columns=otherIdentifier&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=explicitMarginOfSafety&columns=implicitMarginOfSafety&columns=includeInMeasure&columns=completionDate&columns=tmdlDate&columns=fiscalYearEstablished&columns=assessmentUnitId&columns=assessmentUnitName&columns=loadAllocation&columns=loadAllocationUnits&columns=locationDescription&columns=waterSize&columns=waterSizeUnits&columns=wasteLoadAllocation';
   const columnsValueCurl =
-    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","pollutant","addressedParameter","sourceType","npdesIdentifier","otherIdentifier","actionId","actionName","actionAgency","inIndianCountry","explicitMarginOfSafety","implicitMarginOfSafety","includeInMeasure","completionDate","tmdlDate","fiscalYearEstablished","assessmentUnitId","assessmentUnitName","loadAllocation","loadAllocationUnits","locationDescription","waterSize","waterSizeUnits","wasteLoadAllocation"]';
+    '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","pollutantGroup","pollutant","addressedParameterGroup","addressedParameter","sourceType","npdesIdentifier","otherIdentifier","actionId","actionName","actionAgency","inIndianCountry","explicitMarginOfSafety","implicitMarginOfSafety","includeInMeasure","completionDate","tmdlDate","fiscalYearEstablished","assessmentUnitId","assessmentUnitName","loadAllocation","loadAllocationUnits","locationDescription","waterSize","waterSizeUnits","wasteLoadAllocation"]';
 
   const location = window.location;
   const origin =
@@ -67,7 +67,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.get('#input-completionDateHi').type('1992-12-18');
 
     //Explicit Margin of Safety
-    cy.selectOption('input-explicitMarginOfSafety', '10.3');
+    cy.selectOption('input-explicitMarginOfSafety', '10.3 acre');
 
     //Fiscal Year Established
     cy.get('#input-fiscalYearEstablishedLo').type('1984');
@@ -113,7 +113,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     //Action ID
     cy.selectOption('input-actionId', 'ia7001');
-    cy.selectOption('input-actionId', 'cedar creek');
+    cy.selectOption('input-actionId', 'cannonball river - from snake');
 
     //Completion Date
     cy.get('#input-completionDateLo').type('1987-11-02');
@@ -148,7 +148,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.findByText('Tab-separated (TSV)').click();
 
     const queryValue =
-      'actionAgency=EPA&actionId=IA7001&actionId=R7MO1344TMDL1&completionDateLo=11-02-1987&completionDateHi=12-16-1991&fiscalYearEstablishedLo=2014&fiscalYearEstablishedHi=2018&includeInMeasure=Y&organizationId=21SC60WQ&organizationId=OKDEQ&otherIdentifier=City%20of%20Belvue&sourceType=Nonpoint%20source&tmdlDateLo=08-05-1993&tmdlDateHi=03-09-1994';
+      'actionAgency=EPA&actionId=IA7001&actionId=11624&completionDateLo=11-02-1987&completionDateHi=12-16-1991&fiscalYearEstablishedLo=2014&fiscalYearEstablishedHi=2018&includeInMeasure=Y&organizationId=21SC60WQ&organizationId=OKDEQ&otherIdentifier=City%20of%20Belvue&sourceType=Nonpoint%20source&tmdlDateLo=08-05-1993&tmdlDateHi=03-09-1994';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -161,7 +161,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"actionAgency":["EPA"],"actionId":["IA7001","R7MO1344TMDL1"],"completionDateLo":"11-02-1987","completionDateHi":"12-16-1991","fiscalYearEstablishedLo":"2014","fiscalYearEstablishedHi":"2018","includeInMeasure":["Y"],"organizationId":["21SC60WQ","OKDEQ"],"otherIdentifier":["City of Belvue"],"sourceType":["Nonpoint source"],"tmdlDateLo":"08-05-1993","tmdlDateHi":"03-09-1994"},"options":{"format":"tsv"},${columnsValueCurl}}`,
+        `{"filters":{"actionAgency":["EPA"],"actionId":["IA7001","11624"],"completionDateLo":"11-02-1987","completionDateHi":"12-16-1991","fiscalYearEstablishedLo":"2014","fiscalYearEstablishedHi":"2018","includeInMeasure":["Y"],"organizationId":["21SC60WQ","OKDEQ"],"otherIdentifier":["City of Belvue"],"sourceType":["Nonpoint source"],"tmdlDateLo":"08-05-1993","tmdlDateHi":"03-09-1994"},"options":{"format":"tsv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
@@ -171,7 +171,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.findByRole('checkbox', { name: 'Tribal' }).click({ force: true });
 
     //Action ID
-    cy.selectOption('input-actionId', '70200');
+    cy.selectOption('input-actionId', '35772');
     cy.selectOption('input-actionId', 'bear creek');
 
     //Addressed Parameter
@@ -179,7 +179,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
 
     //Assessment Unit ID
     cy.selectOption('input-assessmentUnitId', 'fl1382g');
-    cy.selectOption('input-assessmentUnitId', 'ash cr');
+    cy.selectOption('input-assessmentUnitId', 'hackberry cr');
 
     //Completion Date
     cy.get('#input-completionDateLo').type('2009-12-08');
@@ -232,7 +232,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.selectOption('input-waterType', 'harbor');
 
     const queryValue =
-      'actionAgency=Tribal&actionId=70200&actionId=R7MO3960TMDL1Revised&addressedParameter=ALGAE&assessmentUnitId=FL1382G&assessmentUnitId=KS-1027020736&completionDateLo=12-08-2009&completionDateHi=09-08-2017&explicitMarginOfSafety=1.21E+09&fiscalYearEstablishedLo=2008&fiscalYearEstablishedHi=2019&implicitMarginOfSafety=TSS%20target%20based%20on%20the%2025th%20percentile%20concentration%20of%20all%20USGS%20TSS%20data%20from%20Missouri%20in%20the%20EDU%20where%20Mound%20Branch%20is%20located.&includeInMeasure=N&inIndianCountry=Y&npdesIdentifier=59925&organizationId=21KAN001&organizationId=21FL303D&otherIdentifier=BPU%20Kaw%20Power%20Station&pollutant=CFC-113&region=06&sourceType=Point%20source&tmdlDateLo=12-08-2019&tmdlDateHi=09-30-2022&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS';
+      'actionAgency=Tribal&actionId=35772&actionId=11593&addressedParameter=ALGAE&assessmentUnitId=FL1382G&assessmentUnitId=KS-102500033&completionDateLo=12-08-2009&completionDateHi=09-08-2017&explicitMarginOfSafety=1.21E+09&fiscalYearEstablishedLo=2008&fiscalYearEstablishedHi=2019&implicitMarginOfSafety=TSS%20target%20based%20on%20the%2025th%20percentile%20concentration%20of%20all%20USGS%20TSS%20data%20from%20Missouri%20in%20the%20EDU%20where%20Mound%20Branch%20is%20located.&includeInMeasure=N&inIndianCountry=Y&npdesIdentifier=59925&organizationId=21KAN001&organizationId=21FL303D&otherIdentifier=BPU%20Kaw%20Power%20Station&pollutant=CFC-113&region=06&sourceType=Point%20source&tmdlDateLo=12-08-2019&tmdlDateHi=09-30-2022&waterType=GREAT%20LAKES%20BAYS%20AND%20HARBORS';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -245,7 +245,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"actionAgency":["Tribal"],"actionId":["70200","R7MO3960TMDL1Revised"],"addressedParameter":["ALGAE"],"assessmentUnitId":["FL1382G","KS-1027020736"],"completionDateLo":"12-08-2009","completionDateHi":"09-08-2017","explicitMarginOfSafety":["1.21E+09"],"fiscalYearEstablishedLo":"2008","fiscalYearEstablishedHi":"2019","implicitMarginOfSafety":["TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located."],"includeInMeasure":["N"],"inIndianCountry":["Y"],"npdesIdentifier":["59925"],"organizationId":["21KAN001","21FL303D"],"otherIdentifier":["BPU Kaw Power Station"],"pollutant":["CFC-113"],"region":["06"],"sourceType":["Point source"],"tmdlDateLo":"12-08-2019","tmdlDateHi":"09-30-2022","waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+        `{"filters":{"actionAgency":["Tribal"],"actionId":["35772","11593"],"addressedParameter":["ALGAE"],"assessmentUnitId":["FL1382G","KS-102500033"],"completionDateLo":"12-08-2009","completionDateHi":"09-08-2017","explicitMarginOfSafety":["1.21E+09"],"fiscalYearEstablishedLo":"2008","fiscalYearEstablishedHi":"2019","implicitMarginOfSafety":["TSS target based on the 25th percentile concentration of all USGS TSS data from Missouri in the EDU where Mound Branch is located."],"includeInMeasure":["N"],"inIndianCountry":["Y"],"npdesIdentifier":["59925"],"organizationId":["21KAN001","21FL303D"],"otherIdentifier":["BPU Kaw Power Station"],"pollutant":["CFC-113"],"region":["06"],"sourceType":["Point source"],"tmdlDateLo":"12-08-2019","tmdlDateHi":"09-30-2022","waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"csv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/tmdl -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
