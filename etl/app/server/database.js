@@ -134,7 +134,7 @@ export async function checkLogTables() {
           end_time TIMESTAMP,
           load_error VARCHAR,
           start_time TIMESTAMP,
-          s3_julian VARCHAR(20) NOT NULL,
+          s3_julian VARCHAR(20),
           extract_error VARCHAR
         )`,
     );
@@ -1058,7 +1058,7 @@ export async function isDataReady(pool) {
       etlLogId = await logEtlExtractStart(pool, julian);
     }
 
-    // see if this julian has already been loaded into the db
+    // check etl status to ensure it isn't already running
     const etlRunning = await pool.query(
       'SELECT database FROM logging.etl_status',
     );
@@ -1069,7 +1069,7 @@ export async function isDataReady(pool) {
       return { ready: false, julian, logId: etlLogId };
     }
 
-    // check etl status to ensure it isn't already running
+    // see if this julian has already been loaded into the db
     const result = await pool.query(
       `
         SELECT active FROM logging.etl_schemas WHERE s3_julian = $1
