@@ -431,8 +431,8 @@ async function logEtlExtractError(pool, etlLogId, extractError) {
 async function logEtlExtractStart(pool, s3Julian) {
   try {
     const result = await pool.query(
-      'INSERT INTO logging.etl_log (s3_julian)' +
-        ` VALUES (${s3Julian}) RETURNING id`,
+      'INSERT INTO logging.etl_log (s3_julian) VALUES ($1) RETURNING id',
+      [s3Julian],
     );
     log.info('ETL extract start logged');
     return result.rows[0].id;
