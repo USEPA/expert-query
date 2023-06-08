@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 // components
 import { ReactComponent as Folder } from 'images/folder.svg';
-import { ReactComponent as Info } from 'images/info.svg';
 import { ReactComponent as Contact } from 'images/mail.svg';
 import { InPageNavLayout } from 'components/inPageNav';
 // config
@@ -17,10 +16,6 @@ type PageProps = {
 
 export function Page({ children }: PageProps) {
   const location = useLocation();
-  const baseUrl =
-    location.hostname === 'localhost'
-      ? `${location.protocol}//${location.hostname}:9090`
-      : serverUrl;
 
   return (
     <div className="l-page has-footer desktop:padding-top-0">
@@ -40,13 +35,6 @@ export function Page({ children }: PageProps) {
               href={`${serverUrl}/national-downloads`}
             >
               National Downloads
-            </HeaderLink>
-            <HeaderLink
-              className="margin-right-3"
-              icon={Info}
-              href={`${baseUrl}/api/getFile/path/Expert-Query-Users-Guide.pdf`}
-            >
-              User's Guide (PDF)
             </HeaderLink>
             <HeaderLink
               icon={Contact}
