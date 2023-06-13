@@ -5,7 +5,6 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import axios from 'axios';
 import {
   existsSync,
   mkdirSync,
@@ -16,8 +15,7 @@ import {
 } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
-import { setTimeout } from 'timers/promises';
-import { getEnvironment } from './utilities/environment.js';
+import { fetchRetry, getEnvironment } from './utilities/index.js';
 import { log } from './utilities/logger.js';
 import { fileURLToPath } from 'url';
 import {
@@ -141,84 +139,48 @@ export async function uploadFilePublic(
   }
 }
 
-// Retries an HTTP request in response to a failure
-export async function retryRequest(serviceName, count, s3Config, callback) {
-  if (count < s3Config.config.retryLimit) {
-    log.info(`Non-200 response returned from ${serviceName} service, retrying`);
-    await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
-    return callback(s3Config, count + 1);
-  } else {
-    throw new Error(`${serviceName} request retry count exceeded`);
-  }
-}
-
 // Sync the domain values corresponding to a single domain name
-function fetchSingleDomain(name, mapping, pool) {
-  return async function (s3Config, retryCount = 0) {
-    try {
-      const res = await axios.get(
-        `${s3Config.services.domainValues}?domainName=${mapping.domainName}`,
-        { timeout: s3Config.config.webServiceTimeout },
+async function fetchSingleDomain(name, mapping, pool, s3Config) {
+  const res = await fetchRetry({
+    url: `${s3Config.services.domainValues}?domainName=${mapping.domainName}`,
+    s3Config,
+    serviceName: `Domain Values (${mapping.domainName})`,
+    callOptions: { timeout: s3Config.config.webServiceTimeout },
+  });
+
+  const valuesAdded = new Set();
+  let values = res.data
+    .map((value) => {
+      return {
+        label: value[mapping.labelField ?? 'name'],
+        value: value[mapping.valueField ?? 'code'],
+      };
+    })
+    .filter((item) => {
+      return valuesAdded.has(item.value) ? false : valuesAdded.add(item.value);
+    });
+
+  // Add any column values not represented by domain values service
+  for (const colAlias of mapping.columns) {
+    const colValues = await queryColumnValues(s3Config, pool, colAlias);
+    colValues.forEach((value) => {
+      if (valuesAdded.has(value)) return;
+      // Warn about mismatch, since value added here may not have the desired label
+      log.warn(
+        `Column value missing from "${mapping.domainName}" domain service: ${value}`,
       );
+      valuesAdded.add(value);
+      values.push({ label: value, value });
+    });
+  }
 
-      if (res.status !== 200) {
-        return await retryRequest(
-          `Domain Values (${mapping.domainName})`,
-          retryCount,
-          s3Config,
-          fetchSingleDomain(name, mapping, pool),
-        );
-      }
-
-      const valuesAdded = new Set();
-      let values = res.data
-        .map((value) => {
-          return {
-            label: value[mapping.labelField ?? 'name'],
-            value: value[mapping.valueField ?? 'code'],
-          };
-        })
-        .filter((item) => {
-          return valuesAdded.has(item.value)
-            ? false
-            : valuesAdded.add(item.value);
-        });
-
-      // Add any column values not represented by domain values service
-      for (const colAlias of mapping.columns) {
-        const colValues = await queryColumnValues(s3Config, pool, colAlias);
-        colValues.forEach((value) => {
-          if (valuesAdded.has(value)) return;
-          // Warn about mismatch, since value added here may not have the desired label
-          log.warn(
-            `Column value missing from "${mapping.domainName}" domain service: ${value}`,
-          );
-          valuesAdded.add(value);
-          values.push({ label: value, value });
-        });
-      }
-
-      const output = {};
-      output[name] = values;
-      await uploadFilePublic(
-        `${name}.json`,
-        JSON.stringify(output),
-        'content-etl/domainValues',
-      );
-    } catch (errOuter) {
-      try {
-        return await retryRequest(
-          `Domain Values (${mapping.domainName})`,
-          retryCount,
-          s3Config,
-          fetchSingleDomain(name, mapping, pool),
-        );
-      } catch (err) {
-        log.warn(`Sync Domain Values (${mapping.domainName}) failed! ${err}`);
-        throw err;
-      }
-    }
-  };
+  const output = {};
+  output[name] = values;
+  await uploadFilePublic(
+    `${name}.json`,
+    JSON.stringify(output),
+    'content-etl/domainValues',
+  );
 }
 
 export async function syncDomainValues(s3Config, poolParam = null) {
@@ -227,10 +189,10 @@ export async function syncDomainValues(s3Config, poolParam = null) {
 
   try {
     const fetchPromises = [];
-    fetchPromises.push(fetchStateValues(pool)(s3Config));
+    fetchPromises.push(fetchStateValues(pool, s3Config));
 
     Object.entries(s3Config.domainValueMappings).forEach(([name, mapping]) => {
-      fetchPromises.push(fetchSingleDomain(name, mapping, pool)(s3Config));
+      fetchPromises.push(fetchSingleDomain(name, mapping, pool, s3Config));
     });
 
     await Promise.all(fetchPromises);
@@ -256,63 +218,42 @@ export async function syncDomainValues(s3Config, poolParam = null) {
 }
 
 // Sync state codes and labels from the states service
-function fetchStateValues(pool) {
-  return async function (s3Config, retryCount = 0) {
-    try {
-      const res = await axios.get(s3Config.services.stateCodes, {
-        timeout: s3Config.config.webServiceTimeout,
-      });
+async function fetchStateValues(pool, s3Config) {
+  const res = await fetchRetry({
+    url: s3Config.services.stateCodes,
+    s3Config,
+    serviceName: 'States',
+    callOptions: {
+      timeout: s3Config.config.webServiceTimeout,
+    },
+  });
 
-      if (res.status !== 200) {
-        return await retryRequest(
-          'States',
-          retryCount,
-          s3Config,
-          fetchStateValues(pool),
-        );
-      }
+  const valuesAdded = new Set();
+  const states = res.data.data
+    .map((state) => ({
+      label: state.name,
+      value: state.code,
+    }))
+    .filter((item) => {
+      return valuesAdded.has(item.value) ? false : valuesAdded.add(item.value);
+    });
 
-      const valuesAdded = new Set();
-      const states = res.data.data
-        .map((state) => ({
-          label: state.name,
-          value: state.code,
-        }))
-        .filter((item) => {
-          return valuesAdded.has(item.value)
-            ? false
-            : valuesAdded.add(item.value);
-        });
+  const colValues = await queryColumnValues(s3Config, pool, 'state');
+  colValues.forEach((value) => {
+    if (valuesAdded.has(value)) return;
+    // Warn about mismatch, since value added here will not have a nice label
+    log.warn(`Column value missing from "States" domain service: ${value}`);
+    valuesAdded.add(value);
+    states.push({ label: value, value });
+  });
 
-      const colValues = await queryColumnValues(s3Config, pool, 'state');
-      colValues.forEach((value) => {
-        if (valuesAdded.has(value)) return;
-        // Warn about mismatch, since value added here will not have a nice label
-        log.warn(`Column value missing from "States" domain service: ${value}`);
-        valuesAdded.add(value);
-        states.push({ label: value, value });
-      });
-
-      const output = {};
-      output.state = states;
-      await uploadFilePublic(
-        'state.json',
-        JSON.stringify(output),
-        'content-etl/domainValues',
-      );
-    } catch (errOuter) {
-      try {
-        return await retryRequest(
-          'States',
-          retryCount,
-          s3Config,
-          fetchStateValues(pool),
-        );
-      } catch (err) {
-        log.warn(`Sync States failed! ${err}`);
-      }
-    }
-  };
+  const output = {};
+  output.state = states;
+  await uploadFilePublic(
+    'state.json',
+    JSON.stringify(output),
+    'content-etl/domainValues',
+  );
 }
 
 export async function syncGlossary(s3Config, retryCount = 0) {
@@ -320,18 +261,17 @@ export async function syncGlossary(s3Config, retryCount = 0) {
   await updateEtlStatus(pool, 'glossary', 'running');
 
   try {
-    // query the glossary service
-    const res = await axios.get(s3Config.services.glossaryURL, {
-      headers: {
-        authorization: `basic ${process.env.GLOSSARY_AUTH}`,
+    const res = await fetchRetry({
+      url: s3Config.services.glossaryURL,
+      s3Config,
+      serviceName: 'Glossary',
+      callOptions: {
+        headers: {
+          authorization: `basic ${process.env.GLOSSARY_AUTH}`,
+        },
+        timeout: s3Config.config.webServiceTimeout,
       },
-      timeout: s3Config.config.webServiceTimeout,
     });
-
-    // check response, retry on failure
-    if (res.status !== 200) {
-      return await retryRequest('Glossary', retryCount, s3Config, syncGlossary);
-    }
 
     // build the glossary json output
     const terms = {};
@@ -356,13 +296,6 @@ export async function syncGlossary(s3Config, retryCount = 0) {
     await uploadFilePublic('glossary.json', JSON.stringify(terms));
 
     await updateEtlStatus(pool, 'glossary', 'success');
-  } catch (errOuter) {
-    try {
-      return await retryRequest('Glossary', retryCount, s3Config, syncGlossary);
-    } catch (err) {
-      log.warn(`Sync Glossary failed! ${err}`);
-      await updateEtlStatus(pool, 'glossary', 'failed');
-    }
   } finally {
     await endConnPool(pool);
   }

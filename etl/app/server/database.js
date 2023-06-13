@@ -1,18 +1,12 @@
-import axios from 'axios';
 import crypto from 'crypto';
 import https from 'https';
 import pg from 'pg';
 import pgPromise from 'pg-promise';
 import { setTimeout } from 'timers/promises';
 // utils
-import { getEnvironment } from './utilities/environment.js';
+import { fetchRetry, getEnvironment } from './utilities/index.js';
 import { log } from './utilities/logger.js';
-import {
-  deleteDirectory,
-  readS3File,
-  retryRequest,
-  syncDomainValues,
-} from './s3.js';
+import { deleteDirectory, readS3File, syncDomainValues } from './s3.js';
 
 const { Client, Pool } = pg;
 const pgp = pgPromise({ capSQL: true });
@@ -533,13 +527,14 @@ export async function getActiveSchema(pool) {
 }
 
 async function fetchStateValues(s3Config, retryCount = 0) {
-  const res = await axios.get(s3Config.services.stateCodes, {
-    timeout: s3Config.config.webServiceTimeout,
+  const res = await fetchRetry({
+    url: s3Config.services.stateCodes,
+    s3Config,
+    serviceName: 'States',
+    callOptions: {
+      timeout: s3Config.config.webServiceTimeout,
+    },
   });
-
-  if (res.status !== 200) {
-    return retryRequest('States', retryCount, s3Config, fetchStateValues);
-  }
 
   return res.data.data;
 }
@@ -636,31 +631,21 @@ async function getProfileStats(
   retryCount = 0,
 ) {
   const url = `${s3Config.services.materializedViews}/profile_stats`;
-  const res = await axios.get(url, {
-    headers: { 'API-key': process.env.MV_API_KEY },
-    httpsAgent: new https.Agent({
-      // TODO - Remove this when ordspub supports OpenSSL 3.0
-      // This is needed to allow node 18 to talk with ordspub, which does
-      //   not support OpenSSL 3.0
-      secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
-    }),
+  const res = await fetchRetry({
+    url,
+    s3Config,
+    serviceName: 'profile_stats',
+    retryInterval: s3Config.config.retryIntervalProfileStatsSeconds,
+    callOptions: {
+      headers: { 'API-key': process.env.MV_API_KEY },
+      httpsAgent: new https.Agent({
+        // TODO - Remove this when ordspub supports OpenSSL 3.0
+        // This is needed to allow node 18 to talk with ordspub, which does
+        //   not support OpenSSL 3.0
+        secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
+      }),
+    },
   });
-
-  if (res.status !== 200) {
-    log.info('Non-200 response returned from profile_stats service, retrying');
-    if (retryCount < s3Config.config.retryLimit) {
-      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
-      return await getProfileStats(
-        pool,
-        schemaName,
-        s3Config,
-        s3Julian,
-        retryCount + 1,
-      );
-    } else {
-      throw new Error('Retry count exceeded');
-    }
-  }
 
   // get file sizes from s3
   const s3Stats = await readS3File({
@@ -908,25 +893,20 @@ async function extract(profileName, s3Config, next = 0, retryCount = 0) {
   const url =
     `${s3Config.services.materializedViews}/${profileName}` +
     `?p_limit=${chunkSize}&p_offset=${next}`;
-
-  const res = await axios.get(url, {
-    headers: { 'API-key': process.env.MV_API_KEY },
-    httpsAgent: new https.Agent({
-      // TODO - Remove this when ordspub supports OpenSSL 3.0
-      // This is needed to allow node 18 to talk with ordspub, which does
-      //   not support OpenSSL 3.0
-      secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
-    }),
+  const res = await fetchRetry({
+    url,
+    s3Config,
+    serviceName: `ordspub - ${profileName}`,
+    callOptions: {
+      headers: { 'API-key': process.env.MV_API_KEY },
+      httpsAgent: new https.Agent({
+        // TODO - Remove this when ordspub supports OpenSSL 3.0
+        // This is needed to allow node 18 to talk with ordspub, which does
+        //   not support OpenSSL 3.0
+        secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
+      }),
+    },
   });
-  if (res.status !== 200) {
-    log.info(`Non-200 response returned from ${profileName} service, retrying`);
-    if (retryCount < s3Config.config.retryLimit) {
-      await setTimeout(s3Config.config.retryIntervalSeconds * 1000);
-      return await extract(s3Config, next, retryCount + 1);
-    } else {
-      throw new Error('Retry count exceeded');
-    }
-  }
 
   const data = res.data.records;
   return { data: data.length ? data : null, next: next + chunkSize };
