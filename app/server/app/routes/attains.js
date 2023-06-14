@@ -743,6 +743,7 @@ async function checkDatabaseHealth(req, res) {
         'l.end_time',
         knex.raw('l.end_time - l.start_time as duration'),
         'l.load_error',
+        'l.extract_error',
       )
       .orderBy('creation_date', 'desc')
       .first();
@@ -779,6 +780,8 @@ async function checkDatabaseHealth(req, res) {
         duration: activeSchemaResults.duration,
         s3Uuid: activeSchemaResults.s3_julian,
         schema: activeSchemaResults.schema_name,
+        loadError: activeSchemaResults.load_error,
+        extractError: activeSchemaResults.extract_error,
       },
     };
 
@@ -789,6 +792,8 @@ async function checkDatabaseHealth(req, res) {
         duration: schemaResults.duration,
         s3Uuid: schemaResults.s3_julian,
         schema: schemaResults.schema_name,
+        loadError: schemaResults.load_error,
+        extractError: schemaResults.extract_error,
       };
     }
 
