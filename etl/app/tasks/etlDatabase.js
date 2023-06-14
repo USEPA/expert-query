@@ -10,6 +10,6 @@ const s3Config = await s3.loadConfig();
 await database.checkForServerCrash();
 
 // Create and load new schema
-await database.runJob(s3Config);
+await database.runJob(s3Config, true);
 
 log.info('Task Completed: etl_database');

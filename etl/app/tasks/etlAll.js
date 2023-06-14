@@ -6,6 +6,6 @@ log.info('Starting Task: etl_all');
 
 await database.checkForServerCrash();
 
-await etlJob();
+await etlJob(true);
 
 log.info('Task Completed: etl_all');

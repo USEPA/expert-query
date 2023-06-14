@@ -2,7 +2,7 @@ import * as database from './database.js';
 import * as s3 from './s3.js';
 import { log } from './utilities/logger.js';
 
-export default async function etlJob() {
+export default async function etlJob(ignoreReady = false) {
   // load config from private s3 bucket
   const s3Config = await s3.loadConfig();
 
@@ -14,5 +14,5 @@ export default async function etlJob() {
   }
 
   // Create and load new schema
-  await database.runJob(s3Config);
+  await database.runJob(s3Config, ignoreReady);
 }
