@@ -45,7 +45,7 @@ export async function retryRequest({
       retryCount: retryCount + 1,
     });
   } else {
-    throw new Error(`${serviceName} request retry count exceeded`);
+    throw new RetryCountExceededException(serviceName);
   }
 }
 
@@ -59,7 +59,6 @@ export async function fetchRetry({
 }) {
   try {
     const res = await axios.get(url, callOptions);
-
     if (res.status !== 200) {
       return await retryRequest({
         url,
@@ -70,9 +69,9 @@ export async function fetchRetry({
         retryCount,
       });
     }
-
     return res;
   } catch (ex) {
+    if (ex instanceof RetryCountExceededException) throw ex;
     return await retryRequest({
       url,
       s3Config,
@@ -81,5 +80,13 @@ export async function fetchRetry({
       retryInterval,
       retryCount,
     });
+  }
+}
+
+class RetryCountExceededException extends Error {
+  constructor(serviceName) {
+    super();
+    this.code = 429;
+    this.message = `${serviceName} request retry count exceeded`;
   }
 }
