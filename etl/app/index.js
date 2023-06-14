@@ -5,7 +5,7 @@ import * as s3 from './server/s3.js';
 import etlJob from './server/etlJob.js';
 import * as database from './server/database.js';
 import { log } from './server/utilities/logger.js';
-import { getEnvironment } from './server/utilities/environment.js';
+import { getEnvironment } from './server/utilities/index.js';
 
 const app = express();
 app.disable('x-powered-by');

@@ -3,6 +3,7 @@
   "gisChunkSize": 2000,
   "retryLimit": 5,
   "retryIntervalSeconds": 5,
+  "retryIntervalProfileStatsSeconds": 60,
   "schemaRetentionDays": 21,
   "webServiceTimeout": 60000
 }
