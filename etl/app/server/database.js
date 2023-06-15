@@ -918,7 +918,7 @@ async function extract(profileName, s3Config, next = 0, retryCount = 0) {
 // Transforms data from ordspub services into postgres tables
 async function transform(tableName, columns, data) {
   const colList = columns.map((col) => ({
-    name: col.name,
+    name: col.nameOverrideOrds || col.name,
   }));
 
   const insertColumns = new pgp.helpers.ColumnSet(colList);
@@ -926,10 +926,12 @@ async function transform(tableName, columns, data) {
   const rows = [];
   data.forEach((datum) => {
     rows.push(
-      colList.reduce(
-        (acc, cur) => ({ ...acc, [cur.name]: datum[cur.name] }),
-        {},
-      ),
+      colList.reduce((acc, cur) => {
+        const colDef = columns.find(
+          (col) => cur.name === (col.nameOverrideOrds || col.name),
+        );
+        return { ...acc, [cur.name]: datum[colDef.name || col.name] };
+      }, {}),
     );
   });
   return pgp.helpers.insert(rows, insertColumns, tableName);
