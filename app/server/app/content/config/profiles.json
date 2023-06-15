@@ -231,6 +231,7 @@
       "loadAllocation",
       "loadAllocationUnits",
       "locationDescription",
+      "tmdlEndpoint",
       "waterSize",
       "waterSizeUnits",
       "wasteLoadAllocation"

@@ -1558,6 +1558,14 @@
           "format": "date"
         }
       },
+      "tmdlEndpointParam": {
+        "name": "tmdlEndpoint",
+        "in": "query",
+        "example": "See TMDL Documents.",
+        "schema": {
+          "type": "string"
+        }
+      },
       "useClassNameParam": {
         "name": "useClassName",
         "in": "query",
