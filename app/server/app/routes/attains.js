@@ -330,10 +330,12 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     // build the select query
     const selectColumns =
       columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
-    const selectText = selectColumns.map((col) =>
-      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
-    );
-    query.select(selectText).orderBy('objectid', 'asc');
+    const selectText = selectColumns.map((col) => {
+      const name =
+        col.type === 'timestamptz' ? `${col.name}::VARCHAR(100)` : col.name;
+      return col.name === col.alias ? name : `${name} AS ${col.alias}`;
+    });
+    query.select(knex.raw(selectText)).orderBy('objectid', 'asc');
   }
 
   // build where clause of the query
