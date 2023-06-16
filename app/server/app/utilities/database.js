@@ -55,9 +55,6 @@ pg.types.setTypeParser(pg.types.builtins.NUMERIC, (value) => {
 pg.types.setTypeParser(pg.types.builtins.DATE, (value) => {
   return value.toString();
 });
-pg.types.setTypeParser(pg.types.builtins.TIMESTAMPTZ, (value) => {
-  return value.toString();
-});
 
 /**
  * Appends to the where clause of the provided query.
