@@ -94,7 +94,7 @@ function getColumnsFromAliases(columnAliases, profile) {
  * @returns {Object} a different KnexJS query object
  */
 function createLatestSubquery(req, profile, params, columnName, columnType) {
-  if (columnType !== 'numeric' && columnType !== 'timestamptz') return;
+  if (!['date', 'numeric', 'timestamptz'].includes(columnType)) return;
 
   const columnAliases = ['organizationId', 'region', 'reportingCycle', 'state'];
 
@@ -685,7 +685,7 @@ async function queryColumnValues(profile, columns, params, schema) {
   if (params.text) {
     query.andWhere((q) => {
       columns.forEach((col, i) => {
-        if (col.type === 'numeric' || col.type === 'timestamptz') {
+        if (['date', 'numeric', 'timestamptz'].includes(col.type)) {
           i === 0
             ? q.whereRaw('CAST(?? as TEXT) ILIKE ?', [
                 col.name,
@@ -775,7 +775,7 @@ async function checkDatabaseHealth(req, res) {
 
     const output = {
       status,
-      zLastSuccess: {
+      lastSuccess: {
         completed: activeSchemaResults.end_time?.toLocaleString(),
         duration: activeSchemaResults.duration,
         s3Uuid: activeSchemaResults.s3_julian,
@@ -785,9 +785,9 @@ async function checkDatabaseHealth(req, res) {
       },
     };
 
-    // if ids of schemaResults and activeSchemaResults don't match then add zFailed
+    // if ids of schemaResults and activeSchemaResults don't match then add failed
     if (schemaResults.id !== activeSchemaResults.id) {
-      output.zFailed = {
+      output.failed = {
         completed: schemaResults.end_time?.toLocaleString(),
         duration: schemaResults.duration,
         s3Uuid: schemaResults.s3_julian,
