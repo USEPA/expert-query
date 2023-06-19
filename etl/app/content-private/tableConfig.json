@@ -38,7 +38,7 @@
         "alias": "completionDate",
         "lowParam": "completionDateLo",
         "highParam": "completionDateHi",
-        "type": "timestamptz",
+        "type": "date",
         "indexOrder": "desc"
       },
       {
@@ -214,7 +214,7 @@
         "alias": "assessmentDate",
         "lowParam": "assessmentDateLo",
         "highParam": "assessmentDateHi",
-        "type": "timestamptz",
+        "type": "date",
         "indexOrder": "desc"
       },
       {
@@ -328,7 +328,7 @@
         "alias": "monitoringEndDate",
         "lowParam": "monitoringEndDateLo",
         "highParam": "monitoringEndDateHi",
-        "type": "timestamptz",
+        "type": "date",
         "indexOrder": "desc"
       },
       {
@@ -336,7 +336,7 @@
         "alias": "monitoringStartDate",
         "lowParam": "monitoringStartDateLo",
         "highParam": "monitoringStartDateHi",
-        "type": "timestamptz",
+        "type": "date",
         "indexOrder": "desc"
       },
       {
@@ -400,7 +400,7 @@
         "alias": "seasonEndDate",
         "lowParam": "seasonEndDateLo",
         "highParam": "seasonEndDateHi",
-        "type": "timestamptz",
+        "type": "date",
         "indexOrder": "desc"
       },
       {
@@ -408,7 +408,7 @@
         "alias": "seasonStartDate",
         "lowParam": "seasonStartDateLo",
         "highParam": "seasonStartDateHi",
-        "type": "timestamptz",
+        "type": "date",
         "indexOrder": "desc"
       },
       {
@@ -1360,7 +1360,7 @@
         "alias": "completionDate",
         "lowParam": "completionDateLo",
         "highParam": "completionDateHi",
-        "type": "timestamptz",
+        "type": "date",
         "indexOrder": "desc"
       },
       {
@@ -1448,7 +1448,7 @@
         "alias": "tmdlDate",
         "lowParam": "tmdlDateLo",
         "highParam": "tmdlDateHi",
-        "type": "timestamptz",
+        "type": "date",
         "indexOrder": "desc"
       },
       {

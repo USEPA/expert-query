@@ -94,7 +94,7 @@ function getColumnsFromAliases(columnAliases, profile) {
  * @returns {Object} a different KnexJS query object
  */
 function createLatestSubquery(req, profile, params, columnName, columnType) {
-  if (columnType !== 'numeric' && columnType !== 'timestamptz') return;
+  if (!['date', 'numeric', 'timestamptz'].includes(columnType)) return;
 
   const columnAliases = ['organizationId', 'region', 'reportingCycle', 'state'];
 
@@ -685,7 +685,7 @@ async function queryColumnValues(profile, columns, params, schema) {
   if (params.text) {
     query.andWhere((q) => {
       columns.forEach((col, i) => {
-        if (col.type === 'numeric' || col.type === 'timestamptz') {
+        if (['date', 'numeric', 'timestamptz'].includes(col.type)) {
           i === 0
             ? q.whereRaw('CAST(?? as TEXT) ILIKE ?', [
                 col.name,
