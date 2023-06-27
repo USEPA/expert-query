@@ -608,12 +608,7 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
     });
     await Promise.all(loadTasks);
 
-    const profileStats = await getProfileStats(
-      pool,
-      schemaName,
-      s3Config,
-      s3Julian,
-    );
+    const profileStats = await getProfileStats(pool, schemaName, s3Julian);
 
     // Verify the etl was successfull and the data matches what we expect.
     // We skip this when running locally, since the row counts will never match.
@@ -632,13 +627,7 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
   }
 }
 
-async function getProfileStats(
-  pool,
-  schemaName,
-  s3Config,
-  s3Julian,
-  retryCount = 0,
-) {
+async function getProfileStats(pool, schemaName, s3Julian) {
   // get profile stats from s3
   const profileStats = await readS3File({
     bucketInfo: {
