@@ -67,17 +67,23 @@ export async function endConnPool(pool) {
   log.info('EqPool connection pool ended');
 }
 
+function extractProfileName(name) {
+  return name
+    .replace('attains_app.profile_', '')
+    .replace('profile_', '')
+    .replace('.csv', '');
+}
+
 async function cacheProfileStats(pool, schemaName, profileStats, s3Stats) {
   const client = await getClient(pool);
   try {
     await client.query('BEGIN');
-    for (const profile of profileStats) {
-      const profileName = profile['name'].replace('attains_app.profile_', '');
+    for (const profile of profileStats.details) {
+      const profileName = extractProfileName(profile.name);
 
       // lookup the file size from s3Stats
       const s3Metadata = s3Stats.files.find(
-        (f) =>
-          f.name.replace('profile_', '').replace('.csv', '') === profileName,
+        (f) => extractProfileName(f.name) === profileName,
       );
 
       await client.query(
@@ -602,12 +608,7 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
     });
     await Promise.all(loadTasks);
 
-    const profileStats = await getProfileStats(
-      pool,
-      schemaName,
-      s3Config,
-      s3Julian,
-    );
+    const profileStats = await getProfileStats(pool, schemaName, s3Julian);
 
     // Verify the etl was successfull and the data matches what we expect.
     // We skip this when running locally, since the row counts will never match.
@@ -626,28 +627,16 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
   }
 }
 
-async function getProfileStats(
-  pool,
-  schemaName,
-  s3Config,
-  s3Julian,
-  retryCount = 0,
-) {
-  const url = `${s3Config.services.materializedViews}/profile_stats`;
-  const res = await fetchRetry({
-    url,
-    s3Config,
-    serviceName: 'profile_stats',
-    retryInterval: s3Config.config.retryIntervalProfileStatsSeconds,
-    callOptions: {
-      headers: { 'API-key': process.env.MV_API_KEY },
-      httpsAgent: new https.Agent({
-        // TODO - Remove this when ordspub supports OpenSSL 3.0
-        // This is needed to allow node 18 to talk with ordspub, which does
-        //   not support OpenSSL 3.0
-        secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
-      }),
+async function getProfileStats(pool, schemaName, s3Julian) {
+  // get profile stats from s3
+  const profileStats = await readS3File({
+    bucketInfo: {
+      accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+      bucketId: process.env.CF_S3_PUB_BUCKET_ID,
+      region: process.env.CF_S3_PUB_REGION,
+      secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
     },
+    path: `national-downloads/${s3Julian}/ready.json`,
   });
 
   // get file sizes from s3
@@ -661,9 +650,9 @@ async function getProfileStats(
     path: `national-downloads/${s3Julian}/status.json`,
   });
 
-  await cacheProfileStats(pool, schemaName, res.data.details, s3Stats);
+  await cacheProfileStats(pool, schemaName, profileStats, s3Stats);
 
-  return res.data.details;
+  return profileStats.files;
 }
 
 // Verify the data pulled in from the ETL matches the materialized views.
@@ -671,23 +660,22 @@ async function certifyEtlComplete(pool, profileStats, logId, schemaName) {
   // loop through and make sure the tables exist and the counts match
   let issuesMessage = '';
   for (const profile of profileStats) {
+    const profileName = extractProfileName(profile.name);
+
     // check date
     if (profile.last_refresh_end_time <= profile.last_refresh_date) {
-      issuesMessage += `${profile.name} issue: last_refresh_end_time (${profile.last_refresh_end_time}) is not after last_refresh_date (${profile.last_refresh_date}).\n`;
+      issuesMessage += `${profileName} issue: last_refresh_end_time (${profile.last_refresh_end_time}) is not after last_refresh_date (${profile.last_refresh_date}).\n`;
     }
 
     // query to get row count
     const queryRes = await pool.query(
-      `SELECT COUNT(*) FROM "${schemaName}"."${profile.name.replace(
-        'attains_app.profile_',
-        '',
-      )}"`,
+      `SELECT COUNT(*) FROM "${schemaName}"."${profileName}"`,
     );
     const queryCount = parseInt(queryRes.rows[0].count);
 
     // verify row counts match
     if (queryCount !== profile.num_rows) {
-      issuesMessage += `${profile.name} issue: count mismatch MV has "${profile.num_rows}" rows and DB has "${queryCount}".\n`;
+      issuesMessage += `${profileName} issue: count mismatch MV has "${profile.num_rows}" rows and DB has "${queryCount}".\n`;
     }
   }
 
