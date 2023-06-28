@@ -652,7 +652,7 @@ async function getProfileStats(pool, schemaName, s3Julian) {
 
   await cacheProfileStats(pool, schemaName, profileStats, s3Stats);
 
-  return profileStats.files;
+  return profileStats.details;
 }
 
 // Verify the data pulled in from the ETL matches the materialized views.
