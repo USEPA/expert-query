@@ -758,23 +758,25 @@ async function checkDatabaseHealth(req, res) {
     query.where('active', true);
     const activeSchemaResults = await query;
 
-    // verify database updated in the last week, with 6 hour buffer
-    const timeSinceLastUpdate =
-      (Date.now() - activeSchemaResults.end_time) / (1000 * 60 * 60);
-    if (timeSinceLastUpdate >= 175 && !etlRunning) {
-      setStatus('FAILED-TIME');
-    }
+    if (!etlRunning) {
+      // verify database updated in the last week, with 6 hour buffer
+      const timeSinceLastUpdate =
+        (Date.now() - activeSchemaResults.end_time) / (1000 * 60 * 60);
+      if (timeSinceLastUpdate >= 175) {
+        setStatus('FAILED-TIME');
+      }
 
-    // verify a query can be ran against each table in the active db
-    for (const profile of Object.values(privateConfig.tableConfig)) {
-      query = knex
-        .withSchema(req.activeSchema)
-        .from(profile.tableName)
-        .select(profile.idColumn)
-        .limit(1)
-        .first();
-      const dataResults = await query;
-      if (!dataResults[profile.idColumn]) setStatus('FAILED-QUERY');
+      // verify a query can be ran against each table in the active db
+      for (const profile of Object.values(privateConfig.tableConfig)) {
+        query = knex
+          .withSchema(req.activeSchema)
+          .from(profile.tableName)
+          .select(profile.idColumn)
+          .limit(1)
+          .first();
+        const dataResults = await query;
+        if (!dataResults[profile.idColumn]) setStatus('FAILED-QUERY');
+      }
     }
 
     const output = {
@@ -792,7 +794,7 @@ async function checkDatabaseHealth(req, res) {
 
     // if ids of schemaResults and activeSchemaResults don't match then add failed
     if (schemaResults.id !== activeSchemaResults.id) {
-      output.failed = {
+      output[etlRunning ? 'inProgress' : 'failed'] = {
         completed: schemaResults.end_time?.toLocaleString(),
         duration: schemaResults.duration,
         s3Uuid: schemaResults.s3_julian,
