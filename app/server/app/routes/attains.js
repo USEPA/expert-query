@@ -732,6 +732,8 @@ async function checkDatabaseHealth(req, res) {
     const statusResults = await query;
     if (statusResults.database === 'failed') setStatus('FAILED-DB');
 
+    const etlRunning = statusResults.database === 'running';
+
     // verify the latest entry in the schema table is active
     query = knex
       .withSchema('logging')
@@ -748,7 +750,7 @@ async function checkDatabaseHealth(req, res) {
       .orderBy('creation_date', 'desc')
       .first();
     const schemaResults = await query;
-    if (!schemaResults.active && statusResults.database !== 'running') {
+    if (!schemaResults.active && !etlRunning) {
       setStatus('FAILED-SCHEMA');
     }
 
@@ -756,10 +758,12 @@ async function checkDatabaseHealth(req, res) {
     query.where('active', true);
     const activeSchemaResults = await query;
 
-    // verify database updated in the last week, with 1 hour buffer
+    // verify database updated in the last week, with 6 hour buffer
     const timeSinceLastUpdate =
-      (Date.now() - activeSchemaResults.creation_date) / (1000 * 60 * 60);
-    if (timeSinceLastUpdate >= 169) setStatus('FAILED-TIME');
+      (Date.now() - activeSchemaResults.end_time) / (1000 * 60 * 60);
+    if (timeSinceLastUpdate >= 175) {
+      setStatus('FAILED-TIME');
+    }
 
     // verify a query can be ran against each table in the active db
     for (const profile of Object.values(privateConfig.tableConfig)) {
@@ -775,6 +779,7 @@ async function checkDatabaseHealth(req, res) {
 
     const output = {
       status,
+      etlRunning,
       lastSuccess: {
         completed: activeSchemaResults.end_time?.toLocaleString(),
         duration: activeSchemaResults.duration,
@@ -787,7 +792,7 @@ async function checkDatabaseHealth(req, res) {
 
     // if ids of schemaResults and activeSchemaResults don't match then add failed
     if (schemaResults.id !== activeSchemaResults.id) {
-      output.failed = {
+      output[etlRunning ? 'inProgress' : 'failed'] = {
         completed: schemaResults.end_time?.toLocaleString(),
         duration: schemaResults.duration,
         s3Uuid: schemaResults.s3_julian,
