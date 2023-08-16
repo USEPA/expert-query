@@ -7,7 +7,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
-import { AsyncPaginate } from 'react-select-async-paginate';
+import { AsyncPaginate, wrapMenuList } from 'react-select-async-paginate';
 import { ReactComponent as Download } from 'images/file_download.svg';
 // components
 import { AccordionItem } from 'components/accordion';
@@ -19,7 +19,7 @@ import { InPageNavAnchor, NumberedInPageNavLabel } from 'components/inPageNav';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
-import { MenuList } from 'components/menuList';
+import { MenuList as CustomMenuList } from 'components/menuList';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { StepIndicator } from 'components/stepIndicator';
@@ -856,18 +856,25 @@ function SelectFilter({
   const [loading, setLoading] = useState(false);
 
   const fetchOptions = useCallback(
-    async (inputValue: string, loadedOptions: readonly Option[]) => {
+    async (
+      inputValue: string,
+      loadedOptions: readonly (Option | GroupBase<Option>)[],
+    ) => {
       abort();
       setLoading(true);
+      let result: ReturnType<typeof filterFunc> = {
+        options: [],
+        hasMore: true,
+      };
       try {
-        const newOptions = await filterFunc(inputValue, loadedOptions);
-        setLoading(false);
-        // setOptions(newOptions);
+        result = await filterFunc(inputValue, loadedOptions);
       } catch (err) {
-        if (isAbort(err)) return;
+        if (!isAbort(err)) console.error(err);
+      } finally {
         setLoading(false);
-        console.error(err);
       }
+      console.log(result);
+      return result;
     },
     [abort, filterFunc],
   );
@@ -892,7 +899,7 @@ function SelectFilter({
 
   const loadOptions = (
     inputValue: string | null = null,
-    loadedOptions: readonly Option[],
+    loadedOptions: readonly (Option | GroupBase<Option>)[],
   ) =>
     inputValue === null || !debouncedFetchOptions
       ? fetchOptions(inputValue ?? '', loadedOptions)
@@ -911,8 +918,10 @@ function SelectFilter({
     [secondaryFilterKey],
   );
 
+  const MenuList = wrapMenuList(CustomMenuList);
+
   return (
-    <AsyncPaginate<Option, GroupBase<Option>, unknown, boolean>
+    <AsyncPaginate
       aria-label={`${filterLabel} input`}
       className="width-full"
       classNames={{
@@ -920,14 +929,14 @@ function SelectFilter({
         menuList: () => 'font-ui-xs',
       }}
       components={{ MenuList }}
-      debounceTimeout={content.data?.parameters.debounceMilliseconds}
+      // debounceTimeout={content.data?.parameters.debounceMilliseconds}
       formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
       isMulti={isMulti}
       key={sourceValue?.value}
-      loadOptions={filterFunc}
+      loadOptions={loadOptions}
       menuPortalTarget={document.body}
       onChange={filterHandler}
       // onInputChange={(inputValue, actionMeta) => {
@@ -940,7 +949,7 @@ function SelectFilter({
         setOptions(null);
       }}
       // onMenuOpen={loadOptions}
-      options={options ?? undefined}
+      // options={options ?? undefined}
       styles={{
         control: (base) => ({
           ...base,
