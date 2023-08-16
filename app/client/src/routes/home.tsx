@@ -7,6 +7,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
+import { AsyncPaginate } from 'react-select-async-paginate';
 import { ReactComponent as Download } from 'images/file_download.svg';
 // components
 import { AccordionItem } from 'components/accordion';
@@ -18,6 +19,7 @@ import { InPageNavAnchor, NumberedInPageNavLabel } from 'components/inPageNav';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
+import { MenuList } from 'components/menuList';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { StepIndicator } from 'components/stepIndicator';
@@ -31,6 +33,8 @@ import { getData, isAbort, postData, useAbort } from 'utils';
 // types
 import type { Content } from 'contexts/content';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import type { GroupBase } from 'react-select';
+import type { LoadOptions } from 'react-select-async-paginate';
 import type {
   DomainOptions,
   MultiOptionField,
@@ -797,6 +801,8 @@ function SourceSelectFilter(props: SourceSelectFilterProps) {
   );
 }
 
+type FilterFunction = LoadOptions<Option, GroupBase<Option>, unknown>;
+
 function SelectFilter({
   apiKey,
   apiUrl,
@@ -818,16 +824,17 @@ function SelectFilter({
   const { abort, getSignal } = useAbort();
 
   // Create the filter function from the HOF
-  const filterFunc = useMemo(() => {
+  const filterFunc: FilterFunction = useMemo(() => {
     return filterOptions({
       apiKey,
       apiUrl,
       defaultOption,
+      direction: sortDirection,
       filters: contextFilters,
       profile: profile.key,
       fieldName: filterKey,
-      direction: sortDirection,
-      dynamicOptionLimit: content.data?.parameters.selectOptionsPageSize,
+      getSignal,
+      pageSize: content.data?.parameters.selectOptionsPageSize,
       secondaryFieldName: secondaryFilterKey,
       staticOptions,
     });
@@ -838,6 +845,7 @@ function SelectFilter({
     contextFilters,
     defaultOption,
     filterKey,
+    getSignal,
     profile,
     secondaryFilterKey,
     sortDirection,
@@ -848,20 +856,20 @@ function SelectFilter({
   const [loading, setLoading] = useState(false);
 
   const fetchOptions = useCallback(
-    async (inputValue: string) => {
+    async (inputValue: string, loadedOptions: readonly Option[]) => {
       abort();
       setLoading(true);
       try {
-        const newOptions = await filterFunc(inputValue, getSignal());
+        const newOptions = await filterFunc(inputValue, loadedOptions);
         setLoading(false);
-        setOptions(newOptions);
+        // setOptions(newOptions);
       } catch (err) {
         if (isAbort(err)) return;
         setLoading(false);
         console.error(err);
       }
     },
-    [abort, filterFunc, getSignal],
+    [abort, filterFunc],
   );
 
   const debouncedFetchOptions = useMemo(() => {
@@ -882,10 +890,13 @@ function SelectFilter({
     };
   }, [debouncedFetchOptions]);
 
-  const loadOptions = (inputValue: string | null = null) =>
+  const loadOptions = (
+    inputValue: string | null = null,
+    loadedOptions: readonly Option[],
+  ) =>
     inputValue === null || !debouncedFetchOptions
-      ? fetchOptions(inputValue ?? '')
-      : debouncedFetchOptions(inputValue);
+      ? fetchOptions(inputValue ?? '', loadedOptions)
+      : debouncedFetchOptions(inputValue, loadedOptions);
 
   const formatOptionLabel = useCallback(
     (option: Option) => {
@@ -901,31 +912,34 @@ function SelectFilter({
   );
 
   return (
-    <Select
+    <AsyncPaginate<Option, GroupBase<Option>, unknown, boolean>
       aria-label={`${filterLabel} input`}
       className="width-full"
       classNames={{
         container: () => 'font-ui-xs',
         menuList: () => 'font-ui-xs',
       }}
+      components={{ MenuList }}
+      debounceTimeout={content.data?.parameters.debounceMilliseconds}
       formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isLoading={loading}
       isMulti={isMulti}
       key={sourceValue?.value}
+      loadOptions={filterFunc}
       menuPortalTarget={document.body}
       onChange={filterHandler}
-      onInputChange={(inputValue, actionMeta) => {
-        if (actionMeta.action !== 'input-change') return;
-        loadOptions(inputValue);
-      }}
+      // onInputChange={(inputValue, actionMeta) => {
+      //   if (actionMeta.action !== 'input-change') return;
+      //   loadOptions(inputValue);
+      // }}
       onMenuClose={() => {
         abort();
         setLoading(false);
         setOptions(null);
       }}
-      onMenuOpen={loadOptions}
+      // onMenuOpen={loadOptions}
       options={options ?? undefined}
       styles={{
         control: (base) => ({
@@ -1361,6 +1375,7 @@ function filterDynamicOptions({
   direction = 'asc',
   fieldName,
   filters,
+  getSignal,
   limit = 20,
   profile,
   secondaryFieldName,
@@ -1371,14 +1386,15 @@ function filterDynamicOptions({
   direction?: SortDirection;
   fieldName: string;
   filters?: FilterQueryData;
+  getSignal?: () => AbortSignal;
   limit?: number;
   profile: string;
   secondaryFieldName?: string | null;
 }) {
   return async function (
     inputValue: string,
-    signal?: AbortSignal,
-  ): Promise<Array<Option>> {
+    loadedOptions: readonly (Option | GroupBase<Option>)[],
+  ) {
     const url = `${apiUrl}/${profile}/values/${fieldName}`;
     const data = {
       text: inputValue,
@@ -1392,7 +1408,7 @@ function filterDynamicOptions({
       apiKey,
       data,
       responseType: 'json',
-      signal,
+      signal: getSignal?.(),
     });
     const options = values.map((item: Record<string, string>) => {
       const value = item[fieldName];
@@ -1403,7 +1419,10 @@ function filterDynamicOptions({
       const label = secondaryValue ? secondaryValue : value;
       return { label, value };
     });
-    return defaultOption ? [defaultOption, ...options] : options;
+    return {
+      options: defaultOption ? [defaultOption, ...options] : options,
+      hasMore: options.length >= limit,
+    };
   };
 }
 
@@ -1412,9 +1431,10 @@ function filterOptions({
   apiKey,
   apiUrl,
   defaultOption,
-  dynamicOptionLimit,
+  pageSize,
   fieldName,
   filters = {},
+  getSignal,
   profile,
   direction = 'asc',
   staticOptions,
@@ -1423,9 +1443,10 @@ function filterOptions({
   apiKey: string;
   apiUrl: string;
   defaultOption?: Option | null;
-  dynamicOptionLimit?: number;
+  pageSize?: number;
   fieldName: string;
   filters?: FilterQueryData;
+  getSignal?: () => AbortSignal;
   profile: string;
   direction?: SortDirection;
   secondaryFieldName?: string | null;
@@ -1444,7 +1465,8 @@ function filterOptions({
       direction,
       fieldName,
       filters,
-      limit: dynamicOptionLimit,
+      getSignal,
+      limit: pageSize,
       profile,
       secondaryFieldName,
     });
@@ -1471,9 +1493,10 @@ function filterStaticOptions(
       }
       return true;
     });
-    return Promise.resolve(
-      defaultOption ? [defaultOption, ...matches] : matches,
-    );
+    return Promise.resolve({
+      options: defaultOption ? [defaultOption, ...matches] : matches,
+      hasMore: false,
+    });
   };
 }
 
@@ -1844,7 +1867,7 @@ function scrollToHash() {
 ## Constants
 */
 
-const staticOptionLimit = 100;
+const staticOptionLimit = Infinity;
 
 /*
 ## Types
