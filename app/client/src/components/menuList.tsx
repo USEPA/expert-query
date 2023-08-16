@@ -25,7 +25,11 @@ function useWindowSize() {
 }
 
 export default MenuList;
-export function MenuList<T>({ children, maxHeight }: MenuListProps<T>) {
+export function MenuList<T>({
+  children,
+  maxHeight,
+  innerRef,
+}: MenuListProps<T>) {
   const items = Children.toArray(children);
   const { width } = useWindowSize();
   const listRef = useRef<VariableSizeList | null>(null);
@@ -41,6 +45,7 @@ export function MenuList<T>({ children, maxHeight }: MenuListProps<T>) {
 
   return (
     <VariableSizeList
+      outerRef={innerRef}
       ref={listRef}
       width="100%"
       height={maxHeight}

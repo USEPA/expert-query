@@ -861,7 +861,7 @@ function SelectFilter({
       loadedOptions: readonly (Option | GroupBase<Option>)[],
     ) => {
       abort();
-      setLoading(true);
+      // setLoading(true);
       let result: ReturnType<typeof filterFunc> = {
         options: [],
         hasMore: true,
@@ -871,7 +871,7 @@ function SelectFilter({
       } catch (err) {
         if (!isAbort(err)) console.error(err);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
       console.log(result);
       return result;
@@ -933,7 +933,7 @@ function SelectFilter({
       formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
-      isLoading={loading}
+      // isLoading={loading}
       isMulti={isMulti}
       key={sourceValue?.value}
       loadOptions={loadOptions}
@@ -945,7 +945,7 @@ function SelectFilter({
       // }}
       onMenuClose={() => {
         abort();
-        setLoading(false);
+        // setLoading(false);
         setOptions(null);
       }}
       // onMenuOpen={loadOptions}
