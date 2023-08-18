@@ -1,5 +1,4 @@
 import { Children, useCallback, useEffect, useRef, useState } from 'react';
-import { components } from 'react-select';
 import { VariableSizeList } from 'react-window';
 // types
 import type { ReactNode } from 'react';
@@ -43,18 +42,18 @@ export function MenuList<T>(props: MenuListProps<T>) {
   const getSize = (index: number) => sizeMap.current[index] || 70;
 
   // Calculate total height of items in list, up to maxHeight.
-  let height = 0;
-  for (let i of Array(items.length).keys()) {
-    if (height + getSize(i) > maxHeight) {
-      height = maxHeight;
-      break;
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    let newHeight = 0;
+    for (let i of Array(items.length).keys()) {
+      if (newHeight + getSize(i) > maxHeight) {
+        newHeight = maxHeight;
+        break;
+      }
+      newHeight += getSize(i);
     }
-    height += getSize(i);
-  }
-
-  if (height < maxHeight) {
-    return <components.MenuList {...props}>{children}</components.MenuList>;
-  }
+    setHeight(newHeight);
+  }, [items, maxHeight]);
 
   return (
     <VariableSizeList
@@ -89,7 +88,7 @@ type MenuItemProps = {
 function MenuItem({ index, width, setSize, value }: MenuItemProps) {
   const rowRef = useRef<HTMLDivElement | null>(null);
 
-  // keep track of the height of the rows to autosize rows
+  // Keep track of the height of the rows to autosize rows.
   useEffect(() => {
     if (!rowRef?.current) return;
 
