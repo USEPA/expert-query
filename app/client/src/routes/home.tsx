@@ -881,13 +881,7 @@ function SelectFilter({
     };
   }, [debouncedFetchOptions]);
 
-  const loadOptions = (
-    inputValue: string | null = null,
-    loadedOptions: readonly (Option | GroupBase<Option>)[],
-  ) =>
-    inputValue === null || !debouncedFetchOptions
-      ? fetchOptions(inputValue ?? '', loadedOptions)
-      : debouncedFetchOptions(inputValue, loadedOptions);
+  const loadOptions = debouncedFetchOptions ?? fetchOptions;
 
   const formatOptionLabel = useCallback(
     (option: Option) => {
