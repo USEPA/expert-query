@@ -486,23 +486,18 @@ function FilterFieldInputs({
       switch (fieldConfig.type) {
         case 'multiselect':
         case 'select':
-          const initialOptions = getInitialOptions(
-            staticOptions,
-            fieldConfig.key,
-          );
-
           if (
             !sourceFieldConfig &&
             fieldConfig.type === 'multiselect' &&
-            Array.isArray(initialOptions) &&
-            initialOptions.length <= 5
+            fieldConfig.key in staticOptions &&
+            staticOptions[fieldConfig.key].length <= 5
           ) {
             return [
               <Checkboxes
                 key={fieldConfig.key}
                 label={fieldConfig.label}
                 onChange={filterHandlers[fieldConfig.key] as OptionInputHandler}
-                options={initialOptions}
+                options={staticOptions[fieldConfig.key]}
                 selected={
                   (filterState[fieldConfig.key] as MultiOptionState) ?? []
                 }
@@ -1480,8 +1475,7 @@ function filterStaticOptions(
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     const matches: Option[] = [];
-    options.every((option) => {
-      if (matches.length >= staticOptionLimit) return false;
+    options.forEach((option) => {
       if (
         (typeof option.label === 'string' &&
           option.label.toLowerCase().includes(value)) ||
@@ -1490,7 +1484,6 @@ function filterStaticOptions(
       ) {
         matches.push(option);
       }
-      return true;
     });
     return Promise.resolve({
       options: defaultOption ? [defaultOption, ...matches] : matches,
@@ -1557,18 +1550,6 @@ function getDefaultSourceState(sourceFields: SourceFields) {
 function getDefaultValue(field: FilterField | SourceField) {
   const defaultValue = 'default' in field ? field.default : null;
   return defaultValue ?? (isSingleValueField(field) ? '' : null);
-}
-
-// Returns unfiltered options for a field, up to a maximum length
-function getInitialOptions(staticOptions: StaticOptions, fieldName: string) {
-  if (staticOptions.hasOwnProperty(fieldName)) {
-    const fieldOptions = staticOptions[fieldName as keyof StaticOptions] ?? [];
-
-    return fieldOptions.length > staticOptionLimit
-      ? fieldOptions.slice(0, staticOptionLimit)
-      : fieldOptions;
-  }
-  return null;
 }
 
 // Extracts the value field from Option items, otherwise returns the item
@@ -1861,12 +1842,6 @@ function scrollToHash() {
   const hashTag = document.getElementById(hash);
   hashTag?.scrollIntoView({ behavior: 'smooth' });
 }
-
-/*
-## Constants
-*/
-
-const staticOptionLimit = Infinity;
 
 /*
 ## Types
