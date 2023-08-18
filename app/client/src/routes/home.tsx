@@ -1,4 +1,4 @@
-import { debounce } from 'lodash';
+import { debounce, isEqual } from 'lodash';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
   Outlet,
@@ -852,29 +852,18 @@ function SelectFilter({
     staticOptions,
   ]);
 
-  const [options, setOptions] = useState<readonly Option[] | null>(null);
-  const [loading, setLoading] = useState(false);
-
   const fetchOptions = useCallback(
     async (
       inputValue: string,
       loadedOptions: readonly (Option | GroupBase<Option>)[],
     ) => {
       abort();
-      // setLoading(true);
-      let result: ReturnType<typeof filterFunc> = {
-        options: [],
-        hasMore: true,
-      };
       try {
-        result = await filterFunc(inputValue, loadedOptions);
+        return await filterFunc(inputValue, loadedOptions);
       } catch (err) {
         if (!isAbort(err)) console.error(err);
-      } finally {
-        // setLoading(false);
+        return { options: [], hasMore: true };
       }
-      console.log(result);
-      return result;
     },
     [abort, filterFunc],
   );
@@ -920,36 +909,31 @@ function SelectFilter({
 
   const MenuList = wrapMenuList(CustomMenuList);
 
+  // Memoize the context filters so options can be cached correctly
+  const [contextFiltersMemo, setContextFiltersMemo] = useState(contextFilters);
+  if (!isEqual(contextFilters, contextFiltersMemo)) {
+    setContextFiltersMemo(contextFilters);
+  }
+
   return (
     <AsyncPaginate
       aria-label={`${filterLabel} input`}
+      cacheUniqs={[contextFiltersMemo]}
       className="width-full"
       classNames={{
         container: () => 'font-ui-xs',
         menuList: () => 'font-ui-xs',
       }}
       components={{ MenuList }}
-      // debounceTimeout={content.data?.parameters.debounceMilliseconds}
       formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
-      // isLoading={loading}
       isMulti={isMulti}
       key={sourceValue?.value}
       loadOptions={loadOptions}
       menuPortalTarget={document.body}
       onChange={filterHandler}
-      // onInputChange={(inputValue, actionMeta) => {
-      //   if (actionMeta.action !== 'input-change') return;
-      //   loadOptions(inputValue);
-      // }}
-      onMenuClose={() => {
-        abort();
-        // setLoading(false);
-        setOptions(null);
-      }}
-      // onMenuOpen={loadOptions}
-      // options={options ?? undefined}
+      onMenuClose={abort}
       styles={{
         control: (base) => ({
           ...base,
@@ -1381,7 +1365,7 @@ function filterDynamicOptions({
   apiKey,
   apiUrl,
   defaultOption,
-  direction = 'asc',
+  direction,
   fieldName,
   filters,
   getSignal,
@@ -1392,7 +1376,7 @@ function filterDynamicOptions({
   apiKey: string;
   apiUrl: string;
   defaultOption?: Option | null;
-  direction?: SortDirection;
+  direction: SortDirection;
   fieldName: string;
   filters?: FilterQueryData;
   getSignal?: () => AbortSignal;
@@ -1404,10 +1388,16 @@ function filterDynamicOptions({
     inputValue: string,
     loadedOptions: readonly (Option | GroupBase<Option>)[],
   ) {
+    const lastLoadedOption = loadedOptions[loadedOptions.length - 1];
+    const lastLoadedValue =
+      lastLoadedOption && 'options' in lastLoadedOption // option is a group
+        ? lastLoadedOption.options[lastLoadedOption.options.length - 1]?.value
+        : lastLoadedOption?.value;
     const url = `${apiUrl}/${profile}/values/${fieldName}`;
     const data = {
       text: inputValue,
-      direction: direction ?? null,
+      comparand: lastLoadedValue,
+      direction,
       limit,
       filters,
       additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
@@ -1524,7 +1514,7 @@ function getContextFilters(
   profile: Profile,
   filters: FilterQueryData,
 ) {
-  if (!('contextFields' in fieldConfig)) return;
+  if (!('contextFields' in fieldConfig)) return {};
 
   return Object.entries(filters).reduce<FilterQueryData>(
     (current, [key, value]) => {
