@@ -674,7 +674,7 @@ async function queryColumnValues(profile, columns, params, schema) {
       ),
     )
     .whereNotNull(primaryColumn.name)
-    .distinctOn(primaryColumn.name)
+    .distinct()
     .orderBy(primaryColumn.name, params.direction ?? 'asc')
     .select();
 
