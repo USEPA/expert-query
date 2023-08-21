@@ -244,8 +244,19 @@
         });
 
         window.addEventListener('error', function (event) {
+          // Ignore errors stemming from EPA template script.
+          if (
+            event.filename ===
+            'https://www.epa.gov/themes/epa_theme/js/dist/scripts.min.js?v=9.2.6'
+          ) {
+            event.stopImmediatePropagation();
+            return;
+          }
+          const description = event.error
+            ? `${event.error.message}${event.error.stack}`
+            : event.message;
           window.logToGa('send', 'exception', {
-            exDescription: `${event.error.message}${event.error.stack}`,
+            exDescription: description,
             exFatal: true,
           });
 
