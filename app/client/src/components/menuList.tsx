@@ -25,8 +25,11 @@ function useWindowSize() {
 }
 
 export default MenuList;
-export function MenuList<T>(props: MenuListProps<T>) {
-  const { children, maxHeight, innerRef } = props;
+export function MenuList<T>({
+  children,
+  maxHeight,
+  innerRef,
+}: MenuListProps<T>) {
   const items = Children.toArray(children);
 
   const { width } = useWindowSize();

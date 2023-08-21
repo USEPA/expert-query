@@ -1408,7 +1408,10 @@ function filterDynamicOptions({
       return { label, value };
     });
     return {
-      options: defaultOption ? [defaultOption, ...options] : options,
+      options:
+        !lastLoadedOption && defaultOption // only include default option in first page
+          ? [defaultOption, ...options]
+          : options,
       hasMore: options.length >= limit,
     };
   };
