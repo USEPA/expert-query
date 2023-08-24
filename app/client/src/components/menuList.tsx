@@ -1,4 +1,4 @@
-import { Children, useEffect, useRef, useState } from 'react';
+import { Children, useCallback, useEffect, useRef, useState } from 'react';
 import { VariableSizeList } from 'react-window';
 // types
 import type { ReactNode } from 'react';
@@ -38,40 +38,37 @@ export function MenuList<T>({
   // Keeps track of the size of the virtualized items. This handles
   // items where the text wraps.
   const sizeMap = useRef<{ [index: number]: number }>({});
-  const setSize = (index: number, size: number) => {
+  const setSize = useCallback((index: number, size: number) => {
     sizeMap.current = { ...sizeMap.current, [index]: size };
-  };
-  const getSize = (index: number) => sizeMap.current[index] || 35;
+    listRef.current?.resetAfterIndex(index);
+  }, []);
+  const getSize = (index: number) => sizeMap.current[index] || 70;
 
+  // Calculate total height of items in list, up to maxHeight.
   const [height, setHeight] = useState(0);
+  useEffect(() => {
+    let newHeight = 0;
+    for (let i of Array(items.length).keys()) {
+      if (newHeight + getSize(i) > maxHeight) {
+        newHeight = maxHeight;
+        break;
+      }
+      newHeight += getSize(i);
+    }
+    setHeight(newHeight);
+  }, [items, maxHeight]);
 
   return (
     <VariableSizeList
-      onItemsRendered={({ visibleStartIndex }) => {
-        listRef.current?.resetAfterIndex(visibleStartIndex);
-      }}
       outerRef={innerRef}
-      ref={(node) => {
-        if (!node) return;
-        listRef.current = node;
-        // Calculate total height of items in list, up to maxHeight.
-        let newHeight = 0;
-        for (let i of Array(items.length).keys()) {
-          if (newHeight + getSize(i) > maxHeight) {
-            newHeight = maxHeight;
-            break;
-          }
-          newHeight += getSize(i);
-        }
-        setHeight(newHeight);
-      }}
+      ref={listRef}
       width="100%"
       height={height}
       itemCount={items.length}
       itemSize={getSize}
     >
       {({ index, style }) => (
-        <div style={{ ...style, overflow: 'hidden' }}>
+        <div style={{ ...style, overflowX: 'hidden' }}>
           <MenuItem
             index={index}
             width={width}
@@ -95,21 +92,11 @@ function MenuItem({ index, width, setSize, value }: MenuItemProps) {
   const rowRef = useRef<HTMLDivElement | null>(null);
 
   // Keep track of the height of the rows to autosize rows.
-  const [prevWidth, setPrevWidth] = useState(width);
-  if (prevWidth !== width && rowRef.current) {
-    setPrevWidth(width);
-    setSize(index, rowRef.current.getBoundingClientRect().height);
-  }
+  useEffect(() => {
+    if (!rowRef?.current) return;
 
-  return (
-    <div
-      ref={(node) => {
-        if (!node) return;
-        setSize(index, node.getBoundingClientRect().height);
-        rowRef.current = node;
-      }}
-    >
-      {value}
-    </div>
-  );
+    setSize(index, rowRef.current.getBoundingClientRect().height);
+  }, [setSize, index, width]);
+
+  return <div ref={rowRef}>{value}</div>;
 }
