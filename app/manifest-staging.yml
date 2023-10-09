@@ -1,8 +1,6 @@
 ---
 applications:
   - name: expert-query-staging
-    routes:
-    - route: owapps-stage.app.cloud.gov/expertquery
     instances: 1
     memory: 512MB
     disk_quota: 512MB
