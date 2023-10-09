@@ -1,6 +1,8 @@
 ---
 applications:
   - name: expert-query-dev
+    routes:
+    - route: owapps-dev.app.cloud.gov/expertquery
     instances: 1
     memory: 512MB
     disk_quota: 512MB
