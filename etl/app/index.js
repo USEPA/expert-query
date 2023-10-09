@@ -14,10 +14,16 @@ const port = process.env.PORT || 3001;
 
 const environment = getEnvironment();
 
-const requiredEnvVars = ['EQ_PASSWORD', 'GLOSSARY_AUTH', 'MV_API_KEY'];
+const requiredEnvVars = ['EQ_PASSWORD', 'GLOSSARY_AUTH'];
 
 if (environment.isLocal) {
-  requiredEnvVars.push('DB_USERNAME', 'DB_PASSWORD', 'DB_PORT', 'DB_HOST');
+  requiredEnvVars.push(
+    'DB_USERNAME',
+    'DB_PASSWORD',
+    'DB_PORT',
+    'DB_HOST',
+    'MV_API_KEY',
+  );
 } else {
   requiredEnvVars.push(
     'CF_S3_PUB_ACCESS_KEY',
