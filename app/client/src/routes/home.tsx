@@ -1,4 +1,4 @@
-import { debounce } from 'lodash';
+import { debounce, isEqual } from 'lodash';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
   Outlet,
@@ -7,6 +7,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import Select from 'react-select';
+import { AsyncPaginate, wrapMenuList } from 'react-select-async-paginate';
 import { ReactComponent as Download } from 'images/file_download.svg';
 // components
 import { AccordionItem } from 'components/accordion';
@@ -18,6 +19,7 @@ import { InPageNavAnchor, NumberedInPageNavLabel } from 'components/inPageNav';
 import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
+import { MenuList as CustomMenuList } from 'components/menuList';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { StepIndicator } from 'components/stepIndicator';
@@ -31,6 +33,8 @@ import { getData, isAbort, postData, useAbort } from 'utils';
 // types
 import type { Content } from 'contexts/content';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import type { GroupBase } from 'react-select';
+import type { LoadOptions } from 'react-select-async-paginate';
 import type {
   DomainOptions,
   MultiOptionField,
@@ -482,23 +486,18 @@ function FilterFieldInputs({
       switch (fieldConfig.type) {
         case 'multiselect':
         case 'select':
-          const initialOptions = getInitialOptions(
-            staticOptions,
-            fieldConfig.key,
-          );
-
           if (
             !sourceFieldConfig &&
             fieldConfig.type === 'multiselect' &&
-            Array.isArray(initialOptions) &&
-            initialOptions.length <= 5
+            fieldConfig.key in staticOptions &&
+            staticOptions[fieldConfig.key].length <= 5
           ) {
             return [
               <Checkboxes
                 key={fieldConfig.key}
                 label={fieldConfig.label}
                 onChange={filterHandlers[fieldConfig.key] as OptionInputHandler}
-                options={initialOptions}
+                options={staticOptions[fieldConfig.key]}
                 selected={
                   (filterState[fieldConfig.key] as MultiOptionState) ?? []
                 }
@@ -797,6 +796,8 @@ function SourceSelectFilter(props: SourceSelectFilterProps) {
   );
 }
 
+type FilterFunction = LoadOptions<Option, GroupBase<Option>, unknown>;
+
 function SelectFilter({
   apiKey,
   apiUrl,
@@ -818,16 +819,17 @@ function SelectFilter({
   const { abort, getSignal } = useAbort();
 
   // Create the filter function from the HOF
-  const filterFunc = useMemo(() => {
+  const filterFunc: FilterFunction = useMemo(() => {
     return filterOptions({
       apiKey,
       apiUrl,
       defaultOption,
+      direction: sortDirection,
       filters: contextFilters,
       profile: profile.key,
       fieldName: filterKey,
-      direction: sortDirection,
-      dynamicOptionLimit: content.data?.parameters.selectOptionsPageSize,
+      getSignal,
+      pageSize: content.data?.parameters.selectOptionsPageSize,
       secondaryFieldName: secondaryFilterKey,
       staticOptions,
     });
@@ -838,30 +840,27 @@ function SelectFilter({
     contextFilters,
     defaultOption,
     filterKey,
+    getSignal,
     profile,
     secondaryFilterKey,
     sortDirection,
     staticOptions,
   ]);
 
-  const [options, setOptions] = useState<readonly Option[] | null>(null);
-  const [loading, setLoading] = useState(false);
-
   const fetchOptions = useCallback(
-    async (inputValue: string) => {
+    async (
+      inputValue: string,
+      loadedOptions: readonly (Option | GroupBase<Option>)[],
+    ) => {
       abort();
-      setLoading(true);
       try {
-        const newOptions = await filterFunc(inputValue, getSignal());
-        setLoading(false);
-        setOptions(newOptions);
+        return await filterFunc(inputValue, loadedOptions);
       } catch (err) {
-        if (isAbort(err)) return;
-        setLoading(false);
-        console.error(err);
+        if (!isAbort(err)) console.error(err);
+        return { options: [], hasMore: true };
       }
     },
-    [abort, filterFunc, getSignal],
+    [abort, filterFunc],
   );
 
   const debouncedFetchOptions = useMemo(() => {
@@ -882,10 +881,7 @@ function SelectFilter({
     };
   }, [debouncedFetchOptions]);
 
-  const loadOptions = (inputValue: string | null = null) =>
-    inputValue === null || !debouncedFetchOptions
-      ? fetchOptions(inputValue ?? '')
-      : debouncedFetchOptions(inputValue);
+  const loadOptions = debouncedFetchOptions ?? fetchOptions;
 
   const formatOptionLabel = useCallback(
     (option: Option) => {
@@ -900,33 +896,33 @@ function SelectFilter({
     [secondaryFilterKey],
   );
 
+  const MenuList = wrapMenuList(CustomMenuList);
+
+  // Memoize the context filters so options can be cached correctly
+  const [contextFiltersMemo, setContextFiltersMemo] = useState(contextFilters);
+  if (!isEqual(contextFilters, contextFiltersMemo)) {
+    setContextFiltersMemo(contextFilters);
+  }
+
   return (
-    <Select
+    <AsyncPaginate
       aria-label={`${filterLabel} input`}
+      cacheUniqs={[contextFiltersMemo]}
       className="width-full"
       classNames={{
         container: () => 'font-ui-xs',
         menuList: () => 'font-ui-xs',
       }}
+      components={{ MenuList }}
       formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
-      isLoading={loading}
       isMulti={isMulti}
       key={sourceValue?.value}
+      loadOptions={loadOptions}
       menuPortalTarget={document.body}
       onChange={filterHandler}
-      onInputChange={(inputValue, actionMeta) => {
-        if (actionMeta.action !== 'input-change') return;
-        loadOptions(inputValue);
-      }}
-      onMenuClose={() => {
-        abort();
-        setLoading(false);
-        setOptions(null);
-      }}
-      onMenuOpen={loadOptions}
-      options={options ?? undefined}
+      onMenuClose={abort}
       styles={{
         control: (base) => ({
           ...base,
@@ -1358,9 +1354,10 @@ function filterDynamicOptions({
   apiKey,
   apiUrl,
   defaultOption,
-  direction = 'asc',
+  direction,
   fieldName,
   filters,
+  getSignal,
   limit = 20,
   profile,
   secondaryFieldName,
@@ -1368,21 +1365,28 @@ function filterDynamicOptions({
   apiKey: string;
   apiUrl: string;
   defaultOption?: Option | null;
-  direction?: SortDirection;
+  direction: SortDirection;
   fieldName: string;
   filters?: FilterQueryData;
+  getSignal?: () => AbortSignal;
   limit?: number;
   profile: string;
   secondaryFieldName?: string | null;
 }) {
   return async function (
     inputValue: string,
-    signal?: AbortSignal,
-  ): Promise<Array<Option>> {
+    loadedOptions: readonly (Option | GroupBase<Option>)[],
+  ) {
+    const lastLoadedOption = loadedOptions[loadedOptions.length - 1];
+    const lastLoadedValue =
+      lastLoadedOption && 'options' in lastLoadedOption // option is a group
+        ? lastLoadedOption.options[lastLoadedOption.options.length - 1]?.value
+        : lastLoadedOption?.value;
     const url = `${apiUrl}/${profile}/values/${fieldName}`;
     const data = {
       text: inputValue,
-      direction: direction ?? null,
+      comparand: lastLoadedValue,
+      direction,
       limit,
       filters,
       additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
@@ -1392,7 +1396,7 @@ function filterDynamicOptions({
       apiKey,
       data,
       responseType: 'json',
-      signal,
+      signal: getSignal?.(),
     });
     const options = values.map((item: Record<string, string>) => {
       const value = item[fieldName];
@@ -1403,7 +1407,13 @@ function filterDynamicOptions({
       const label = secondaryValue ? secondaryValue : value;
       return { label, value };
     });
-    return defaultOption ? [defaultOption, ...options] : options;
+    return {
+      options:
+        !lastLoadedOption && defaultOption // only include default option in first page
+          ? [defaultOption, ...options]
+          : options,
+      hasMore: options.length >= limit,
+    };
   };
 }
 
@@ -1412,9 +1422,10 @@ function filterOptions({
   apiKey,
   apiUrl,
   defaultOption,
-  dynamicOptionLimit,
+  pageSize,
   fieldName,
   filters = {},
+  getSignal,
   profile,
   direction = 'asc',
   staticOptions,
@@ -1423,9 +1434,10 @@ function filterOptions({
   apiKey: string;
   apiUrl: string;
   defaultOption?: Option | null;
-  dynamicOptionLimit?: number;
+  pageSize?: number;
   fieldName: string;
   filters?: FilterQueryData;
+  getSignal?: () => AbortSignal;
   profile: string;
   direction?: SortDirection;
   secondaryFieldName?: string | null;
@@ -1444,7 +1456,8 @@ function filterOptions({
       direction,
       fieldName,
       filters,
-      limit: dynamicOptionLimit,
+      getSignal,
+      limit: pageSize,
       profile,
       secondaryFieldName,
     });
@@ -1459,8 +1472,7 @@ function filterStaticOptions(
   return function (inputValue: string) {
     const value = inputValue.trim().toLowerCase();
     const matches: Option[] = [];
-    options.every((option) => {
-      if (matches.length >= staticOptionLimit) return false;
+    options.forEach((option) => {
       if (
         (typeof option.label === 'string' &&
           option.label.toLowerCase().includes(value)) ||
@@ -1469,11 +1481,11 @@ function filterStaticOptions(
       ) {
         matches.push(option);
       }
-      return true;
     });
-    return Promise.resolve(
-      defaultOption ? [defaultOption, ...matches] : matches,
-    );
+    return Promise.resolve({
+      options: defaultOption ? [defaultOption, ...matches] : matches,
+      hasMore: false,
+    });
   };
 }
 
@@ -1492,7 +1504,7 @@ function getContextFilters(
   profile: Profile,
   filters: FilterQueryData,
 ) {
-  if (!('contextFields' in fieldConfig)) return;
+  if (!('contextFields' in fieldConfig)) return {};
 
   return Object.entries(filters).reduce<FilterQueryData>(
     (current, [key, value]) => {
@@ -1535,18 +1547,6 @@ function getDefaultSourceState(sourceFields: SourceFields) {
 function getDefaultValue(field: FilterField | SourceField) {
   const defaultValue = 'default' in field ? field.default : null;
   return defaultValue ?? (isSingleValueField(field) ? '' : null);
-}
-
-// Returns unfiltered options for a field, up to a maximum length
-function getInitialOptions(staticOptions: StaticOptions, fieldName: string) {
-  if (staticOptions.hasOwnProperty(fieldName)) {
-    const fieldOptions = staticOptions[fieldName as keyof StaticOptions] ?? [];
-
-    return fieldOptions.length > staticOptionLimit
-      ? fieldOptions.slice(0, staticOptionLimit)
-      : fieldOptions;
-  }
-  return null;
 }
 
 // Extracts the value field from Option items, otherwise returns the item
@@ -1839,12 +1839,6 @@ function scrollToHash() {
   const hashTag = document.getElementById(hash);
   hashTag?.scrollIntoView({ behavior: 'smooth' });
 }
-
-/*
-## Constants
-*/
-
-const staticOptionLimit = 100;
 
 /*
 ## Types

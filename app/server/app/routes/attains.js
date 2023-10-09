@@ -617,6 +617,7 @@ function getQueryParamsValues(req) {
     },
     {
       text: '',
+      comparand: null,
       direction: null,
       filters: {},
       limit: null,
@@ -673,7 +674,7 @@ async function queryColumnValues(profile, columns, params, schema) {
       ),
     )
     .whereNotNull(primaryColumn.name)
-    .distinctOn(primaryColumn.name)
+    .distinct()
     .orderBy(primaryColumn.name, params.direction ?? 'asc')
     .select();
 
@@ -681,6 +682,14 @@ async function queryColumnValues(profile, columns, params, schema) {
   profile.columns.forEach((col) => {
     appendToWhere(query, col.name, params.filters[col.alias]);
   });
+
+  if (
+    typeof params.comparand === 'string' ||
+    typeof params.comparand === 'number'
+  ) {
+    const comparator = params.direction === 'desc' ? '<' : '>';
+    query.andWhere(primaryColumn.name, comparator, params.comparand);
+  }
 
   if (params.text) {
     query.andWhere((q) => {
