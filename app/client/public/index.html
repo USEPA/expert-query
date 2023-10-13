@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8" />
@@ -78,6 +78,30 @@
       rel="icon"
       sizes="32x32"
       href="https://www.epa.gov/themes/epa_theme/images/favicon-32.png"
+    />
+    <link
+      rel="preload"
+      href="https://www.epa.gov/themes/epa_theme/fonts/source-sans-pro/sourcesanspro-regular-webfont.woff2"
+      as="font"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="https://www.epa.gov/themes/epa_theme/fonts/source-sans-pro/sourcesanspro-bold-webfont.woff2"
+      as="font"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="https://www.epa.gov/themes/epa_theme/fonts/source-sans-pro/sourcesanspro-italic-webfont.woff2"
+      as="font"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="https://www.epa.gov/themes/epa_theme/fonts/merriweather/Latin-Merriweather-Bold.woff2"
+      as="font"
+      crossorigin="anonymous"
     />
     <link
       rel="stylesheet"
@@ -269,7 +293,6 @@
   <body id="top">
     <div class="skiplinks" role="navigation" aria-labelledby="skip-to-main">
       <a
-        aria-label="Skip to main content"
         id="skip-to-main"
         href="#main"
         class="skiplinks__link visually-hidden focusable"
@@ -316,7 +339,7 @@
           </div>
         </header>
 
-        <div class="usa-banner__content usa-accordion__content" id="gov-banner">
+        <div id="gov-banner" class="usa-banner__content usa-accordion__content">
           <div class="grid-row grid-gap-lg">
             <div class="usa-banner__guidance tablet:grid-col-6">
               <img
@@ -402,8 +425,8 @@
                 </svg>
               </span>
             </a>
-            <button class="usa-menu-btn usa-button l-header__menu-button">
-              Menu
+            <button class="usa-menu-btn button--dark l-header__menu-button">
+              Main Menu
             </button>
           </div>
 
@@ -416,15 +439,15 @@
               <div role="search">
                 <label class="usa-sr-only" for="search-box">Search</label>
                 <input
-                  class="usa-input"
                   id="search-box"
+                  class="usa-input"
                   type="search"
                   name="querytext"
                   placeholder="Search EPA.gov"
                 />
-                <button class="usa-button" type="submit">
+                <button class="button button--dark" type="submit">
                   <img
-                    src="%PUBLIC_URL%/img/search--white.svg"
+                    src="https://www.epa.gov/themes/epa_theme/images/usa-icons-bg/search--white.svg"
                     class="usa-search__submit-icon"
                     alt="Search"
                   />
@@ -530,7 +553,7 @@
                   class="menu__link"
                   href="https://www.epa.gov/home/wwwepagov-snapshots"
                 >
-                  EPA www Web Snapshot
+                  EPA www Web Snapshots
                 </a>
               </li>
               <li class="menu__item">
@@ -574,14 +597,20 @@
             <h2>Connect.</h2>
             <ul class="menu menu--footer">
               <li class="menu__item">
-                <a href="https://www.data.gov/" class="menu__link"
-                  >Data.gov<svg
+                <a class="menu__link" href="https://www.data.gov/">
+                  Data.gov<svg
                     class="icon icon--exit is-spaced-before"
                     role="img"
                   >
                     <title>Exit EPA’s Website</title>
-                    <use href="%PUBLIC_URL%/img/sprite.svg#launch"></use></svg
-                ></a>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path d="M0 0h24v24H0z" fill="none" />
+                      <path
+                        d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"
+                      />
+                    </svg>
+                  </svg>
+                </a>
               </li>
               <li class="menu__item">
                 <a
@@ -607,14 +636,20 @@
                 </a>
               </li>
               <li class="menu__item">
-                <a href="https://www.regulations.gov/" class="menu__link"
-                  >Regulations.gov<svg
+                <a class="menu__link" href="https://www.regulations.gov/">
+                  Regulations.gov<svg
                     class="icon icon--exit is-spaced-before"
                     role="img"
                   >
                     <title>Exit EPA’s Website</title>
-                    <use href="%PUBLIC_URL%/img/sprite.svg#launch"></use></svg
-                ></a>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path d="M0 0h24v24H0z" fill="none" />
+                      <path
+                        d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"
+                      />
+                    </svg>
+                  </svg>
+                </a>
               </li>
               <li class="menu__item">
                 <a
@@ -625,24 +660,36 @@
                 </a>
               </li>
               <li class="menu__item">
-                <a href="https://www.usa.gov/" class="menu__link"
-                  >USA.gov<svg
+                <a class="menu__link" href="https://www.usa.gov/">
+                  USA.gov<svg
                     class="icon icon--exit is-spaced-before"
                     role="img"
                   >
                     <title>Exit EPA’s Website</title>
-                    <use href="%PUBLIC_URL%/img/sprite.svg#launch"></use></svg
-                ></a>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path d="M0 0h24v24H0z" fill="none" />
+                      <path
+                        d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"
+                      />
+                    </svg>
+                  </svg>
+                </a>
               </li>
               <li class="menu__item">
-                <a href="https://www.whitehouse.gov/" class="menu__link"
-                  >White House<svg
+                <a class="menu__link" href="https://www.whitehouse.gov/">
+                  White House<svg
                     class="icon icon--exit is-spaced-before"
                     role="img"
                   >
                     <title>Exit EPA’s Website</title>
-                    <use href="%PUBLIC_URL%/img/sprite.svg#launch"></use></svg
-                ></a>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path d="M0 0h24v24H0z" fill="none" />
+                      <path
+                        d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"
+                      />
+                    </svg>
+                  </svg>
+                </a>
               </li>
             </ul>
           </div>
@@ -784,8 +831,6 @@
       }
     </style>
 
-    <script src="https://www.epa.gov/themes/epa_theme/js/dist/common.min.js?v=9.2.6"></script>
-    <script src="https://www.epa.gov/themes/epa_theme/js/dist/scripts.min.js?v=9.2.6"></script>
     <script>
       (function () {
         var sz = document.createElement('script');
