@@ -154,11 +154,11 @@ export function Tooltip({ children, className, text }: TooltipProps) {
     'usa-tooltip__body',
     {
       'is-set': isVisible,
+      'is-visible': isShown,
       'usa-tooltip__body--top': effectivePosition === 'top',
       'usa-tooltip__body--bottom': effectivePosition === 'bottom',
       'usa-tooltip__body--right': effectivePosition === 'right',
       'usa-tooltip__body--left': effectivePosition === 'left',
-      'opacity-0': !isShown,
       'usa-tooltip__body--wrap': isVisible && wrapTooltip,
     },
   );

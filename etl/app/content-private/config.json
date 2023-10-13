@@ -1,5 +1,5 @@
 {
-  "chunkSize": 11500,
+  "chunkSize": 5000,
   "gisChunkSize": 2000,
   "retryLimit": 5,
   "retryIntervalSeconds": 5,
