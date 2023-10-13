@@ -73,7 +73,7 @@ async function protectRoutes(req, res, next) {
     // get config from private S3 bucket
     const privateConfig = await getPrivateConfig();
     if (!privateConfig?.approvedUsers) {
-      handleError('Server failed to load configuration', 500);
+      return handleError('Server failed to load configuration', 500);
     }
 
     const approvedUserIds = privateConfig.approvedUsers.map(

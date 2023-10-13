@@ -564,41 +564,52 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
 function executeValuesQuery(req, res) {
   const metadataObj = populateMetdataObjFromRequest(req);
 
-  const profile = privateConfig.tableConfig[req.params.profile];
-  if (!profile) {
-    return res
-      .status(404)
-      .json({ message: 'The requested profile does not exist' });
-  }
-
-  const { additionalColumns, ...params } = getQueryParamsValues(req);
-
-  const columnAliases = [
-    req.params.column,
-    ...(Array.isArray(additionalColumns) ? additionalColumns : []),
-  ];
-
-  let columns;
   try {
-    columns = getColumnsFromAliases(columnAliases, profile);
-  } catch (err) {
-    return res.status(404).json({
-      message: `The column ${err.message} does not exist on the selected profile`,
-    });
-  }
+    const profile = privateConfig.tableConfig[req.params.profile];
+    if (!profile) {
+      return res
+        .status(404)
+        .json({ message: 'The requested profile does not exist' });
+    }
 
-  queryColumnValues(profile, columns, params, req.activeSchema)
-    .then((values) => res.status(200).json(values))
-    .catch((error) => {
-      log.error(
-        formatLogMsg(
-          metadataObj,
-          `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
-          error,
-        ),
-      );
-      res.status(500).json({ message: 'Error! ' + error });
-    });
+    const { additionalColumns, ...params } = getQueryParamsValues(req);
+
+    const columnAliases = [
+      req.params.column,
+      ...(Array.isArray(additionalColumns) ? additionalColumns : []),
+    ];
+
+    let columns;
+    try {
+      columns = getColumnsFromAliases(columnAliases, profile);
+    } catch (err) {
+      return res.status(404).json({
+        message: `The column ${err.message} does not exist on the selected profile`,
+      });
+    }
+
+    queryColumnValues(profile, columns, params, req.activeSchema)
+      .then((values) => res.status(200).json(values))
+      .catch((error) => {
+        log.error(
+          formatLogMsg(
+            metadataObj,
+            `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
+            error,
+          ),
+        );
+        res.status(500).json({ message: 'Error! ' + error });
+      });
+  } catch (error) {
+    log.error(
+      formatLogMsg(
+        metadataObj,
+        `Failed to get values for the "${req.params.profile}" table and "${req.params.column}" column:`,
+        error,
+      ),
+    );
+    return res.status(error.code ?? 500).json(error);
+  }
 }
 
 /**
