@@ -64,7 +64,7 @@ async function protectRoutes(req, res, next) {
     return res.status(status).json(errJson);
   }
 
-  if (!eqSecret || eqSecret !== process.env.EQ_SECRET) handleError();
+  if (!eqSecret || eqSecret !== process.env.EQ_SECRET) return handleError();
 
   // For dev and stage only, check if user-id is authorized
   if (environment.isDevelopment || environment.isStaging) {
@@ -81,7 +81,7 @@ async function protectRoutes(req, res, next) {
     );
 
     // check if apiUserId is approved
-    if (!approvedUserIds.includes(apiUserId)) handleError();
+    if (!approvedUserIds.includes(apiUserId)) return handleError();
   }
 
   next();
