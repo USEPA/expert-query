@@ -260,44 +260,5 @@ export default function (app, basePath) {
       });
   });
 
-  // --- get static content from S3
-  router.get('/getFile/:path*', (req, res) => {
-    // get the filepath from the url and trim the leading forward slash
-    const filepath = req.params[0].slice(1);
-    const metadataObj = populateMetdataObjFromRequest(req);
-
-    getFile(`content/${filepath}`, undefined, 'arraybuffer')
-      .then((stringsOrResponses) => {
-        // set the headers for the file
-        const filename = filepath.split('/').pop();
-        const format = filename.split('.').pop();
-        if (format) {
-          res.setHeader('Content-disposition', `inline; filename=${filename}`);
-          res.setHeader('Content-type', `application/${format}`);
-        }
-
-        // local development: return root of response
-        // Cloud.gov: return data value of response
-        return res.send(
-          environment.isLocal ? stringsOrResponses : stringsOrResponses.data,
-        );
-      })
-      .catch((error) => {
-        if (typeof error.toJSON === 'function') {
-          log.debug(formatLogMsg(metadataObj, error.toJSON()));
-        }
-
-        const errorStatus = error.response?.status;
-        const errorMethod = error.response?.config?.method?.toUpperCase();
-        const errorUrl = error.response?.config?.url;
-        const message = `S3 Error: ${errorStatus} ${errorMethod} ${errorUrl}`;
-        log.error(formatLogMsg(metadataObj, message));
-
-        return res
-          .status(error?.response?.status || 500)
-          .json({ message: 'Error getting static content from S3 bucket' });
-      });
-  });
-
   app.use(`${basePath}api`, router);
 }

@@ -51,33 +51,6 @@
         }
       }
     },
-    "/getFile/{path}": {
-      "get": {
-        "tags": ["S3"],
-        "summary": "Fetch a file from S3",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/pathParam"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The requested file was found.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/ServerError"
-          }
-        }
-      }
-    },
     "/health": {
       "get": {
         "tags": ["Health"],
@@ -963,8 +936,8 @@
         }
       },
       "columnParam": {
-        "name": "columns",
-        "description": "The columns to return in the result set, and the order in which to return them.",
+        "name": "column",
+        "description": "The column name for which values are queried.",
         "in": "path",
         "required": true,
         "example": "assessmentUnitId",
@@ -1404,14 +1377,6 @@
           "items": {
             "type": "string"
           }
-        }
-      },
-      "pathParam": {
-        "name": "path",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "string"
         }
       },
       "pollutantParam": {
