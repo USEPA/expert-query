@@ -5,7 +5,7 @@ import { statSync } from 'node:fs';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getActiveSchema, protectRoutes } from '../middleware.js';
-import { knex } from '../utilities/database.js';
+import { knex, queryPool } from '../utilities/database.js';
 import {
   corsOptionsDelegate,
   getEnvironment,
@@ -40,15 +40,13 @@ export default function (app, basePath) {
 
       try {
         // check etl status in db
-        const query = knex
-          .withSchema('logging')
-          .from('etl_status')
-          .select('glossary')
-          .first();
-        const results = await query;
+        const results =
+          (await queryPool(
+            knex.withSchema('logging').from('etl_status').select('glossary'),
+          ),
+          true);
         if (results.glossary === 'failed') {
-          res.status(200).json({ status: 'FAILED-DB' });
-          return;
+          return res.status(200).json({ status: 'FAILED-DB' });
         }
 
         // initialize timeSinceLastUpdate to the minimum time node allows
@@ -77,12 +75,12 @@ export default function (app, basePath) {
         }
 
         // check that glossary was updated in the last 25 hours
-        res
+        return res
           .status(200)
           .json({ status: timeSinceLastUpdate >= 24.5 ? 'FAILED-TIME' : 'UP' });
       } catch (error) {
         log.error(formatLogMsg(metadataObj, 'Error!: ', error));
-        res.status(500).send('Error!' + error);
+        return res.status(500).send('Error!' + error);
       }
     },
   );

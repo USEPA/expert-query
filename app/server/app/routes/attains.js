@@ -5,8 +5,9 @@ import Excel from 'exceljs';
 import { readdirSync, statSync } from 'node:fs';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import QueryStream from 'pg-query-stream';
 import { getActiveSchema, protectRoutes } from '../middleware.js';
-import { appendToWhere, knex } from '../utilities/database.js';
+import { appendToWhere, knex, pool, queryPool } from '../utilities/database.js';
 import {
   corsOptions,
   corsOptionsDelegate,
@@ -143,27 +144,36 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
 /**
  * Creates a stream object from a query.
  * @param {Object} query KnexJS query object
- * @returns {Object} a readable stream
+ * @param {Express.Response} req
+ * @param {Express.Response} res
+ * @param {string} format the format of the file attachment
+ * @param {Object} excelDoc Excel workbook and worksheet objects
+ * @param {number} nextId starting objectid for the next page
  */
-function createStream(query) {
-  const stream = query.stream({
-    batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
-    highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
-  });
+async function createStream(query, req, res, format, wbObject, nextId) {
+  pool.connect((err, client, done) => {
+    if (err) throw err;
 
-  // close the stream if the request is canceled
-  stream.on('close', stream.end.bind(stream));
-  return stream;
+    const qStream = new QueryStream(query.toString(), [], {
+      batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
+      highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
+    });
+    const stream = client.query(qStream);
+    stream.on('end', done);
+
+    StreamingService.streamResponse(res, stream, format, wbObject, nextId);
+  });
 }
 
 /**
  * Streams the results of a query as a file attachment.
  * @param {Object} query KnexJS query object
+ * @param {Express.Response} req
  * @param {Express.Response} res
  * @param {string} format the format of the file attachment
  * @param {string} baseName the name of the file without the extension
  */
-async function streamFile(query, res, format, baseName) {
+async function streamFile(query, req, res, format, baseName) {
   query.limit(maxQuerySize);
 
   res.setHeader(
@@ -178,43 +188,37 @@ async function streamFile(query, res, format, baseName) {
     });
     const worksheet = workbook.addWorksheet('data');
 
-    StreamingService.streamResponse(res, createStream(query), format, {
-      workbook,
-      worksheet,
-    });
+    createStream(query, req, res, format, { workbook, worksheet });
   } else {
-    StreamingService.streamResponse(res, createStream(query), format);
+    createStream(query, req, res, format);
   }
 }
 
 /**
  * Streams the results of a query as paginated JSON.
  * @param {Object} query KnexJS query object
+ * @param {Express.Response} req
  * @param {Express.Response} res
  * @param {number} startId current objectid to start returning results from
  */
-async function streamJson(query, res, startId) {
+async function streamJson(query, req, res, startId) {
   if (startId) query.where('objectid', '>=', startId);
 
   const nextId =
     (
-      await knex
-        .select('objectId')
-        .from(query.clone().limit(maxQuerySize).as('q'))
-        .offset(jsonPageSize)
-        .limit(1)
-        .first()
+      await queryPool(
+        knex
+          .select('objectId')
+          .from(query.clone().limit(maxQuerySize).as('q'))
+          .offset(jsonPageSize)
+          .limit(1),
+        true,
+      )
     )?.objectId ?? null;
 
   query.limit(jsonPageSize);
 
-  StreamingService.streamResponse(
-    res,
-    createStream(query),
-    'json',
-    null,
-    nextId,
-  );
+  createStream(query, req, res, 'json', null, nextId);
 }
 
 /**
@@ -388,12 +392,12 @@ async function executeQuery(profile, req, res) {
 
     const format = queryParams.options.format ?? queryParams.options.f;
     if (['csv', 'tsv', 'xlsx'].includes(format)) {
-      await streamFile(query, res, format, profile.tableName);
+      await streamFile(query, req, res, format, profile.tableName);
     } else {
       const startId = queryParams.options.startId
         ? parseInt(queryParams.options.startId)
         : null;
-      await streamJson(query, res, startId);
+      await streamJson(query, req, res, startId);
     }
   } catch (error) {
     log.error(
@@ -440,15 +444,17 @@ function validateQueryParams(queryParams, profile) {
  * @returns {Promise<boolean>} true if the max query size is exceeded
  */
 async function exceedsMaxSize(query) {
-  const count = await knex
-    .from(
-      query
-        .clone()
-        .limit(maxQuerySize + 1)
-        .as('q'),
-    )
-    .count()
-    .first();
+  const count = await queryPool(
+    knex
+      .from(
+        query
+          .clone()
+          .limit(maxQuerySize + 1)
+          .as('q'),
+      )
+      .count(),
+    true,
+  );
 
   return count.count > maxQuerySize;
 }
@@ -459,7 +465,7 @@ async function exceedsMaxSize(query) {
  * @param {express.Request} req
  * @param {express.Response} res
  */
-function executeQueryCountOnly(profile, req, res) {
+async function executeQueryCountOnly(profile, req, res) {
   const metadataObj = populateMetdataObjFromRequest(req);
 
   // always return json with the count
@@ -472,12 +478,8 @@ function executeQueryCountOnly(profile, req, res) {
 
     parseCriteria(req, query, profile, queryParams, true);
 
-    query
-      .count()
-      .first()
-      .then(({ count }) => {
-        res.status(200).json({ count, maxCount: maxQuerySize });
-      });
+    const count = (await queryPool(query.count(), true)).count;
+    return res.status(200).json({ count, maxCount: maxQuerySize });
   } catch (error) {
     log.error(
       formatLogMsg(
@@ -523,7 +525,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
     }
 
     if (groupByColumns.length === 0) {
-      res.status(200).json({
+      return res.status(200).json({
         message:
           'This table does not include any of the required columns (organizationid, reportingcycle, or cycleid).',
       });
@@ -541,9 +543,9 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
     if (profile.tableName === 'catchment_correspondence')
       query.whereNotNull('catchmentnhdplusid');
 
-    const results = await query;
+    const results = await queryPool(query);
 
-    res.status(200).json(results);
+    return res.status(200).json(results);
   } catch (error) {
     log.error(
       formatLogMsg(
@@ -561,7 +563,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
  * @param {express.Request} req
  * @param {express.Response} res
  */
-function executeValuesQuery(req, res) {
+async function executeValuesQuery(req, res) {
   const metadataObj = populateMetdataObjFromRequest(req);
 
   try {
@@ -588,23 +590,18 @@ function executeValuesQuery(req, res) {
       });
     }
 
-    queryColumnValues(profile, columns, params, req.activeSchema)
-      .then((values) => res.status(200).json(values))
-      .catch((error) => {
-        log.error(
-          formatLogMsg(
-            metadataObj,
-            `Failed to get values for the "${req.params.column}" column from the "${profile.tableName}" table: ${error}`,
-            error,
-          ),
-        );
-        res.status(500).json({ message: 'Error! ' + error });
-      });
+    const values = await queryColumnValues(
+      profile,
+      columns,
+      params,
+      req.activeSchema,
+    );
+    return res.status(200).json(values);
   } catch (error) {
     log.error(
       formatLogMsg(
         metadataObj,
-        `Failed to get values for the "${req.params.profile}" table and "${req.params.column}" column:`,
+        `Failed to get values for the "${req.params.column}" column from the "${req.params.profile}" table: ${error}`,
         error,
       ),
     );
@@ -726,7 +723,7 @@ async function queryColumnValues(profile, columns, params, schema) {
 
   if (params.limit) query.limit(params.limit);
 
-  return await query;
+  return await queryPool(query);
 }
 
 /**
@@ -747,9 +744,8 @@ async function checkDatabaseHealth(req, res) {
     let query = knex
       .withSchema('logging')
       .from('etl_status')
-      .select('database')
-      .first();
-    const statusResults = await query;
+      .select('database');
+    const statusResults = await queryPool(query, true);
     if (statusResults.database === 'failed') setStatus('FAILED-DB');
 
     const etlRunning = statusResults.database === 'running';
@@ -767,16 +763,15 @@ async function checkDatabaseHealth(req, res) {
         'l.load_error',
         'l.extract_error',
       )
-      .orderBy('creation_date', 'desc')
-      .first();
-    const schemaResults = await query;
+      .orderBy('creation_date', 'desc');
+    const schemaResults = await queryPool(query, true);
     if (!schemaResults.active && !etlRunning) {
       setStatus('FAILED-SCHEMA');
     }
 
     query = query.clone();
     query.where('active', true);
-    const activeSchemaResults = await query;
+    const activeSchemaResults = await queryPool(query, true);
 
     // verify database updated in the last week, with 6 hour buffer
     const timeSinceLastUpdate =
@@ -791,9 +786,8 @@ async function checkDatabaseHealth(req, res) {
         .withSchema(req.activeSchema)
         .from(profile.tableName)
         .select(profile.idColumn)
-        .limit(1)
-        .first();
-      const dataResults = await query;
+        .limit(1);
+      const dataResults = await queryPool(query, true);
       if (!dataResults[profile.idColumn]) setStatus('FAILED-QUERY');
     }
 
@@ -823,10 +817,10 @@ async function checkDatabaseHealth(req, res) {
     }
 
     // everything passed
-    res.status(200).json(output);
+    return res.status(200).json(output);
   } catch (error) {
     log.error(formatLogMsg(metadataObj, 'Error!', error));
-    res.status(500).send('Error!' + error);
+    return res.status(500).send('Error!' + error);
   }
 }
 
@@ -836,17 +830,17 @@ async function checkDatabaseHealth(req, res) {
  * @param {express.Response} res
  */
 async function checkDomainValuesHealth(req, res) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
   try {
     // check etl status in db
     const query = knex
       .withSchema('logging')
       .from('etl_status')
-      .select('domain_values')
-      .first();
-    const results = await query;
+      .select('domain_values');
+    const results = await queryPool(query, true);
     if (results.domain_values === 'failed') {
-      res.status(200).json({ status: 'FAILED-DB' });
-      return;
+      return res.status(200).json({ status: 'FAILED-DB' });
     }
 
     // initialize timeSinceLastUpdate to the minimum time node allows
@@ -889,12 +883,12 @@ async function checkDomainValuesHealth(req, res) {
     }
 
     // check that domain values was updated in the last week and 1 hour
-    res
+    return res
       .status(200)
       .json({ status: timeSinceLastUpdate >= 169 ? 'FAILED-TIME' : 'UP' });
   } catch (error) {
     log.error(formatLogMsg(metadataObj, 'Error!', error));
-    res.status(500).send('Error!' + error);
+    return res.status(500).send('Error!' + error);
   }
 }
 
@@ -921,8 +915,8 @@ export default function (app, basePath) {
       router.get(
         `/${profileName}/count`,
         cors(corsOptions),
-        function (req, res) {
-          executeQueryCountOnly(profile, req, res);
+        async function (req, res) {
+          await executeQueryCountOnly(profile, req, res);
         },
       );
 
@@ -937,8 +931,8 @@ export default function (app, basePath) {
       router.post(
         `/${profileName}/count`,
         cors(corsOptions),
-        function (req, res) {
-          executeQueryCountOnly(profile, req, res);
+        async function (req, res) {
+          await executeQueryCountOnly(profile, req, res);
         },
       );
 
@@ -950,15 +944,15 @@ export default function (app, basePath) {
       router.get(
         '/:profile/values/:column',
         cors(corsOptionsDelegate),
-        function (req, res) {
-          executeValuesQuery(req, res);
+        async function (req, res) {
+          await executeValuesQuery(req, res);
         },
       );
       router.post(
         '/:profile/values/:column',
         cors(corsOptionsDelegate),
-        function (req, res) {
-          executeValuesQuery(req, res);
+        async function (req, res) {
+          await executeValuesQuery(req, res);
         },
       );
 

@@ -1,4 +1,4 @@
-import { knex } from './utilities/database.js';
+import { knex, queryPool } from './utilities/database.js';
 import { getEnvironment } from './utilities/environment.js';
 import { getPrivateConfig } from './utilities/s3.js';
 import {
@@ -21,13 +21,15 @@ async function getActiveSchema(req, res, next) {
 
   try {
     // query the logging schema to get the active schema
-    const schema = await knex
-      .withSchema('logging')
-      .select('schema_name', 'active')
-      .from('etl_schemas')
-      .where('active', true)
-      .orderBy('creation_date', 'desc')
-      .first();
+    const schema = await queryPool(
+      knex
+        .withSchema('logging')
+        .select('schema_name', 'active')
+        .from('etl_schemas')
+        .where('active', true)
+        .orderBy('creation_date', 'desc'),
+      true,
+    );
 
     // Add activeSchema to the request object
     req.activeSchema = schema.schema_name;
@@ -37,7 +39,7 @@ async function getActiveSchema(req, res, next) {
     log.error(
       formatLogMsg(metadataObj, 'Failed to get active schema: ', error),
     );
-    res.status(500).json({ message: 'Error !' + error });
+    return res.status(500).json({ message: 'Error !' + error });
   }
 }
 
