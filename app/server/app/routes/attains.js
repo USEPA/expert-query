@@ -529,46 +529,10 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
 
   // always return json with the count
   try {
-    const groupByColumns = [];
-    const hasOrgId = profile.columns.find((c) => c.name === 'organizationid');
-    const hasReportingCycleId = profile.columns.find(
-      (c) => c.name === 'reportingcycle',
-    );
-    const hasCycleId = profile.columns.find((c) => c.name === 'cycleid');
-
-    const orderByArray = [];
-    if (hasOrgId) {
-      groupByColumns.push('organizationid');
-      orderByArray.push({ column: 'organizationid', order: 'ASC' });
-    }
-    if (hasReportingCycleId) {
-      groupByColumns.push('reportingcycle');
-      orderByArray.push({ column: 'reportingcycle', order: 'DESC' });
-    }
-    if (hasCycleId) {
-      groupByColumns.push('cycleid');
-      orderByArray.push({ column: 'cycleid', order: 'ASC' });
-    }
-
-    if (groupByColumns.length === 0) {
-      return res.status(200).json({
-        message:
-          'This table does not include any of the required columns (organizationid, reportingcycle, or cycleid).',
-      });
-    }
-
     const query = knex
       .withSchema(req.activeSchema)
-      .select(groupByColumns)
-      .count()
-      .countDistinct('assessmentunitid as assessmentUnitIdCount')
-      .from(profile.tableName)
-      .groupBy(groupByColumns)
-      .orderBy(orderByArray);
-
-    if (profile.tableName === 'catchment_correspondence')
-      query.whereNotNull('catchmentnhdplusid');
-
+      .select()
+      .from(`${profile.tableName}_countperorgcycle`);
     const results = await queryPool(query);
 
     return res.status(200).json(results);

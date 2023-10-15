@@ -875,6 +875,51 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
       );
     }
   }
+
+  // create countPerOrgCycle view
+  const groupByColumns = [];
+  const hasOrgId = table.columns.find((c) => c.name === 'organizationid');
+  const hasReportingCycleId = table.columns.find(
+    (c) => c.name === 'reportingcycle',
+  );
+  const hasCycleId = table.columns.find((c) => c.name === 'cycleid');
+
+  const orderByArray = [];
+  if (hasOrgId) {
+    groupByColumns.push('organizationid');
+    orderByArray.push({ column: 'organizationid', order: 'ASC' });
+  }
+  if (hasReportingCycleId) {
+    groupByColumns.push('reportingcycle');
+    orderByArray.push({ column: 'reportingcycle', order: 'DESC' });
+  }
+  if (hasCycleId) {
+    groupByColumns.push('cycleid');
+    orderByArray.push({ column: 'cycleid', order: 'ASC' });
+  }
+
+  const mvName = `${tableName}_countperorgcycle`;
+  await client.query(`
+    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
+    AS
+    SELECT ${groupByColumns.join(
+      ', ',
+    )}, count(*), count(distinct "assessmentunitid") as "assessmentUnitIdCount"
+    FROM ${tableName}
+    ${
+      tableName === 'catchment_correspondence'
+        ? 'WHERE catchmentnhdplusid IS NOT NULL'
+        : ''
+    }
+    GROUP BY ${groupByColumns.join(', ')}
+    ORDER BY ${orderByArray
+      .map((col) => `${col.column} ${col.order}`)
+      .join(', ')}
+
+    WITH DATA;
+  `);
+
+  log.info(`${tableName}: Created countPerOrgCycle materialized view`);
 }
 
 // Extracts data from ordspub services
