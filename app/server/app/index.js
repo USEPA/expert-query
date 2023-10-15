@@ -90,6 +90,7 @@ const requiredEnvVars = [
   'STREAM_BATCH_SIZE',
   'STREAM_HIGH_WATER_MARK',
   'MAX_QUERY_SIZE',
+  'MAX_VALUES_QUERY_SIZE',
   'JSON_PAGE_SIZE',
 ];
 

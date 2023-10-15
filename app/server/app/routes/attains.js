@@ -49,6 +49,22 @@ class InvalidParameterException extends Error {
   }
 }
 
+class LimitExceededException extends Error {
+  constructor(limit) {
+    super();
+    this.code = 400;
+    this.message = `The provided limit (${limit}) exceeds the maximum ${process.env.MAX_VALUES_QUERY_SIZE} allowable limit.`;
+  }
+}
+
+class NoParametersException extends Error {
+  constructor(message) {
+    super();
+    this.code = 400;
+    this.message = `No parameters were provided. ${message}`;
+  }
+}
+
 /**
  * Searches for a materialized view, associated with the profile, that is applicable to the provided columns/filters.
  * @param {Object} profile definition of the profile being queried
@@ -379,6 +395,16 @@ async function executeQuery(profile, req, res) {
 
     validateQueryParams(queryParams, profile);
 
+    // verify atleast 1 parameter was provided, excluding the columns parameter
+    if (
+      Object.keys(queryParams.filters).length === 0 &&
+      queryParams.options.startId
+    ) {
+      throw new NoParametersException(
+        'Please provide at least one filter or a startId',
+      );
+    }
+
     parseCriteria(req, query, profile, queryParams);
 
     // Check that the query doesn't exceed the MAX_QUERY_SIZE.
@@ -576,6 +602,12 @@ async function executeValuesQuery(req, res) {
 
     const { additionalColumns, ...params } = getQueryParamsValues(req);
 
+    if (!params.text && !params.limit) {
+      throw new NoParametersException(
+        `Please provide either a text filter or a limit that does not exceed ${process.env.MAX_VALUES_QUERY_SIZE}.`,
+      );
+    }
+
     const columnAliases = [
       req.params.column,
       ...(Array.isArray(additionalColumns) ? additionalColumns : []),
@@ -721,7 +753,11 @@ async function queryColumnValues(profile, columns, params, schema) {
     });
   }
 
-  if (params.limit) query.limit(params.limit);
+  const maxValuesQuerySize = parseInt(process.env.MAX_VALUES_QUERY_SIZE);
+  if (params.limit > maxValuesQuerySize) {
+    throw new LimitExceededException(params.limit);
+  }
+  query.limit(params.limit ?? maxValuesQuerySize);
 
   return await queryPool(query);
 }
