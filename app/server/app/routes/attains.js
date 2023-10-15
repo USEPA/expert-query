@@ -395,12 +395,6 @@ async function executeQuery(profile, req, res) {
 
     validateQueryParams(queryParams, profile);
 
-    console.log('queryParams: ', queryParams);
-    console.log(
-      'Object.keys(queryParams.filters).length: ',
-      Object.keys(queryParams.filters).length,
-    );
-    console.log('startId: ', queryParams.options.startId);
     // verify atleast 1 parameter was provided, excluding the columns parameter
     if (
       Object.keys(queryParams.filters).length === 0 &&
