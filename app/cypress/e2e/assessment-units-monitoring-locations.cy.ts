@@ -173,7 +173,7 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"assessmentUnitId":["DN_AM_Watershed","FL2543D"],"assessmentUnitStatus":["A"],"monitoringLocationId":["F01A21         "],"monitoringLocationOrgId":["21AWIC"],"organizationId":["REDLAKE","21GAEPD"],"region":["04"],"state":["KY"],"useClassName":["VII"],"waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"csv"},${columnsValueCurl}}`,
+        `{"filters":{"assessmentUnitId":["DN_AM_Watershed","FL2543D"],"assessmentUnitStatus":["A"],"monitoringLocationId":["F01A21 "],"monitoringLocationOrgId":["21AWIC"],"organizationId":["REDLAKE","21GAEPD"],"region":["04"],"state":["KY"],"useClassName":["VII"],"waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"csv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
