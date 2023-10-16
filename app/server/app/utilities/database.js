@@ -73,7 +73,8 @@ function appendToWhere(query, paramName, paramValue) {
 }
 
 async function queryPool(query, first = false) {
-  const results = (await pool.query(query.toString())).rows;
+  const { sql, bindings } = query.toSQL().toNative();
+  const results = (await pool.query(`${sql}`, bindings)).rows;
   return first ? results[0] : results;
 }
 
