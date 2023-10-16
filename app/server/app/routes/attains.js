@@ -397,12 +397,11 @@ async function executeQuery(profile, req, res) {
 
     // verify atleast 1 parameter was provided, excluding the columns parameter
     if (
+      Object.keys(queryParams.columns).length === 0 &&
       Object.keys(queryParams.filters).length === 0 &&
-      !queryParams.options.startId
+      Object.keys(queryParams.options).length === 0
     ) {
-      throw new NoParametersException(
-        'Please provide at least one filter or a startId',
-      );
+      throw new NoParametersException('Please provide at least one parameter');
     }
 
     parseCriteria(req, query, profile, queryParams);
@@ -433,7 +432,7 @@ async function executeQuery(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json(error);
+    return res.status(error.code ?? 500).json({ error });
   }
 }
 
@@ -514,7 +513,7 @@ async function executeQueryCountOnly(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json(error);
+    return res.status(error.code ?? 500).json({ error });
   }
 }
 
@@ -544,7 +543,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json(error);
+    return res.status(error.code ?? 500).json({ error });
   }
 }
 
@@ -601,7 +600,7 @@ async function executeValuesQuery(req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json(error);
+    return res.status(error.code ?? 500).json({ error });
   }
 }
 

@@ -180,7 +180,7 @@ app.all(pathRegex, (req, res) => res.redirect(`${basePath}`));
 app.use(basePath, express.static(path.join(__dirname, 'public')));
 
 // setup client routes (built React app)
-app.get('/', function (req, res) {
+app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
