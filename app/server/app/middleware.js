@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { knex, queryPool } from './utilities/database.js';
 import { getEnvironment } from './utilities/environment.js';
 import { getPrivateConfig } from './utilities/s3.js';
@@ -6,8 +8,33 @@ import {
   log,
   populateMetdataObjFromRequest,
 } from './utilities/logger.js';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
+
+function checkClientRouteExists(req, res, next) {
+  const subPath = process.env.SERVER_BASE_PATH || '';
+
+  const clientRoutes = [
+    '/',
+    '/api-documentation',
+    '/api-key-signup',
+    '/attains',
+    '/attains/actions',
+    '/attains/assessments',
+    '/attains/assessmentUnits',
+    '/attains/assessmentUnitsMonitoringLocations',
+    '/attains/catchmentCorrespondence',
+    '/attains/sources',
+    '/attains/tmdl',
+    '/national-downloads',
+  ].map((route) => `${subPath}${route}`);
+
+  if (!clientRoutes.includes(req.path)) {
+    console.log('client route rejected: ', req.path);
+    return res.status(404).sendFile(path.join(__dirname, 'public', '400.html'));
+  }
+}
 
 /**
  * Middleware to get/set the active schema and add it to the original request
@@ -89,4 +116,4 @@ async function protectRoutes(req, res, next) {
   next();
 }
 
-export { getActiveSchema, protectRoutes };
+export { checkClientRouteExists, getActiveSchema, protectRoutes };
