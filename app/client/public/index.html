@@ -333,6 +333,7 @@
               class="usa-accordion__button usa-banner__button"
               aria-expanded="false"
               aria-controls="gov-banner"
+              onclick="toggleBanner()"
             >
               <span class="usa-banner__button-text">Here’s how you know</span>
             </button>
@@ -836,20 +837,20 @@
     </style>
 
     <script>
-      const bannerHeader = document.querySelector('.usa-banner__header');
-      const bannerContent = document.querySelector('#gov-banner');
-      const bannerButton = bannerHeader.querySelector('.usa-banner__button');
-      bannerButton.onclick = function () {
-        if (bannerButton.ariaExpanded === true) {
-          bannerButton.ariaExpanded = false;
+      function toggleBanner() {
+        const bannerHeader = document.querySelector('.usa-banner__header');
+        const bannerContent = document.querySelector('#gov-banner');
+        const bannerButton = bannerHeader.querySelector('.usa-banner__button');
+        if (bannerButton.getAttribute('aria-expanded') === 'true') {
+          bannerButton.setAttribute('aria-expanded', 'false');
           bannerHeader.classList.remove('usa-banner__header--expanded');
           bannerContent.hidden = true;
         } else {
-          bannerButton.ariaExpanded = true;
+          bannerButton.setAttribute('aria-expanded', 'true');
           bannerHeader.classList.add('usa-banner__header--expanded');
           bannerContent.hidden = false;
         }
-      };
+      }
     </script>
 
     <script>
