@@ -27,6 +27,7 @@ function checkClientRouteExists(req, res, next) {
     '/attains/catchmentCorrespondence',
     '/attains/sources',
     '/attains/tmdl',
+    '/manifest.json',
     '/national-downloads',
   ].map((route) => `${subPath}${route}`);
 
