@@ -432,7 +432,7 @@ async function executeQuery(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json({ error });
+    return res.status(error.code ?? 500).json({ error: error.toString() });
   }
 }
 
@@ -513,7 +513,7 @@ async function executeQueryCountOnly(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json({ error });
+    return res.status(error.code ?? 500).json({ error: error.toString() });
   }
 }
 
@@ -543,7 +543,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json({ error });
+    return res.status(error.code ?? 500).json({ error: error.toString() });
   }
 }
 
@@ -600,7 +600,7 @@ async function executeValuesQuery(req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json({ error });
+    return res.status(error.code ?? 500).json({ error: error.toString() });
   }
 }
 
