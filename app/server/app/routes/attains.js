@@ -397,7 +397,7 @@ async function executeQuery(profile, req, res) {
 
     // verify atleast 1 parameter was provided, excluding the columns parameter
     if (
-      Object.keys(queryParams.columns).length === 0 &&
+      (!queryParams.columns || Object.keys(queryParams.columns).length === 0) &&
       Object.keys(queryParams.filters).length === 0 &&
       Object.keys(queryParams.options).length === 0
     ) {
