@@ -31,9 +31,10 @@ function checkClientRouteExists(req, res, next) {
   ].map((route) => `${subPath}${route}`);
 
   if (!clientRoutes.includes(req.path)) {
-    console.log('client route rejected: ', req.path);
     return res.status(404).sendFile(path.join(__dirname, 'public', '400.html'));
   }
+
+  next();
 }
 
 /**
