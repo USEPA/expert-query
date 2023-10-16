@@ -214,13 +214,13 @@ describe('Data Profile Assessments', () => {
     cy.selectOption('input-parameterName', 'radium');
 
     //Parameter Attainment
-    cy.selectOption('input-parameterAttainment', 'algae');
+    cy.selectOption('input-parameterAttainment', 'Meeting criteria');
 
     //Parameter Group
     cy.selectOption('input-parameterGroup', 'other');
 
     //Parameter IR Category
-    cy.selectOption('input-parameterIrCategory', '2');
+    cy.selectOption('input-parameterIrCategory', '4a');
 
     // //Parameter State IR Category
     cy.selectOption('input-parameterStateIrCategory', '1d');
@@ -269,7 +269,7 @@ describe('Data Profile Assessments', () => {
     cy.selectOption('input-useName', 'scenic value');
 
     //Use State IR Category
-    cy.selectOption('input-useStateIrCategory', '1');
+    cy.selectOption('input-useStateIrCategory', '1d');
 
     //Use Support
     cy.findAllByRole('checkbox', { name: 'No' }).each(($elem, index) => {
@@ -288,7 +288,7 @@ describe('Data Profile Assessments', () => {
     cy.findByText('Tab-separated (TSV)').click();
 
     const queryValue =
-      'alternateListingIdentifier=72992&assessmentBasis=Monitored%20Data&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&assessmentMethods=Fish%20surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A01R_PIA01A00&assessmentUnitId=AK-20401-004_00&assessmentUnitStatus=A&assessmentUnitStatus=H&associatedActionAgency=EPA&associatedActionId=1024&associatedActionId=257&associatedActionStatus=Draft&associatedActionType=Implementation%20Completed&cwa303dPriorityRanking=Medium&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&delisted=Y&delistedReason=Not%20specified&epaIrCategory=4A&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&organizationId=21PA&organizationId=21IOWA&overallStatus=Not%20Assessed&parameterAttainment=ALGAE&parameterGroup=METALS%20(OTHER%20THAN%20MERCURY)&parameterIrCategory=2&parameterName=RADIUM&parameterStateIrCategory=1d&parameterStatus=Meeting%20Criteria&pollutantIndicator=N&region=08&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=CULTURAL_USE&useName=Scenic%20Value&useStateIrCategory=1&vision303dPriority=N&waterType=WASH';
+      'alternateListingIdentifier=72992&assessmentBasis=Monitored%20Data&assessmentDateLo=12-26-2006&assessmentDateHi=03-09-2021&assessmentMethods=Fish%20surveys&assessmentTypes=BIOLOGICAL&assessmentUnitId=VAN-A01R_PIA01A00&assessmentUnitId=AK-20401-004_00&assessmentUnitStatus=A&assessmentUnitStatus=H&associatedActionAgency=EPA&associatedActionId=1024&associatedActionId=257&associatedActionStatus=Draft&associatedActionType=Implementation%20Completed&cwa303dPriorityRanking=Medium&cycleExpectedToAttainLo=2010&cycleExpectedToAttainHi=2013&cycleFirstListedLo=2008&cycleFirstListedHi=2023&cycleLastAssessedLo=2007&cycleLastAssessedHi=2021&cycleScheduledForTmdlLo=2005&cycleScheduledForTmdlHi=2019&delisted=Y&delistedReason=Not%20specified&epaIrCategory=4A&monitoringEndDateLo=06-03-2014&monitoringEndDateHi=07-16-2019&monitoringStartDateLo=08-08-2013&monitoringStartDateHi=06-23-2021&organizationId=21PA&organizationId=21IOWA&overallStatus=Not%20Assessed&parameterAttainment=Meeting%20criteria&parameterGroup=METALS%20(OTHER%20THAN%20MERCURY)&parameterIrCategory=4A&parameterName=RADIUM&parameterStateIrCategory=1d&parameterStatus=Meeting%20Criteria&pollutantIndicator=N&region=08&seasonEndDateLo=04-23-2014&seasonEndDateHi=03-07-2022&seasonStartDateLo=12-08-2009&seasonStartDateHi=06-03-2022&state=AZ&stateIrCategory=3x&useClassName=VII&useGroup=CULTURAL_USE&useName=Scenic%20Value&useStateIrCategory=1d&vision303dPriority=N&waterType=WASH';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
@@ -302,7 +302,7 @@ describe('Data Profile Assessments', () => {
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
-        `{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A01R_PIA01A00","AK-20401-004_00"],"assessmentUnitStatus":["A","H"],"associatedActionAgency":["EPA"],"associatedActionId":["1024","257"],"associatedActionStatus":["Draft"],"associatedActionType":["Implementation Completed"],"cwa303dPriorityRanking":["Medium"],"cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","delisted":["Y"],"delistedReason":["Not specified"],"epaIrCategory":["4A"],"monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","organizationId":["21PA","21IOWA"],"overallStatus":["Not Assessed"],"parameterAttainment":["ALGAE"],"parameterGroup":["METALS (OTHER THAN MERCURY)"],"parameterIrCategory":["2"],"parameterName":["RADIUM"],"parameterStateIrCategory":["1d"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["CULTURAL_USE"],"useName":["Scenic Value"],"useStateIrCategory":["1"],"vision303dPriority":["N"],"waterType":["WASH"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
+        `{"filters":{"alternateListingIdentifier":["72992"],"assessmentBasis":["Monitored Data"],"assessmentDateLo":"12-26-2006","assessmentDateHi":"03-09-2021","assessmentMethods":["Fish surveys"],"assessmentTypes":["BIOLOGICAL"],"assessmentUnitId":["VAN-A01R_PIA01A00","AK-20401-004_00"],"assessmentUnitStatus":["A","H"],"associatedActionAgency":["EPA"],"associatedActionId":["1024","257"],"associatedActionStatus":["Draft"],"associatedActionType":["Implementation Completed"],"cwa303dPriorityRanking":["Medium"],"cycleExpectedToAttainLo":"2010","cycleExpectedToAttainHi":"2013","cycleFirstListedLo":"2008","cycleFirstListedHi":"2023","cycleLastAssessedLo":"2007","cycleLastAssessedHi":"2021","cycleScheduledForTmdlLo":"2005","cycleScheduledForTmdlHi":"2019","delisted":["Y"],"delistedReason":["Not specified"],"epaIrCategory":["4A"],"monitoringEndDateLo":"06-03-2014","monitoringEndDateHi":"07-16-2019","monitoringStartDateLo":"08-08-2013","monitoringStartDateHi":"06-23-2021","organizationId":["21PA","21IOWA"],"overallStatus":["Not Assessed"],"parameterAttainment":["Meeting criteria"],"parameterGroup":["METALS (OTHER THAN MERCURY)"],"parameterIrCategory":["4A"],"parameterName":["RADIUM"],"parameterStateIrCategory":["1d"],"parameterStatus":["Meeting Criteria"],"pollutantIndicator":["N"],"region":["08"],"seasonEndDateLo":"04-23-2014","seasonEndDateHi":"03-07-2022","seasonStartDateLo":"12-08-2009","seasonStartDateHi":"06-03-2022","state":["AZ"],"stateIrCategory":["3x"],"useClassName":["VII"],"useGroup":["CULTURAL_USE"],"useName":["Scenic Value"],"useStateIrCategory":["1d"],"vision303dPriority":["N"],"waterType":["WASH"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
       )} ${origin}/api/attains/assessments -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });

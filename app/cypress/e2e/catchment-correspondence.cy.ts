@@ -95,7 +95,7 @@ describe('Data Profile Catchment Correspondence', () => {
     cy.selectOption('input-organizationId', 'montana');
 
     //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2018{downArrow}');
+    cy.selectOption('input-reportingCycle', '2018', true);
 
     //File Format
     cy.findByText('Microsoft Excel (XLSX)').click();
@@ -121,7 +121,7 @@ describe('Data Profile Catchment Correspondence', () => {
 
   it('Verify copy box text flavor 5', () => {
     //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2016{downArrow}');
+    cy.selectOption('input-reportingCycle', '2016', true);
 
     //Assessment Unit ID
     cy.selectOption('input-assessmentUnitId', 'as-01o');
