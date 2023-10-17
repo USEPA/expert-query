@@ -898,7 +898,7 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
     orderByArray.push({ column: 'cycleid', order: 'ASC' });
   }
 
-  const mvName = `${tableName}_countperorgcycle`;
+  let mvName = `${tableName}_countperorgcycle`;
   await client.query(`
     CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
     AS
@@ -920,6 +920,28 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
   `);
 
   log.info(`${tableName}: Created countPerOrgCycle materialized view`);
+
+  mvName = `${tableName}_count`;
+  await client.query(`
+    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
+    AS
+    SELECT count(*)
+    FROM ${tableName}
+    ${
+      hasReportingCycleId
+        ? `WHERE ("organizationid", "reportingcycle") IN (
+          SELECT "organizationid", MAX("reportingcycle")
+          FROM ${indexTableName}_reportingcycle
+          GROUP BY "organizationid"
+        )
+        `
+        : ''
+    }
+
+    WITH DATA;
+  `);
+
+  log.info(`${tableName}: Created count materialized view`);
 }
 
 // Extracts data from ordspub services
