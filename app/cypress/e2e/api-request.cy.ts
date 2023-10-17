@@ -232,7 +232,7 @@ describe('Api Validations', () => {
   });
 
   it('Verify error message while using correct Profile name and wrong fieldName name GET api', () => {
-    const url = `${origin}/api/attains/actions/values/wrongFieldName`;
+    const url = `${origin}/api/attains/actions/values/wrongFieldName?text=ver`;
     const message =
       'The column wrongFieldName does not exist on the selected profile';
 

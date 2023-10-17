@@ -34,7 +34,7 @@ declare global {
        * @example cy.dataCy('greeting')
        */
       selectProfile(profile: string): Chainable<Element>;
-      selectOption(id: string, option: string): Chainable<Element>;
+      selectOption(id: string, option: string, selectViaKeys?: boolean): Chainable<Element>;
       clipboardValue(value: string): Chainable<Element>;
       selectCopyBox(id: string, value: string): Chainable<Element>;
     }
@@ -61,17 +61,23 @@ Cypress.Commands.add('selectProfile', (profile: string) => {
  * @param option - option to select
  */
 
-Cypress.Commands.add('selectOption', (id: string, option: string) => {
-  cy.get(`#${id}`).type(option);
+Cypress.Commands.add('selectOption', (id: string, option: string, selectViaKeys: boolean = false) => {
+  // NOTE: There is a cypress and or react-select bug where the select menu
+  //       does not re-fetch the data when cypress first types something in.
+  //       To work around this I just added a slight delay before typing the
+  //       last character of the provided option. 
+  cy.get(`#${id}`).type(option.slice(0, -1));
+  cy.wait(1000);
+  cy.get(`#${id}`).type(option.slice(-1));
 
-  cy.wait(500);
   cy.findByText('Loading...').should('not.exist');
-
-  cy.get(`#react-select-instance-${id.replace('input-', '')}-listbox`)
-    .children()
-    .children()
-    .first()
-    .click({ force: true });
+  
+  if(selectViaKeys) {
+    cy.get(`#${id}`).type('{downArrow}{enter}');
+  } else {
+    cy.get(`#react-select-instance-${id.replace('input-', '')}-option-0`)
+      .click({ force: true });
+    }
 });
 
 /**
@@ -98,7 +104,5 @@ Cypress.Commands.add('clipboardValue', (value: string) => {
 Cypress.Commands.add('selectCopyBox', (id: string, value: string) => {
   cy.findByTestId(id)
     .should('exist')
-    .should(($elem) => {
-      expect($elem.find('span').first().text().trim()).equal(value);
-    });
+    cy.findByText(value);
 });
