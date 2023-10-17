@@ -36,7 +36,7 @@ const privateConfig = await getPrivateConfig();
 class DuplicateParameterException extends Error {
   constructor(parameter) {
     super();
-    this.code = 400;
+    this.httpStatusCode = 400;
     this.message = `Duplicate '${parameter}' parameters not allowed`;
   }
 }
@@ -44,7 +44,7 @@ class DuplicateParameterException extends Error {
 class InvalidParameterException extends Error {
   constructor(parameter) {
     super();
-    this.code = 400;
+    this.httpStatusCode = 400;
     this.message = `The parameter '${parameter}' is not valid for the specified profile`;
   }
 }
@@ -52,7 +52,7 @@ class InvalidParameterException extends Error {
 class LimitExceededException extends Error {
   constructor(limit) {
     super();
-    this.code = 400;
+    this.httpStatusCode = 400;
     this.message = `The provided limit (${limit}) exceeds the maximum ${process.env.MAX_VALUES_QUERY_SIZE} allowable limit.`;
   }
 }
@@ -60,7 +60,7 @@ class LimitExceededException extends Error {
 class NoParametersException extends Error {
   constructor(message) {
     super();
-    this.code = 400;
+    this.httpStatusCode = 200;
     this.message = `No parameters were provided. ${message}`;
   }
 }
@@ -432,7 +432,9 @@ async function executeQuery(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json({ error: error.toString() });
+    return res
+      .status(error.httpStatusCode ?? 500)
+      .json({ error: error.toString() });
   }
 }
 
@@ -499,6 +501,15 @@ async function executeQueryCountOnly(profile, req, res) {
 
     const queryParams = getQueryParams(req);
 
+    // query against the ..._count mv when no filters are applied, for better performance
+    if (Object.keys(queryParams.filters).length === 0) {
+      const query = knex
+        .withSchema(req.activeSchema)
+        .from(`${profile.tableName}_count`);
+      const count = (await queryPool(query, true)).count;
+      return res.status(200).json({ count, maxCount: maxQuerySize });
+    }
+
     validateQueryParams(queryParams, profile);
 
     parseCriteria(req, query, profile, queryParams, true);
@@ -513,7 +524,9 @@ async function executeQueryCountOnly(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json({ error: error.toString() });
+    return res
+      .status(error.httpStatusCode ?? 500)
+      .json({ error: error.toString() });
   }
 }
 
@@ -543,7 +556,9 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json({ error: error.toString() });
+    return res
+      .status(error.httpStatusCode ?? 500)
+      .json({ error: error.toString() });
   }
 }
 
@@ -580,7 +595,7 @@ async function executeValuesQuery(req, res) {
     try {
       columns = getColumnsFromAliases(columnAliases, profile);
     } catch (err) {
-      return res.status(404).json({
+      return res.status(400).json({
         message: `The column ${err.message} does not exist on the selected profile`,
       });
     }
@@ -600,7 +615,9 @@ async function executeValuesQuery(req, res) {
         error,
       ),
     );
-    return res.status(error.code ?? 500).json({ error: error.toString() });
+    return res
+      .status(error.httpStatusCode ?? 500)
+      .json({ error: error.toString() });
   }
 }
 
@@ -819,7 +836,7 @@ async function checkDatabaseHealth(req, res) {
     return res.status(200).json(output);
   } catch (error) {
     log.error(formatLogMsg(metadataObj, 'Error!', error));
-    return res.status(500).send('Error!' + error);
+    return res.status(error.httpStatusCode ?? 500).send('Error!' + error);
   }
 }
 
@@ -887,7 +904,7 @@ async function checkDomainValuesHealth(req, res) {
       .json({ status: timeSinceLastUpdate >= 169 ? 'FAILED-TIME' : 'UP' });
   } catch (error) {
     log.error(formatLogMsg(metadataObj, 'Error!', error));
-    return res.status(500).send('Error!' + error);
+    return res.status(error.httpStatusCode ?? 500).send('Error!' + error);
   }
 }
 
@@ -940,13 +957,6 @@ export default function (app, basePath) {
       // ****************************** //
 
       // get column domain values
-      router.get(
-        '/:profile/values/:column',
-        cors(corsOptionsDelegate),
-        async function (req, res) {
-          await executeValuesQuery(req, res);
-        },
-      );
       router.post(
         '/:profile/values/:column',
         cors(corsOptionsDelegate),
