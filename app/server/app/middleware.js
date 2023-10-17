@@ -16,7 +16,6 @@ function checkClientRouteExists(req, res, next) {
   const subPath = process.env.SERVER_BASE_PATH || '';
 
   const clientRoutes = [
-    '/',
     '/api-documentation',
     '/api-key-signup',
     '/attains',
@@ -29,7 +28,10 @@ function checkClientRouteExists(req, res, next) {
     '/attains/tmdl',
     '/manifest.json',
     '/national-downloads',
-  ].map((route) => `${subPath}${route}`);
+  ].reduce((acc, cur) => {
+    return acc.concat([`${subPath}${cur}`, `${subPath}${cur}/`]);
+  }, []);
+  clientRoutes.push('/');
 
   if (!clientRoutes.includes(req.path)) {
     return res.status(404).sendFile(path.join(__dirname, 'public', '400.html'));
