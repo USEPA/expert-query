@@ -72,6 +72,12 @@ function appendToWhere(query, paramName, paramValue) {
   }
 }
 
+async function queryPool(query, first = false) {
+  const { sql, bindings } = query.toSQL().toNative();
+  const results = (await pool.query(`${sql}`, bindings)).rows;
+  return first ? results[0] : results;
+}
+
 const knex = knexJs({
   client: 'pg',
   connection: {
@@ -82,9 +88,18 @@ const knex = knexJs({
     database: dbName,
   },
   pool: {
-    min: parseInt(process.env.DB_POOL_MIN),
-    max: parseInt(process.env.DB_POOL_MAX),
+    min: 0,
+    max: 0,
   },
 });
 
-export { appendToWhere, knex };
+const pool = new pg.Pool({
+  host: dbHost,
+  user: dbUser,
+  port: dbPort,
+  password: dbPassword,
+  database: dbName,
+  max: parseInt(process.env.DB_POOL_MAX),
+});
+
+export { appendToWhere, knex, pool, queryPool };

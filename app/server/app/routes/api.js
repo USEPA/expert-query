@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import path, { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getActiveSchema } from '../middleware.js';
-import { knex } from '../utilities/database.js';
+import { knex, queryPool } from '../utilities/database.js';
 import { getEnvironment } from '../utilities/environment.js';
 import {
   formatLogMsg,
@@ -48,21 +48,22 @@ async function fetchMetadata(req) {
       logError(err, metadataObj);
     }),
 
-    knex
-      .withSchema('logging')
-      .column({
-        profileName: 'profile_name',
-        numRows: 'num_rows',
-        timestamp: 'last_refresh_end_time',
-        csvSize: 'csv_size',
-        zipSize: 'zip_size',
-      })
-      .from('mv_profile_stats')
-      .where('schema_name', req.activeSchema)
-      .select()
-      .catch((err) => {
-        logError(err, metadataObj);
-      }),
+    queryPool(
+      knex
+        .withSchema('logging')
+        .column({
+          profileName: 'profile_name',
+          numRows: 'num_rows',
+          timestamp: 'last_refresh_end_time',
+          csvSize: 'csv_size',
+          zipSize: 'zip_size',
+        })
+        .from('mv_profile_stats')
+        .where('schema_name', req.activeSchema)
+        .select(),
+    ).catch((err) => {
+      logError(err, metadataObj);
+    }),
   ]);
 
   if (!latestRes || !profileStats)

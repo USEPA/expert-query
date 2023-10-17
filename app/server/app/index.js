@@ -5,6 +5,7 @@ import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkClientRouteExists } from './middleware.js';
 import routes from './routes/index.js';
 import { getEnvironment } from './utilities/environment.js';
 import {
@@ -90,6 +91,7 @@ const requiredEnvVars = [
   'STREAM_BATCH_SIZE',
   'STREAM_HIGH_WATER_MARK',
   'MAX_QUERY_SIZE',
+  'MAX_VALUES_QUERY_SIZE',
   'JSON_PAGE_SIZE',
 ];
 
@@ -177,6 +179,9 @@ app.all(pathRegex, (req, res) => res.redirect(`${basePath}`));
 // NOTE: client app's `build` directory contents copied into server app's
 // `public` directory in CI/CD step
 app.use(basePath, express.static(path.join(__dirname, 'public')));
+
+// Ensure that requested client route exists (otherwise send 404).
+app.use(checkClientRouteExists);
 
 // setup client routes (built React app)
 app.get('*', function (req, res) {

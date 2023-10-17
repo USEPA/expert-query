@@ -33,7 +33,11 @@
     <meta name="twitter:image:width" content="1200" />
     <meta name="msapplication-TileColor" content="#005ea2" />
     <meta name="theme-color" content="#005ea2" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link
+      rel="manifest"
+      href="%PUBLIC_URL%/manifest.json"
+      crossorigin="use-credentials"
+    />
     <link rel="canonical" href="%PUBLIC_URL%/" />
     <link
       rel="apple-touch-icon-precomposed"
@@ -333,13 +337,18 @@
               class="usa-accordion__button usa-banner__button"
               aria-expanded="false"
               aria-controls="gov-banner"
+              onclick="toggleBanner()"
             >
               <span class="usa-banner__button-text">Here’s how you know</span>
             </button>
           </div>
         </header>
 
-        <div id="gov-banner" class="usa-banner__content usa-accordion__content">
+        <div
+          id="gov-banner"
+          class="usa-banner__content usa-accordion__content"
+          hidden="true"
+        >
           <div class="grid-row grid-gap-lg">
             <div class="usa-banner__guidance tablet:grid-col-6">
               <img
@@ -830,6 +839,23 @@
         }
       }
     </style>
+
+    <script>
+      function toggleBanner() {
+        const bannerHeader = document.querySelector('.usa-banner__header');
+        const bannerContent = document.querySelector('#gov-banner');
+        const bannerButton = bannerHeader.querySelector('.usa-banner__button');
+        if (bannerButton.getAttribute('aria-expanded') === 'true') {
+          bannerButton.setAttribute('aria-expanded', 'false');
+          bannerHeader.classList.remove('usa-banner__header--expanded');
+          bannerContent.hidden = true;
+        } else {
+          bannerButton.setAttribute('aria-expanded', 'true');
+          bannerHeader.classList.add('usa-banner__header--expanded');
+          bannerContent.hidden = false;
+        }
+      }
+    </script>
 
     <script>
       (function () {

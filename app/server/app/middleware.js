@@ -1,4 +1,6 @@
-import { knex } from './utilities/database.js';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { knex, queryPool } from './utilities/database.js';
 import { getEnvironment } from './utilities/environment.js';
 import { getPrivateConfig } from './utilities/s3.js';
 import {
@@ -6,8 +8,37 @@ import {
   log,
   populateMetdataObjFromRequest,
 } from './utilities/logger.js';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
+
+function checkClientRouteExists(req, res, next) {
+  const subPath = process.env.SERVER_BASE_PATH || '';
+
+  const clientRoutes = [
+    '/api-documentation',
+    '/api-key-signup',
+    '/attains',
+    '/attains/actions',
+    '/attains/assessments',
+    '/attains/assessmentUnits',
+    '/attains/assessmentUnitsMonitoringLocations',
+    '/attains/catchmentCorrespondence',
+    '/attains/sources',
+    '/attains/tmdl',
+    '/manifest.json',
+    '/national-downloads',
+  ].reduce((acc, cur) => {
+    return acc.concat([`${subPath}${cur}`, `${subPath}${cur}/`]);
+  }, []);
+  clientRoutes.push('/');
+
+  if (!clientRoutes.includes(req.path)) {
+    return res.status(404).sendFile(path.join(__dirname, 'public', '400.html'));
+  }
+
+  next();
+}
 
 /**
  * Middleware to get/set the active schema and add it to the original request
@@ -21,13 +52,15 @@ async function getActiveSchema(req, res, next) {
 
   try {
     // query the logging schema to get the active schema
-    const schema = await knex
-      .withSchema('logging')
-      .select('schema_name', 'active')
-      .from('etl_schemas')
-      .where('active', true)
-      .orderBy('creation_date', 'desc')
-      .first();
+    const schema = await queryPool(
+      knex
+        .withSchema('logging')
+        .select('schema_name', 'active')
+        .from('etl_schemas')
+        .where('active', true)
+        .orderBy('creation_date', 'desc'),
+      true,
+    );
 
     // Add activeSchema to the request object
     req.activeSchema = schema.schema_name;
@@ -37,7 +70,7 @@ async function getActiveSchema(req, res, next) {
     log.error(
       formatLogMsg(metadataObj, 'Failed to get active schema: ', error),
     );
-    res.status(500).json({ message: 'Error !' + error });
+    return res.status(500).json({ message: 'Error !' + error });
   }
 }
 
@@ -87,4 +120,4 @@ async function protectRoutes(req, res, next) {
   next();
 }
 
-export { getActiveSchema, protectRoutes };
+export { checkClientRouteExists, getActiveSchema, protectRoutes };

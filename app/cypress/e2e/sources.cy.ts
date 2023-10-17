@@ -76,7 +76,7 @@ describe('Data Profile Sources', () => {
     cy.selectOption('input-parameterGroup', 'pesticides');
 
     //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2017{downArrow}');
+    cy.selectOption('input-reportingCycle', '2017', true);
 
     //Source Name
     cy.selectOption('input-sourceName', 'groundwater');
@@ -124,7 +124,7 @@ describe('Data Profile Sources', () => {
     cy.selectOption('input-parameterGroup', 'nutrients');
 
     //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2018{downArrow}');
+    cy.selectOption('input-reportingCycle', '2018', true);
 
     //Source Name
     cy.selectOption('input-sourceName', 'manure lagoons');
@@ -159,7 +159,7 @@ describe('Data Profile Sources', () => {
 
   it('Verify copy box text flavor 5', () => {
     //Reporting Cycle
-    cy.selectOption('input-reportingCycle', '2016{downArrow}');
+    cy.selectOption('input-reportingCycle', '2016', true);
 
     //Assessment Unit ID
     cy.selectOption('input-assessmentUnitId', 'AL-Gulf-of-Mexico-2');
