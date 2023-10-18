@@ -3,7 +3,14 @@ Sections 303(d) and 305(b) of the Clean Water Act require states to submit water
 
 The Expert Query tool will provide the public, EPA, state, and tribal users the ability to view more detailed ATTAINS data than they can in [How’s My Waterway](https://mywaterway.epa.gov/). It will also allow users to download data on a national scale.
 
-Code and access to the application **expected late 2022**.
+<p align="center">
+			<img height="50%" width="50%" src="/docs/img/AttainsQueryPage.png" alt="Screenshot of Attains Query page">
+</p>
+
+## Documentation
+- [Local Development Environment Setup](/docs/local_dev_setup.md), instructions for getting the application running on your device to support coding.
+- [How to contribute to the project](/docs/CONTRIBUTING.md), learn how to help improve the application. 
+- [Changelog](/docs/changelog.md), high-level information about the changes in each release.
 
 ## Disclaimer
 
