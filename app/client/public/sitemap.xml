@@ -5,6 +5,10 @@
         <changefreq>weekly</changefreq>
     </url>
     <url>
+        <loc>https://owapps.epa.gov/expertquery/api-key-signup</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
         <loc>https://owapps.epa.gov/expertquery/attains</loc>
         <changefreq>weekly</changefreq>
     </url>
