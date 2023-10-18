@@ -67,7 +67,7 @@ describe('Api Validations', () => {
     );
   });
 
-  it("Action's GET APIs", () => {
+  it("Action's POST APIs", () => {
     const fieldNames = [
       'assessmentUnitId',
       'actionId',
@@ -78,16 +78,17 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/attains/actions/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/actions/values/${fieldNames[i]}`;
+      const body = { text: '', limit: 20 };
 
-      cy.request('GET', url).then(async ({ body, status }) => {
+      cy.request('POST', url, body).then(async ({ body, status }) => {
         expect(status).to.eq(200);
         expect(body).to.be.a('array');
       });
     }
   });
 
-  it("Assessment Unit's GET APIs", () => {
+  it("Assessment Unit's POST APIs", () => {
     const fieldNames = [
       'assessmentUnitId',
       'assessmentUnitName',
@@ -97,16 +98,17 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/attains/assessmentUnits/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/assessmentUnits/values/${fieldNames[i]}`;
+      const body = { text: '', limit: 20 };
 
-      cy.request('GET', url).then(async ({ body, status }) => {
+      cy.request('POST', url, body).then(async ({ body, status }) => {
         expect(status).to.eq(200);
         expect(body).to.be.a('array');
       });
     }
   });
 
-  it("Assessments's GET APIs", () => {
+  it("Assessments's POST APIs", () => {
     const fieldNames = [
       'alternateListingIdentifier',
       'assessmentBasis',
@@ -126,16 +128,17 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/attains/assessments/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/assessments/values/${fieldNames[i]}`;
+      const body = { text: '', limit: 20 };
 
-      cy.request('GET', url).then(async ({ body, status }) => {
+      cy.request('POST', url, body).then(async ({ body, status }) => {
         expect(status).to.eq(200);
         expect(body).to.be.a('array');
       });
     }
   });
 
-  it("Assessment Units with Monitoring Locations's GET APIs", () => {
+  it("Assessment Units with Monitoring Locations's POST APIs", () => {
     const fieldNames = [
       'assessmentUnitId',
       'assessmentUnitName',
@@ -146,16 +149,17 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/attains/assessmentUnitsMonitoringLocations/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/assessmentUnitsMonitoringLocations/values/${fieldNames[i]}`;
+      const body = { text: '', limit: 20 };
 
-      cy.request('GET', url).then(async ({ body, status }) => {
+      cy.request('POST', url, body).then(async ({ body, status }) => {
         expect(status).to.eq(200);
         expect(body).to.be.a('array');
       });
     }
   });
 
-  it("Catchment Correspondence's GET APIs", () => {
+  it("Catchment Correspondence's POST APIs", () => {
     const fieldNames = [
       'assessmentUnitId',
       'assessmentUnitName',
@@ -164,16 +168,17 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/attains/catchmentCorrespondence/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/catchmentCorrespondence/values/${fieldNames[i]}`;
+      const body = { text: '', limit: 20 };
 
-      cy.request('GET', url).then(async ({ body, status }) => {
+      cy.request('POST', url, body).then(async ({ body, status }) => {
         expect(status).to.eq(200);
         expect(body).to.be.a('array');
       });
     }
   });
 
-  it("Sources's GET APIs", () => {
+  it("Sources's POST APIs", () => {
     const fieldNames = [
       'assessmentUnitId',
       'assessmentUnitName',
@@ -185,16 +190,17 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/attains/sources/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/sources/values/${fieldNames[i]}`;
+      const body = { text: '', limit: 20 };
 
-      cy.request('GET', url).then(async ({ body, status }) => {
+      cy.request('POST', url, body).then(async ({ body, status }) => {
         expect(status).to.eq(200);
         expect(body).to.be.a('array');
       });
     }
   });
 
-  it("Total Maximum Daily Load's GET APIs", () => {
+  it("Total Maximum Daily Load's POST APIs", () => {
     const fieldNames = [
       'actionId',
       'actionName',
@@ -210,20 +216,21 @@ describe('Api Validations', () => {
     ];
 
     for (let i = 0; i < fieldNames.length; i++) {
-      const url = `${origin}/api/attains/tmdl/values/${fieldNames[i]}?text=&limit=20`;
+      const url = `${origin}/api/attains/tmdl/values/${fieldNames[i]}`;
+      const body = { text: '', limit: 20 };
 
-      cy.request('GET', url).then(async ({ body, status }) => {
+      cy.request('POST', url, body).then(async ({ body, status }) => {
         expect(status).to.eq(200);
         expect(body).to.be.a('array');
       });
     }
   });
 
-  it('Verify error message while using wrong Profile name GET api', () => {
+  it('Verify error message while using wrong Profile name POST api', () => {
     const url = `${origin}/api/attains/wrongProfile/values/fieldName`;
     const message = 'The requested profile does not exist';
 
-    cy.request({ method: 'GET', url, failOnStatusCode: false }).then(
+    cy.request({ method: 'POST', url, failOnStatusCode: false }).then(
       async ({ body, status }) => {
         expect(status).to.eq(404);
         expect(body.message).to.eq(message);
@@ -231,14 +238,15 @@ describe('Api Validations', () => {
     );
   });
 
-  it('Verify error message while using correct Profile name and wrong fieldName name GET api', () => {
-    const url = `${origin}/api/attains/actions/values/wrongFieldName?text=ver`;
+  it('Verify error message while using correct Profile name and wrong fieldName name POST api', () => {
+    const url = `${origin}/api/attains/actions/values/wrongFieldName`;
+    const body = { text: 'ver' };
     const message =
       'The column wrongFieldName does not exist on the selected profile';
 
-    cy.request({ method: 'GET', url, failOnStatusCode: false }).then(
+    cy.request({ method: 'POST', url, body, failOnStatusCode: false }).then(
       async ({ body, status }) => {
-        expect(status).to.eq(404);
+        expect(status).to.eq(400);
         expect(body.message).to.eq(message);
       },
     );
