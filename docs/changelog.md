@@ -1,4 +1,4 @@
 
 # Change Log
 
-## 1.0.0 (Released November 2023)
+## 1.0.0 (Released December 2023)
