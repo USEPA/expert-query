@@ -8,7 +8,7 @@
 "licenses": [
 {
 "name": "Creative Commons Zero (CC0)",
-"URL": "https://github.com/USEPA/mywaterway/blob/develop/LICENSE"
+"URL": "https://github.com/USEPA/expert-query/blob/develop/LICENSE"
 }
 ],
 "usageType": "openSource",
@@ -16,9 +16,9 @@
 },
 "repositoryURL": "https://github.com/USEPA/expert-query",
 "vcs" : "git",
-"homepageURL" : "https://attainsquery.epa.gov",
+"homepageURL" : "https://owapps.epa.gov/expertquery",
 "downloadURL" : "https://github.com/USEPA/expert-query",
-"disclaimerURL" : "https://github.com/USEPA/expert-query/blob/develop/readme.md",
+"disclaimerURL" : "https://github.com/USEPA/expert-query/blob/develop/README.md",
 "disclaimerText" : "This United States Environmental Protection Agency (EPA) GitHub project code is provided on an 'as is' basis and the user assumes responsibility for its use. EPA has relinquished control of the information and no longer has responsibility to protect the integrity, confidentiality, or availability of the information.",
 "languages": [
 "React",
@@ -34,7 +34,7 @@
 "contact": {
 "name": "Expert Query Team",
 "email": "expertquery@epa.gov",
-"URL": "https://www.epa.gov/waterdata/forms/contact-us-about-expert-query"
+"URL": "https://www.epa.gov/waterdata/forms/contact-us-about-water-data-and-tools"
 },
 "reusedCode": [
 {
