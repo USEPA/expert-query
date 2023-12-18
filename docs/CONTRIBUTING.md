@@ -13,7 +13,7 @@ Please take a moment to review this document in order to make the contribution p
 
 The issue tracker is the preferred channel for [change requests](#change_requests), but please respect the following restrictions:
 
-* Please **do not** use the issue tracker for personal support requests or questions. Use the [contact us form]([mailto:expertquery@epa.gov](https://www.epa.gov/waterdata/forms/contact-us-about-water-data-and-tools)) instead.
+* Please **do not** use the issue tracker for personal support requests or questions. Use the [contact us form](https://www.epa.gov/waterdata/forms/contact-us-about-water-data-and-tools) instead.
 
 * Please **do not** derail issues. Keep the discussion on topic and respect the opinions of others. Start a new issue for a new change instead of using the same thread for multiple changes.
 
