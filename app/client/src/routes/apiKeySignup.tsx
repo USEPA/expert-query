@@ -46,7 +46,9 @@ export function ApiKeySignup() {
         use <b>Expert Query</b>'s web services, then explore the web service{' '}
         <Link to={`${serverUrl}/api-documentation`}>documentation</Link>.
       </p>
-      <div id="apidatagov_signup">{loading && <Loading />}</div>
+
+      {loading && <Loading />}
+      <div id="apidatagov_signup"></div>
     </div>
   );
 }
