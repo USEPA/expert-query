@@ -1,7 +1,5 @@
 ## Expert Query
-Sections 303(d) and 305(b) of the Clean Water Act require states to submit water quality assessment and impairment information to EPA on April 1st of every even numbered year. EPA now requires this data to be submitted electronically through the [Assessment and TMDL Tracking and implementatioN System (ATTAINS)](https://www.epa.gov/waterdata/attains). 
-
-The Expert Query tool will provide the public, EPA, state, and tribal users the ability to view more detailed ATTAINS data than they can in [How’s My Waterway](https://mywaterway.epa.gov/). It will also allow users to download data on a national scale.
+The Expert Query Tool provides a way to interact with public [Assessment and TMDL Tracking and implementatioN System (ATTAINS)](https://www.epa.gov/waterdata/attains) data, by allowing users to filter and download ATTAINS data either within an organization (state or tribe) or across multiple organizations. Users can query water quality Assessment decisions (under Clean Water Act Sections 303(d), 305(b), and 106), such as querying all the assessments for a specific parameter within an EPA region. The tool also allows users to query Action data like Total Maximum Daily Loads (TMDLs), Advance Restoration Plans (ARPs), and Protection Approaches, such as querying for all nutrient TMDLs nationally.  Expert Query allows users to download the results of their query in various formats, such as Excel files or CSV files.
 
 <p align="center">
 			<img height="50%" width="50%" src="/docs/img/AttainsQueryPage.png" alt="Screenshot of Attains Query page">
