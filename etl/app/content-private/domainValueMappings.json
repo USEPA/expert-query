@@ -1,0 +1,77 @@
+{
+  "actionAgency": {
+    "domainName": "AgencyCode",
+    "columns": ["actionAgency", "associatedActionAgency"],
+    "valueField": "name"
+  },
+  "actionType": {
+    "domainName": "ActionType",
+    "columns": ["actionType", "associatedActionType"],
+    "labelField": "code"
+  },
+  "assessmentTypes": {
+    "domainName": "AssessmentTypeCode",
+    "columns": ["assessmentTypes"]
+  },
+  "assessmentUnitStatus": {
+    "domainName": "StatusIndicator",
+    "columns": ["assessmentUnitStatus"]
+  },
+  "associatedActionStatus": {
+    "domainName": "ActionStatusType",
+    "labelField": "code",
+    "columns": ["associatedActionStatus"]
+  },
+  "delistedReason": {
+    "domainName": "DelistingReasonCode",
+    "columns": ["delistedReason"],
+    "valueField": "name"
+  },
+  "locationTypeCode": {
+    "domainName": "LocationTypeCode",
+    "columns": ["locationTypeCode"]
+  },
+  "parameterGroup": {
+    "domainName": "ParameterGroupCodeType",
+    "columns": ["parameterGroup"]
+  },
+  "parameterName": {
+    "domainName": "ParameterName",
+    "columns": ["parameterName", "pollutant"]
+  },
+  "parameterStatus": {
+    "domainName": "ParameterStatus",
+    "columns": ["parameterStatus"]
+  },
+  "sourceName": {
+    "domainName": "SourceName",
+    "columns": ["sourceName"]
+  },
+  "sourceType": {
+    "domainName": "PollutantSourceType",
+    "columns": ["sourceType"]
+  },
+  "stateIrCategory": {
+    "domainName": "StateIRCategoryCode",
+    "columns": ["stateIrCategory"]
+  },
+  "useClassName": {
+    "domainName": "UseClassType",
+    "columns": ["useClassName"],
+    "valueField": "name"
+  },
+  "useName": {
+    "domainName": "UseName",
+    "columns": ["useName"]
+  },
+  "useSupport": {
+    "domainName": "UseAttainmentCode",
+    "columns": ["useSupport"]
+  },
+  "waterType": {
+    "domainName": "WaterTypeUnitsCode",
+    "columns": ["waterType"],
+    "labelField": "context",
+    "valueField": "context"
+  }
+}

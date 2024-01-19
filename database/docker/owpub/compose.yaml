@@ -1,0 +1,23 @@
+# Use postgres/example user/password credentials
+
+services:
+  adminer:
+    image: adminer
+    ports:
+      - 8081:8080
+
+  owpub:
+    build: .
+    environment:
+      POSTGRES_PASSWORD: example
+    image: expert-query/postgis
+    ports:
+      - 5433:5432
+    restart: always
+    volumes:
+      - ./config:/etc/postgresql:ro
+      - ./log:/var/log/postgresql
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - ./data:/var/lib/postgresql/data
+
+version: "3.9"
