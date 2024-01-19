@@ -1,0 +1,1586 @@
+{
+  "actions": {
+    "tableName": "actions",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS actions ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, fiscalyearestablished VARCHAR (4), parameter VARCHAR(240), parametergroup VARCHAR(60), locationdescription VARCHAR(2000), actiontype VARCHAR(50) NOT NULL, watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), actionagency VARCHAR(10) NOT NULL, inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1) )",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "actionagency",
+        "alias": "actionAgency"
+      },
+      {
+        "name": "actionid",
+        "alias": "actionId"
+      },
+      {
+        "name": "actionname",
+        "alias": "actionName"
+      },
+      {
+        "name": "actiontype",
+        "alias": "actionType"
+      },
+      {
+        "name": "assessmentunitid",
+        "alias": "assessmentUnitId"
+      },
+      {
+        "name": "assessmentunitname",
+        "alias": "assessmentUnitName"
+      },
+      {
+        "name": "completiondate",
+        "alias": "completionDate",
+        "lowParam": "completionDateLo",
+        "highParam": "completionDateHi",
+        "type": "date",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "fiscalyearestablished",
+        "alias": "fiscalYearEstablished",
+        "lowParam": "fiscalYearEstablishedLo",
+        "highParam": "fiscalYearEstablishedHi",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "includeinmeasure",
+        "alias": "includeInMeasure"
+      },
+      {
+        "name": "inindiancountry",
+        "alias": "inIndianCountry"
+      },
+      {
+        "name": "locationdescription",
+        "alias": "locationDescription",
+        "skipIndex": true
+      },
+      {
+        "name": "organizationid",
+        "alias": "organizationId"
+      },
+      {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType",
+        "skipIndex": true
+      },
+      {
+        "name": "parameter",
+        "alias": "parameter"
+      },
+      {
+        "name": "parametergroup",
+        "alias": "parameterGroup"
+      },
+      {
+        "name": "region",
+        "alias": "region"
+      },
+      {
+        "name": "state",
+        "alias": "state"
+      },
+      {
+        "name": "watersize",
+        "alias": "waterSize",
+        "type": "numeric",
+        "skipIndex": true
+      },
+      {
+        "name": "watersizeunits",
+        "alias": "waterSizeUnits",
+        "skipIndex": true
+      },
+      {
+        "name": "watertype",
+        "alias": "waterType"
+      }
+    ],
+    "materializedViewColumns": [
+      {
+        "name": "statename",
+        "alias": "stateName"
+      }
+    ],
+    "materializedViews": [
+      {
+        "name": "actions_assessments",
+        "columns": [
+          {
+            "name": "assessmentunitid"
+          },
+          {
+            "name": "assessmentunitname"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "organizationtype"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "statename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "states",
+            "joinKey": ["state", "statecode"]
+          }
+        ]
+      },
+      {
+        "name": "actions_actions",
+        "columns": [
+          {
+            "name": "actionid"
+          },
+          {
+            "name": "actionname"
+          },
+          {
+            "name": "actiontype"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "organizationtype"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          }
+        ]
+      },
+      {
+        "name": "actions_parameter",
+        "columns": [
+          {
+            "name": "parameter"
+          },
+          {
+            "name": "parametergroup"
+          }
+        ]
+      }
+    ]
+  },
+  "assessments": {
+    "tableName": "assessments",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS assessments ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), cyclelastassessed NUMERIC(4,0) NOT NULL, overallstatus VARCHAR(4000), epaircategory VARCHAR(5), stateircategory VARCHAR(5), parametergroup VARCHAR(60), parametername VARCHAR(240), parameterstatus VARCHAR(240), usegroup VARCHAR(500), usename VARCHAR(255), useircategory VARCHAR(5), usestateircategory VARCHAR(5), usesupport VARCHAR(1), parameterattainment VARCHAR(50), parameterircategory VARCHAR(5), parameterstateircategory VARCHAR(5), cyclefirstlisted NUMERIC(4,0), associatedactionid VARCHAR(45), associatedactionname VARCHAR(255), associatedactiontype VARCHAR(50), locationdescription VARCHAR(2000), watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), sizesource VARCHAR(100), sourcescale VARCHAR(30), assessmentunitstatus VARCHAR(1), useclassname VARCHAR(50), assessmentdate DATE, assessmentbasis VARCHAR(30), monitoringstartdate DATE, monitoringenddate DATE, assessmentmethods VARCHAR(150), assessmenttypes VARCHAR(30), delisted VARCHAR(1), delistedreason VARCHAR(100), seasonstartdate DATE, seasonenddate DATE, pollutantindicator VARCHAR(1), cyclescheduledfortmdl NUMERIC(4,0), cycleexpectedtoattain NUMERIC(4,0), cwa303dpriorityranking VARCHAR(25), vision303dpriority VARCHAR(1), alternatelistingidentifier VARCHAR(50), consentdecreecycle NUMERIC(4,0), associatedactionstatus VARCHAR(30), associatedactionagency VARCHAR(10) )",
+    "overrideWorkMemory": "1GB",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "alternatelistingidentifier",
+        "alias": "alternateListingIdentifier"
+      },
+      {
+        "name": "assessmentbasis",
+        "alias": "assessmentBasis"
+      },
+      {
+        "name": "assessmentdate",
+        "alias": "assessmentDate",
+        "lowParam": "assessmentDateLo",
+        "highParam": "assessmentDateHi",
+        "type": "date",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "assessmentmethods",
+        "alias": "assessmentMethods"
+      },
+      {
+        "name": "assessmenttypes",
+        "alias": "assessmentTypes"
+      },
+      {
+        "name": "assessmentunitid",
+        "alias": "assessmentUnitId"
+      },
+      {
+        "name": "assessmentunitname",
+        "alias": "assessmentUnitName"
+      },
+      {
+        "name": "assessmentunitstatus",
+        "alias": "assessmentUnitStatus"
+      },
+      {
+        "name": "associatedactionagency",
+        "alias": "associatedActionAgency"
+      },
+      {
+        "name": "associatedactionid",
+        "alias": "associatedActionId"
+      },
+      {
+        "name": "associatedactionname",
+        "alias": "associatedActionName"
+      },
+      {
+        "name": "associatedactionstatus",
+        "alias": "associatedActionStatus"
+      },
+      {
+        "name": "associatedactiontype",
+        "alias": "associatedActionType"
+      },
+      {
+        "name": "consentdecreecycle",
+        "alias": "consentDecreeCycle",
+        "lowParam": "consentDecreeCycleLo",
+        "highParam": "consentDecreeCycleHi",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "cwa303dpriorityranking",
+        "alias": "cwa303dPriorityRanking"
+      },
+      {
+        "name": "cycleexpectedtoattain",
+        "alias": "cycleExpectedToAttain",
+        "lowParam": "cycleExpectedToAttainLo",
+        "highParam": "cycleExpectedToAttainHi",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "cyclefirstlisted",
+        "alias": "cycleFirstListed",
+        "lowParam": "cycleFirstListedLo",
+        "highParam": "cycleFirstListedHi",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "cycleid",
+        "alias": "cycleId",
+        "type": "numeric"
+      },
+      {
+        "name": "cyclelastassessed",
+        "alias": "cycleLastAssessed",
+        "lowParam": "cycleLastAssessedLo",
+        "highParam": "cycleLastAssessedHi",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "cyclescheduledfortmdl",
+        "alias": "cycleScheduledForTmdl",
+        "lowParam": "cycleScheduledForTmdlLo",
+        "highParam": "cycleScheduledForTmdlHi",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "delisted",
+        "alias": "delisted"
+      },
+      {
+        "name": "delistedreason",
+        "alias": "delistedReason"
+      },
+      {
+        "name": "epaircategory",
+        "alias": "epaIrCategory"
+      },
+      {
+        "name": "locationdescription",
+        "alias": "locationDescription",
+        "skipIndex": true
+      },
+      {
+        "name": "monitoringenddate",
+        "alias": "monitoringEndDate",
+        "lowParam": "monitoringEndDateLo",
+        "highParam": "monitoringEndDateHi",
+        "type": "date",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "monitoringstartdate",
+        "alias": "monitoringStartDate",
+        "lowParam": "monitoringStartDateLo",
+        "highParam": "monitoringStartDateHi",
+        "type": "date",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "organizationid",
+        "alias": "organizationId"
+      },
+      {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType",
+        "skipIndex": true
+      },
+      {
+        "name": "overallstatus",
+        "alias": "overallStatus"
+      },
+      {
+        "name": "parameterattainment",
+        "alias": "parameterAttainment"
+      },
+      {
+        "name": "parametergroup",
+        "alias": "parameterGroup"
+      },
+      {
+        "name": "parameterircategory",
+        "alias": "parameterIrCategory"
+      },
+      {
+        "name": "parametername",
+        "alias": "parameterName"
+      },
+      {
+        "name": "parameterstateircategory",
+        "alias": "parameterStateIrCategory"
+      },
+      {
+        "name": "parameterstatus",
+        "alias": "parameterStatus"
+      },
+      {
+        "name": "pollutantindicator",
+        "alias": "pollutantIndicator"
+      },
+      {
+        "name": "region",
+        "alias": "region"
+      },
+      {
+        "name": "reportingcycle",
+        "alias": "reportingCycle",
+        "default": "latest",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "seasonenddate",
+        "alias": "seasonEndDate",
+        "lowParam": "seasonEndDateLo",
+        "highParam": "seasonEndDateHi",
+        "type": "date",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "seasonstartdate",
+        "alias": "seasonStartDate",
+        "lowParam": "seasonStartDateLo",
+        "highParam": "seasonStartDateHi",
+        "type": "date",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "sizesource",
+        "alias": "sizeSource",
+        "skipIndex": true
+      },
+      {
+        "name": "sourcescale",
+        "alias": "sourceScale",
+        "skipIndex": true
+      },
+      {
+        "name": "state",
+        "alias": "state"
+      },
+      {
+        "name": "stateircategory",
+        "alias": "stateIrCategory"
+      },
+      {
+        "name": "useclassname",
+        "alias": "useClassName"
+      },
+      {
+        "name": "usegroup",
+        "alias": "useGroup"
+      },
+      {
+        "name": "useircategory",
+        "alias": "useIrCategory"
+      },
+      {
+        "name": "usename",
+        "alias": "useName"
+      },
+      {
+        "name": "usestateircategory",
+        "alias": "useStateIrCategory"
+      },
+      {
+        "name": "usesupport",
+        "alias": "useSupport"
+      },
+      {
+        "name": "vision303dpriority",
+        "alias": "vision303dPriority"
+      },
+      {
+        "name": "watersize",
+        "alias": "waterSize",
+        "type": "numeric",
+        "skipIndex": true
+      },
+      {
+        "name": "watersizeunits",
+        "alias": "waterSizeUnits",
+        "skipIndex": true
+      },
+      {
+        "name": "watertype",
+        "alias": "waterType"
+      }
+    ],
+    "materializedViewColumns": [
+      {
+        "name": "statename",
+        "alias": "stateName"
+      }
+    ],
+    "materializedViews": [
+      {
+        "name": "assessments_assessments",
+        "columns": [
+          {
+            "name": "assessmentunitid"
+          },
+          {
+            "name": "assessmentunitname"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "organizationtype"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "statename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "states",
+            "joinKey": ["state", "statecode"]
+          }
+        ]
+      },
+      {
+        "name": "assessments_alternatelistingidentifier",
+        "columns": [
+          {
+            "name": "alternatelistingidentifier"
+          }
+        ]
+      },
+      {
+        "name": "assessments_assessmentbasis",
+        "columns": [
+          {
+            "name": "assessmentbasis"
+          }
+        ]
+      },
+      {
+        "name": "assessments_assessmentmethods",
+        "columns": [
+          {
+            "name": "assessmentmethods"
+          }
+        ]
+      },
+      {
+        "name": "assessments_associatedaction",
+        "columns": [
+          {
+            "name": "associatedactionid"
+          },
+          {
+            "name": "associatedactionname"
+          },
+          {
+            "name": "associatedactionstatus"
+          },
+          {
+            "name": "associatedactiontype"
+          }
+        ]
+      },
+      {
+        "name": "assessments_epaircategory",
+        "columns": [
+          {
+            "name": "epaircategory"
+          }
+        ]
+      },
+      {
+        "name": "assessments_overallstatus",
+        "columns": [
+          {
+            "name": "overallstatus"
+          }
+        ]
+      },
+      {
+        "name": "assessments_parameterattainment",
+        "columns": [
+          {
+            "name": "parameterattainment"
+          }
+        ]
+      },
+      {
+        "name": "assessments_parameterircategory",
+        "columns": [
+          {
+            "name": "parameterircategory",
+            "type": "numeric"
+          }
+        ]
+      },
+      {
+        "name": "assessments_parametername",
+        "columns": [
+          {
+            "name": "parametername"
+          },
+          {
+            "name": "parametergroup"
+          }
+        ]
+      },
+      {
+        "name": "assessments_parameterstateircategory",
+        "columns": [
+          {
+            "name": "parameterstateircategory",
+            "type": "numeric"
+          }
+        ]
+      },
+      {
+        "name": "assessments_reportingcycle",
+        "columns": [
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "reportingcycle",
+            "type": "numeric"
+          },
+          {
+            "name": "state"
+          }
+        ]
+      },
+      {
+        "name": "assessments_usegroup",
+        "columns": [
+          {
+            "name": "usegroup"
+          },
+          {
+            "name": "usename"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "state"
+          }
+        ]
+      },
+      {
+        "name": "assessments_useircategory",
+        "columns": [
+          {
+            "name": "useircategory",
+            "type": "numeric"
+          }
+        ]
+      },
+      {
+        "name": "assessments_usestateircategory",
+        "columns": [
+          {
+            "name": "usestateircategory",
+            "type": "numeric"
+          }
+        ]
+      }
+    ]
+  },
+  "assessmentUnits": {
+    "tableName": "assessment_units",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30), locationtypecode VARCHAR(22), locationtext VARCHAR(100) )",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "assessmentunitid",
+        "alias": "assessmentUnitId"
+      },
+      {
+        "name": "assessmentunitname",
+        "alias": "assessmentUnitName"
+      },
+      {
+        "name": "assessmentunitstatus",
+        "alias": "assessmentUnitStatus"
+      },
+      {
+        "name": "cycleid",
+        "alias": "cycleId",
+        "type": "numeric"
+      },
+      {
+        "name": "locationdescription",
+        "alias": "locationDescription",
+        "skipIndex": true
+      },
+      {
+        "name": "locationtext",
+        "alias": "locationText"
+      },
+      {
+        "name": "locationtypecode",
+        "alias": "locationTypeCode"
+      },
+      {
+        "name": "organizationid",
+        "alias": "organizationId"
+      },
+      {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType"
+      },
+      {
+        "name": "region",
+        "alias": "region"
+      },
+      {
+        "name": "reportingcycle",
+        "alias": "reportingCycle",
+        "default": "latest",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "sizesource",
+        "alias": "sizeSource",
+        "skipIndex": true
+      },
+      {
+        "name": "sourcescale",
+        "alias": "sourceScale",
+        "skipIndex": true
+      },
+      {
+        "name": "state",
+        "alias": "state"
+      },
+      {
+        "name": "useclassname",
+        "alias": "useClassName"
+      },
+      {
+        "name": "watersize",
+        "alias": "waterSize",
+        "type": "numeric",
+        "skipIndex": true
+      },
+      {
+        "name": "watersizeunits",
+        "alias": "waterSizeUnits",
+        "skipIndex": true
+      },
+      {
+        "name": "watertype",
+        "alias": "waterType"
+      }
+    ],
+    "materializedViewColumns": [
+      {
+        "name": "statename",
+        "alias": "stateName"
+      }
+    ],
+    "materializedViews": [
+      {
+        "name": "assessmentunits_assessments",
+        "columns": [
+          {
+            "name": "assessmentunitid"
+          },
+          {
+            "name": "assessmentunitname"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "statename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "states",
+            "joinKey": ["state", "statecode"]
+          }
+        ]
+      },
+      {
+        "name": "assessmentunits_locationtext",
+        "columns": [
+          {
+            "name": "locationtypecode"
+          },
+          {
+            "name": "locationtext"
+          }
+        ]
+      },
+      {
+        "name": "assessmentunits_reportingcycle",
+        "columns": [
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "reportingcycle",
+            "type": "numeric"
+          },
+          {
+            "name": "state"
+          }
+        ]
+      }
+    ]
+  },
+  "assessmentUnitsMonitoringLocations": {
+    "tableName": "assessment_units_monitoring_locations",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units_monitoring_locations ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, monitoringlocationorgid VARCHAR(30), monitoringlocationid VARCHAR(35), monitoringlocationdatalink VARCHAR(255), assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30) )",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "assessmentunitid",
+        "alias": "assessmentUnitId"
+      },
+      {
+        "name": "assessmentunitname",
+        "alias": "assessmentUnitName"
+      },
+      {
+        "name": "assessmentunitstatus",
+        "alias": "assessmentUnitStatus"
+      },
+      {
+        "name": "cycleid",
+        "alias": "cycleId",
+        "type": "numeric"
+      },
+      {
+        "name": "locationdescription",
+        "alias": "locationDescription",
+        "skipIndex": true
+      },
+      {
+        "name": "monitoringlocationdatalink",
+        "alias": "monitoringLocationDataLink",
+        "skipIndex": true
+      },
+      {
+        "name": "monitoringlocationid",
+        "alias": "monitoringLocationId"
+      },
+      {
+        "name": "monitoringlocationorgid",
+        "alias": "monitoringLocationOrgId"
+      },
+      {
+        "name": "organizationid",
+        "alias": "organizationId"
+      },
+      {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType",
+        "skipIndex": true
+      },
+      {
+        "name": "region",
+        "alias": "region"
+      },
+      {
+        "name": "reportingcycle",
+        "alias": "reportingCycle",
+        "default": "latest",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "sizesource",
+        "alias": "sizeSource",
+        "skipIndex": true
+      },
+      {
+        "name": "sourcescale",
+        "alias": "sourceScale",
+        "skipIndex": true
+      },
+      {
+        "name": "state",
+        "alias": "state"
+      },
+      {
+        "name": "useclassname",
+        "alias": "useClassName"
+      },
+      {
+        "name": "watersize",
+        "alias": "waterSize",
+        "type": "numeric",
+        "skipIndex": true
+      },
+      {
+        "name": "watersizeunits",
+        "alias": "waterSizeUnits",
+        "skipIndex": true
+      },
+      {
+        "name": "watertype",
+        "alias": "waterType"
+      }
+    ],
+    "materializedViewColumns": [
+      {
+        "name": "statename",
+        "alias": "stateName"
+      }
+    ],
+    "materializedViews": [
+      {
+        "name": "assessmentunitsmonitoringlocations_assessments",
+        "columns": [
+          {
+            "name": "assessmentunitid"
+          },
+          {
+            "name": "assessmentunitname"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "statename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "states",
+            "joinKey": ["state", "statecode"]
+          }
+        ]
+      },
+      {
+        "name": "assessmentunitsmonitoringlocations_locationtext",
+        "columns": [
+          {
+            "name": "monitoringlocationid"
+          },
+          {
+            "name": "monitoringlocationorgid"
+          }
+        ]
+      },
+      {
+        "name": "assessmentunitsmonitoringlocations_reportingcycle",
+        "columns": [
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "reportingcycle",
+            "type": "numeric"
+          },
+          {
+            "name": "state"
+          }
+        ]
+      }
+    ]
+  },
+  "catchmentCorrespondence": {
+    "tableName": "catchment_correspondence",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS catchment_correspondence ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, catchmentnhdplusid NUMERIC(38,0) )",
+    "overrideWorkMemory": "790MB",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "assessmentunitid",
+        "alias": "assessmentUnitId"
+      },
+      {
+        "name": "assessmentunitname",
+        "alias": "assessmentUnitName"
+      },
+      {
+        "name": "catchmentnhdplusid",
+        "alias": "catchmentNhdPlusId",
+        "type": "numeric"
+      },
+      {
+        "name": "cycleid",
+        "alias": "cycleId",
+        "type": "numeric"
+      },
+      {
+        "name": "organizationid",
+        "alias": "organizationId"
+      },
+      {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType",
+        "skipIndex": true
+      },
+      {
+        "name": "region",
+        "alias": "region"
+      },
+      {
+        "name": "reportingcycle",
+        "alias": "reportingCycle",
+        "default": "latest",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "state",
+        "alias": "state"
+      }
+    ],
+    "materializedViewColumns": [
+      {
+        "name": "statename",
+        "alias": "stateName"
+      }
+    ],
+    "materializedViews": [
+      {
+        "name": "catchmentcorrespondence_assessments",
+        "columns": [
+          {
+            "name": "assessmentunitid"
+          },
+          {
+            "name": "assessmentunitname"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "statename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "states",
+            "joinKey": ["state", "statecode"]
+          }
+        ]
+      },
+      {
+        "name": "catchmentcorrespondence_catchmentnhdplusid",
+        "columns": [
+          {
+            "name": "catchmentnhdplusid",
+            "type": "numeric"
+          }
+        ]
+      },
+      {
+        "name": "catchmentcorrespondence_reportingcycle",
+        "columns": [
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "reportingcycle",
+            "type": "numeric"
+          },
+          {
+            "name": "state"
+          }
+        ]
+      }
+    ]
+  },
+  "sources": {
+    "tableName": "sources",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS sources ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, overallstatus VARCHAR(4000), epaircategory VARCHAR(5), stateircategory VARCHAR(5), sourcename VARCHAR(240) NOT NULL, confirmed VARCHAR(1) NOT NULL, parametergroup VARCHAR(60) NOT NULL, causename VARCHAR(240) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL )",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "assessmentunitid",
+        "alias": "assessmentUnitId"
+      },
+      {
+        "name": "assessmentunitname",
+        "alias": "assessmentUnitName"
+      },
+      {
+        "name": "causename",
+        "alias": "causeName"
+      },
+      {
+        "name": "confirmed",
+        "alias": "confirmed"
+      },
+      {
+        "name": "cycleid",
+        "alias": "cycleId",
+        "type": "numeric"
+      },
+      {
+        "name": "epaircategory",
+        "alias": "epaIrCategory"
+      },
+      {
+        "name": "locationdescription",
+        "alias": "locationDescription",
+        "skipIndex": true
+      },
+      {
+        "name": "organizationid",
+        "alias": "organizationId"
+      },
+      {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType",
+        "skipIndex": true
+      },
+      {
+        "name": "overallstatus",
+        "alias": "overallStatus"
+      },
+      {
+        "name": "parametergroup",
+        "alias": "parameterGroup"
+      },
+      {
+        "name": "region",
+        "alias": "region"
+      },
+      {
+        "name": "reportingcycle",
+        "alias": "reportingCycle",
+        "default": "latest",
+        "type": "numeric",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "sourcename",
+        "alias": "sourceName"
+      },
+      {
+        "name": "state",
+        "alias": "state"
+      },
+      {
+        "name": "stateircategory",
+        "alias": "stateIrCategory"
+      },
+      {
+        "name": "watersize",
+        "alias": "waterSize",
+        "type": "numeric",
+        "skipIndex": true
+      },
+      {
+        "name": "watersizeunits",
+        "alias": "waterSizeUnits",
+        "skipIndex": true
+      },
+      {
+        "name": "watertype",
+        "alias": "waterType"
+      }
+    ],
+    "materializedViewColumns": [
+      {
+        "name": "statename",
+        "alias": "stateName"
+      }
+    ],
+    "materializedViews": [
+      {
+        "name": "sources_assessments",
+        "columns": [
+          {
+            "name": "assessmentunitid"
+          },
+          {
+            "name": "assessmentunitname"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "statename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "states",
+            "joinKey": ["state", "statecode"]
+          }
+        ]
+      },
+      {
+        "name": "sources_causename",
+        "columns": [
+          {
+            "name": "causename"
+          }
+        ]
+      },
+      {
+        "name": "sources_epaircategory",
+        "columns": [
+          {
+            "name": "epaircategory"
+          }
+        ]
+      },
+      {
+        "name": "sources_overallstatus",
+        "columns": [
+          {
+            "name": "overallstatus"
+          }
+        ]
+      },
+      {
+        "name": "sources_reportingcycle",
+        "columns": [
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "reportingcycle",
+            "type": "numeric"
+          },
+          {
+            "name": "state"
+          }
+        ]
+      }
+    ]
+  },
+  "tmdl": {
+    "tableName": "tmdl",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS tmdl ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, tmdldate DATE, fiscalyearestablished VARCHAR(4), pollutant VARCHAR(240), pollutantgroup VARCHAR(60), sourcetype VARCHAR(40), addressedparameter VARCHAR(240), addressedparametergroup VARCHAR(60), locationdescription VARCHAR(2000), watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), actionagency VARCHAR(10) NOT NULL, loadallocation NUMERIC(21,3), loadallocationunits VARCHAR(40), explicitmarginofsafety VARCHAR(255), implicitmarginofsafety VARCHAR(255), tmdlendpoint1 TEXT, tmdlendpoint2 TEXT, tmdlendpoint3 TEXT, npdesidentifier VARCHAR(60), otheridentifier VARCHAR(4000), wasteloadallocation NUMERIC(24,3), inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1), tmdlendpoint TEXT GENERATED ALWAYS AS (coalesce(tmdlendpoint1, '') || coalesce(tmdlendpoint2, '') || coalesce(tmdlendpoint3, '')) STORED )",
+    "overrideWorkMemory": "790MB",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "actionagency",
+        "alias": "actionAgency"
+      },
+      {
+        "name": "actionid",
+        "alias": "actionId"
+      },
+      {
+        "name": "actionname",
+        "alias": "actionName"
+      },
+      {
+        "name": "addressedparameter",
+        "alias": "addressedParameter"
+      },
+      {
+        "name": "addressedparametergroup",
+        "alias": "addressedParameterGroup"
+      },
+      {
+        "name": "assessmentunitid",
+        "alias": "assessmentUnitId"
+      },
+      {
+        "name": "assessmentunitname",
+        "alias": "assessmentUnitName"
+      },
+      {
+        "name": "completiondate",
+        "alias": "completionDate",
+        "lowParam": "completionDateLo",
+        "highParam": "completionDateHi",
+        "type": "date",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "explicitmarginofsafety",
+        "alias": "explicitMarginOfSafety"
+      },
+      {
+        "name": "fiscalyearestablished",
+        "alias": "fiscalYearEstablished",
+        "lowParam": "fiscalYearEstablishedLo",
+        "highParam": "fiscalYearEstablishedHi",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "implicitmarginofsafety",
+        "alias": "implicitMarginOfSafety"
+      },
+      {
+        "name": "includeinmeasure",
+        "alias": "includeInMeasure"
+      },
+      {
+        "name": "inindiancountry",
+        "alias": "inIndianCountry"
+      },
+      {
+        "name": "loadallocation",
+        "alias": "loadAllocation",
+        "type": "numeric",
+        "skipIndex": true
+      },
+      {
+        "name": "loadallocationunits",
+        "alias": "loadAllocationUnits",
+        "skipIndex": true
+      },
+      {
+        "name": "locationdescription",
+        "alias": "locationDescription",
+        "skipIndex": true
+      },
+      {
+        "name": "npdesidentifier",
+        "alias": "npdesIdentifier"
+      },
+      {
+        "name": "organizationid",
+        "alias": "organizationId"
+      },
+      {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType",
+        "skipIndex": true
+      },
+      {
+        "name": "otheridentifier",
+        "alias": "otherIdentifier"
+      },
+      {
+        "name": "pollutant",
+        "alias": "pollutant"
+      },
+      {
+        "name": "pollutantgroup",
+        "alias": "pollutantGroup"
+      },
+      {
+        "name": "region",
+        "alias": "region"
+      },
+      {
+        "name": "sourcetype",
+        "alias": "sourceType"
+      },
+      {
+        "name": "state",
+        "alias": "state"
+      },
+      {
+        "name": "tmdldate",
+        "alias": "tmdlDate",
+        "lowParam": "tmdlDateLo",
+        "highParam": "tmdlDateHi",
+        "type": "date",
+        "indexOrder": "desc"
+      },
+      {
+        "name": "tmdlendpoint",
+        "nameOverrideOrds": "tmdlendpoint1",
+        "alias": "tmdlEndpoint",
+        "skipIndex": true
+      },
+      {
+        "name": "wasteloadallocation",
+        "alias": "wasteLoadAllocation",
+        "type": "numeric",
+        "skipIndex": true
+      },
+      {
+        "name": "watersize",
+        "alias": "waterSize",
+        "type": "numeric",
+        "skipIndex": true
+      },
+      {
+        "name": "watersizeunits",
+        "alias": "waterSizeUnits",
+        "skipIndex": true
+      },
+      {
+        "name": "watertype",
+        "alias": "waterType"
+      }
+    ],
+    "materializedViewColumns": [
+      {
+        "name": "statename",
+        "alias": "stateName"
+      }
+    ],
+    "materializedViews": [
+      {
+        "name": "tmdl_assessments",
+        "columns": [
+          {
+            "name": "assessmentunitid"
+          },
+          {
+            "name": "assessmentunitname"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "statename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "states",
+            "joinKey": ["state", "statecode"]
+          }
+        ]
+      },
+      {
+        "name": "tmdl_actions",
+        "columns": [
+          {
+            "name": "actionid"
+          },
+          {
+            "name": "actionname"
+          },
+          {
+            "name": "actionagency"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "state"
+          }
+        ]
+      },
+      {
+        "name": "tmdl_addressedparameter",
+        "columns": [
+          {
+            "name": "addressedparameter"
+          }
+        ]
+      },
+      {
+        "name": "tmdl_explicitmarginofsafety",
+        "columns": [
+          {
+            "name": "explicitmarginofsafety"
+          }
+        ]
+      },
+      {
+        "name": "tmdl_implicitmarginofsafety",
+        "columns": [
+          {
+            "name": "implicitmarginofsafety"
+          }
+        ]
+      },
+      {
+        "name": "tmdl_npdesidentifier",
+        "columns": [
+          {
+            "name": "npdesidentifier"
+          }
+        ]
+      },
+      {
+        "name": "tmdl_otheridentifier",
+        "columns": [
+          {
+            "name": "otheridentifier"
+          }
+        ]
+      }
+    ]
+  }
+}

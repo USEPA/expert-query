@@ -1,0 +1,1006 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "description": "Production",
+      "url": "https://api.epa.gov/expertquery/api"
+    },
+    {
+      "description": "Staging",
+      "url": "https://api.epa.gov/expertquery-stage/api"
+    },
+    {
+      "description": "Development",
+      "url": "https://api.epa.gov/expertquery-dev/api"
+    },
+    {
+      "description": "Developer",
+      "url": " http://localhost:{port}/api",
+      "variables": {
+        "port": {
+          "default": 9090
+        }
+      }
+    }
+  ],
+  "info": {
+    "description": "",
+    "version": "1.0.0",
+    "title": "US EPA Expert Query",
+    "termsOfService": "https://edg.epa.gov/EPA_Data_License.html",
+    "license": {
+      "name": "Creative Commons Zero Public Domain Dedication",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  "paths": {
+    "/lookupFiles": {
+      "get": {
+        "tags": ["S3"],
+        "summary": "Fetch Expert Query UI content",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/LookupFilesSuccess"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "description": "Check the status of the web server.",
+        "summary": "Web server health check",
+        "responses": {
+          "200": {
+            "description": "The web server is up.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/etlGlossary": {
+      "get": {
+        "tags": ["Health"],
+        "description": "Check if the last run of the ETL glossary task completed successfully.",
+        "summary": "ETL glossary task health check",
+        "responses": {
+          "200": {
+            "description": "Returns the last status of the ETL glossary task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorString"
+          }
+        }
+      }
+    },
+    "/attains/health/etlDatabase": {
+      "get": {
+        "tags": ["Health"],
+        "description": "Check if the last run of the ETL database task completed successfully.",
+        "summary": "ETL database task health check",
+        "responses": {
+          "200": {
+            "description": "Returns the last status of the ETL database task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorString"
+          }
+        }
+      }
+    },
+    "/attains/health/etlDomainValues": {
+      "get": {
+        "tags": ["Health"],
+        "description": "Check if the last run of the ETL domain values task completed successfully.",
+        "summary": "ETL domain values task health check",
+        "responses": {
+          "200": {
+            "description": "Returns the last status of the ETL domain values task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorString"
+          }
+        }
+      }
+    },
+    "/attains/actions/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessments/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnits/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnitsMonitoringLocations/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/catchmentCorrespondence/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/sources/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/tmdl/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/actions/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each organization of the Actions profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each organization of the Actions profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessments/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessments profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessments profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnits/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessment Units profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessment Units profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnitsMonitoringLocations/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessment Units with Monitoring Locations profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Assessment Units with Monitoring Locations profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/catchmentCorrespondence/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Catchment Correspondence profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Catchment Correspondence profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/sources/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Sources profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each distinct combination of cycle, organization and reporting cycle of the Sources profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgCycleSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/tmdl/countPerOrgCycle": {
+      "get": {
+        "summary": "Row count for each organization of the TMDL profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count for each organization of the TMDL profile",
+        "tags": ["ATTAINS - Count Per Organization/Cycle"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountPerOrgSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Expert Query",
+    "url": ""
+  },
+  "components": {
+    "schemas": {
+      "HealthResponseObject": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "UP"
+          }
+        },
+        "required": ["status"]
+      },
+      "OptionList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ProfileMetadata": {
+        "type": "object",
+        "properties": {
+          "numRows": {
+            "type": "integer"
+          },
+          "csvSize": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "url": {
+            "type": "string"
+          },
+          "zipSize": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "columnParam": {
+        "name": "column",
+        "description": "The column name for which values are queried.",
+        "in": "path",
+        "required": true,
+        "example": "assessmentUnitId",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "requestBodies": {
+      "ValuesQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "example": {
+                "text": "Vermont",
+                "direction": "asc",
+                "filters": {
+                  "objectId": [42]
+                },
+                "additionalColumns": ["assessmentUnitId"]
+              },
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "direction": {
+                  "type": "string"
+                },
+                "filters": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "limit": {
+                  "type": "integer"
+                },
+                "additionalColumns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      }
+    },
+    "responses": {
+      "ColumnNotFoundError": {
+        "description": "One or more of the columns specified does not exist on the selected profile.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            }
+          }
+        }
+      },
+      "InvalidRequestError": {
+        "description": "The request was invalid.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": 400
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["code", "message"]
+            }
+          }
+        }
+      },
+      "LookupFilesSuccess": {
+        "description": "A success response. A JSON object returning the content is returned.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "alertsConfig": {
+                  "type": "object"
+                },
+                "domainValues": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/OptionList"
+                  }
+                },
+                "filterConfig": {
+                  "type": "object",
+                  "properties": {
+                    "filterFields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "boundary": {
+                            "type": "string"
+                          },
+                          "contextFields": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "default": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "direction": {
+                            "type": "string"
+                          },
+                          "domain": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "secondaryKey": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "filterGroupLabels": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "filterGroups": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "fields": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "sourceFields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "glossary": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "term": {
+                        "type": "string"
+                      },
+                      "definition": {
+                        "type": "string"
+                      },
+                      "definitionHtml": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "listOptions": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/OptionList"
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/ProfileMetadata"
+                  }
+                },
+                "nationalDownloads": {
+                  "type": "object",
+                  "properties": {
+                    "heading": {
+                      "type": "string"
+                    },
+                    "infoMessages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "heading": {
+                            "type": "string"
+                          },
+                          "content": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "debounceMilliseconds": {
+                      "type": "integer"
+                    },
+                    "selectOptionsPageSize": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "profileConfig": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "key": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "resource": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "services": {
+                  "type": "object",
+                  "properties": {
+                    "eqDataApi": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "QueryCountPerOrgSuccess": {
+        "description": "The query evaluated successfully. The response contains the total record count for each distinct organization id.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "organizationId": {
+                  "type": "string",
+                  "example": "21AS"
+                },
+                "count": {
+                  "type": "integer",
+                  "example": 760
+                }
+              },
+              "required": ["count"]
+            }
+          }
+        }
+      },
+      "QueryCountPerOrgCycleSuccess": {
+        "description": "The query evaluated successfully. The response contains the total record count for each distinct combination of cycle id, organization id and reporting cycle.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "organizationid": {
+                  "type": "string",
+                  "example": "21AS"
+                },
+                "reportingcycle": {
+                  "type": "integer",
+                  "example": 2018
+                },
+                "cycleid": {
+                  "type": "integer",
+                  "example": 3182
+                },
+                "count": {
+                  "type": "integer",
+                  "example": 122
+                }
+              },
+              "required": ["count"]
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "An internal server error occurred.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": 500
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["code", "message"]
+            }
+          }
+        }
+      },
+      "ServerErrorString": {
+        "description": "An internal server error occurred.",
+        "content": {
+          "text/html": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ValuesQuerySuccess": {
+        "description": "Query success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
