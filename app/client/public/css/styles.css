@@ -1,0 +1,136 @@
+/* --- EPA/USWDS --- */
+.l-constrain {
+  max-width: 75rem;
+}
+
+.l-page__header a,
+.l-page__header a:focus,
+.l-page__header a:hover,
+.l-page__header a:visited {
+  color: white;
+}
+
+.usa-site-alert .usa-alert {
+  margin-top: 0 !important;
+  max-width: 1400px;
+  padding: 0;
+}
+
+.usa-alert:before {
+  display: none !important;
+}
+
+.usa-site-alert .usa-alert__body {
+  display: block;
+}
+
+.usa-checkbox__label,
+.usa-radio__label {
+  text-indent: 0;
+}
+
+.usa-logo a {
+  color: white !important;
+}
+
+.usa-modal--lg .usa-modal__main {
+  max-width: 48rem;
+}
+
+.usa-table--striped tbody tr:nth-child(odd) td,
+.usa-table--striped tbody tr:nth-child(odd) th {
+  color: inherit;
+}
+
+/* --- Reach UI --- */
+[data-reach-dialog-overlay] {
+  /* match USWDS modal */
+  z-index: 99999;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+[data-reach-dialog-overlay]::before {
+  /* match USWDS modal */
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+[data-reach-dialog-content] {
+  /* match USWDS modal */
+  overflow-x: auto !important;
+  margin: 1.25rem auto !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+[data-reach-tooltip] {
+  z-index: 100000;
+}
+
+/* --- Utilities --- */
+.bg-inherit {
+  background-color: inherit !important;
+}
+
+.break-word {
+  word-break: break-word;
+}
+
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-help {
+  cursor: help;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.sr-only {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.text-ellipsis {
+  text-overflow: ellipsis;
+}
+
+.top-full {
+  top: 100%;
+}
+
+.text-shadow {
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.width-fit {
+  width: fit-content;
+}
+
+/* --- SwaggerUI --- */
+.swagger-ui td,
+.swagger-ui th {
+  background-color: inherit;
+  border: none;
+}
+
+.swagger-ui .info {
+  margin-top: 0;
+}
+
+/* --- Source select --- */
+[data-node-ref='_sourceListNode'] {
+  margin-bottom: 0 !important;
+}

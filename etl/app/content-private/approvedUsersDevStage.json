@@ -1,0 +1,34 @@
+[
+    { 
+        "name": "Dev",
+        "userId": "e5a9789a-959b-473d-aade-7032dd4d6cb5" 
+    },
+    { 
+        "name": "Stage",
+        "userId": "9b64af65-267f-4df0-b276-08746a02a334" 
+    },
+    { 
+        "name": "Swagger",
+        "userId": "9424b7be-08a2-4773-876c-a0f707e9d8f5" 
+    },
+    { 
+        "name": "Uptime Monitoring",
+        "userId": "ae66ec1b-8493-4042-9122-c714c9f9e21d" 
+    },
+    { 
+        "name": "Brad - EPA",
+        "userId": "fce30730-2fc4-4e33-8e54-baabf630060c" 
+    },
+    { 
+        "name": "Brad - ERG",
+        "userId": "f3e90936-6d22-448d-9420-b994840176b6" 
+    },
+    { 
+        "name": "Caleb",
+        "userId": "bb2478f9-6d64-4141-a6d1-d87f6812a9ed" 
+    },
+    { 
+        "name": "Max",
+        "userId": "def4da52-b14f-47b6-8926-c1fa6779c61c" 
+    }
+]

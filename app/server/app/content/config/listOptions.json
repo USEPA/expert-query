@@ -1,0 +1,52 @@
+{
+  "confirmed": [
+    { "label": "No", "value": "N" },
+    { "label": "Yes", "value": "Y" }
+  ],
+  "cwa303dPriorityRanking": [
+    { "label": "High", "value": "High" },
+    { "label": "Low", "value": "Low" },
+    { "label": "Medium", "value": "Medium" }
+  ],
+  "dataProfile": [
+    { "value": "actions", "label": "Actions" },
+    { "value": "assessmentUnits", "label": "Assessment Units" },
+    {
+      "value": "assessmentUnitsMonitoringLocations",
+      "label": "Assessment Units with Monitoring Locations"
+    },
+    { "value": "assessments", "label": "Assessments" },
+    { "value": "catchmentCorrespondence", "label": "Catchment Correspondence" },
+    { "value": "sources", "label": "Sources" },
+    { "value": "tmdl", "label": "Total Maximum Daily Load" }
+  ],
+  "delisted": [
+    { "label": "No", "value": "N" },
+    { "label": "Yes", "value": "Y" }
+  ],
+  "format": [
+    { "label": "Comma-separated (CSV)", "value": "csv" },
+    { "label": "Microsoft Excel (XLSX)", "value": "xlsx" },
+    { "label": "Tab-separated (TSV)", "value": "tsv" }
+  ],
+  "inIndianCountry": [
+    { "label": "No", "value": "N" },
+    { "label": "Yes", "value": "Y" }
+  ],
+  "includeInMeasure": [
+    { "label": "No", "value": "N" },
+    { "label": "Yes", "value": "Y" }
+  ],
+  "organizationType": [
+    { "label": "State", "value": "State" },
+    { "label": "Tribe", "value": "Tribe" }
+  ],
+  "pollutantIndicator": [
+    { "label": "No", "value": "N" },
+    { "label": "Yes", "value": "Y" }
+  ],
+  "vision303dPriority": [
+    { "label": "No", "value": "N" },
+    { "label": "Yes", "value": "Y" }
+  ]
+}

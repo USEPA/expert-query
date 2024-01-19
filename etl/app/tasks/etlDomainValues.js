@@ -1,0 +1,10 @@
+import * as s3 from '../server/s3.js';
+import { log } from '../server/utilities/logger.js';
+
+log.info('Starting Task: etl_domain_values');
+
+// load config from private s3 bucket
+const s3Config = await s3.loadConfig();
+await s3.syncDomainValues(s3Config);
+
+log.info('Task Completed: etl_domain_values');
