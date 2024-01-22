@@ -2,7 +2,7 @@
   "actions": {
     "tableName": "actions",
     "idColumn": "objectid",
-    "createQuery": "CREATE TABLE IF NOT EXISTS actions ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, fiscalyearestablished VARCHAR (4), parameter VARCHAR(240), parametergroup VARCHAR(60), locationdescription VARCHAR(2000), actiontype VARCHAR(50) NOT NULL, watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), actionagency VARCHAR(10) NOT NULL, inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1) )",
+    "createQuery": "CREATE TABLE IF NOT EXISTS actions ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, fiscalyearestablished VARCHAR (4), parameter VARCHAR(240), parametergroup VARCHAR(60), locationdescription VARCHAR(2000), actiontype VARCHAR(50) NOT NULL, watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), actionagency VARCHAR(10) NOT NULL, inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1), plansummarylink VARCHAR(116) )",
     "columns": [
       {
         "name": "objectid",
@@ -81,6 +81,11 @@
       {
         "name": "parametergroup",
         "alias": "parameterGroup"
+      },
+      {
+        "name": "plansummarylink",
+        "alias": "planSummaryLink",
+        "skipIndex": true
       },
       {
         "name": "region",
@@ -1319,7 +1324,7 @@
   "tmdl": {
     "tableName": "tmdl",
     "idColumn": "objectid",
-    "createQuery": "CREATE TABLE IF NOT EXISTS tmdl ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, tmdldate DATE, fiscalyearestablished VARCHAR(4), pollutant VARCHAR(240), pollutantgroup VARCHAR(60), sourcetype VARCHAR(40), addressedparameter VARCHAR(240), addressedparametergroup VARCHAR(60), locationdescription VARCHAR(2000), watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), actionagency VARCHAR(10) NOT NULL, loadallocation NUMERIC(21,3), loadallocationunits VARCHAR(40), explicitmarginofsafety VARCHAR(255), implicitmarginofsafety VARCHAR(255), tmdlendpoint1 TEXT, tmdlendpoint2 TEXT, tmdlendpoint3 TEXT, npdesidentifier VARCHAR(60), otheridentifier VARCHAR(4000), wasteloadallocation NUMERIC(24,3), inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1), tmdlendpoint TEXT GENERATED ALWAYS AS (coalesce(tmdlendpoint1, '') || coalesce(tmdlendpoint2, '') || coalesce(tmdlendpoint3, '')) STORED )",
+    "createQuery": "CREATE TABLE IF NOT EXISTS tmdl ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, tmdldate DATE, fiscalyearestablished VARCHAR(4), pollutant VARCHAR(240), pollutantgroup VARCHAR(60), sourcetype VARCHAR(40), addressedparameter VARCHAR(240), addressedparametergroup VARCHAR(60), locationdescription VARCHAR(2000), watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), actionagency VARCHAR(10) NOT NULL, loadallocation NUMERIC(21,3), loadallocationunits VARCHAR(40), explicitmarginofsafety VARCHAR(255), implicitmarginofsafety VARCHAR(255), tmdlendpoint1 TEXT, tmdlendpoint2 TEXT, tmdlendpoint3 TEXT, npdesidentifier VARCHAR(60), otheridentifier VARCHAR(4000), wasteloadallocation NUMERIC(24,3), inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1), plansummarylink VARCHAR(116), tmdlendpoint TEXT GENERATED ALWAYS AS (coalesce(tmdlendpoint1, '') || coalesce(tmdlendpoint2, '') || coalesce(tmdlendpoint3, '')) STORED )",
     "overrideWorkMemory": "790MB",
     "columns": [
       {
@@ -1422,6 +1427,11 @@
       {
         "name": "otheridentifier",
         "alias": "otherIdentifier"
+      },
+      {
+        "name": "plansummarylink",
+        "alias": "planSummaryLink",
+        "skipIndex": true
       },
       {
         "name": "pollutant",
