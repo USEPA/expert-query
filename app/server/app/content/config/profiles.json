@@ -24,7 +24,8 @@
       "fiscalYearEstablished",
       "locationDescription",
       "waterSize",
-      "waterSizeUnits"
+      "waterSizeUnits",
+      "planSummaryLink"
     ],
     "label": "Actions",
     "resource": "actions"
@@ -234,7 +235,8 @@
       "tmdlEndpoint",
       "waterSize",
       "waterSizeUnits",
-      "wasteLoadAllocation"
+      "wasteLoadAllocation",
+      "planSummaryLink"
     ],
     "label": "Total Maximum Daily Load",
     "resource": "tmdl"
