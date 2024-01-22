@@ -1960,6 +1960,9 @@
                 "parameterGroup": {
                   "type": "string"
                 },
+                "planSummaryLink": {
+                  "type": "string"
+                },
                 "region": {
                   "type": "string"
                 },
@@ -3400,6 +3403,9 @@
                   "type": "string"
                 },
                 "otherIdentifier": {
+                  "type": "string"
+                },
+                "planSummaryLink": {
                   "type": "string"
                 },
                 "pollutant": {
