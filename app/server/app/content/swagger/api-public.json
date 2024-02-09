@@ -408,10 +408,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/seasonEndDateLoParam"
@@ -632,10 +629,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/seasonEndDateLoParam"
@@ -766,10 +760,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/stateParam"
@@ -858,10 +849,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/stateParam"
@@ -959,10 +947,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/stateParam"
@@ -1051,10 +1036,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/stateParam"
@@ -1146,10 +1128,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/stateParam"
@@ -1226,10 +1205,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/stateParam"
@@ -1327,10 +1303,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/sourceNameParam"
@@ -1428,10 +1401,7 @@
             "$ref": "#/components/parameters/regionParam"
           },
           {
-            "$ref": "#/components/parameters/reportingCycleLoParam"
-          },
-          {
-            "$ref": "#/components/parameters/reportingCycleHiParam"
+            "$ref": "#/components/parameters/reportingCycleParam"
           },
           {
             "$ref": "#/components/parameters/sourceNameParam"
@@ -1758,6 +1728,11 @@
       "get": {
         "summary": "Retrieve this OpenAPI JSON specification",
         "tags": ["OpenAPI"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
         "responses": {
           "200": {
             "description": "A success response. A JSON response containing Expert Query's OpenAPI specification is returned.",
@@ -2216,10 +2191,7 @@
               "type": "string"
             }
           },
-          "reportingCycleLo": {
-            "type": "integer"
-          },
-          "reportingCycleHi": {
+          "reportingCycle": {
             "type": "integer"
           },
           "seasonEndDateLo": {
@@ -2552,10 +2524,7 @@
               "type": "string"
             }
           },
-          "reportingCycleLo": {
-            "type": "integer"
-          },
-          "reportingCycleHi": {
+          "reportingCycle": {
             "type": "integer"
           },
           "state": {
@@ -2641,10 +2610,7 @@
               "type": "string"
             }
           },
-          "reportingCycleLo": {
-            "type": "integer"
-          },
-          "reportingCycleHi": {
+          "reportingCycle": {
             "type": "integer"
           },
           "state": {
@@ -2844,7 +2810,7 @@
           "catchmentNhdPlusId": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "integer"
             }
           },
           "cycleId": {
@@ -2877,10 +2843,7 @@
               "type": "string"
             }
           },
-          "reportingCycleLo": {
-            "type": "integer"
-          },
-          "reportingCycleHi": {
+          "reportingCycle": {
             "type": "integer"
           },
           "state": {
@@ -2909,7 +2872,7 @@
                   "type": "string"
                 },
                 "catchmentNhdPlusId": {
-                  "type": "string"
+                  "type": "integer"
                 },
                 "cycleId": {
                   "type": "integer"
@@ -3055,10 +3018,7 @@
               "type": "string"
             }
           },
-          "reportingCycleLo": {
-            "type": "integer"
-          },
-          "reportingCycleHi": {
+          "reportingCycle": {
             "type": "integer"
           },
           "sourceName": {
@@ -3815,11 +3775,11 @@
         "name": "catchmentNhdPlusId",
         "in": "query",
         "explode": true,
-        "example": ["-504164"],
+        "example": [-504164],
         "schema": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "integer"
           }
         }
       },
@@ -3995,48 +3955,40 @@
         "name": "monitoringEndDateLo",
         "in": "query",
         "explode": true,
-        "example": 1994,
+        "example": "04-28-2012",
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
+          "type": "string",
+          "format": "date"
         }
       },
       "monitoringEndDateHiParam": {
         "name": "monitoringEndDateHi",
         "in": "query",
         "explode": true,
-        "example": 2002,
+        "example": "04-28-2022",
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
+          "type": "string",
+          "format": "date"
         }
       },
       "monitoringStartDateLoParam": {
         "name": "monitoringStartDateLo",
         "in": "query",
         "explode": true,
-        "example": 1994,
+        "example": "04-28-2012",
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
+          "type": "string",
+          "format": "date"
         }
       },
       "monitoringStartDateHiParam": {
         "name": "monitoringStartDateHi",
         "in": "query",
         "explode": true,
-        "example": 2002,
+        "example": "04-28-2022",
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
+          "type": "string",
+          "format": "date"
         }
       },
       "monitoringLocationIdParam": {
@@ -4278,20 +4230,11 @@
           }
         }
       },
-      "reportingCycleLoParam": {
-        "name": "reportingCycleLo",
+      "reportingCycleParam": {
+        "name": "reportingCycle",
         "in": "query",
-        "example": 1994,
+        "example": 2020,
         "explode": true,
-        "schema": {
-          "type": "integer"
-        }
-      },
-      "reportingCycleHiParam": {
-        "name": "reportingCycleHi",
-        "in": "query",
-        "explode": true,
-        "example": 2002,
         "schema": {
           "type": "integer"
         }
