@@ -952,18 +952,18 @@ export default function (app, basePath) {
         },
       );
 
-      // ****************************** //
-      // Private / NOT CORS Enabled     //
-      // ****************************** //
-
       // get column domain values
       router.post(
         '/:profile/values/:column',
-        cors(corsOptionsDelegate),
+        cors(corsOptions),
         async function (req, res) {
           await executeValuesQuery(req, res);
         },
       );
+
+      // ****************************** //
+      // Private / NOT CORS Enabled     //
+      // ****************************** //
 
       // get bean counts
       router.get(
