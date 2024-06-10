@@ -55,7 +55,7 @@ export function Checkboxes({
               }
             }}
             tile={tile}
-            value={option.value.toString()}
+            value={option.value?.toString()}
           />
         );
       })}
