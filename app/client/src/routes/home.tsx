@@ -29,7 +29,7 @@ import { useContentState } from 'contexts/content';
 // config
 import { serverUrl } from 'config';
 // utils
-import { getData, isAbort, postData, useAbort } from 'utils';
+import { isAbort, postData, useAbort } from 'utils';
 // types
 import type { Content } from 'contexts/content';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
