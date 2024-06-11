@@ -63,12 +63,23 @@ pg.types.setTypeParser(pg.types.builtins.DATE, (value) => {
  * @param {string} paramValue URL query value
  */
 function appendToWhere(query, paramName, paramValue) {
-  if (!paramValue) return;
+  if (paramValue === undefined) return;
 
-  if (Array.isArray(paramValue)) {
-    query.whereIn(paramName, paramValue);
-  } else {
-    query.where(paramName, paramValue);
+  try {
+    if (Array.isArray(paramValue)) {
+      const nonNulls = paramValue.filter((p) => p !== 'null' && p !== null);
+      const nulls = paramValue.filter((p) => p === 'null' || p === null);
+      query.where((q) => {
+        if (nonNulls.length > 0) q.whereIn(paramName, nonNulls);
+        if (nulls.length > 0) q.orWhereNull(paramName);
+      });
+    } else if (paramValue === 'null' || paramValue === null) {
+      query.whereNull(paramName);
+    } else {
+      query.where(paramName, paramValue);
+    }
+  } catch (ex) {
+    console.error(ex);
   }
 }
 

@@ -358,7 +358,7 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     const exactArg = queryParams.filters[col.alias];
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
-    } else if (exactArg) {
+    } else if (exactArg !== undefined) {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
     }
   });

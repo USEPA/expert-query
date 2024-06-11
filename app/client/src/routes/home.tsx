@@ -29,7 +29,7 @@ import { useContentState } from 'contexts/content';
 // config
 import { serverUrl } from 'config';
 // utils
-import { getData, isAbort, postData, useAbort } from 'utils';
+import { isAbort, postData, useAbort } from 'utils';
 // types
 import type { Content } from 'contexts/content';
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
@@ -1293,8 +1293,17 @@ async function checkColumnValue(
   fieldName: string,
   profile: string,
 ) {
-  const url = `${apiUrl}/${profile}/values/${fieldName}?${fieldName}=${value}&limit=1`;
-  const res = await getData<string[]>({ url, apiKey });
+  const url = `${apiUrl}/${profile}/values/${fieldName}`;
+  const data = {
+    [fieldName]: value,
+    limit: 1,
+  };
+  const res = await postData({
+    url,
+    apiKey,
+    data,
+    responseType: 'json',
+  });
   if (res.length) return true;
   return false;
 }
