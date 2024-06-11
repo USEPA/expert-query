@@ -26,20 +26,20 @@
     "coverage": "concurrently -kc \"blue.dim,green.dim,yellow.dim\" -n server,client,cypress \"npm:server\" \"npm:client\" \"npx rimraf .nyc_output/out.json && cypress run --browser edge\""
   },
   "devDependencies": {
-    "@cypress/code-coverage": "3.12.3",
-    "@testing-library/cypress": "10.0.1",
-    "@types/jest": "29.5.5",
-    "@types/mocha": "10.0.2",
+    "@cypress/code-coverage": "3.12.39",
+    "@testing-library/cypress": "10.0.2",
+    "@types/jest": "29.5.12",
+    "@types/mocha": "10.0.6",
     "@types/node": "20.14.2",
-    "@types/testing-library__cypress": "5.0.11",
-    "concurrently": "8.2.1",
-    "cypress": "13.3.1",
-    "cypress-real-events": "1.10.3",
-    "eslint-plugin-cypress": "2.15.1",
-    "istanbul-lib-coverage": "3.2.0",
-    "nyc": "15.1.0",
-    "prettier": "3.0.3",
-    "typescript": "5.2.2"
+    "@types/testing-library__cypress": "5.0.13",
+    "concurrently": "8.2.2",
+    "cypress": "13.11.0",
+    "cypress-real-events": "1.12.0",
+    "eslint-plugin-cypress": "3.3.0",
+    "istanbul-lib-coverage": "3.2.2",
+    "nyc": "17.0.0",
+    "prettier": "3.3.2",
+    "typescript": "5.4.5"
   },
   "eslintConfig": {
     "extends": [
