@@ -15,6 +15,9 @@
     "Caleb Schwind <caleb.schwind@erg.com",
     "Max Diebold <max.diebold@erg.com>"
   ],
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "start": "react-scripts -r @cypress/instrument-cra start",
     "build": "react-scripts build",
@@ -30,7 +33,7 @@
     "@types/classnames": "2.3.1",
     "@types/jest": "29.5.5",
     "@types/lodash": "4.14.199",
-    "@types/node": "18.18.4",
+    "@types/node": "20.14.2",
     "@types/react": "18.2.28",
     "@types/react-dom": "18.2.13",
     "@types/react-window": "1.8.6",

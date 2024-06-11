@@ -19,7 +19,7 @@
     "Max Diebold <max.diebold@erg.com>"
   ],
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "repository": "github:USEPA/expert-query",
   "scripts": {
