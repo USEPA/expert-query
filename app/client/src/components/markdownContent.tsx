@@ -18,7 +18,7 @@ type Props = {
 export function MarkdownContent({ className, children, components }: Readonly<Props>) {
   return (
     <ReactMarkdown
-      className={className || ''}
+      className={className ?? ''}
       children={children}
       remarkPlugins={[remarkGfm]}
       components={{

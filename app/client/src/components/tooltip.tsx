@@ -12,7 +12,7 @@ const TRIANGLE_SIZE = 5;
 ## Components
 */
 
-export function Tooltip({ children, className, text }: TooltipProps) {
+export function Tooltip({ children, className, text }: Readonly<TooltipProps>) {
   const triggerElementRef = useRef<HTMLElement & HTMLButtonElement>(null);
   const tooltipBodyRef = useRef<HTMLElement>(null);
   const tooltipId = useRef(uniqueId('tooltip-'));
