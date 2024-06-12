@@ -730,7 +730,7 @@ function RangeFilter({
   lowValue,
   tooltip,
   type,
-}: RangeFilterProps) {
+}: Readonly<RangeFilterProps>) {
   return (
     <div className={className}>
       <span className="display-flex flex-align-center line-height-sans-1">
@@ -812,7 +812,7 @@ function SelectFilter({
   sourceKey,
   sourceValue,
   staticOptions,
-}: SelectFilterProps) {
+}: Readonly<SelectFilterProps>) {
   const { content } = useContentState();
   const { abort, getSignal } = useAbort();
 
@@ -1411,7 +1411,7 @@ function filterDynamicOptions({
       const secondaryValue = secondaryFieldName
         ? item[secondaryFieldName]
         : null;
-      const label = secondaryValue ? secondaryValue : value;
+      const label = secondaryValue || value;
       return { label, value };
     });
     return {
