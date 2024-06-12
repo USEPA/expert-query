@@ -14,7 +14,7 @@ type PageProps = {
   children: ReactNode;
 };
 
-export function Page({ children }: PageProps) {
+export function Page({ children }: Readonly<PageProps>) {
   const location = useLocation();
 
   return (
@@ -94,7 +94,7 @@ type HeaderLinkProps = {
   href: string;
 };
 
-function HeaderLink({ className, children, icon, href }: HeaderLinkProps) {
+function HeaderLink({ className, children, icon, href }: Readonly<HeaderLinkProps>) {
   const Icon = icon;
 
   return (

@@ -4,7 +4,7 @@ export function StepIndicator({
   children,
   currentStep,
   totalSteps,
-}: StepIndicatorProps) {
+}: Readonly<StepIndicatorProps>) {
   return (
     <div className="usa-step-indicator__header margin-bottom-2 margin-top-4 tablet:margin-top-8">
       <h2 className="margin-top-0 usa-step-indicator__heading line-height-sans-2">

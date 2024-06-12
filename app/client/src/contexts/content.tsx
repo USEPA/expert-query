@@ -157,7 +157,7 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export function ContentProvider({ children }: Props) {
+export function ContentProvider({ children }: Readonly<Props>) {
   const initialState: State = {
     content: {
       status: 'idle',
