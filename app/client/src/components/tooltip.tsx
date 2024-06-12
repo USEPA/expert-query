@@ -17,12 +17,12 @@ export function Tooltip({ children, className, text }: Readonly<TooltipProps>) {
   const tooltipBodyRef = useRef<HTMLElement>(null);
   const tooltipId = useRef(uniqueId('tooltip-'));
 
-  const [isVisible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [isShown, setIsShown] = useState(false);
   const [effectivePosition, setEffectivePosition] = useState<
     'top' | 'bottom' | 'left' | 'right' | undefined
   >(undefined);
-  const [positioningAttempts, setPositionAttempts] = useState(0);
+  const [positionAttempts, setPositionAttempts] = useState(0);
   const [wrapTooltip, setWrapTooltip] = useState(false);
   const [positionStyles, setPositionStyles] = useState({});
 
@@ -86,7 +86,7 @@ export function Tooltip({ children, className, text }: Readonly<TooltipProps>) {
 
   useEffect(() => {
     // When position/styles change, check if in viewport
-    if (isVisible && triggerElementRef.current && tooltipBodyRef.current) {
+    if (visible && triggerElementRef.current && tooltipBodyRef.current) {
       const tooltipTrigger = triggerElementRef.current;
       const tooltipBody = tooltipBodyRef.current;
 
@@ -98,7 +98,7 @@ export function Tooltip({ children, className, text }: Readonly<TooltipProps>) {
       } else {
         // Try the next position
         const maxAttempts = positions.length;
-        const attempt = positioningAttempts;
+        const attempt = positionAttempts;
         if (attempt < maxAttempts || wrapTooltip === false) {
           setPositionAttempts((a) => a + 1);
 
@@ -115,30 +115,22 @@ export function Tooltip({ children, className, text }: Readonly<TooltipProps>) {
         }
       }
     }
-  }, [
-    effectivePosition,
-    isVisible,
-    positioningAttempts,
-    positions,
-    wrapTooltip,
-  ]);
+  }, [effectivePosition, positionAttempts, positions, visible, wrapTooltip]);
 
   useEffect(() => {
-    if (!isVisible) {
+    if (!visible) {
       // Hide tooltip
       setIsShown(false);
       setWrapTooltip(false);
       setPositionAttempts(0);
-    } else {
+    } else if (triggerElementRef.current && tooltipBodyRef.current) {
       // Show tooltip
-      if (triggerElementRef.current && tooltipBodyRef.current) {
-        const tooltipTrigger = triggerElementRef.current;
-        const tooltipBody = tooltipBodyRef.current;
+      const tooltipTrigger = triggerElementRef.current;
+      const tooltipBody = tooltipBodyRef.current;
 
-        positionTop(tooltipBody, tooltipTrigger);
-      }
+      positionTop(tooltipBody, tooltipTrigger);
     }
-  }, [isVisible]);
+  }, [visible]);
 
   const showTooltip = () => {
     setVisible(true);
@@ -153,13 +145,13 @@ export function Tooltip({ children, className, text }: Readonly<TooltipProps>) {
     'text-semibold',
     'usa-tooltip__body',
     {
-      'is-set': isVisible,
+      'is-set': visible,
       'is-visible': isShown,
       'usa-tooltip__body--top': effectivePosition === 'top',
       'usa-tooltip__body--bottom': effectivePosition === 'bottom',
       'usa-tooltip__body--right': effectivePosition === 'right',
       'usa-tooltip__body--left': effectivePosition === 'left',
-      'usa-tooltip__body--wrap': isVisible && wrapTooltip,
+      'usa-tooltip__body--wrap': visible && wrapTooltip,
     },
   );
 
@@ -194,7 +186,7 @@ export function Tooltip({ children, className, text }: Readonly<TooltipProps>) {
         ref={tooltipBodyRef}
         className={tooltipBodyClasses}
         role="tooltip"
-        aria-hidden={!isVisible}
+        aria-hidden={!visible}
         style={positionStyles}
       >
         {text}
