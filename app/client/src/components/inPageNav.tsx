@@ -168,7 +168,7 @@ function InPageNavLayoutInner({ children }: { children: ReactNode }) {
           </nav>
         </aside>
       )}
-      <div className="flex-fill">{children}</div>
+      <div className="flex-fill width-full">{children}</div>
     </div>
   );
 }
