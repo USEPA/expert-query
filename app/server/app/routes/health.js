@@ -16,8 +16,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const environment = getEnvironment();
 
-const minDateTime = new Date(-8640000000000000);
-
 export default function (app, basePath) {
   const router = express.Router();
 
@@ -43,7 +41,7 @@ export default function (app, basePath) {
       }
 
       // initialize timeSinceLastUpdate to the minimum time node allows
-      let timeSinceLastUpdate = minDateTime;
+      let timeSinceLastUpdate;
 
       // verify file update date is within the last 24 hours
       if (environment.isLocal) {

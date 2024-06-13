@@ -17,7 +17,7 @@ export function ConfirmationModal({
   children,
   heading,
   onClose,
-}: ConfirmationModalProps) {
+}: Readonly<ConfirmationModalProps>) {
   const [id] = useState(uniqueId('modal-'));
 
   return (
@@ -33,7 +33,7 @@ export function ConfirmationModal({
           <h2 className="usa-modal__heading d-flex justify-content-center">
             {heading}
           </h2>
-          <>{children}</>
+          {children}
         </div>
         <button
           aria-label="Close this window"
@@ -58,7 +58,7 @@ export function ConfirmationModalFooter({
   continueText = 'Continue',
   onClose,
   onContinue,
-}: ConfirmationModalFooterProps) {
+}: Readonly<ConfirmationModalFooterProps>) {
   return (
     <div className="usa-modal__footer">
       <ul className="flex-justify-center usa-button-group">

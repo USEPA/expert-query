@@ -52,7 +52,7 @@ import type {
 
 export default Home;
 
-function HomeContent({ content }: { content: Content }) {
+function HomeContent({ content }: Readonly<{ content: Content }>) {
   const {
     domainValues,
     filterConfig,
@@ -204,29 +204,27 @@ function HomeContent({ content }: { content: Content }) {
           />
 
           {profile && (
-            <>
-              <Outlet
-                context={{
-                  apiKey,
-                  apiUrl,
-                  filterFields,
-                  filterGroupLabels,
-                  filterGroups: filterGroups[profile.key],
-                  filterHandlers,
-                  filterState,
-                  format,
-                  formatHandler: setFormat,
-                  glossary,
-                  profile,
-                  queryParams,
-                  resetFilters,
-                  sourceFields,
-                  sourceHandlers,
-                  sourceState,
-                  staticOptions,
-                }}
-              />
-            </>
+            <Outlet
+              context={{
+                apiKey,
+                apiUrl,
+                filterFields,
+                filterGroupLabels,
+                filterGroups: filterGroups[profile.key],
+                filterHandlers,
+                filterState,
+                format,
+                formatHandler: setFormat,
+                glossary,
+                profile,
+                queryParams,
+                resetFilters,
+                sourceFields,
+                sourceHandlers,
+                sourceState,
+                staticOptions,
+              }}
+            />
           )}
         </>
       )}
@@ -629,7 +627,7 @@ function FilterFieldInputs({
   );
 }
 
-function FilterFieldGroups(props: FilterFieldGroupsProps) {
+function FilterFieldGroups(props: Readonly<FilterFieldGroupsProps>) {
   const { filterGroupLabels, filterGroups, ...filterFieldsProps } = props;
   const { filterFields } = filterFieldsProps;
   const groupedFields = filterGroups.map((group) => ({
@@ -668,9 +666,9 @@ function FilterFieldGroups(props: FilterFieldGroupsProps) {
 
 function ParameterErrorAlert({
   parameters,
-}: {
+}: Readonly<{
   parameters: ParameterErrors | null;
-}) {
+}>) {
   const [visible, setVisible] = useState(false);
 
   const closeAlert = useCallback(() => {
@@ -732,7 +730,7 @@ function RangeFilter({
   lowValue,
   tooltip,
   type,
-}: RangeFilterProps) {
+}: Readonly<RangeFilterProps>) {
   return (
     <div className={className}>
       <span className="display-flex flex-align-center line-height-sans-1">
@@ -814,7 +812,7 @@ function SelectFilter({
   sourceKey,
   sourceValue,
   staticOptions,
-}: SelectFilterProps) {
+}: Readonly<SelectFilterProps>) {
   const { content } = useContentState();
   const { abort, getSignal } = useAbort();
 
@@ -1413,7 +1411,7 @@ function filterDynamicOptions({
       const secondaryValue = secondaryFieldName
         ? item[secondaryFieldName]
         : null;
-      const label = secondaryValue ? secondaryValue : value;
+      const label = secondaryValue || value;
       return { label, value };
     });
     return {
