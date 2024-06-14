@@ -3222,9 +3222,8 @@
           },
           "organizationId": {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "items": null,
+            "type": "string"
           },
           "organizationName": {
             "type": "array",
