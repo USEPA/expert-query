@@ -1,0 +1,122 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Production Build
+
+# Controls when the action will run. 
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Set shared environment variables
+env:
+  APP_VERSION: 1.1.0
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:  
+  app:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    environment: production
+
+    # Set environment variables
+    env:
+      CLOUD_SPACE: production
+      SERVER_BASE_PATH: /expertquery
+      SERVER_URL: https://owapps-dev.app.cloud.gov/expertquery
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+      
+      # Set up node and npm
+      - uses: actions/setup-node@v4
+      
+      # Run back-end processes (install, lint, test, bundle)
+      - name: Cache server app node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/server/.npm
+          key: v1-npm-server-deps-${{ hashFiles('**/server/package-lock.json') }}
+          restore-keys: v1-npm-server-deps-
+          working-directory: app
+
+      - name: Install server app dependencies
+        run: npm install
+        working-directory: app/server
+      
+      # Run front-end processes (install, lint, test, bundle)
+      - name: Cache client app node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/client/.npm
+          key: v1-npm-client-deps-${{ hashFiles('**/client/package-lock.json') }}
+          restore-keys: v1-npm-client-deps-
+          working-directory: app
+
+      - name: Install front-end dependencies
+        run: |
+          npm install --legacy-peer-deps
+          npx gulp init
+        working-directory: app/client
+
+      - name: Build front-end files and move to server
+        run: |
+          PUBLIC_URL="$SERVER_URL" \
+            REACT_APP_SERVER_BASE_PATH="$SERVER_BASE_PATH" \
+            REACT_APP_CLOUD_SPACE="$CLOUD_SPACE" \
+            npm run build
+          cd build
+          cp -r * ../../server/app/public
+          rm -rf *
+        working-directory: app/client
+
+      - name: Remove unnecessary server app files
+        run: rm -rf .env.example .eslintrc.js .prettierrc.json
+        working-directory: app/server
+
+      - name: Copy production manifest file to server app
+        run: cp manifest-production.yml server/manifest-production.yml
+        working-directory: app
+
+      - name: Create production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eq_v${{ env.APP_VERSION }}
+          path: app/server
+
+  etl:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    environment: production
+
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+      
+      # Set up node and npm
+      - uses: actions/setup-node@v4
+      
+      # Run back-end processes (install, lint, test, bundle)
+      - name: Cache server app node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/server/.npm
+          key: v1-npm-server-deps-${{ hashFiles('**/server/package-lock.json') }}
+          restore-keys: v1-npm-server-deps-
+          working-directory: etl
+
+      - name: Install server app dependencies
+        run: npm install
+        working-directory: etl
+
+      - name: Remove unnecessary server app files
+        run: rm -rf .env.example .eslintrc.js .prettierrc.json manifest-dev.yml manifest-staging.yml
+        working-directory: etl
+
+      - name: Create production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eq-etl_v${{ env.APP_VERSION }}
+          path: etl
