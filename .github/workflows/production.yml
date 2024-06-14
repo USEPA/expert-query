@@ -31,6 +31,8 @@ jobs:
       
       # Set up node and npm
       - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       
       # Run back-end processes (install, lint, test, bundle)
       - name: Cache server app node modules
@@ -41,7 +43,7 @@ jobs:
           restore-keys: v1-npm-server-deps-
 
       - name: Install server app dependencies
-        run: npm install
+        run: npm install --omit=dev
         working-directory: app/server
       
       # Run front-end processes (install, lint, test, bundle)
@@ -54,7 +56,7 @@ jobs:
 
       - name: Install front-end dependencies
         run: |
-          npm install --legacy-peer-deps
+          npm install --legacy-peer-deps --omit=dev
           npx gulp init
         working-directory: app/client
 
@@ -95,6 +97,8 @@ jobs:
       
       # Set up node and npm
       - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       
       # Run back-end processes (install, lint, test, bundle)
       - name: Cache server app node modules
@@ -105,11 +109,11 @@ jobs:
           restore-keys: v1-npm-etl-deps-
 
       - name: Install server app dependencies
-        run: npm install
+        run: npm install --omit=dev
         working-directory: etl
 
       - name: Remove unnecessary server app files
-        run: rm -rf .env.example .eslintrc.js .prettierrc.json manifest-dev.yml manifest-staging.yml app/config
+        run: rm -rf .env.example .eslintrc.yml .prettierrc.json manifest-dev.yml manifest-staging.yml app/config
         working-directory: etl
 
       - name: Create production artifact

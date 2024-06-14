@@ -89,6 +89,8 @@ jobs:
       
       # Set up node and npm
       - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       
       # Run front-end processes (install, lint, test, bundle)
       - name: Cache node modules
@@ -213,6 +215,8 @@ jobs:
       
       # Set up node and npm
       - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
       # Run CloudFoundry/Cloud.gov deployment
       - name: Set up Cloud Foundry CLI
