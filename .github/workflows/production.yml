@@ -79,27 +79,9 @@ jobs:
         run: cp manifest-production.yml server/manifest-production.yml
         working-directory: app
 
-      - name: Create production artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: eq_v${{ env.APP_VERSION }}
-          path: app/server
+      - name: Copy to build folder
+        run: mkdir -p build/app && cp -R app/server/. build/app
 
-  etl:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    environment: production
-
-
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-      
-      # Set up node and npm
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      
       # Run back-end processes (install, lint, test, bundle)
       - name: Cache server app node modules
         uses: actions/cache@v4
@@ -116,8 +98,11 @@ jobs:
         run: rm -rf .env.example .eslintrc.yml .prettierrc.json manifest-dev.yml manifest-staging.yml app/config
         working-directory: etl
 
+      - name: Copy to build folder
+        run: mkdir -p build/etl && cp -R etl/. build/etl
+
       - name: Create production artifact
         uses: actions/upload-artifact@v4
         with:
-          name: eq-etl_v${{ env.APP_VERSION }}
-          path: etl
+          name: eq_v${{ env.APP_VERSION }}
+          path: build
