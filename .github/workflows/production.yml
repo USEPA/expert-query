@@ -22,7 +22,7 @@ jobs:
     env:
       CLOUD_SPACE: production
       SERVER_BASE_PATH: /expertquery
-      SERVER_URL: https://owapps-dev.app.cloud.gov/expertquery
+      SERVER_URL: https://owapps.epa.gov/expertquery
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
