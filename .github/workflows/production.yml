@@ -36,10 +36,9 @@ jobs:
       - name: Cache server app node modules
         uses: actions/cache@v4
         with:
-          path: ~/server/.npm
-          key: v1-npm-server-deps-${{ hashFiles('**/server/package-lock.json') }}
+          path: app/server/.npm
+          key: v1-npm-server-deps-${{ hashFiles('app/server/package-lock.json') }}
           restore-keys: v1-npm-server-deps-
-          working-directory: app
 
       - name: Install server app dependencies
         run: npm install
@@ -50,9 +49,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/client/.npm
-          key: v1-npm-client-deps-${{ hashFiles('**/client/package-lock.json') }}
+          key: v1-npm-client-deps-${{ hashFiles('app/client/package-lock.json') }}
           restore-keys: v1-npm-client-deps-
-          working-directory: app
 
       - name: Install front-end dependencies
         run: |
@@ -72,7 +70,7 @@ jobs:
         working-directory: app/client
 
       - name: Remove unnecessary server app files
-        run: rm -rf .env.example .eslintrc.js .prettierrc.json
+        run: rm -rf .env.example .eslintrc.js .prettierrc.json app/config
         working-directory: app/server
 
       - name: Copy production manifest file to server app
@@ -102,17 +100,16 @@ jobs:
       - name: Cache server app node modules
         uses: actions/cache@v4
         with:
-          path: ~/server/.npm
-          key: v1-npm-server-deps-${{ hashFiles('**/server/package-lock.json') }}
-          restore-keys: v1-npm-server-deps-
-          working-directory: etl
+          path: etl/.npm
+          key: v1-npm-etl-deps-${{ hashFiles('etl/package-lock.json') }}
+          restore-keys: v1-npm-etl-deps-
 
       - name: Install server app dependencies
         run: npm install
         working-directory: etl
 
       - name: Remove unnecessary server app files
-        run: rm -rf .env.example .eslintrc.js .prettierrc.json manifest-dev.yml manifest-staging.yml
+        run: rm -rf .env.example .eslintrc.js .prettierrc.json manifest-dev.yml manifest-staging.yml app/config
         working-directory: etl
 
       - name: Create production artifact
