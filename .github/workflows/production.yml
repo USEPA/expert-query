@@ -56,7 +56,7 @@ jobs:
 
       - name: Install front-end dependencies
         run: |
-          npm install --legacy-peer-deps --omit=dev
+          npm install --legacy-peer-deps
           npx gulp init
         working-directory: app/client
 
