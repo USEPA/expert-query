@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 ## Components
 */
 
-export function Accordion({ children }: { children: ReactNode }) {
+export function Accordion({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div
       className="margin-top-2 usa-accordion usa-accordion--multiselectable"
@@ -22,7 +22,7 @@ export function AccordionItem({
   children,
   heading,
   initialExpand = false,
-}: AccordionItemProps) {
+}: Readonly<AccordionItemProps>) {
   const [id] = useState(uniqueId('accordion-item-'));
   const [expanded, setExpanded] = useState(initialExpand);
 

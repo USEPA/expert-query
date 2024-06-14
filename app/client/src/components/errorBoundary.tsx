@@ -24,10 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('Uncaught error:', error, errorInfo);
 
     if (!window.gaTarget) return;
-    window.logToGa('send', 'exception', {
-      exDescription: `${error}${errorInfo.componentStack}`,
-      exFatal: true,
-    });
+    window.logErrorToGa(`${error}${errorInfo.componentStack}`, true);
   }
 
   public render() {

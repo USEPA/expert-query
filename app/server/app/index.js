@@ -150,10 +150,9 @@ if (isDevelopment || isStaging) {
 }
 
 /****************************************************************
-Enable CORS/Preflight/OPTIONS request
+Enable CORS
 ****************************************************************/
-app.options(
-  '*',
+app.use(
   cors({
     methods: ['GET', 'POST', 'HEAD'],
   }),

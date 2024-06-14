@@ -17,7 +17,7 @@ export function RadioButtons({
   selected = null,
   tile = false,
   tooltip,
-}: RadioButtonsProps) {
+}: Readonly<RadioButtonsProps>) {
   const [id] = useState(uniqueId('radio-'));
   return (
     <fieldset
