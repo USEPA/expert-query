@@ -3773,24 +3773,18 @@
         "name": "catchmentNhdPlusId",
         "in": "query",
         "explode": true,
-        "example": [-504164],
+        "example": -504164,
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
+          "type": "integer"
         }
       },
       "cycleIdParam": {
         "name": "cycleId",
         "in": "query",
         "explode": true,
-        "example": [2346],
+        "example": 2346,
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
+          "type": "integer"
         }
       },
       "cycleLastAssessedLoParam": {
@@ -4030,12 +4024,9 @@
         "description": "The unique ID assigned to a data item under the current profile",
         "in": "query",
         "explode": true,
-        "example": [42],
+        "example": 42,
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
+          "type": "integer"
         }
       },
       "organizationIdParam": {
