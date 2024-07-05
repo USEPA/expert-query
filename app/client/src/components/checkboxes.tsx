@@ -18,7 +18,7 @@ export function Checkboxes({
   selected = [],
   tile = false,
   tooltip,
-}: CheckboxesProps) {
+}: Readonly<CheckboxesProps>) {
   const [id] = useState(uniqueId('checkboxes-'));
   return (
     <fieldset
@@ -55,7 +55,7 @@ export function Checkboxes({
               }
             }}
             tile={tile}
-            value={option.value.toString()}
+            value={option.value?.toString()}
           />
         );
       })}

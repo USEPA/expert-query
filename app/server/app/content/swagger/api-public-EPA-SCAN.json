@@ -1,0 +1,5169 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "description": "Production",
+      "url": "https://api.epa.gov/expertquery/api"
+    },
+    {
+      "description": "Staging",
+      "url": "https://api.epa.gov/expertquery-stage/api"
+    },
+    {
+      "description": "Development",
+      "url": "https://api.epa.gov/expertquery-dev/api"
+    },
+    {
+      "description": "Developer",
+      "url": " http://localhost:{port}/api",
+      "variables": {
+        "port": {
+          "default": "9090"
+        }
+      }
+    }
+  ],
+  "info": {
+    "description": "",
+    "version": "1.0.0",
+    "title": "US EPA Expert Query",
+    "termsOfService": "https://edg.epa.gov/EPA_Data_License.html",
+    "license": {
+      "name": "Creative Commons Zero Public Domain Dedication",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  "paths": {
+    "/attains/actions": {
+      "get": {
+        "tags": ["ATTAINS - Actions"],
+        "summary": "Query Actions profile data",
+        "description": "Query the Actions profile on the <a href='/expertquery/attains/actions' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/outputFormatParam"
+          },
+          {
+            "$ref": "#/components/parameters/startIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/columnsParam"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionAgencyParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/includeInMeasureParam"
+          },
+          {
+            "$ref": "#/components/parameters/inIndianCountryParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ActionsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["ATTAINS - Actions"],
+        "summary": "Query Actions profile data",
+        "description": "Query the Actions profile on the <a href='/expertquery/attains/actions' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ActionsQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ActionsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/actions/count": {
+      "get": {
+        "summary": "Row count of Actions profile query",
+        "description": "Query the Actions profile on the <a href='/expertquery/attains/actions' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Actions"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionAgencyParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/includeInMeasureParam"
+          },
+          {
+            "$ref": "#/components/parameters/inIndianCountryParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count of Actions profile query",
+        "description": "Query the Actions profile on the <a href='/expertquery/attains/actions' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Actions"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ActionsCountRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessments": {
+      "get": {
+        "summary": "Query Assessments profile data",
+        "description": "Query the Assessments profile on the <a href='/expertquery/attains/assessments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessments"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/outputFormatParam"
+          },
+          {
+            "$ref": "#/components/parameters/startIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/columnsParam"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/alternateListingIdentifierParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentBasisParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentMethodsParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentTypesParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionAgencyParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/consentDecreeCycleLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/consentDecreeCycleHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cwa303dPriorityRankingParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleExpectedToAttainLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleExpectedToAttainHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleFirstListedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleFirstListedHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleLastAssessedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleLastAssessedHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleScheduledForTmdlLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleScheduledForTmdlHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/delistedParam"
+          },
+          {
+            "$ref": "#/components/parameters/delistedReasonParam"
+          },
+          {
+            "$ref": "#/components/parameters/epaIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringEndDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringEndDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringStartDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringStartDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/overallStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterAttainmentParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/pollutantIndicatorParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/seasonEndDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/seasonEndDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/seasonStartDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/seasonStartDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/useClassNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/useGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/useIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/useNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/useStateIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/useSupportParam"
+          },
+          {
+            "$ref": "#/components/parameters/vision303dPriorityParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AssessmentsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Query Assessments profile data",
+        "description": "Query the Assessments profile on the <a href='/expertquery/attains/assessments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessments"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AssessmentsQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AssessmentsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessments/count": {
+      "get": {
+        "summary": "Row count of Assessments profile query",
+        "description": "Query the Assessments profile on the <a href='/expertquery/attains/assessments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessments"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/alternateListingIdentifierParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentBasisParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentMethodsParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentTypesParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionAgencyParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/associatedActionTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/consentDecreeCycleLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/consentDecreeCycleHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cwa303dPriorityRankingParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleExpectedToAttainLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleExpectedToAttainHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleFirstListedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleFirstListedHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleLastAssessedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleLastAssessedHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleScheduledForTmdlLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleScheduledForTmdlHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/delistedParam"
+          },
+          {
+            "$ref": "#/components/parameters/delistedReasonParam"
+          },
+          {
+            "$ref": "#/components/parameters/epaIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringEndDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringEndDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringStartDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringStartDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/overallStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterAttainmentParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/pollutantIndicatorParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/seasonEndDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/seasonEndDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/seasonStartDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/seasonStartDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/useClassNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/useGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/useIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/useNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/useStateIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/useSupportParam"
+          },
+          {
+            "$ref": "#/components/parameters/vision303dPriorityParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count of Assessments profile query",
+        "description": "Query the Assessments profile on the <a href='/expertquery/attains/assessments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessments"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AssessmentsCountRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnits": {
+      "get": {
+        "summary": "Query Assessment Units profile data",
+        "description": "Query the Assessment Units profile on the <a href='/expertquery/attains/assessmentUnits' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessment Units"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/outputFormatParam"
+          },
+          {
+            "$ref": "#/components/parameters/startIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/columnsParam"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/locationTextParam"
+          },
+          {
+            "$ref": "#/components/parameters/locationTypeCodeParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/useClassNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AssessmentUnitsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Query Assessment Units profile data",
+        "description": "Query the Assessment Units profile on the <a href='/expertquery/attains/assessmentUnits' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessment Units"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AssessmentUnitsQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AssessmentUnitsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnits/count": {
+      "get": {
+        "summary": "Row count of Assessment Units profile query",
+        "description": "Query the Assessment Units profile on the <a href='/expertquery/attains/assessmentUnits' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessment Units"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/locationTextParam"
+          },
+          {
+            "$ref": "#/components/parameters/locationTypeCodeParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/useClassNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count of Assessment Units profile query",
+        "description": "Query the Assessment Units profile on the <a href='/expertquery/attains/assessmentUnits' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessment Units"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AssessmentUnitsCountRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnitsMonitoringLocations": {
+      "get": {
+        "summary": "Query Assessment Units with Monitoring Locations profile data",
+        "description": "Query the Assessment Units with Monitoring Locations profile on the <a href='/expertquery/attains/assessmentUnitsMonitoringLocations' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/outputFormatParam"
+          },
+          {
+            "$ref": "#/components/parameters/startIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/columnsParam"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringLocationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringLocationOrgIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/useClassNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AssessmentUnitsMonitoringLocationsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Query Assessment Units with Monitoring Locations profile data",
+        "description": "Query the Assessment Units with Monitoring Locations profile on the <a href='/expertquery/attains/assessmentUnitsMonitoringLocations' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AssessmentUnitsMonitoringLocationsQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AssessmentUnitsMonitoringLocationsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/assessmentUnitsMonitoringLocations/count": {
+      "get": {
+        "summary": "Row count of Assessment Units with Monitoring Locations profile query",
+        "description": "Query the Assessment Units with Monitoring Locations profile on the <a href='/expertquery/attains/assessmentUnitsMonitoringLocations' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringLocationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/monitoringLocationOrgIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/useClassNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count of Assessment Units with Monitoring Locations profile query",
+        "description": "Query the Assessment Units with Monitoring Locations profile on the <a href='/expertquery/attains/assessmentUnitsMonitoringLocations' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Assessment Units with Monitoring Locations"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/AssessmentUnitsMonitoringLocationsCountRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/catchmentCorrespondence": {
+      "get": {
+        "summary": "Query Catchment Correspondence profile data",
+        "description": "Query the Catchment Correspondence profile on the <a href='/expertquery/attains/catchmentCorrespondence' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Catchment Correspondence"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/outputFormatParam"
+          },
+          {
+            "$ref": "#/components/parameters/startIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/columnsParam"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/catchmentNhdPlusIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CatchmentCorrespondenceQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Query Catchment Correspondence profile data",
+        "description": "Query the Catchment Correspondence profile on the <a href='/expertquery/attains/catchmentCorrespondence' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Catchment Correspondence"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/CatchmentCorrespondenceQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CatchmentCorrespondenceQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/catchmentCorrespondence/count": {
+      "get": {
+        "summary": "Row count of Catchment Correspondence profile query",
+        "description": "Query the Catchment Correspondence profile on the <a href='/expertquery/attains/catchmentCorrespondence' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Catchment Correspondence"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/catchmentNhdPlusIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count of Catchment Correspondence profile query",
+        "description": "Query the Catchment Correspondence profile on the <a href='/expertquery/attains/catchmentCorrespondence' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Catchment Correspondence"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/CatchmentCorrespondenceCountRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/sources": {
+      "get": {
+        "summary": "Query Sources profile data",
+        "description": "Query the Sources profile on the <a href='/expertquery/attains/sources' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Sources"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/outputFormatParam"
+          },
+          {
+            "$ref": "#/components/parameters/startIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/columnsParam"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/causeNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/confirmedParm"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/epaIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/overallStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/sourceNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SourcesQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Query Sources profile data",
+        "description": "Query the Sources profile on the <a href='/expertquery/attains/sources' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Sources"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/SourcesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SourcesQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/sources/count": {
+      "get": {
+        "summary": "Row count of Sources profile query",
+        "description": "Query the Sources profile on the <a href='/expertquery/attains/sources' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Sources"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/causeNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/confirmedParm"
+          },
+          {
+            "$ref": "#/components/parameters/cycleIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/epaIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/overallStatusParam"
+          },
+          {
+            "$ref": "#/components/parameters/parameterGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/reportingCycleParam"
+          },
+          {
+            "$ref": "#/components/parameters/sourceNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateIrCategoryParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count of Sources profile query",
+        "description": "Query the Sources profile on the <a href='/expertquery/attains/sources' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Sources"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/SourcesCountRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/tmdl": {
+      "get": {
+        "summary": "Query TMDL profile data",
+        "description": "Query the TMDL profile on the <a href='/expertquery/attains/tmdl' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - TMDL"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/outputFormatParam"
+          },
+          {
+            "$ref": "#/components/parameters/startIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/columnsParam"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionAgencyParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/addressedParameterGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/addressedParameterParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/explicitMarginOfSafetyParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/implicitMarginOfSafetyParam"
+          },
+          {
+            "$ref": "#/components/parameters/includeInMeasureParam"
+          },
+          {
+            "$ref": "#/components/parameters/inIndianCountryParam"
+          },
+          {
+            "$ref": "#/components/parameters/npdesIdentifierParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/otherIdentifierParam"
+          },
+          {
+            "$ref": "#/components/parameters/pollutantGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/pollutantParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/sourceTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/tmdlDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/tmdlDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TmdlQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Query TMDL profile data",
+        "description": "Query the TMDL profile on the <a href='/expertquery/attains/tmdl' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - TMDL"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/TmdlQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TmdlQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/tmdl/count": {
+      "get": {
+        "summary": "Row count of TMDL profile query",
+        "description": "Query the TMDL profile on the <a href='/expertquery/attains/tmdl' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - TMDL"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionAgencyParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/addressedParameterGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/addressedParameterParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/assessmentUnitNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/explicitMarginOfSafetyParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/fiscalYearEstablishedHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/implicitMarginOfSafetyParam"
+          },
+          {
+            "$ref": "#/components/parameters/includeInMeasureParam"
+          },
+          {
+            "$ref": "#/components/parameters/inIndianCountryParam"
+          },
+          {
+            "$ref": "#/components/parameters/npdesIdentifierParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/otherIdentifierParam"
+          },
+          {
+            "$ref": "#/components/parameters/pollutantGroupParam"
+          },
+          {
+            "$ref": "#/components/parameters/pollutantParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/sourceTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/tmdlDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/tmdlDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/waterTypeParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count of TMDL profile query",
+        "description": "Query the TMDL profile on the <a href='/expertquery/attains/tmdl' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - TMDL"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/TmdlCountRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/openapi": {
+      "get": {
+        "summary": "Retrieve this OpenAPI JSON specification",
+        "tags": ["OpenAPI"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A success response. A JSON response containing Expert Query's OpenAPI specification is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Expert Query",
+    "url": ""
+  },
+  "components": {
+    "schemas": {
+      "ActionsFilters": {
+        "type": "object",
+        "properties": {
+          "actionAgency": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "completionDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "completionDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "fiscalYearEstablishedLo": {
+            "type": "string"
+          },
+          "fiscalYearEstablishedHi": {
+            "type": "string"
+          },
+          "includeInMeasure": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inIndianCountry": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "objectId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "organizationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameter": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterGroup": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "state": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "waterType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ActionsQueryOutput": {
+        "type": "object",
+        "properties": {
+          "nextId": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "actionAgency": {
+                  "type": "string"
+                },
+                "actionId": {
+                  "type": "string"
+                },
+                "actionName": {
+                  "type": "string"
+                },
+                "actionType": {
+                  "type": "string"
+                },
+                "assessmentUnitId": {
+                  "type": "string"
+                },
+                "assessmentUnitName": {
+                  "type": "string"
+                },
+                "completionDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "fiscalYearEstablished": {
+                  "type": "string"
+                },
+                "includeInMeasure": {
+                  "type": "string"
+                },
+                "inIndianCountry": {
+                  "type": "string"
+                },
+                "locationDescription": {
+                  "type": "string"
+                },
+                "objectId": {
+                  "type": "integer"
+                },
+                "organizationId": {
+                  "type": "string"
+                },
+                "organizationName": {
+                  "type": "string"
+                },
+                "organizationType": {
+                  "type": "string"
+                },
+                "parameter": {
+                  "type": "string"
+                },
+                "parameterGroup": {
+                  "type": "string"
+                },
+                "planSummaryLink": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "waterSize": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "waterSizeUnits": {
+                  "type": "string"
+                },
+                "waterType": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "AssessmentsFilters": {
+        "type": "object",
+        "properties": {
+          "alternateListingIdentifier": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentBasis": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "assessmentDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "assessmentMethods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitStatus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "associatedActionAgency": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "associatedActionId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "associatedActionName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "associatedActionStatus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "associatedActionType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "consentDecreeCycleLo": {
+            "type": "integer"
+          },
+          "consentDecreeCycleHi": {
+            "type": "integer"
+          },
+          "cwa303dPriorityRanking": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cycleExpectedToAttainLo": {
+            "type": "integer"
+          },
+          "cycleExpectedToAttainHi": {
+            "type": "integer"
+          },
+          "cycleFirstListedLo": {
+            "type": "integer"
+          },
+          "cycleFirstListedHi": {
+            "type": "integer"
+          },
+          "cycleId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "cycleLastAssessedLo": {
+            "type": "integer"
+          },
+          "cycleLastAssessedHi": {
+            "type": "integer"
+          },
+          "cycleScheduledForTmdlLo": {
+            "type": "integer"
+          },
+          "cycleScheduledForTmdlHi": {
+            "type": "integer"
+          },
+          "delisted": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "delistedReason": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "epaIrCategory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "monitoringEndDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "monitoringEndDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "monitoringStartDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "monitoringStartDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "objectId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "organizationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "overallStatus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterAttainment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterGroup": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterIrCategory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterStateIrCategory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterStatus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pollutantIndicator": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reportingCycle": {
+            "type": "integer"
+          },
+          "seasonEndDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "seasonEndDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "seasonStartDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "seasonStartDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "state": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stateIrCategory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useClassName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useGroup": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useIrCategory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useStateIrCategory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useSupport": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "vision303dPriority": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "waterType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AssessmentsQueryOutput": {
+        "type": "object",
+        "properties": {
+          "nextId": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "alternateListingIdentifier": {
+                  "type": "string"
+                },
+                "assessmentBasis": {
+                  "type": "string"
+                },
+                "assessmentDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "assessmentMethods": {
+                  "type": "string"
+                },
+                "assessmentTypes": {
+                  "type": "string"
+                },
+                "assessmentUnitId": {
+                  "type": "string"
+                },
+                "assessmentUnitName": {
+                  "type": "string"
+                },
+                "assessmentUnitStatus": {
+                  "type": "string"
+                },
+                "associatedActionAgency": {
+                  "type": "string"
+                },
+                "associatedActionId": {
+                  "type": "string"
+                },
+                "associatedActionName": {
+                  "type": "string"
+                },
+                "associatedActionStatus": {
+                  "type": "string"
+                },
+                "associatedActionType": {
+                  "type": "string"
+                },
+                "consentDecreeCycle": {
+                  "type": "integer"
+                },
+                "cwa303dPriorityRanking": {
+                  "type": "string"
+                },
+                "cycleExpectedToAttain": {
+                  "type": "integer"
+                },
+                "cycleFirstListed": {
+                  "type": "integer"
+                },
+                "cycleId": {
+                  "type": "integer"
+                },
+                "cycleLastAssessed": {
+                  "type": "integer"
+                },
+                "cycleScheduledForTmdl": {
+                  "type": "integer"
+                },
+                "delisted": {
+                  "type": "string"
+                },
+                "delistedReason": {
+                  "type": "string"
+                },
+                "epaIrCategory": {
+                  "type": "string"
+                },
+                "locationDescription": {
+                  "type": "string"
+                },
+                "monitoringEndDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "monitoringStartDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "objectId": {
+                  "type": "integer"
+                },
+                "organizationId": {
+                  "type": "string"
+                },
+                "organizationName": {
+                  "type": "string"
+                },
+                "organizationType": {
+                  "type": "string"
+                },
+                "overallStatus": {
+                  "type": "string"
+                },
+                "parameterAttainment": {
+                  "type": "string"
+                },
+                "parameterGroup": {
+                  "type": "string"
+                },
+                "parameterIrCategory": {
+                  "type": "string"
+                },
+                "parameterName": {
+                  "type": "string"
+                },
+                "parameterStateIrCategory": {
+                  "type": "string"
+                },
+                "parameterStatus": {
+                  "type": "string"
+                },
+                "pollutantIndicator": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "reportingCycle": {
+                  "type": "integer"
+                },
+                "seasonEndDate": {
+                  "format": "date"
+                },
+                "seasonStartDate": {
+                  "format": "date"
+                },
+                "sizeSource": {
+                  "type": "string"
+                },
+                "sourceScale": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "stateIrCategory": {
+                  "type": "string"
+                },
+                "useClassName": {
+                  "type": "string"
+                },
+                "useGroup": {
+                  "type": "string"
+                },
+                "useIrCategory": {
+                  "type": "string"
+                },
+                "useName": {
+                  "type": "string"
+                },
+                "useStateIrCategory": {
+                  "type": "string"
+                },
+                "useSupport": {
+                  "type": "string"
+                },
+                "vision303dPriority": {
+                  "type": "string"
+                },
+                "waterSize": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "waterSizeUnits": {
+                  "type": "string"
+                },
+                "waterType": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "AssessmentUnitsFilters": {
+        "type": "object",
+        "properties": {
+          "assessmentUnitId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitStatus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cycleId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "locationText": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "locationTypeCode": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "objectId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "organizationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reportingCycle": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useClassName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "waterType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AssessmentUnitsMonitoringLocationsFilters": {
+        "type": "object",
+        "properties": {
+          "assessmentUnitId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitStatus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cycleId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "monitoringLocationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "monitoringLocationOrgId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "objectId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "organizationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reportingCycle": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useClassName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "waterType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AssessmentUnitsQueryOutput": {
+        "type": "object",
+        "properties": {
+          "nextId": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "assessmentUnitId": {
+                  "type": "string"
+                },
+                "assessmentUnitName": {
+                  "type": "string"
+                },
+                "assessmentUnitStatus": {
+                  "type": "string"
+                },
+                "cycleId": {
+                  "type": "integer"
+                },
+                "locationDescription": {
+                  "type": "string"
+                },
+                "locationText": {
+                  "type": "string"
+                },
+                "locationTypeCode": {
+                  "type": "string"
+                },
+                "objectId": {
+                  "type": "integer"
+                },
+                "organizationId": {
+                  "type": "string"
+                },
+                "organizationName": {
+                  "type": "string"
+                },
+                "organizationType": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "reportingCycle": {
+                  "type": "integer"
+                },
+                "sizeSource": {
+                  "type": "string"
+                },
+                "sourceScale": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "useClassName": {
+                  "type": "string"
+                },
+                "waterSize": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "waterSizeUnits": {
+                  "type": "string"
+                },
+                "waterType": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "AssessmentUnitsMonitoringLocationsQueryOutput": {
+        "type": "object",
+        "properties": {
+          "nextId": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "assessmentUnitId": {
+                  "type": "string"
+                },
+                "assessmentUnitName": {
+                  "type": "string"
+                },
+                "assessmentUnitStatus": {
+                  "type": "string"
+                },
+                "cycleId": {
+                  "type": "integer"
+                },
+                "locationDescription": {
+                  "type": "string"
+                },
+                "monitoringLocationDataLink": {
+                  "type": "string"
+                },
+                "monitoringLocationId": {
+                  "type": "string"
+                },
+                "monitoringLocationOrgId": {
+                  "type": "string"
+                },
+                "objectId": {
+                  "type": "integer"
+                },
+                "organizationId": {
+                  "type": "string"
+                },
+                "organizationName": {
+                  "type": "string"
+                },
+                "organizationType": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "reportingCycle": {
+                  "type": "integer"
+                },
+                "sizeSource": {
+                  "type": "string"
+                },
+                "sourceScale": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "useClassName": {
+                  "type": "string"
+                },
+                "waterSize": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "waterSizeUnits": {
+                  "type": "string"
+                },
+                "waterType": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "CatchmentCorrespondenceFilters": {
+        "type": "object",
+        "properties": {
+          "assessmentUnitId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "catchmentNhdPlusId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "cycleId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "objectId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "organizationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reportingCycle": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CatchmentCorrespondenceQueryOutput": {
+        "type": "object",
+        "properties": {
+          "nextId": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "assessmentUnitId": {
+                  "type": "string"
+                },
+                "assessmentUnitName": {
+                  "type": "string"
+                },
+                "catchmentNhdPlusId": {
+                  "type": "integer"
+                },
+                "cycleId": {
+                  "type": "integer"
+                },
+                "objectId": {
+                  "type": "integer"
+                },
+                "organizationId": {
+                  "type": "string"
+                },
+                "organizationName": {
+                  "type": "string"
+                },
+                "organizationType": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "reportingCycle": {
+                  "type": "integer"
+                },
+                "state": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "FileAttachmentCsv": {
+        "type": "string",
+        "description": "Query output returned as a CSV (Comma-Separated Value) file attachment"
+      },
+      "FileAttachmentTsv": {
+        "type": "string",
+        "description": "Query output returned as a TSV (Tab-Separated Value) file attachment"
+      },
+      "FileAttachmentXlsx": {
+        "type": "string",
+        "format": "binary",
+        "description": "Query output returned as an XLSX (Microsoft Excel) file attachment"
+      },
+      "Options": {
+        "type": "object",
+        "properties": {
+          "startId": {
+            "type": "integer"
+          },
+          "format": {
+            "$ref": "#/components/schemas/OutputFormat"
+          }
+        }
+      },
+      "OutputFormat": {
+        "type": "string",
+        "description": "This field is ignored in queries sent to '/count' endpoints",
+        "enum": ["json", "csv", "tsv", "xlsx"]
+      },
+      "QuerySizeExceededMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "default": "The current query exceeds the maximum query size. Please refine the search or visit the National Downloads page to download a compressed dataset."
+          }
+        },
+        "required": ["message"]
+      },
+      "SourcesFilters": {
+        "type": "object",
+        "properties": {
+          "assessmentUnitId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "causeName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "confirmed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cycleId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "epaIrCategory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "objectId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "organizationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "overallStatus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parameterGroup": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reportingCycle": {
+            "type": "integer"
+          },
+          "sourceName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "state": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stateIrCategory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "waterType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SourcesQueryOutput": {
+        "type": "object",
+        "properties": {
+          "nextId": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "assessmentUnitId": {
+                  "type": "string"
+                },
+                "assessmentUnitName": {
+                  "type": "string"
+                },
+                "causeName": {
+                  "type": "string"
+                },
+                "confirmed": {
+                  "type": "string"
+                },
+                "cycleId": {
+                  "type": "integer"
+                },
+                "epaIrCategory": {
+                  "type": "string"
+                },
+                "locationDescription": {
+                  "type": "string"
+                },
+                "objectId": {
+                  "type": "integer"
+                },
+                "organizationId": {
+                  "type": "string"
+                },
+                "organizationName": {
+                  "type": "string"
+                },
+                "organizationType": {
+                  "type": "string"
+                },
+                "overallStatus": {
+                  "type": "string"
+                },
+                "parameterGroup": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "reportingCycle": {
+                  "type": "integer"
+                },
+                "sourceName": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "stateIrCategory": {
+                  "type": "string"
+                },
+                "waterSize": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "waterSizeUnits": {
+                  "type": "string"
+                },
+                "waterType": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["data"]
+      },
+      "TmdlFilters": {
+        "type": "object",
+        "properties": {
+          "actionAgency": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "addressedParameter": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "addressedParameterGroup": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assessmentUnitName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "completionDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "completionDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "explicitMarginOfSafety": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fiscalYearEstablishedHi": {
+            "type": "string"
+          },
+          "fiscalYearEstablishedLo": {
+            "type": "string"
+          },
+          "implicitMarginOfSafety": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "includeInMeasure": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inIndianCountry": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "npdesIdentifier": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "objectId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "organizationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "otherIdentifier": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pollutant": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pollutantGroup": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourceType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "state": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tmdlDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "tmdlDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "waterType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TmdlQueryOutput": {
+        "type": "object",
+        "properties": {
+          "nextId": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "objectId": {
+                  "type": "integer"
+                },
+                "actionAgency": {
+                  "type": "string"
+                },
+                "actionId": {
+                  "type": "string"
+                },
+                "actionName": {
+                  "type": "string"
+                },
+                "addressedParameter": {
+                  "type": "string"
+                },
+                "addressedParameterGroup": {
+                  "type": "string"
+                },
+                "assessmentUnitId": {
+                  "type": "string"
+                },
+                "assessmentUnitName": {
+                  "type": "string"
+                },
+                "completionDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "explicitMarginOfSafety": {
+                  "type": "string"
+                },
+                "fiscalYearEstablished": {
+                  "type": "integer"
+                },
+                "implicitMarginOfSafety": {
+                  "type": "string"
+                },
+                "includeInMeasure": {
+                  "type": "string"
+                },
+                "inIndianCountry": {
+                  "type": "string"
+                },
+                "loadAllocation": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "loadAllocationUnits": {
+                  "type": "string"
+                },
+                "locationDescription": {
+                  "type": "string"
+                },
+                "npdesIdentifier": {
+                  "type": "string"
+                },
+                "organizationId": {
+                  "type": "string"
+                },
+                "organizationName": {
+                  "type": "string"
+                },
+                "organizationType": {
+                  "type": "string"
+                },
+                "otherIdentifier": {
+                  "type": "string"
+                },
+                "planSummaryLink": {
+                  "type": "string"
+                },
+                "pollutant": {
+                  "type": "string"
+                },
+                "pollutantGroup": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "sourceType": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "tmdlDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "tmdlEndpoint": {
+                  "type": "string"
+                },
+                "wasteLoadAllocation": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "waterSize": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "waterSizeUnits": {
+                  "type": "string"
+                },
+                "waterType": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["data"]
+      }
+    },
+    "parameters": {
+      "actionAgencyParam": {
+        "name": "actionAgency",
+        "in": "query",
+        "example": ["State"],
+        "explode": true,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "actionIdParam": {
+        "name": "actionId",
+        "in": "query",
+        "explode": true,
+        "example": ["64808"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "actionNameParam": {
+        "name": "actionName",
+        "in": "query",
+        "explode": true,
+        "example": ["12-Mile Creek"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "actionTypeParam": {
+        "name": "actionType",
+        "in": "query",
+        "explode": true,
+        "example": ["Implementation Completed"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "addressedParameterGroupParam": {
+        "name": "addressedParameterGroup",
+        "in": "query",
+        "explode": true,
+        "example": ["AMMONIA"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "addressedParameterParam": {
+        "name": "addressedParameter",
+        "in": "query",
+        "explode": true,
+        "example": ["AMMONIA"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "alternateListingIdentifierParam": {
+        "name": "alternateListingIdentifier",
+        "in": "query",
+        "explode": true,
+        "example": ["SD-CH-L-SHERIDAN_01"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "apiKeyHeader": {
+        "in": "header",
+        "name": "X-Api-Key",
+        "description": "The API key used to access EPA web service resources. The below default value key is used for testing purposes only. Web service consumers should <a target=\"_blank\" rel=\"noreferrer\" href=\"/expertquery/api-key-signup\">obtain their own API key</a>.",
+        "schema": {
+          "type": "string",
+          "default": "53BVce47MQ3KXKibjx35g4ojaDQGh8qWfbdO8cE0"
+        },
+        "required": true
+      },
+      "assessmentBasisParam": {
+        "name": "assessmentBasis",
+        "in": "query",
+        "explode": true,
+        "example": ["Monitored Data"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "assessmentDateLoParam": {
+        "name": "assessmentDateLo",
+        "in": "query",
+        "example": "04-28-2021",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "assessmentDateHiParam": {
+        "name": "assessmentDateHi",
+        "in": "query",
+        "example": "04-28-2023",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "assessmentMethodsParam": {
+        "name": "assessmentMethods",
+        "in": "query",
+        "explode": true,
+        "example": ["2002 Assessment Methodology"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "assessmentTypesParam": {
+        "name": "assessmentTypes",
+        "in": "query",
+        "explode": true,
+        "example": ["PHYSICAL/CHEMICAL"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "assessmentUnitIdParam": {
+        "name": "assessmentUnitId",
+        "in": "query",
+        "explode": true,
+        "example": ["AZ150200001-010_00"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "assessmentUnitNameParam": {
+        "name": "assessmentUnitName",
+        "in": "query",
+        "explode": true,
+        "example": ["Abbott Branch"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "assessmentUnitStatusParam": {
+        "name": "assessmentUnitStatus",
+        "in": "query",
+        "explode": true,
+        "example": ["A"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "associatedActionAgencyParam": {
+        "name": "associatedActionAgency",
+        "in": "query",
+        "explode": true,
+        "example": ["State"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "associatedActionIdParam": {
+        "name": "associatedActionId",
+        "in": "query",
+        "explode": true,
+        "example": ["64808"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "associatedActionNameParam": {
+        "name": "associatedActionName",
+        "in": "query",
+        "explode": true,
+        "example": ["12-Mile Creek"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "associatedActionStatusParam": {
+        "name": "associatedActionStatus",
+        "in": "query",
+        "explode": true,
+        "example": ["EPA Final Action"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "associatedActionTypeParam": {
+        "name": "associatedActionType",
+        "in": "query",
+        "explode": true,
+        "example": ["Implementation Completed"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "causeNameParam": {
+        "name": "causeName",
+        "in": "query",
+        "explode": true,
+        "example": ["EUTROPHICATION"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "columnsParam": {
+        "name": "columns",
+        "description": "The columns to return in the result set, and the order in which to return them.",
+        "in": "query",
+        "explode": true,
+        "example": ["assessmentUnitId", "assessmentUnitName"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "completionDateLoParam": {
+        "name": "completionDateLo",
+        "in": "query",
+        "example": "04-28-2021",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "completionDateHiParam": {
+        "name": "completionDateHi",
+        "in": "query",
+        "example": "04-28-2021",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "confirmedParm": {
+        "name": "confirmed",
+        "in": "query",
+        "explode": true,
+        "example": ["Y"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "consentDecreeCycleLoParam": {
+        "name": "consentDecreeCycleLo",
+        "in": "query",
+        "example": 1998,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "consentDecreeCycleHiParam": {
+        "name": "consentDecreeCycleHi",
+        "in": "query",
+        "example": 2008,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cwa303dPriorityRankingParam": {
+        "name": "cwa303dPriorityRanking",
+        "in": "query",
+        "explode": true,
+        "example": ["High"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "cycleExpectedToAttainLoParam": {
+        "name": "cycleExpectedToAttainLo",
+        "in": "query",
+        "example": 1992,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cycleExpectedToAttainHiParam": {
+        "name": "cycleExpectedToAttainHi",
+        "in": "query",
+        "example": 2002,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cycleFirstListedLoParam": {
+        "name": "cycleFirstListedLo",
+        "in": "query",
+        "example": 1994,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cycleFirstListedHiParam": {
+        "name": "cycleFirstListedHi",
+        "in": "query",
+        "example": 2008,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "catchmentNhdPlusIdParam": {
+        "name": "catchmentNhdPlusId",
+        "in": "query",
+        "explode": true,
+        "example": -504164,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cycleIdParam": {
+        "name": "cycleId",
+        "in": "query",
+        "explode": true,
+        "example": 2346,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cycleLastAssessedLoParam": {
+        "name": "cycleLastAssessedLo",
+        "in": "query",
+        "example": 1994,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cycleLastAssessedHiParam": {
+        "name": "cycleLastAssessedHi",
+        "in": "query",
+        "example": 2002,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cycleScheduledForTmdlLoParam": {
+        "name": "cycleScheduledForTmdlLo",
+        "in": "query",
+        "example": 1994,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "cycleScheduledForTmdlHiParam": {
+        "name": "cycleScheduledForTmdlHi",
+        "in": "query",
+        "example": 2002,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "delistedParam": {
+        "name": "delisted",
+        "in": "query",
+        "explode": true,
+        "example": ["Y"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "delistedReasonParam": {
+        "name": "delistedReason",
+        "in": "query",
+        "explode": true,
+        "example": ["Not specified"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "epaIrCategoryParam": {
+        "name": "epaIrCategory",
+        "in": "query",
+        "explode": true,
+        "example": ["4A"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "explicitMarginOfSafetyParam": {
+        "name": "explicitMarginOfSafety",
+        "in": "query",
+        "explode": true,
+        "example": ["10%"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "fiscalYearEstablishedLoParam": {
+        "name": "fiscalYearEstablishedLo",
+        "in": "query",
+        "example": ["1994"],
+        "schema": {
+          "type": "string"
+        }
+      },
+      "fiscalYearEstablishedHiParam": {
+        "name": "fiscalYearEstablishedHi",
+        "in": "query",
+        "example": ["2002"],
+        "schema": {
+          "type": "string"
+        }
+      },
+      "implicitMarginOfSafetyParam": {
+        "name": "implicitMarginOfSafety",
+        "in": "query",
+        "explode": true,
+        "example": ["conservative assumptions"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "includeInMeasureParam": {
+        "name": "includeInMeasure",
+        "in": "query",
+        "explode": true,
+        "example": ["Y"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "inIndianCountryParam": {
+        "name": "inIndianCountry",
+        "in": "query",
+        "explode": true,
+        "example": ["N"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "locationTextParam": {
+        "name": "locationText",
+        "in": "query",
+        "explode": true,
+        "example": ["01010001"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "locationTypeCodeParam": {
+        "name": "locationTypeCode",
+        "in": "query",
+        "explode": true,
+        "example": ["Basin"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "monitoringEndDateLoParam": {
+        "name": "monitoringEndDateLo",
+        "in": "query",
+        "explode": true,
+        "example": "04-28-2012",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "monitoringEndDateHiParam": {
+        "name": "monitoringEndDateHi",
+        "in": "query",
+        "explode": true,
+        "example": "04-28-2022",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "monitoringStartDateLoParam": {
+        "name": "monitoringStartDateLo",
+        "in": "query",
+        "explode": true,
+        "example": "04-28-2012",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "monitoringStartDateHiParam": {
+        "name": "monitoringStartDateHi",
+        "in": "query",
+        "explode": true,
+        "example": "04-28-2022",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "monitoringLocationIdParam": {
+        "name": "monitoringLocationId",
+        "in": "query",
+        "explode": true,
+        "example": ["1083"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "monitoringLocationOrgIdParam": {
+        "name": "monitoringLocationOrgId",
+        "in": "query",
+        "explode": true,
+        "example": ["21AWIC"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "npdesIdentifierParam": {
+        "name": "npdesIdentifier",
+        "in": "query",
+        "explode": true,
+        "example": ["KS0099571"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "objectIdParam": {
+        "name": "objectId",
+        "description": "The unique ID assigned to a data item under the current profile",
+        "in": "query",
+        "explode": true,
+        "example": 42,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "organizationIdParam": {
+        "name": "organizationId",
+        "in": "query",
+        "explode": true,
+        "example": ["21AWIC"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "organizationNameParam": {
+        "name": "organizationName",
+        "in": "query",
+        "explode": true,
+        "example": ["Georgia Environmental Protection Division"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "outputFormatParam": {
+        "name": "format",
+        "description": "The format in which data is returned. JSON data is returned inline, other types are returned as a file attachment.",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "default": "json",
+          "enum": ["json", "csv", "tsv", "xlsx"]
+        }
+      },
+      "otherIdentifierParam": {
+        "name": "otherIdentifier",
+        "in": "query",
+        "explode": true,
+        "example": ["City of  Wellington"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "overallStatusParam": {
+        "name": "overallStatus",
+        "in": "query",
+        "explode": true,
+        "example": ["Fully Supporting"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "parameterAttainmentParam": {
+        "name": "parameterAttainment",
+        "in": "query",
+        "explode": true,
+        "example": ["1,2-DICHLOROBENZENE"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "parameterGroupParam": {
+        "name": "parameterGroup",
+        "in": "query",
+        "explode": true,
+        "example": ["BIOTOXINS"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "parameterIrCategoryParam": {
+        "name": "parameterIrCategory",
+        "in": "query",
+        "explode": true,
+        "example": ["4A"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "parameterNameParam": {
+        "name": "parameterName",
+        "in": "query",
+        "explode": true,
+        "example": ["EUTROPHICATION"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "parameterParam": {
+        "name": "parameter",
+        "in": "query",
+        "explode": true,
+        "example": ["EUTROPHICATION"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "parameterStateIrCategoryParam": {
+        "name": "parameterStateIrCategory",
+        "in": "query",
+        "explode": true,
+        "example": ["5"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "parameterStatusParam": {
+        "name": "parameterStatus",
+        "in": "query",
+        "explode": true,
+        "example": ["Observed effect"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "pollutantGroupParam": {
+        "name": "pollutantGroup",
+        "in": "query",
+        "explode": true,
+        "example": ["AMMONIA"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "pollutantParam": {
+        "name": "pollutant",
+        "in": "query",
+        "explode": true,
+        "example": ["ACID"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "pollutantIndicatorParam": {
+        "name": "pollutantIndicator",
+        "in": "query",
+        "explode": true,
+        "example": ["Y"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "regionParam": {
+        "name": "region",
+        "in": "query",
+        "explode": true,
+        "example": ["01"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "reportingCycleParam": {
+        "name": "reportingCycle",
+        "in": "query",
+        "example": 2020,
+        "explode": true,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "seasonEndDateLoParam": {
+        "name": "seasonEndDateLo",
+        "in": "query",
+        "example": "04-28-2012",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "seasonEndDateHiParam": {
+        "name": "seasonEndDateHi",
+        "in": "query",
+        "example": "04-28-2022",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "seasonStartDateLoParam": {
+        "name": "seasonStartDateLo",
+        "in": "query",
+        "example": "04-28-2012",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "seasonStartDateHiParam": {
+        "name": "seasonStartDateHi",
+        "in": "query",
+        "example": "04-28-2022",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "sourceNameParam": {
+        "name": "sourceName",
+        "in": "query",
+        "explode": true,
+        "example": ["ACID MINE DRAINAGE"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "sourceTypeParam": {
+        "name": "sourceType",
+        "in": "query",
+        "explode": true,
+        "example": ["Nonpoint source"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "startIdParam": {
+        "name": "startId",
+        "in": "query",
+        "example": 20,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "stateIrCategoryParam": {
+        "name": "stateIrCategory",
+        "in": "query",
+        "explode": true,
+        "example": ["4A"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "stateParam": {
+        "name": "state",
+        "in": "query",
+        "explode": true,
+        "example": ["OH"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "tmdlDateLoParam": {
+        "name": "tmdlDateLo",
+        "in": "query",
+        "example": "05-22-1991",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "tmdlDateHiParam": {
+        "name": "tmdlDateHi",
+        "in": "query",
+        "example": "05-22-1998",
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "tmdlEndpointParam": {
+        "name": "tmdlEndpoint",
+        "in": "query",
+        "example": "See TMDL Documents.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "useClassNameParam": {
+        "name": "useClassName",
+        "in": "query",
+        "explode": true,
+        "example": ["CLASS B"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "useGroupParam": {
+        "name": "useGroup",
+        "in": "query",
+        "explode": true,
+        "example": ["AGRICULTURAL"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "useIrCategoryParam": {
+        "name": "useIrCategory",
+        "in": "query",
+        "explode": true,
+        "example": ["4A"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "useNameParam": {
+        "name": "useName",
+        "in": "query",
+        "explode": true,
+        "example": ["Aquaculture"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "useStateIrCategoryParam": {
+        "name": "useStateIrCategory",
+        "in": "query",
+        "explode": true,
+        "example": ["5"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "useSupportParam": {
+        "name": "useSupport",
+        "in": "query",
+        "explode": true,
+        "example": ["Fully Supporting"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "vision303dPriorityParam": {
+        "name": "vision303dPriority",
+        "in": "query",
+        "explode": true,
+        "example": ["Y"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "wasteLoadAllocationParam": {
+        "name": "wasteLoadAllocation",
+        "in": "query",
+        "explode": true,
+        "example": [7.09],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          }
+        }
+      },
+      "waterTypeParam": {
+        "name": "waterType",
+        "in": "query",
+        "explode": true,
+        "example": ["ESTUARY"],
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "requestBodies": {
+      "ActionsCountRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "$ref": "#/components/schemas/ActionsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "ActionsQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "$ref": "#/components/schemas/Options"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filters": {
+                  "$ref": "#/components/schemas/ActionsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentsCountRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "$ref": "#/components/schemas/AssessmentsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentsQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "$ref": "#/components/schemas/Options"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filters": {
+                  "$ref": "#/components/schemas/AssessmentsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentUnitsCountRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "$ref": "#/components/schemas/AssessmentUnitsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentUnitsQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "$ref": "#/components/schemas/Options"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filters": {
+                  "$ref": "#/components/schemas/AssessmentUnitsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentUnitsMonitoringLocationsCountRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "$ref": "#/components/schemas/AssessmentUnitsMonitoringLocationsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "AssessmentUnitsMonitoringLocationsQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "$ref": "#/components/schemas/Options"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filters": {
+                  "$ref": "#/components/schemas/AssessmentUnitsMonitoringLocationsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "CatchmentCorrespondenceCountRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "$ref": "#/components/schemas/CatchmentCorrespondenceFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "CatchmentCorrespondenceQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "$ref": "#/components/schemas/Options"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filters": {
+                  "$ref": "#/components/schemas/CatchmentCorrespondenceFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "SourcesCountRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "$ref": "#/components/schemas/SourcesFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "SourcesQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "$ref": "#/components/schemas/Options"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filters": {
+                  "$ref": "#/components/schemas/SourcesFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "TmdlCountRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "$ref": "#/components/schemas/TmdlFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "TmdlQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "$ref": "#/components/schemas/Options"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filters": {
+                  "$ref": "#/components/schemas/TmdlFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      }
+    },
+    "responses": {
+      "ActionsQuerySuccess": {
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ActionsQueryOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentXlsx"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentCsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentTsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "AssessmentsQuerySuccess": {
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AssessmentsQueryOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentXlsx"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentCsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentTsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "AssessmentUnitsQuerySuccess": {
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AssessmentUnitsQueryOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentXlsx"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentCsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentTsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "AssessmentUnitsMonitoringLocationsQuerySuccess": {
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AssessmentUnitsMonitoringLocationsQueryOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentXlsx"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentCsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentTsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "CatchmentCorrespondenceQuerySuccess": {
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/CatchmentCorrespondenceQueryOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentXlsx"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentCsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentTsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "InvalidRequestError": {
+        "description": "The request was invalid.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": 400
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["code", "message"]
+            }
+          }
+        }
+      },
+      "QueryCountSuccess": {
+        "description": "The query evaluated successfully. The response contains the total count of the query along with the maximum count allowed by the server.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "example": 148220
+                },
+                "maxCount": {
+                  "type": "integer",
+                  "example": 1000000
+                }
+              },
+              "required": ["count", "sizeExceeded"]
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "An internal server error occurred.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": 500
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["code", "message"]
+            }
+          }
+        }
+      },
+      "SourcesQuerySuccess": {
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SourcesQueryOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentXlsx"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentCsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentTsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "TmdlQuerySuccess": {
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/TmdlQueryOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentXlsx"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentCsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentTsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

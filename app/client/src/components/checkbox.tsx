@@ -15,7 +15,7 @@ export function Checkbox({
   styles = [],
   tile = false,
   value,
-}: CheckboxProps) {
+}: Readonly<CheckboxProps>) {
   const [id] = useState(uniqueId('checkbox-'));
   return (
     <div className={`usa-checkbox bg-inherit ${styles.join(' ')}`}>
