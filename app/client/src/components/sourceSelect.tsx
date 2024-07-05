@@ -15,7 +15,7 @@ export function SourceSelect({
   children,
   onChange,
   selected,
-}: SourceSelectProps) {
+}: Readonly<SourceSelectProps>) {
   const [id] = useState(uniqueId());
   const sourceList = useRef<HTMLButtonElement | null>(null);
   const sourceDownPress = useKeyPress('ArrowDown', sourceList);

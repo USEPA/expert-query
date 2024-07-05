@@ -15,10 +15,10 @@ type Props = {
 // to determine if an anchor link should open in a new tab – see note below).
 // Any additional elements beyond anchor links can be passed when to explicitly
 // set how those components should be rendered.
-export function MarkdownContent({ className, children, components }: Props) {
+export function MarkdownContent({ className, children, components }: Readonly<Props>) {
   return (
     <ReactMarkdown
-      className={className || ''}
+      className={className ?? ''}
       children={children}
       remarkPlugins={[remarkGfm]}
       components={{
