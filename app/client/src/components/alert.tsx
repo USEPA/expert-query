@@ -11,7 +11,7 @@ export function Alert({
   slim = false,
   styles = [],
   type = 'info',
-}: AlertProps) {
+}: Readonly<AlertProps>) {
   const alertStyles = [...styles];
 
   let role = 'alert';

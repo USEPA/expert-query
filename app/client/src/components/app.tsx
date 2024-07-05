@@ -23,6 +23,7 @@ declare global {
     ga: Function;
     gaTarget: string;
     logToGa: Function;
+    logErrorToGa: Function;
   }
 }
 

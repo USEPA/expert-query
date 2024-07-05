@@ -16,7 +16,7 @@ import type { ReactNode } from 'react';
 const StateContext = createContext<State | undefined>(undefined);
 const DispatchContext = createContext<ObserverDispatch | undefined>(undefined);
 
-function InPageNavProvider({ children }: { children: ReactNode }) {
+function InPageNavProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [active, setActive] = useState('');
   const [navItems, setNavItems] = useState<Array<InPageNavItem>>([]);
 
@@ -113,7 +113,7 @@ function useInPageNavDispatch() {
 ## Components
 */
 
-export function InPageNavLayout({ children }: { children: ReactNode }) {
+export function InPageNavLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <InPageNavProvider>
       <InPageNavLayoutInner>{children}</InPageNavLayoutInner>
@@ -121,7 +121,7 @@ export function InPageNavLayout({ children }: { children: ReactNode }) {
   );
 }
 
-function InPageNavLayoutInner({ children }: { children: ReactNode }) {
+function InPageNavLayoutInner({ children }: Readonly<{ children: ReactNode }>) {
   const { active, navItems } = useInPageNavState();
 
   const sortedNavItems = useMemo(() => {
@@ -168,7 +168,7 @@ function InPageNavLayoutInner({ children }: { children: ReactNode }) {
           </nav>
         </aside>
       )}
-      <div className="flex-fill">{children}</div>
+      <div className="flex-fill width-full">{children}</div>
     </div>
   );
 }
@@ -178,7 +178,7 @@ export function InPageNavAnchor({
   id,
   label,
   subItem = false,
-}: InPageNavAnchorProps) {
+}: Readonly<InPageNavAnchorProps>) {
   const { observe, unobserve } = useInPageNavDispatch();
 
   const ref = useCallback(
@@ -202,7 +202,7 @@ export function InPageNavAnchor({
 export function NumberedInPageNavLabel({
   children,
   number,
-}: NumberedInPageNavLabelProps) {
+}: Readonly<NumberedInPageNavLabelProps>) {
   return (
     <>
       <span className="bg-primary display-inline-block font-family-mono height-205 line-height-sans-3 margin-right-1 radius-pill text-center text-white width-205">

@@ -3,7 +3,7 @@ type Props = {
   text: string;
 };
 
-export function Message({ type, text }: Props) {
+export function Message({ type, text }: Readonly<Props>) {
   return (
     <div className={`usa-alert usa-alert--${type}`} role="alert">
       <div className="usa-alert__body">

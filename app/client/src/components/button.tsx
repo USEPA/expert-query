@@ -14,7 +14,7 @@ export function Button({
   disabled = false,
   onClick,
   styles = [],
-}: Props) {
+}: Readonly<Props>) {
   const buttonStyles: string[] = [...styles];
 
   switch (color) {

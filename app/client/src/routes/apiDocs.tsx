@@ -7,14 +7,12 @@ export default ApiDocs;
 
 export function ApiDocs() {
   return (
-    <>
-      <div>
-        <SwaggerUI
-          url={`${serverUrl}/api/openapi`}
-          deepLinking={true}
-          defaultModelsExpandDepth={-1}
-        />
-      </div>
-    </>
+    <div>
+      <SwaggerUI
+        url={`${serverUrl}/api/openapi`}
+        deepLinking={true}
+        defaultModelsExpandDepth={-1}
+      />
+    </div>
   );
 }

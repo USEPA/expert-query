@@ -27,7 +27,7 @@ export function DownloadModal<D extends PostData>({
   queryData,
   queryUrl,
   setDownloadStatus,
-}: DownloadModalProps<D>) {
+}: Readonly<DownloadModalProps<D>>) {
   const { abort, getSignal } = useAbort();
 
   const closeModal = useCallback(() => {

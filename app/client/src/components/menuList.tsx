@@ -88,7 +88,7 @@ type MenuItemProps = {
   value: ReactNode;
 };
 
-function MenuItem({ index, width, setSize, value }: MenuItemProps) {
+function MenuItem({ index, width, setSize, value }: Readonly<MenuItemProps>) {
   const rowRef = useRef<HTMLDivElement | null>(null);
 
   // Keep track of the height of the rows to autosize rows.

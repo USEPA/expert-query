@@ -13,7 +13,7 @@ export function CopyBox({
   maxLength,
   testId,
   text,
-}: CopyBoxProps) {
+}: Readonly<CopyBoxProps>) {
   const [status, setStatus] = useState<Status>('idle');
   const [statusVisible, setStatusVisible] = useState(false);
 

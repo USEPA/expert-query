@@ -184,7 +184,7 @@ async function fetchSingleDomain(name, mapping, pool, s3Config) {
 }
 
 export async function syncDomainValues(s3Config, poolParam = null) {
-  const pool = poolParam ? poolParam : startConnPool();
+  const pool = poolParam || startConnPool();
   await updateEtlStatus(pool, 'domain_values', 'running');
 
   try {
