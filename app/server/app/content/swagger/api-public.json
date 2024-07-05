@@ -18,7 +18,7 @@
       "url": " http://localhost:{port}/api",
       "variables": {
         "port": {
-          "default": 9090
+          "default": "9090"
         }
       }
     }
@@ -28,9 +28,6 @@
     "version": "1.0.0",
     "title": "US EPA Expert Query",
     "termsOfService": "https://edg.epa.gov/EPA_Data_License.html",
-    "contact": {
-      "email": ""
-    },
     "license": {
       "name": "Creative Commons Zero Public Domain Dedication",
       "url": "https://creativecommons.org/publicdomain/zero/1.0/"
@@ -1805,10 +1802,10 @@
             "format": "date"
           },
           "fiscalYearEstablishedLo": {
-            "type": "integer"
+            "type": "string"
           },
           "fiscalYearEstablishedHi": {
-            "type": "integer"
+            "type": "string"
           },
           "includeInMeasure": {
             "type": "array",
@@ -3188,10 +3185,10 @@
             }
           },
           "fiscalYearEstablishedHi": {
-            "type": "integer"
+            "type": "string"
           },
           "fiscalYearEstablishedLo": {
-            "type": "integer"
+            "type": "string"
           },
           "implicitMarginOfSafety": {
             "type": "array",
@@ -3219,8 +3216,9 @@
           },
           "objectId": {
             "type": "array",
-            "items": null,
-            "type": "integer"
+            "items": {
+              "type": "integer"
+            }
           },
           "organizationId": {
             "type": "array",
@@ -3878,17 +3876,17 @@
       "fiscalYearEstablishedLoParam": {
         "name": "fiscalYearEstablishedLo",
         "in": "query",
-        "example": 1994,
+        "example": ["1994"],
         "schema": {
-          "type": "integer"
+          "type": "string"
         }
       },
       "fiscalYearEstablishedHiParam": {
         "name": "fiscalYearEstablishedHi",
         "in": "query",
-        "example": 2002,
+        "example": ["2002"],
         "schema": {
-          "type": "integer"
+          "type": "string"
         }
       },
       "implicitMarginOfSafetyParam": {

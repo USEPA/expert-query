@@ -1,5 +1,4 @@
 import { ListObjectsCommand } from '@aws-sdk/client-s3';
-import cors from 'cors';
 import express from 'express';
 import Excel from 'exceljs';
 import { readdirSync, statSync } from 'node:fs';
@@ -8,11 +7,7 @@ import { fileURLToPath } from 'node:url';
 import QueryStream from 'pg-query-stream';
 import { getActiveSchema, protectRoutes } from '../middleware.js';
 import { appendToWhere, knex, pool, queryPool } from '../utilities/database.js';
-import {
-  corsOptions,
-  corsOptionsDelegate,
-  getEnvironment,
-} from '../utilities/environment.js';
+import { getEnvironment } from '../utilities/environment.js';
 import {
   formatLogMsg,
   log,
@@ -363,7 +358,7 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     const exactArg = queryParams.filters[col.alias];
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
-    } else if (exactArg) {
+    } else if (exactArg !== undefined) {
       appendToWhere(query, col.name, queryParams.filters[col.alias]);
     }
   });
@@ -916,86 +911,45 @@ export default function (app, basePath) {
 
   Object.entries(privateConfig.tableConfig).forEach(
     ([profileName, profile]) => {
-      // ****************************** //
-      // Public / CORS Enabled          //
-      // ****************************** //
-
       // create get requests
-      router.get(
-        `/${profileName}`,
-        cors(corsOptions),
-        async function (req, res) {
-          await executeQuery(profile, req, res);
-        },
-      );
-      router.get(
-        `/${profileName}/count`,
-        cors(corsOptions),
-        async function (req, res) {
-          await executeQueryCountOnly(profile, req, res);
-        },
-      );
+      router.get(`/${profileName}`, async function (req, res) {
+        await executeQuery(profile, req, res);
+      });
+      router.get(`/${profileName}/count`, async function (req, res) {
+        await executeQueryCountOnly(profile, req, res);
+      });
 
       // create post requests
-      router.post(
-        `/${profileName}`,
-        cors(corsOptions),
-        async function (req, res) {
-          await executeQuery(profile, req, res);
-        },
-      );
-      router.post(
-        `/${profileName}/count`,
-        cors(corsOptions),
-        async function (req, res) {
-          await executeQueryCountOnly(profile, req, res);
-        },
-      );
-
-      // ****************************** //
-      // Private / NOT CORS Enabled     //
-      // ****************************** //
+      router.post(`/${profileName}`, async function (req, res) {
+        await executeQuery(profile, req, res);
+      });
+      router.post(`/${profileName}/count`, async function (req, res) {
+        await executeQueryCountOnly(profile, req, res);
+      });
 
       // get column domain values
-      router.post(
-        '/:profile/values/:column',
-        cors(corsOptionsDelegate),
-        async function (req, res) {
-          await executeValuesQuery(req, res);
-        },
-      );
+      router.post('/:profile/values/:column', async function (req, res) {
+        await executeValuesQuery(req, res);
+      });
 
       // get bean counts
-      router.get(
-        `/${profileName}/countPerOrgCycle`,
-        cors(corsOptionsDelegate),
-        async function (req, res) {
-          await executeQueryCountPerOrgCycle(profile, req, res);
-        },
-      );
+      router.get(`/${profileName}/countPerOrgCycle`, async function (req, res) {
+        await executeQueryCountPerOrgCycle(profile, req, res);
+      });
       router.post(
         `/${profileName}/countPerOrgCycle`,
-        cors(corsOptionsDelegate),
         async function (req, res) {
           await executeQueryCountPerOrgCycle(profile, req, res);
         },
       );
 
-      router.get(
-        '/health/etlDatabase',
-        cors(corsOptionsDelegate),
-        async function (req, res) {
-          await checkDatabaseHealth(req, res);
-        },
-      );
+      router.get('/health/etlDatabase', async function (req, res) {
+        await checkDatabaseHealth(req, res);
+      });
 
-      router.get(
-        '/health/etlDomainValues',
-        cors(corsOptionsDelegate),
-        async function (req, res) {
-          await checkDomainValuesHealth(req, res);
-        },
-      );
+      router.get('/health/etlDomainValues', async function (req, res) {
+        await checkDomainValuesHealth(req, res);
+      });
     },
   );
 

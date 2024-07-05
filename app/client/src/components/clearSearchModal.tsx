@@ -16,7 +16,7 @@ export function ClearSearchModal({
   continueText,
   onClose,
   onContinue,
-}: ClearSearchModalProps) {
+}: Readonly<ClearSearchModalProps>) {
   const confirm = useCallback(() => {
     onContinue();
     onClose();

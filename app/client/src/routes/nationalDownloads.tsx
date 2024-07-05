@@ -69,7 +69,7 @@ type NationalDownloadsDataProps = {
   content: FetchState<Content>;
 };
 
-function NationalDownloadsData({ content }: NationalDownloadsDataProps) {
+function NationalDownloadsData({ content }: Readonly<NationalDownloadsDataProps>) {
   if (content.status !== 'success') return null;
 
   return (
