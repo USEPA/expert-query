@@ -423,7 +423,7 @@ async function executeQuery(profile, req, res) {
     log.error(
       formatLogMsg(
         metadataObj,
-        `Failed to get data from the "${profile.tableName}" table...`,
+        `Failed to get data from the "${profile.tableName}" table:`,
         error,
       ),
     );
@@ -606,7 +606,7 @@ async function executeValuesQuery(req, res) {
     log.error(
       formatLogMsg(
         metadataObj,
-        `Failed to get values for the "${req.params.column}" column from the "${req.params.profile}" table: ${error}`,
+        `Failed to get values for the "${req.params.column}" column from the "${req.params.profile}" table:`,
         error,
       ),
     );

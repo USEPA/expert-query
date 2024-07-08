@@ -67,9 +67,7 @@ async function getActiveSchema(req, res, next) {
 
     next();
   } catch (error) {
-    log.error(
-      formatLogMsg(metadataObj, 'Failed to get active schema: ', error),
-    );
+    log.error(formatLogMsg(metadataObj, 'Failed to get active schema:', error));
     return res.status(500).json({ message: 'Error !' + error });
   }
 }
