@@ -74,6 +74,11 @@ function populateMetdataObjFromRequest(request) {
     request.header('x-api-umbrella-request-id') === undefined
       ? null
       : request.header('x-api-umbrella-request-id');
+  metadata.request = {
+    url: request.url ?? null,
+    method: request.method ?? null,
+    body: request.body ?? null,
+  };
 
   return metadata;
 }
