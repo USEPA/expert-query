@@ -34,7 +34,7 @@ function checkClientRouteExists(req, res, next) {
   clientRoutes.push('/');
 
   if (!clientRoutes.includes(req.path)) {
-    return res.status(404).sendFile(path.join(__dirname, 'public', '400.html'));
+    return res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
   }
 
   next();
