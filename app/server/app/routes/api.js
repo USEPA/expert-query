@@ -261,9 +261,9 @@ export default function (app, basePath) {
       });
   });
 
-  app.use(`${basePath}api`, router);
-
-  app.get('/api/*', (req, res) => {
+  router.get(`/*`, (req, res) => {
     res.status(404).json({ message: 'The api route does not exist.' });
   });
+
+  app.use(`${basePath}api`, router);
 }
