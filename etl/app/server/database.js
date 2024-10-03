@@ -46,6 +46,7 @@ const pgConfig = {
   database: 'postgres',
   port: database_port,
   host: database_host,
+  ssl: environment.isLocal ? undefined : { rejectUnauthorized: false },
 };
 
 const eqConfig = {
