@@ -34,7 +34,7 @@ function checkClientRouteExists(req, res, next) {
   clientRoutes.push('/');
 
   if (!clientRoutes.includes(req.path)) {
-    return res.status(404).sendFile(path.join(__dirname, 'public', '400.html'));
+    return res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
   }
 
   next();
@@ -67,9 +67,7 @@ async function getActiveSchema(req, res, next) {
 
     next();
   } catch (error) {
-    log.error(
-      formatLogMsg(metadataObj, 'Failed to get active schema: ', error),
-    );
+    log.error(formatLogMsg(metadataObj, 'Failed to get active schema:', error));
     return res.status(500).json({ message: 'Error !' + error });
   }
 }

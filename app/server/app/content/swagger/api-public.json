@@ -3876,7 +3876,7 @@
       "fiscalYearEstablishedLoParam": {
         "name": "fiscalYearEstablishedLo",
         "in": "query",
-        "example": ["1994"],
+        "example": "1994",
         "schema": {
           "type": "string"
         }
@@ -3884,7 +3884,7 @@
       "fiscalYearEstablishedHiParam": {
         "name": "fiscalYearEstablishedHi",
         "in": "query",
-        "example": ["2002"],
+        "example": "2002",
         "schema": {
           "type": "string"
         }

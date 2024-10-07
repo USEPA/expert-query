@@ -97,6 +97,7 @@ const knex = knexJs({
     user: dbUser,
     password: dbPassword,
     database: dbName,
+    ssl: isLocal ? undefined : { rejectUnauthorized: false },
   },
   pool: {
     min: 0,
@@ -111,6 +112,7 @@ const pool = new pg.Pool({
   password: dbPassword,
   database: dbName,
   max: parseInt(process.env.DB_POOL_MAX),
+  ssl: isLocal ? undefined : { rejectUnauthorized: false },
 });
 
 export { appendToWhere, knex, pool, queryPool };
