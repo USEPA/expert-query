@@ -1,10 +1,6 @@
-describe('API Documentation and API key Signup Pages', () => {
-  const location = window.location;
-  const origin =
-    location.hostname === 'localhost'
-      ? `${location.protocol}//${location.hostname}:3000`
-      : window.location.origin;
+import { clientUrl, serverUrl } from '../constants';
 
+describe('API Documentation and API key Signup Pages', () => {
   it('Verify link to api documentation page through UI', () => {
     cy.visit('/');
     cy.selectProfile('Actions');
@@ -12,12 +8,12 @@ describe('API Documentation and API key Signup Pages', () => {
 
     cy.findByRole('link', { name: 'API Documentation' })
       .should('be.visible')
-      .should('have.attr', 'href', `${origin}/api-documentation`);
+      .should('have.attr', 'href', `${clientUrl}/api-documentation`);
   });
 
   it('Navigate directly to api documentation page', () => {
     cy.visit('/api-documentation');
-    cy.findByRole('link', { name: `${origin}/api/openapi` }).should(
+    cy.findByRole('link', { name: `${serverUrl}/api/openapi` }).should(
       'be.visible',
     );
     cy.findByRole('link', { name: 'ATTAINS - Actions' }).should('be.visible');

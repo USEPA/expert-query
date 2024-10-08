@@ -1,3 +1,5 @@
+import { clientUrl, serverUrl } from '../constants';
+
 describe('Data Profile Assessment Units with Monitoring Locations', () => {
   beforeEach(() => {
     cy.visit('/');
@@ -10,26 +12,20 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
   const columnsValueCurl =
     '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","useClassName","monitoringLocationId","monitoringLocationOrgId","assessmentUnitId","assessmentUnitName","assessmentUnitStatus","reportingCycle","cycleId","locationDescription","monitoringLocationDataLink","sizeSource","sourceScale","waterSize","waterSizeUnits"]';
 
-  const location = window.location;
-  const origin =
-    location.hostname === 'localhost'
-      ? `${location.protocol}//${location.hostname}:3000`
-      : window.location.origin;
-
   it('Verify copy box text flavor 1', () => {
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations?assessmentUnitStatus=A`,
+      `${clientUrl}/attains/assessmentUnitsMonitoringLocations?assessmentUnitStatus=A`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&assessmentUnitStatus=A&format=csv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&assessmentUnitStatus=A&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["A"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -43,17 +39,17 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["DN_AM_Watershed","AK_R_8031116_001"],"assessmentUnitStatus":["A"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -76,17 +72,17 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["H"],"monitoringLocationOrgId":["TSWQC_WQX"],"useClassName":["NON-CLASS"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -115,17 +111,17 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["DELAWARENATION-1300"],"assessmentUnitStatus":["H"],"organizationId":["21PA"],"waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -164,17 +160,17 @@ describe('Data Profile Assessment Units with Monitoring Locations', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnitsMonitoringLocations?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnitsMonitoringLocations?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["DN_AM_Watershed","FL2543D"],"assessmentUnitStatus":["A"],"monitoringLocationId":["F01A21 "],"monitoringLocationOrgId":["21AWIC"],"organizationId":["REDLAKE","21GAEPD"],"region":["04"],"state":["KY"],"useClassName":["VII"],"waterType":["GREAT LAKES BAYS AND HARBORS"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnitsMonitoringLocations -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 });
