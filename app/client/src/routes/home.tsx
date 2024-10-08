@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom';
 import Select from 'react-select';
 import { AsyncPaginate, wrapMenuList } from 'react-select-async-paginate';
-import { ReactComponent as Download } from 'images/file_download.svg';
+import Download from 'images/file_download.svg?react';
 // components
 import { AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -27,7 +27,7 @@ import { Button } from 'components/button';
 // contexts
 import { useContentState } from 'contexts/content';
 // config
-import { serverUrl } from 'config';
+import { clientUrl, serverUrl } from 'config';
 // utils
 import { isAbort, postData, useAbort } from 'utils';
 // types
@@ -412,7 +412,7 @@ export function QueryBuilder() {
         <AccordionItem heading="Advanced Queries">
           Visit our{' '}
           <a
-            href={`${serverUrl}/api-documentation`}
+            href={`${clientUrl}/api-documentation`}
             target="_blank"
             rel="noopener noreferrer"
           >

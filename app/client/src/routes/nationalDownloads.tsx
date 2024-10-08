@@ -1,4 +1,4 @@
-import { ReactComponent as Exit } from 'images/launch.svg';
+import Exit from 'images/launch.svg?react';
 import { Link } from 'react-router-dom';
 // components
 import { Alert } from 'components/alert';
