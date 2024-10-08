@@ -69,6 +69,7 @@ jobs:
       CF_S3_PRIV_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PRIV_SECRET_KEY }}
       DB_POOL_MAX: 20
       DB_POOL_MIN: 5
+      DB_SSL: true
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
       DB_USERNAME: ${{ secrets.EQ_USER_STAGING }}
@@ -140,6 +141,7 @@ jobs:
           cf set-env $APP_NAME "CF_S3_PRIV_SECRET_KEY" "$CF_S3_PRIV_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MAX" "$DB_POOL_MAX" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MIN" "$DB_POOL_MIN" > /dev/null
+          cf set-env $APP_NAME "DB_SSL" "$DB_SSL" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
@@ -206,6 +208,7 @@ jobs:
       CF_S3_PRIV_REGION: ${{ secrets.CF_STAGING_S3_PRIV_REGION }}
       CF_S3_PRIV_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PRIV_SECRET_KEY }}
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
+      DB_SSL: true
       EQ_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
       EQ_USERNAME: ${{ secrets.EQ_USER_STAGING }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
@@ -240,6 +243,7 @@ jobs:
           cf set-env $APP_NAME "CF_S3_PRIV_REGION" "$CF_S3_PRIV_REGION" > /dev/null
           cf set-env $APP_NAME "CF_S3_PRIV_SECRET_KEY" "$CF_S3_PRIV_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
+          cf set-env $APP_NAME "DB_SSL" "$DB_SSL" > /dev/null
           cf set-env $APP_NAME "EQ_USERNAME" "$EQ_USERNAME" > /dev/null
           cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null

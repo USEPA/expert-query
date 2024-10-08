@@ -19,6 +19,7 @@ let database_pwd = '';
 let database_port = '';
 
 const dbName = process.env.DB_NAME ?? 'expert_query';
+const dbSsl = process.env.DB_SSL === 'true';
 
 const eqUser = process.env.EQ_USERNAME ?? 'eq';
 
@@ -46,7 +47,7 @@ const pgConfig = {
   database: 'postgres',
   port: database_port,
   host: database_host,
-  ssl: environment.isLocal ? undefined : { rejectUnauthorized: false },
+  ssl: dbSsl ? { rejectUnauthorized: false } : undefined,
 };
 
 const eqConfig = {

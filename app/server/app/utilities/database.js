@@ -11,6 +11,8 @@ let dbPort = '';
 const dbName = process.env.DB_NAME ?? 'expert_query';
 const dbUser = process.env.DB_USERNAME;
 const dbPassword = process.env.DB_PASSWORD;
+const dbSsl = process.env.DB_SSL === 'true';
+console.log('dbSsl: ', dbSsl);
 
 if (process.env.NODE_ENV) {
   isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
@@ -97,7 +99,7 @@ const knex = knexJs({
     user: dbUser,
     password: dbPassword,
     database: dbName,
-    ssl: isLocal ? undefined : { rejectUnauthorized: false },
+    ssl: dbSsl ? { rejectUnauthorized: false } : undefined,
   },
   pool: {
     min: 0,
@@ -112,7 +114,7 @@ const pool = new pg.Pool({
   password: dbPassword,
   database: dbName,
   max: parseInt(process.env.DB_POOL_MAX),
-  ssl: isLocal ? undefined : { rejectUnauthorized: false },
+  ssl: dbSsl ? { rejectUnauthorized: false } : undefined,
 });
 
 export { appendToWhere, knex, pool, queryPool };
