@@ -10,7 +10,7 @@ import {
 } from './utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const environment = getEnvironment();
+const { isLocal, isTest, isDevelopment, isStaging } = getEnvironment();
 
 function checkClientRouteExists(req, res, next) {
   const subPath = process.env.SERVER_BASE_PATH || '';
@@ -81,7 +81,7 @@ async function getActiveSchema(req, res, next) {
  * @param {express.NextFunction} next
  */
 async function protectRoutes(req, res, next) {
-  if (environment.isLocal) {
+  if (isLocal || isTest) {
     next();
     return;
   }
@@ -98,7 +98,7 @@ async function protectRoutes(req, res, next) {
   if (!eqSecret || eqSecret !== process.env.EQ_SECRET) return handleError();
 
   // For dev and stage only, check if user-id is authorized
-  if (environment.isDevelopment || environment.isStaging) {
+  if (isDevelopment || isStaging) {
     const apiUserId = req.header('x-api-user-id');
 
     // get config from private S3 bucket

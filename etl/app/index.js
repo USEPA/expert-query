@@ -12,11 +12,11 @@ app.disable('x-powered-by');
 
 const port = process.env.PORT || 3001;
 
-const environment = getEnvironment();
+const { isLocal } = getEnvironment();
 
 const requiredEnvVars = ['EQ_PASSWORD', 'GLOSSARY_AUTH'];
 
-if (environment.isLocal) {
+if (isLocal) {
   requiredEnvVars.push(
     'DB_USERNAME',
     'DB_PASSWORD',
@@ -58,7 +58,7 @@ app.on('ready', async () => {
 
   // When running locally, just etl everything and exit.
   // All other environments, schedule the etl.
-  if (environment.isLocal) {
+  if (isLocal) {
     // load config from private s3 bucket
     const s3Config = await s3.loadConfig();
 

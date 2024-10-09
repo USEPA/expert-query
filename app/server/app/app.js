@@ -1,4 +1,3 @@
-import browserSync from 'browser-sync';
 import cors from 'cors';
 import express from 'express';
 import basicAuth from 'express-basic-auth';
@@ -16,8 +15,14 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
-const browserSyncPort = 3002;
-let port = process.env.PORT || 3001;
+
+/* istanbul ignore next */
+if (global.__coverage__) {
+  const setupCypressCodeCoverage = await import(
+    '@cypress/code-coverage/middleware/express'
+  );
+  setupCypressCodeCoverage.default(app);
+}
 
 app.use(
   helmet({
@@ -66,7 +71,7 @@ app.use(function (req, res, next) {
 /****************************************************************
  Which environment
 ****************************************************************/
-const { isLocal, isDevelopment, isStaging } = getEnvironment();
+const { isLocal, isTest, isDevelopment, isStaging } = getEnvironment();
 
 if (isLocal) {
   log.info('Environment = local');
@@ -74,7 +79,7 @@ if (isLocal) {
 }
 if (isDevelopment) log.info('Environment = development');
 if (isStaging) log.info('Environment = staging');
-if (!isLocal && !isDevelopment && !isStaging)
+if (!isLocal && !isTest && !isDevelopment && !isStaging)
   log.info('Environment = staging or production');
 
 /****************************************************************
@@ -95,7 +100,7 @@ const requiredEnvVars = [
   'JSON_PAGE_SIZE',
 ];
 
-if (isLocal) {
+if (isLocal || isTest) {
   requiredEnvVars.push('DB_HOST');
   requiredEnvVars.push('DB_PORT');
 } else {
@@ -187,27 +192,6 @@ app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// for local testing of the production flow, use the same port as browersync to avoid
-// different port usage to confuse testers/developers
-if (port === 3001 && !isLocal) port = browserSyncPort;
-
-app.listen(port, function () {
-  if (isLocal) {
-    log.info(`Application listening on port ${browserSyncPort}`);
-
-    browserSync({
-      files: [path.join(__dirname, '/public/**')],
-      online: false,
-      open: false,
-      port: browserSyncPort,
-      proxy: 'localhost:' + port,
-      ui: false,
-    });
-  } else {
-    log.info(`Application listening on port ${port}`);
-  }
-});
-
 /****************************************************************
  Worse case error handling for 404 and 500 issues
  ****************************************************************/
@@ -220,3 +204,5 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
   res.status(500).sendFile(path.join(__dirname, 'public', '500.html'));
 });
+
+export default app;

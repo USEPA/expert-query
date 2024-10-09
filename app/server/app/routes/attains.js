@@ -23,7 +23,7 @@ const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE);
 const minDateTime = new Date(-8640000000000000);
 const maxDateTime = new Date(8640000000000000);
 
-const environment = getEnvironment();
+const { isLocal, isTest } = getEnvironment();
 
 // get config from private S3 bucket
 const privateConfig = await getPrivateConfig();
@@ -858,7 +858,7 @@ async function checkDomainValuesHealth(req, res) {
     let timeSinceLastUpdate = minDateTime;
 
     // verify file update date is within the last week
-    if (environment.isLocal) {
+    if (isLocal || isTest) {
       const path = resolve(__dirname, `../content-etl/domainValues`);
 
       // get hours since file last modified

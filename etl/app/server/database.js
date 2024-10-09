@@ -11,7 +11,7 @@ import { deleteDirectory, readS3File, syncDomainValues } from './s3.js';
 const { Client, Pool } = pg;
 const pgp = pgPromise({ capSQL: true });
 
-const environment = getEnvironment();
+const { isLocal } = getEnvironment();
 
 let database_host = '';
 let database_user = '';
@@ -23,7 +23,7 @@ const dbSsl = process.env.DB_SSL === 'true';
 
 const eqUser = process.env.EQ_USERNAME ?? 'eq';
 
-if (environment.isLocal) {
+if (isLocal) {
   log.info('Since local, using a localhost Postgres database.');
   database_host = process.env.DB_HOST;
   database_user = process.env.DB_USERNAME;
@@ -120,7 +120,7 @@ export async function checkLogTables() {
   try {
     await client.query('BEGIN');
 
-    if (!environment.isLocal) {
+    if (!isLocal) {
       // create aws_s3 extension, used for pulling in data from S3
       await client.query(
         'CREATE EXTENSION IF NOT EXISTS aws_s3 WITH SCHEMA pg_catalog CASCADE',
@@ -500,10 +500,7 @@ export async function runJob(s3Config, ignoreReady = false) {
   log.info(`Are MVs ready: ${readyResult.ready} | Julian ${s3Julian}`);
 
   // exit early if we aren't ready to run etl
-  if (
-    !s3Julian ||
-    (!environment.isLocal && !readyResult.ready && !ignoreReady)
-  ) {
+  if (!s3Julian || (!isLocal && !readyResult.ready && !ignoreReady)) {
     await endConnPool(pool);
     return;
   }
@@ -512,7 +509,7 @@ export async function runJob(s3Config, ignoreReady = false) {
   try {
     await runLoad(pool, s3Config, s3Julian, readyResult.logId);
     await trimSchema(pool, s3Config);
-    if (!environment.isLocal) await trimNationalDownloads(pool);
+    if (!isLocal) await trimNationalDownloads(pool);
     await updateEtlStatus(pool, 'database', 'success');
     await syncDomainValues(s3Config, pool);
   } catch (err) {
@@ -614,7 +611,7 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
 
     // Verify the etl was successfull and the data matches what we expect.
     // We skip this when running locally, since the row counts will never match.
-    if (!environment.isLocal) {
+    if (!isLocal) {
       await certifyEtlComplete(pool, profileStats, schemaId, schemaName);
     }
 
@@ -1016,7 +1013,7 @@ function getProfileEtl(
 
     // Extract, transform, and load the new data
     try {
-      if (environment.isLocal) {
+      if (isLocal) {
         const profileName = `profile_${tableName}`;
         let res = await extract(profileName, s3Config);
         let chunksProcessed = 0;

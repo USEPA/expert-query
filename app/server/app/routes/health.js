@@ -14,7 +14,7 @@ import {
 import { getS3Client } from '../utilities/s3.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const environment = getEnvironment();
+const { isLocal, isTest } = getEnvironment();
 
 export default function (app, basePath) {
   const router = express.Router();
@@ -44,7 +44,7 @@ export default function (app, basePath) {
       let timeSinceLastUpdate;
 
       // verify file update date is within the last 24 hours
-      if (environment.isLocal) {
+      if (isLocal || isTest) {
         const path = resolve(__dirname, `../content-etl/glossary.json`);
 
         // get hours since file last modified

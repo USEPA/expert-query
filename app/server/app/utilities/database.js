@@ -1,10 +1,9 @@
 import knexJs from 'knex';
 import pg from 'pg';
+import { getEnvironment } from '../utilities/environment.js';
 import { log } from '../utilities/logger.js';
 
-let isLocal = false;
-let isDevelopment = false;
-let isStaging = false;
+const { isLocal, isTest } = getEnvironment();
 
 let dbHost = '';
 let dbPort = '';
@@ -12,15 +11,8 @@ const dbName = process.env.DB_NAME ?? 'expert_query';
 const dbUser = process.env.DB_USERNAME;
 const dbPassword = process.env.DB_PASSWORD;
 const dbSsl = process.env.DB_SSL === 'true';
-console.log('dbSsl: ', dbSsl);
 
-if (process.env.NODE_ENV) {
-  isLocal = 'local' === process.env.NODE_ENV.toLowerCase();
-  isDevelopment = 'development' === process.env.NODE_ENV.toLowerCase();
-  isStaging = 'staging' === process.env.NODE_ENV.toLowerCase();
-}
-
-if (isLocal) {
+if (isLocal || isTest) {
   log.info('Since local, using a localhost Postgres database.');
   dbHost = process.env.DB_HOST;
   dbPort = process.env.DB_PORT;
