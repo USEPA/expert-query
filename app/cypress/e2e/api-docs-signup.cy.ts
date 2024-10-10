@@ -28,10 +28,11 @@ describe('API Documentation and API key Signup Pages', () => {
       .should('have.attr', 'href', '/expertquery/api-key-signup');
   });
 
-  it('Navigate directly to api key signup page', () => {
+  it('Navigate directly to api key signup page and verify signup_embed script was added', () => {
     cy.visit('/api-key-signup');
     cy.findByText('Sign up for an application programming interface (API)', {
       exact: false,
     }).should('be.visible');
+    cy.get('script[src="https://api.data.gov/static/javascripts/signup_embed.js"]').should('exist');
   });
 });

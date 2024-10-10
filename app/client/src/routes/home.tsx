@@ -1096,23 +1096,28 @@ function useProfile(
     [navigate],
   );
 
-  if (profileArg !== (profile?.key ?? null)) {
-    if (!profileArg) {
-      setProfile(null);
-      setProfileOption(null);
-    } else if (!(profileArg in profiles)) {
-      navigate('/404');
-    } else {
-      setProfile(profiles[profileArg]);
-      setProfileOption(
-        'dataProfile' in listOptions
-          ? listOptions.dataProfile.find(
-              (option) => option.value === profileArg,
-            ) ?? null
-          : null,
-      );
+  let navigateCalled = false;
+  useEffect(() => {
+    if (navigateCalled) return;
+    if (profileArg !== (profile?.key ?? null)) {
+      if (!profileArg) {
+        setProfile(null);
+        setProfileOption(null);
+      } else if (!(profileArg in profiles)) {
+        navigateCalled = true;
+        navigate('/404');
+      } else {
+        setProfile(profiles[profileArg]);
+        setProfileOption(
+          'dataProfile' in listOptions
+            ? listOptions.dataProfile.find(
+                (option) => option.value === profileArg,
+              ) ?? null
+            : null,
+        );
+      }
     }
-  }
+  }, [listOptions, navigate, profile, profileArg, profiles]);
 
   return { handleProfileChange, profile, profileOption };
 }
