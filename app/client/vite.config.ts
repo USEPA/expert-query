@@ -15,7 +15,7 @@ export default ({ mode }) => {
     mode === "development" ? "" : VITE_SERVER_BASE_PATH || "";
 
   return defineConfig({
-    base: '/',
+    base: serverBasePath,
     build: {
       outDir: 'build',
       sourcemap: true,

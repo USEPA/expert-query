@@ -2,10 +2,10 @@ import supertest from 'supertest';
 import app from '../app/app.js';
 
 async function valuesTest(url, fieldNames) {
-  for (let i = 0; i < fieldNames.length; i++) {
+  for (const fieldName of fieldNames) {
     const body = { text: '', limit: 20 };
     const response = await supertest(app)
-      .post(`${url}/${fieldNames[i]}`)
+      .post(`${url}/${fieldName}`)
       .send(body)
       .expect(200)
       .expect('Content-Type', /json/);
@@ -37,10 +37,6 @@ describe('API Attains Tests', () => {
   });
 
   test('POST /api/attains/sources should return data', async () => {
-    const body = {
-      filters: { confirmed: ['Y'], parameterGroup: ['OTHER CAUSE'] },
-    };
-
     await supertest(app)
       .post('/api/attains/sources')
       .expect(200)

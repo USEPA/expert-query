@@ -60,7 +60,7 @@ describe('API Tests', () => {
   });
 
   test('GET test checkClientRouteExists middleware', async () => {
-    const response = await supertest(app).get('/attains/test').expect(404);
+    await supertest(app).get('/attains/test').expect(404);
   });
 
   test('PUT should return 401 unauthorized', async () => {
