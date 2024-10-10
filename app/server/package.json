@@ -18,7 +18,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "start": "nodemon -r dotenv/config --inspect app/index.js dotenv_config_path=./.env.local",
+    "start": "nodemon -r dotenv/config --inspect app/server.js dotenv_config_path=./.env.local",
     "start_coverage": "nyc --silent node --env-file=./.env.local app/server.js",
     "test": "npx rimraf .nyc_output/out.json && npx rimraf coverage && node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --coverageDirectory='coverage'"
   },

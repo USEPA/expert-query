@@ -1,4 +1,3 @@
-import app from './app.js';
 import browserSync from 'browser-sync';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +8,14 @@ const { isLocal } = getEnvironment();
 
 const browserSyncPort = 3002;
 let port = process.env.PORT || 3001;
+
+let app;
+try {
+  app = (await import('./app.js')).default;
+} catch (err) {
+  log.error('Error starting server: ' + err.message);
+  process.exit();
+}
 
 // for local testing of the production flow, use the same port as browersync to avoid
 // different port usage to confuse testers/developers
