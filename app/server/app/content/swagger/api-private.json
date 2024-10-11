@@ -18,7 +18,7 @@
       "url": " http://localhost:{port}/api",
       "variables": {
         "port": {
-          "default": "9090"
+          "default": "3002"
         }
       }
     }

@@ -18,18 +18,14 @@
   "engines": {
     "node": "20.x"
   },
+  "type": "module",
   "scripts": {
-    "start": "react-scripts -r @cypress/instrument-cra start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "flow": "flow"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "@cypress/instrument-cra": "1.4.0",
-    "@testing-library/jest-dom": "6.4.6",
-    "@testing-library/react": "16.0.0",
-    "@testing-library/user-event": "14.5.2",
     "@types/classnames": "2.3.1",
     "@types/jest": "29.5.12",
     "@types/lodash": "4.17.5",
@@ -38,9 +34,19 @@
     "@types/react-dom": "18.3.0",
     "@types/react-window": "1.8.8",
     "@types/swagger-ui-react": "4.18.3",
+    "@typescript-eslint/eslint-plugin": "8.1.0",
+    "@typescript-eslint/parser": "8.1.0",
     "@uswds/compile": "1.1.0",
     "@uswds/uswds": "3.8.1",
-    "web-vitals": "4.1.1"
+    "@vitejs/plugin-react": "4.3.1",
+    "eslint": "9.9.0",
+    "eslint-plugin-react-hooks": "4.6.2",
+    "eslint-plugin-react-refresh": "0.4.9",
+    "typescript": "5.4.5",
+    "vite": "5.4.0",
+    "vite-plugin-istanbul": "6.0.2",
+    "vite-plugin-svgr": "4.2.0",
+    "vite-tsconfig-paths": "5.0.1"
   },
   "dependencies": {
     "@reach/dialog": "0.18.0",
@@ -51,37 +57,11 @@
     "react-dom": "18.3.1",
     "react-markdown": "9.0.1",
     "react-router-dom": "6.23.1",
-    "react-scripts": "5.0.1",
     "react-select": "5.8.0",
     "react-select-async-paginate": "0.7.4",
     "react-window": "1.8.10",
+    "regenerator-runtime": "0.14.0",
     "remark-gfm": "4.0.0",
-    "swagger-ui-react": "5.17.14",
-    "typescript": "5.4.5"
-  },
-  "proxy": "http://localhost:9090",
-  "lint-staged": {
-    "src/**/*.{js,json,css,md}": "prettier --write",
-    "../cypress/**/*.js": "prettier --write"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ],
-    "env": {
-      "worker": true
-    }
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "swagger-ui-react": "5.17.14"
   }
 }

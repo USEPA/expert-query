@@ -1,15 +1,11 @@
+import { clientUrl, serverUrl } from '../constants';
+
 describe('CopyBox', () => {
   beforeEach(() => {
     cy.visit('/');
     cy.selectProfile('Actions');
     cy.findByRole('button', { name: 'Advanced Queries' }).click();
   });
-
-  const location = window.location;
-  const origin =
-    location.hostname === 'localhost'
-      ? `${location.protocol}//${location.hostname}:3000`
-      : window.location.origin;
 
   const grantPermissions = () => {
     cy.wrap(
@@ -19,7 +15,7 @@ describe('CopyBox', () => {
           permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'],
           // make the permission tighter by allowing the current origin only
           // like "http://localhost:3000"
-          origin: window.location.origin,
+          origin: clientUrl,
         },
       }),
     );
@@ -60,7 +56,7 @@ describe('CopyBox', () => {
         .first()
         .focus()
         .realClick();
-      cy.clipboardValue(`${origin}/attains/actions?`);
+      cy.clipboardValue(`${clientUrl}/attains/actions?`);
     },
   );
 
@@ -77,7 +73,7 @@ describe('CopyBox', () => {
       const columnsValue =
         'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=parameterGroup&columns=parameter&columns=actionType&columns=actionId&columns=actionName&columns=actionAgency&columns=inIndianCountry&columns=includeInMeasure&columns=completionDate&columns=assessmentUnitId&columns=assessmentUnitName&columns=fiscalYearEstablished&columns=locationDescription&columns=waterSize&columns=waterSizeUnits&columns=planSummaryLink';
       cy.clipboardValue(
-        `${origin}/api/attains/actions?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
+        `${serverUrl}/api/attains/actions?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
       );
     },
   );
@@ -97,7 +93,7 @@ describe('CopyBox', () => {
       cy.clipboardValue(
         `curl -X POST --json ${JSON.stringify(
           `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
-        )} ${origin}/api/attains/actions -H "X-Api-Key: <YOUR_API_KEY>"`,
+        )} ${serverUrl}/api/attains/actions -H "X-Api-Key: <YOUR_API_KEY>"`,
       );
     },
   );

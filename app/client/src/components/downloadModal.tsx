@@ -1,14 +1,14 @@
 import { uniqueId } from 'lodash';
 import { Dialog } from '@reach/dialog';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ReactComponent as Close } from 'images/close.svg';
+import Close from 'images/close.svg?react';
 // components
 import { Alert } from 'components/alert';
 import { Loading, LoadingButtonIcon } from 'components/loading';
 // utils
 import { isAbort, postData, useAbort } from 'utils';
 // config
-import { serverUrl } from 'config';
+import { clientUrl } from 'config';
 // styles
 import '@reach/dialog/styles.css';
 // types
@@ -160,7 +160,7 @@ export function DownloadModal<D extends PostData>({
                     <p>
                       Please refine the search, or visit the{' '}
                       <a
-                        href={`${serverUrl}/national-downloads${
+                        href={`${clientUrl}/national-downloads${
                           dataId ? '#' + dataId : ''
                         }`}
                         target="_blank"

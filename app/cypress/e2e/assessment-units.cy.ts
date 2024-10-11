@@ -1,3 +1,5 @@
+import { clientUrl, serverUrl } from '../constants';
+
 describe('Data Profile Assessment Units', () => {
   beforeEach(() => {
     cy.visit('/');
@@ -10,28 +12,22 @@ describe('Data Profile Assessment Units', () => {
   const columnsValueCurl =
     '"columns":["objectId","region","state","organizationType","organizationId","organizationName","waterType","locationTypeCode","locationText","useClassName","assessmentUnitId","assessmentUnitName","assessmentUnitStatus","reportingCycle","cycleId","locationDescription","sizeSource","sourceScale","waterSize","waterSizeUnits"]';
 
-  const location = window.location;
-  const origin =
-    location.hostname === 'localhost'
-      ? `${location.protocol}//${location.hostname}:3000`
-      : window.location.origin;
-
   it('Verify copy box text flavor 1', () => {
     const queryValue = 'assessmentUnitStatus=A';
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["A"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -51,17 +47,17 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2"],"assessmentUnitStatus":["R"],"locationText":["Buffalo County"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -84,17 +80,17 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["R"],"organizationId":["WIDNR"],"waterType":["OCEAN"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -121,17 +117,17 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitStatus":["H","A"],"organizationId":["MTDEQ"],"useClassName":["A-1"],"waterType":["LAKE/RESERVOIR/POND"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -171,17 +167,17 @@ describe('Data Profile Assessment Units', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/assessmentUnits?${queryValue}`,
+      `${clientUrl}/attains/assessmentUnits?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnits?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AL-Gulf-of-Mexico-2","WI10000917"],"assessmentUnitStatus":["A","R","H"],"locationText":["Green County"],"organizationId":["OKDEQ","TDECWR"],"region":["05"],"state":["CO"],"useClassName":["SE3"],"waterType":["FLOWAGE"]},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/assessmentUnits -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 });

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 // components
 import { Loading } from 'components/loading';
 // config
-import { serverUrl } from 'config';
+import { clientUrl } from 'config';
 // contexts
 import { useContentState } from 'contexts/content';
 
@@ -31,7 +31,7 @@ export function ApiKeySignup() {
         <h2>What Next?</h2>
         <ul>
           <li>
-          Explore the <b>Expert Query (EQ)</b> web service <a href='${serverUrl}/api-documentation'>documentation</a>.
+          Explore the <b>Expert Query (EQ)</b> web service <a href='${clientUrl}/api-documentation'>documentation</a>.
           </li>
         </ul>
     `,
@@ -44,7 +44,7 @@ export function ApiKeySignup() {
       <p>
         Sign up for an application programming interface (API) key to access and
         use <b>Expert Query</b>'s web services, then explore the web service{' '}
-        <Link to={`${serverUrl}/api-documentation`}>documentation</Link>.
+        <Link to={`${clientUrl}/api-documentation`}>documentation</Link>.
       </p>
 
       {loading && <Loading />}
