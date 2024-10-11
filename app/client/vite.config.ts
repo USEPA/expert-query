@@ -51,9 +51,6 @@ export default ({ mode }) => {
     server: {
       open: true,
       port: 3000,
-      fs: {
-        strict: false,
-      },
     },
   });
 };
