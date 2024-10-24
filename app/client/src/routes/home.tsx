@@ -9,6 +9,7 @@ import {
 import Select from 'react-select';
 import { AsyncPaginate, wrapMenuList } from 'react-select-async-paginate';
 import Download from 'images/file_download.svg?react';
+import Search from 'images/search.svg?react';
 // components
 import { AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -16,7 +17,7 @@ import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
 import { InfoTooltip } from 'components/tooltip';
 import { InPageNavAnchor, NumberedInPageNavLabel } from 'components/inPageNav';
-import { Loading } from 'components/loading';
+import { Loading, LoadingButtonIcon } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
 import { MenuList as CustomMenuList } from 'components/menuList';
@@ -37,6 +38,7 @@ import type { GroupBase } from 'react-select';
 import type { LoadOptions } from 'react-select-async-paginate';
 import type {
   DomainOptions,
+  FetchState,
   MultiOptionField,
   Option,
   SingleOptionField,
@@ -293,6 +295,31 @@ export function QueryBuilder() {
     downloadConfirmationVisible || clearConfirmationVisible,
   );
 
+  const [preview, setPreview] = useState<
+    FetchState<Array<Record<string, Value | null>>>
+  >({
+    data: null,
+    status: 'idle',
+  });
+  const executeSearchPreview = () => {
+    if (preview.status === 'pending') return;
+
+    setPreview({ data: null, status: 'pending' });
+    postData({
+      url: `${apiUrl}/${profile.resource}/preview`,
+      apiKey,
+      data: queryParams,
+    })
+      .then((res) => {
+        setPreview({ data: res, status: 'success' });
+      })
+      .catch((err) => {
+        if (isAbort(err)) return;
+        console.error(err);
+        setPreview({ data: null, status: 'failure' });
+      });
+  };
+
   const navigate = useNavigate();
 
   return (
@@ -356,6 +383,81 @@ export function QueryBuilder() {
           sourceState={sourceState}
           staticOptions={staticOptions}
         />
+
+        {profile.key === 'actionsDocuments' && (
+          <>
+            <div className="display-flex flex-justify-center margin-top-3 width-full">
+              {preview.status === 'pending' ? (
+                <button
+                  className="cursor-default display-flex flex-justify-center height-5 usa-button hover:bg-primary"
+                  onClick={undefined}
+                  type="button"
+                >
+                  Working <LoadingButtonIcon />
+                </button>
+              ) : (
+                <button
+                  className="display-flex flex-justify-center usa-button"
+                  onClick={executeSearchPreview}
+                  type="button"
+                >
+                  <Search
+                    aria-hidden="true"
+                    className="height-205 margin-right-1 usa-icon width-205"
+                    role="img"
+                    focusable="false"
+                  />
+                  <span className="margin-y-auto">Search</span>
+                </button>
+              )}
+            </div>
+
+            {preview.status === 'success' && (
+              <>
+                {preview.data.length === 0 ? (
+                  <Alert type="info">No results found</Alert>
+                ) : (
+                  <div className="overflow-scroll maxh-mobile tablet:maxh-tablet">
+                    <table className="usa-table usa-table--striped">
+                      <thead>
+                        <tr>
+                          <th scope="col">Rank</th>
+                          <th scope="col">Document URL</th>
+                          <th scope="col">Action ID</th>
+                          <th scope="col">Region</th>
+                          <th scope="col">State</th>
+                          <th scope="col">Organization ID</th>
+                          <th scope="col">HMW Plan Summary URL</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {preview.data.map((row) => (
+                          <tr key={row.objectId}>
+                            <td>{row.rank}</td>
+                            <td>
+                              <a
+                                href={row.docUrl as string}
+                                target="_blank"
+                                rel="noopener,noreferrer"
+                              >
+                                {row.docFilename}
+                              </a>
+                            </td>
+                            <td>{row.actionId}</td>
+                            <td>{row.region}</td>
+                            <td>{row.state}</td>
+                            <td>{row.organizationId}</td>
+                            <td></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
 
         <InPageNavAnchor
           id="download"

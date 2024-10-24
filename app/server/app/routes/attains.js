@@ -19,6 +19,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const jsonPageSize = parseInt(process.env.JSON_PAGE_SIZE);
 const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE);
+const previewSize = parseInt(process.env.PREVIEW_SIZE || 500);
 
 const minDateTime = new Date(-8640000000000000);
 const maxDateTime = new Date(8640000000000000);
@@ -341,8 +342,7 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
         )
       : null;
 
-  // build select statement of the query
-  if (!countOnly) {
+  function getSelectText() {
     // filter down to requested columns, if the user provided that option
     const columnsToReturn = [];
     const columns = queryParams.columns ?? [];
@@ -358,21 +358,14 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
       columnsToReturn.length > 0
         ? columnsToReturn
         : profile.columns.filter((col) => col.output !== false);
-    const selectText = selectColumns.map((col) =>
-      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
+    return selectColumns.map((col) =>
+      col.name === col.alias ? col.name : `${col.name} AS "${col.alias}"`,
     );
-    if (profile.tableName === 'actions_documents') {
-      const rankText = 'ts_rank_cd(doc_tsv, query, 1 | 32)';
-      query
-        .select(
-          knex.raw(
-            `to_char(${rankText} * 100, 'FM999') || '%' AS rank, ${selectText}`,
-          ),
-        )
-        .orderBy(knex.raw(rankText), 'desc');
-    } else {
-      query.select(selectText).orderBy('objectid', 'asc');
-    }
+  }
+
+  // build select statement of the query
+  if (!countOnly) {
+    query.select(getSelectText()).orderBy('objectid', 'asc');
   }
 
   // build where clause of the query
@@ -389,6 +382,17 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
           [exactArg],
         );
         query.whereRaw('query @@ doc_tsv');
+        if (!countOnly) {
+          const rankText = 'ts_rank_cd(doc_tsv, query, 1 | 32)';
+          const selectText = getSelectText();
+          query
+            .select(
+              knex.raw(
+                `to_char(${rankText} * 100, 'FM999') || '%' AS rank, ${selectText}`,
+              ),
+            )
+            .orderBy(knex.raw(rankText), 'desc');
+        }
       } else {
         appendToWhere(query, col.name, exactArg);
       }
@@ -399,97 +403,37 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     // add the "latest" subquery to the where clause
     query.whereIn(['organizationid', latestColumn.name], subQuery);
   }
-
-  log.debug('query:', query.toString());
 }
 
-async function executeDocSearch(profile, req, res, preview = false) {
+/**
+ * Runs a query against the provided profile name and streams the a portion
+ * of the result to the client as inline json.
+ * @param {Object} profile definition of the profile being queried
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+async function executeQueryPreview(profile, req, res) {
   const metadataObj = populateMetdataObjFromRequest(req);
 
-  // output types csv, tab-separated, Excel, or JSON
   try {
     const queryParams = getQueryParams(req);
     validateQueryParams(queryParams, profile);
 
-    const { options: { limit = maxQuerySize } = {} } = queryParams;
-
-    if (limit > maxQuerySize) {
-      throw new LimitExceededException(queryParams.options.limit);
-    }
-
     const query = knex
       .withSchema(req.activeSchema)
       .from(profile.tableName)
-      .limit(limit);
-
-    // verify atleast 1 parameter was provided, excluding the columns parameter
-    if (
-      (!queryParams.columns || queryParams.columns.length === 0) &&
-      Object.keys(queryParams.filters).length === 0 &&
-      Object.keys(queryParams.options).length === 0
-    ) {
-      throw new NoParametersException('Please provide at least one parameter');
-    }
+      .limit(previewSize);
 
     parseCriteria(req, query, profile, queryParams);
 
-    // Check that the query doesn't exceed the MAX_QUERY_SIZE.
-    if (!queryParams.options.limit && (await exceedsMaxSize(query))) {
-      return res.status(200).json({
-        message: `The current query exceeds the maximum query size of ${maxQuerySize.toLocaleString()} rows. Please refine the search, or visit ${
-          process.env.SERVER_URL
-        }/national-downloads to download a compressed dataset`,
-      });
-    }
+    const queryRes = await queryPool(query);
 
-    const format = queryParams.options.format ?? queryParams.options.f;
-    if (['csv', 'tsv', 'xlsx'].includes(format)) {
-      await streamFile(query, req, res, format, profile.tableName);
-    } else {
-      await createStream(query, req, res, 'json');
-    }
+    return res.status(200).json(queryRes);
   } catch (error) {
     log.error(
       formatLogMsg(
         metadataObj,
         `Failed to get data from the "${profile.tableName}" table:`,
-        error,
-      ),
-    );
-    return res
-      .status(error.httpStatusCode ?? 500)
-      .json({ error: error.toString() });
-  }
-}
-
-async function executeDocSearchCountOnly(profile, req, res) {
-  const metadataObj = populateMetdataObjFromRequest(req);
-
-  // always return json with the count
-  try {
-    const queryParams = getQueryParams(req);
-    validateQueryParams(queryParams, profile);
-
-    // query against the ..._count mv when no filters are applied, for better performance
-    /*if (Object.keys(queryParams.filters).length === 0) {
-      const query = knex
-        .withSchema(req.activeSchema)
-        .from(`${profile.tableName}_count`);
-      const count = (await queryPool(query, true)).count;
-      return res.status(200).json({ count, maxCount: maxQuerySize });
-    }*/
-
-    const query = knex.withSchema(req.activeSchema).from(profile.tableName);
-
-    parseCriteria(req, query, profile, queryParams, true);
-
-    const count = (await queryPool(query.count(), true)).count;
-    return res.status(200).json({ count, maxCount: maxQuerySize });
-  } catch (error) {
-    log.error(
-      formatLogMsg(
-        metadataObj,
-        `Failed to get count from the "${profile.tableName}" table:`,
         error,
       ),
     );
@@ -1040,53 +984,36 @@ export default function (app, basePath) {
         await executeValuesQuery(profile, req, res);
       });
 
-      if (profileName === 'actionsDocuments') {
-        // create get requests
-        router.get(`/${profileName}`, async function (req, res) {
-          await executeDocSearch(profile, req, res);
-        });
-        router.get(`/${profileName}/count`, async function (req, res) {
-          await executeDocSearchCountOnly(profile, req, res);
-        });
+      router.post(`/${profileName}/preview`, async function (req, res) {
+        await executeQueryPreview(profile, req, res);
+      });
 
-        // create post requests
-        router.post(`/${profileName}`, async function (req, res) {
-          await executeDocSearch(profile, req, res);
-        });
-        router.post(`/${profileName}/count`, async function (req, res) {
-          await executeDocSearchCountOnly(profile, req, res);
-        });
-      } else {
-        // create get requests
-        router.get(`/${profileName}`, async function (req, res) {
-          await executeQuery(profile, req, res);
-        });
-        router.get(`/${profileName}/count`, async function (req, res) {
-          await executeQueryCountOnly(profile, req, res);
-        });
+      // create get requests
+      router.get(`/${profileName}`, async function (req, res) {
+        await executeQuery(profile, req, res);
+      });
+      router.get(`/${profileName}/count`, async function (req, res) {
+        await executeQueryCountOnly(profile, req, res);
+      });
 
-        // create post requests
-        router.post(`/${profileName}`, async function (req, res) {
-          await executeQuery(profile, req, res);
-        });
-        router.post(`/${profileName}/count`, async function (req, res) {
-          await executeQueryCountOnly(profile, req, res);
-        });
+      // create post requests
+      router.post(`/${profileName}`, async function (req, res) {
+        await executeQuery(profile, req, res);
+      });
+      router.post(`/${profileName}/count`, async function (req, res) {
+        await executeQueryCountOnly(profile, req, res);
+      });
 
-        // get bean counts
-        router.get(
-          `/${profileName}/countPerOrgCycle`,
-          async function (req, res) {
-            await executeQueryCountPerOrgCycle(profile, req, res);
-          },
-        );
-        router.post(
-          `/${profileName}/countPerOrgCycle`,
-          async function (req, res) {
-            await executeQueryCountPerOrgCycle(profile, req, res);
-          },
-        );
-      }
+      // get bean counts
+      router.get(`/${profileName}/countPerOrgCycle`, async function (req, res) {
+        await executeQueryCountPerOrgCycle(profile, req, res);
+      });
+      router.post(
+        `/${profileName}/countPerOrgCycle`,
+        async function (req, res) {
+          await executeQueryCountPerOrgCycle(profile, req, res);
+        },
+      );
     },
   );
 

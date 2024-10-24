@@ -113,7 +113,9 @@ function useInPageNavDispatch() {
 ## Components
 */
 
-export function InPageNavLayout({ children }: Readonly<{ children: ReactNode }>) {
+export function InPageNavLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
     <InPageNavProvider>
       <InPageNavLayoutInner>{children}</InPageNavLayoutInner>
@@ -168,7 +170,7 @@ function InPageNavLayoutInner({ children }: Readonly<{ children: ReactNode }>) {
           </nav>
         </aside>
       )}
-      <div className="flex-fill width-full">{children}</div>
+      <div className="flex-fill overflow-hidden width-full">{children}</div>
     </div>
   );
 }
