@@ -195,6 +195,111 @@
       }
     ]
   },
+  "actionsDocuments": {
+    "tableName": "actions_documents",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS search.actions_documents ( objectid serial PRIMARY KEY, actionid VARCHAR(45), actionname VARCHAR(255), doc_id text, doc_txt text, doc_url text, doc_filename text, doc_errors text, organizationid VARCHAR(30), organizationname VARCHAR(150), organizationtype VARCHAR(30), region VARCHAR(2), state VARCHAR(4000) )",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "actionid",
+        "alias": "actionId"
+      },
+      {
+        "name": "actionname",
+        "alias": "actionName"
+      },
+      {
+        "name": "doc_id",
+        "alias": "docId"
+      },
+      {
+        "name": "doc_txt",
+        "alias": "docTxt",
+        "output": false
+      },
+      {
+        "name": "doc_url",
+        "alias": "docUrl"
+      },
+      {
+        "name": "doc_filename",
+        "alias": "docFilename"
+      },
+      {
+        "name": "doc_errors",
+        "alias": "docErrors"
+      },
+      {
+        "name": "organizationid",
+        "alias": "organizationId"
+      },
+      {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType",
+        "skipIndex": true
+      },
+      {
+        "name": "region",
+        "alias": "region"
+      },
+      {
+        "name": "state",
+        "alias": "state"
+      }
+    ],
+    "materializedViewColumns": [
+      {
+        "name": "statename",
+        "alias": "stateName"
+      }
+    ],
+    "materializedViews": [
+      {
+        "name": "actionsdocuments_actions",
+        "columns": [
+          {
+            "name": "actionid"
+          },
+          {
+            "name": "actionname"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "organizationtype"
+          },
+          {
+            "name": "region"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "statename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "states",
+            "joinKey": ["state", "statecode"]
+          }
+        ]
+      }
+    ]
+  },
   "assessments": {
     "tableName": "assessments",
     "idColumn": "objectid",

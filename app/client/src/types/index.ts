@@ -26,7 +26,7 @@ type BaseFilterFieldConfig = {
   label: string;
   secondaryKey?: string;
   source?: string;
-  type: 'date' | 'multiselect' | 'select' | 'year';
+  type: 'date' | 'multiselect' | 'select' | 'text' | 'year';
 };
 
 // Fields provided in the `domainValues` of the Content context
@@ -84,7 +84,13 @@ export type SingleOptionField = BaseFilterFieldConfig & {
   type: 'select';
 };
 
-export type SingleValueField = BaseFilterFieldConfig & {
+export type SingleValueField = SingleValueTextField | SingleValueRangeField;
+
+export type SingleValueTextField = BaseFilterFieldConfig & {
+  type: 'text';
+};
+
+export type SingleValueRangeField = BaseFilterFieldConfig & {
   boundary: 'low' | 'high';
   domain: string;
   type: 'date' | 'year';

@@ -45,10 +45,10 @@ class InvalidParameterException extends Error {
 }
 
 class LimitExceededException extends Error {
-  constructor(limit) {
+  constructor(value, maximum = maxQuerySize) {
     super();
     this.httpStatusCode = 400;
-    this.message = `The provided limit (${limit}) exceeds the maximum ${process.env.MAX_VALUES_QUERY_SIZE} allowable limit.`;
+    this.message = `The provided limit (${value.toLocaleString()}) exceeds the maximum ${maximum.toLocaleString()} allowable limit.`;
   }
 }
 
@@ -100,10 +100,12 @@ function getColumnsFromAliases(columnAliases, profile) {
 }
 
 /** Get a subquery if "Latest" is used
- * @param {Object} query KnexJS query object
+ * @param {Express.Request} req
+ * @param {Object} profile definition of the profile being queried
+ * @param {Object} params URL query value
  * @param {Object} columnName name of the "Latest" column
  * @param {Object} columnType data type of the "Latest" column
- * @returns {Object} a different KnexJS query object
+ * @returns {Object} an updated KnexJS query object
  */
 function createLatestSubquery(req, profile, params, columnName, columnType) {
   if (!['date', 'numeric', 'timestamptz'].includes(columnType)) return;
@@ -155,13 +157,20 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
 /**
  * Creates a stream object from a query.
  * @param {Object} query KnexJS query object
- * @param {Express.Response} req
+ * @param {Express.Request} req
  * @param {Express.Response} res
  * @param {string} format the format of the file attachment
  * @param {Object} excelDoc Excel workbook and worksheet objects
  * @param {number} nextId starting objectid for the next page
  */
-async function createStream(query, req, res, format, wbObject, nextId) {
+async function createStream(
+  query,
+  req,
+  res,
+  format,
+  wbObject = null,
+  nextId = null,
+) {
   pool.connect((err, client, done) => {
     if (err) throw err;
 
@@ -292,7 +301,7 @@ function getQueryParams(req) {
   }
 
   // organize GET parameters to follow what we expect from POST
-  const optionsParams = ['f', 'format', 'startId'];
+  const optionsParams = ['f', 'format', 'limit', 'startId'];
   const parameters = {
     filters: {},
     options: {},
@@ -311,6 +320,7 @@ function getQueryParams(req) {
 /**
  * Builds the select clause and where clause of the query based on the provided
  * profile name.
+ * @param {express.Request} req
  * @param {Object} query KnexJS query object
  * @param {Object} profile definition of the profile being queried
  * @param {Object} queryParams URL query value
@@ -339,16 +349,30 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     if (!columns.includes('objectId')) columns.push('objectId');
     columns.forEach((col) => {
       const profileCol = profile.columns.find((pc) => pc.alias === col);
-      if (profileCol) columnsToReturn.push(profileCol);
+      if (profileCol && profileCol.output !== false)
+        columnsToReturn.push(profileCol);
     });
 
     // build the select query
     const selectColumns =
-      columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
+      columnsToReturn.length > 0
+        ? columnsToReturn
+        : profile.columns.filter((col) => col.output !== false);
     const selectText = selectColumns.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
     );
-    query.select(selectText).orderBy('objectid', 'asc');
+    if (profile.tableName === 'actions_documents') {
+      const rankText = 'ts_rank_cd(doc_tsv, query, 1 | 32)';
+      query
+        .select(
+          knex.raw(
+            `to_char(${rankText} * 100, 'FM999') || '%' AS rank, ${selectText}`,
+          ),
+        )
+        .orderBy(knex.raw(rankText), 'desc');
+    } else {
+      query.select(selectText).orderBy('objectid', 'asc');
+    }
   }
 
   // build where clause of the query
@@ -359,13 +383,119 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
     } else if (exactArg !== undefined) {
-      appendToWhere(query, col.name, queryParams.filters[col.alias]);
+      if (profile.tableName === 'actions_documents' && col.alias === 'docTxt') {
+        query.fromRaw(
+          `${req.activeSchema}.${profile.tableName}, websearch_to_tsquery(?) query`,
+          [exactArg],
+        );
+        query.whereRaw('query @@ doc_tsv');
+      } else {
+        appendToWhere(query, col.name, exactArg);
+      }
     }
   });
 
   if (subQuery) {
     // add the "latest" subquery to the where clause
     query.whereIn(['organizationid', latestColumn.name], subQuery);
+  }
+
+  log.debug('query:', query.toString());
+}
+
+async function executeDocSearch(profile, req, res, preview = false) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
+  // output types csv, tab-separated, Excel, or JSON
+  try {
+    const queryParams = getQueryParams(req);
+    validateQueryParams(queryParams, profile);
+
+    const { options: { limit = maxQuerySize } = {} } = queryParams;
+
+    if (limit > maxQuerySize) {
+      throw new LimitExceededException(queryParams.options.limit);
+    }
+
+    const query = knex
+      .withSchema(req.activeSchema)
+      .from(profile.tableName)
+      .limit(limit);
+
+    // verify atleast 1 parameter was provided, excluding the columns parameter
+    if (
+      (!queryParams.columns || queryParams.columns.length === 0) &&
+      Object.keys(queryParams.filters).length === 0 &&
+      Object.keys(queryParams.options).length === 0
+    ) {
+      throw new NoParametersException('Please provide at least one parameter');
+    }
+
+    parseCriteria(req, query, profile, queryParams);
+
+    // Check that the query doesn't exceed the MAX_QUERY_SIZE.
+    if (!queryParams.options.limit && (await exceedsMaxSize(query))) {
+      return res.status(200).json({
+        message: `The current query exceeds the maximum query size of ${maxQuerySize.toLocaleString()} rows. Please refine the search, or visit ${
+          process.env.SERVER_URL
+        }/national-downloads to download a compressed dataset`,
+      });
+    }
+
+    const format = queryParams.options.format ?? queryParams.options.f;
+    if (['csv', 'tsv', 'xlsx'].includes(format)) {
+      await streamFile(query, req, res, format, profile.tableName);
+    } else {
+      await createStream(query, req, res, 'json');
+    }
+  } catch (error) {
+    log.error(
+      formatLogMsg(
+        metadataObj,
+        `Failed to get data from the "${profile.tableName}" table:`,
+        error,
+      ),
+    );
+    return res
+      .status(error.httpStatusCode ?? 500)
+      .json({ error: error.toString() });
+  }
+}
+
+async function executeDocSearchCountOnly(profile, req, res) {
+  const metadataObj = populateMetdataObjFromRequest(req);
+
+  // always return json with the count
+  try {
+    const queryParams = getQueryParams(req);
+    validateQueryParams(queryParams, profile);
+
+    // query against the ..._count mv when no filters are applied, for better performance
+    /*if (Object.keys(queryParams.filters).length === 0) {
+      const query = knex
+        .withSchema(req.activeSchema)
+        .from(`${profile.tableName}_count`);
+      const count = (await queryPool(query, true)).count;
+      return res.status(200).json({ count, maxCount: maxQuerySize });
+    }*/
+
+    const query = knex.withSchema(req.activeSchema).from(profile.tableName);
+
+    parseCriteria(req, query, profile, queryParams, true);
+
+    const count = (await queryPool(query.count(), true)).count;
+    return res.status(200).json({ count, maxCount: maxQuerySize });
+  } catch (error) {
+    log.error(
+      formatLogMsg(
+        metadataObj,
+        `Failed to get count from the "${profile.tableName}" table:`,
+        error,
+      ),
+    );
+    return res
+      .status(error.httpStatusCode ?? 500)
+      .json({ error: error.toString() });
   }
 }
 
@@ -436,7 +566,7 @@ async function executeQuery(profile, req, res) {
 /**
  * Throws an error if multiple instances of a parameter were provided
  * for an option or filter that accepts a single argument only
- * @param {Object} queryFilters URL query value for filters
+ * @param {Object} queryParams URL query value for filters
  * @param {Object} profile definition of the profile being queried
  */
 function validateQueryParams(queryParams, profile) {
@@ -547,7 +677,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
     log.error(
       formatLogMsg(
         metadataObj,
-        `Failed to get counts per organizaiton and reporting cycle from the "${profile.tableName}" table:`,
+        `Failed to get counts per organization and reporting cycle from the "${profile.tableName}" table:`,
         error,
       ),
     );
@@ -559,20 +689,14 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
 
 /**
  * Retrieves the domain values for a single table column.
+ * @param {Object} profile definition of the profile being queried
  * @param {express.Request} req
  * @param {express.Response} res
  */
-async function executeValuesQuery(req, res) {
+async function executeValuesQuery(profile, req, res) {
   const metadataObj = populateMetdataObjFromRequest(req);
 
   try {
-    const profile = privateConfig.tableConfig[req.params.profile];
-    if (!profile) {
-      return res
-        .status(404)
-        .json({ message: 'The requested profile does not exist' });
-    }
-
     const { additionalColumns, ...params } = getQueryParamsValues(req);
 
     if (!params.text && !params.limit) {
@@ -730,7 +854,7 @@ async function queryColumnValues(profile, columns, params, schema) {
 
   const maxValuesQuerySize = parseInt(process.env.MAX_VALUES_QUERY_SIZE);
   if (params.limit > maxValuesQuerySize) {
-    throw new LimitExceededException(params.limit);
+    throw new LimitExceededException(params.limit, maxValuesQuerySize);
   }
   query.limit(params.limit ?? maxValuesQuerySize);
 
@@ -911,47 +1035,68 @@ export default function (app, basePath) {
 
   Object.entries(privateConfig.tableConfig).forEach(
     ([profileName, profile]) => {
-      // create get requests
-      router.get(`/${profileName}`, async function (req, res) {
-        await executeQuery(profile, req, res);
-      });
-      router.get(`/${profileName}/count`, async function (req, res) {
-        await executeQueryCountOnly(profile, req, res);
-      });
-
-      // create post requests
-      router.post(`/${profileName}`, async function (req, res) {
-        await executeQuery(profile, req, res);
-      });
-      router.post(`/${profileName}/count`, async function (req, res) {
-        await executeQueryCountOnly(profile, req, res);
-      });
-
       // get column domain values
-      router.post('/:profile/values/:column', async function (req, res) {
-        await executeValuesQuery(req, res);
+      router.post(`/${profileName}/values/:column`, async function (req, res) {
+        await executeValuesQuery(profile, req, res);
       });
 
-      // get bean counts
-      router.get(`/${profileName}/countPerOrgCycle`, async function (req, res) {
-        await executeQueryCountPerOrgCycle(profile, req, res);
-      });
-      router.post(
-        `/${profileName}/countPerOrgCycle`,
-        async function (req, res) {
-          await executeQueryCountPerOrgCycle(profile, req, res);
-        },
-      );
+      if (profileName === 'actionsDocuments') {
+        // create get requests
+        router.get(`/${profileName}`, async function (req, res) {
+          await executeDocSearch(profile, req, res);
+        });
+        router.get(`/${profileName}/count`, async function (req, res) {
+          await executeDocSearchCountOnly(profile, req, res);
+        });
 
-      router.get('/health/etlDatabase', async function (req, res) {
-        await checkDatabaseHealth(req, res);
-      });
+        // create post requests
+        router.post(`/${profileName}`, async function (req, res) {
+          await executeDocSearch(profile, req, res);
+        });
+        router.post(`/${profileName}/count`, async function (req, res) {
+          await executeDocSearchCountOnly(profile, req, res);
+        });
+      } else {
+        // create get requests
+        router.get(`/${profileName}`, async function (req, res) {
+          await executeQuery(profile, req, res);
+        });
+        router.get(`/${profileName}/count`, async function (req, res) {
+          await executeQueryCountOnly(profile, req, res);
+        });
 
-      router.get('/health/etlDomainValues', async function (req, res) {
-        await checkDomainValuesHealth(req, res);
-      });
+        // create post requests
+        router.post(`/${profileName}`, async function (req, res) {
+          await executeQuery(profile, req, res);
+        });
+        router.post(`/${profileName}/count`, async function (req, res) {
+          await executeQueryCountOnly(profile, req, res);
+        });
+
+        // get bean counts
+        router.get(
+          `/${profileName}/countPerOrgCycle`,
+          async function (req, res) {
+            await executeQueryCountPerOrgCycle(profile, req, res);
+          },
+        );
+        router.post(
+          `/${profileName}/countPerOrgCycle`,
+          async function (req, res) {
+            await executeQueryCountPerOrgCycle(profile, req, res);
+          },
+        );
+      }
     },
   );
+
+  router.get('/health/etlDatabase', async function (req, res) {
+    await checkDatabaseHealth(req, res);
+  });
+
+  router.get('/health/etlDomainValues', async function (req, res) {
+    await checkDomainValuesHealth(req, res);
+  });
 
   app.use(`${basePath}api/attains`, router);
 }

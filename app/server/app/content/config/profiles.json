@@ -30,6 +30,27 @@
     "label": "Actions",
     "resource": "actions"
   },
+  "actionsDocuments": {
+    "key": "actionsDocuments",
+    "description": "Contains information on documents associated with actions to restore and protect water quality.",
+    "columns": [
+      "objectId",
+      "actionId",
+      "actionName",
+      "docId",
+      "docUrl",
+      "docFilename",
+      "docErrors",
+      "docTxt",
+      "organizationId",
+      "organizationName",
+      "organizationType",
+      "region",
+      "state"
+    ],
+    "label": "Actions Document Search",
+    "resource": "actionsDocuments"
+  },
   "assessments": {
     "key": "assessments",
     "description": "Contains detailed information on waters assessed under Section 305(b) of the Clean Water Act and waters listed as impaired under Section 303(d) of the Clean Water Act. This includes assessed uses and parameter attainments.",

@@ -41,6 +41,7 @@ import type {
   Option,
   SingleOptionField,
   SingleValueField,
+  SingleValueRangeField,
   StaticOptions,
   Status,
   Value,
@@ -587,7 +588,8 @@ function FilterFieldInputs({
               otherField.domain === fieldConfig.domain,
           );
           // All range inputs should have a high and a low boundary field
-          if (!pairedField || !isSingleValueField(pairedField)) return null;
+          if (!pairedField || !isSingleValueRangeField(pairedField))
+            return null;
 
           return [
             <RangeFilter
@@ -610,6 +612,40 @@ function FilterFieldInputs({
             />,
             fieldConfig.domain,
           ];
+        case 'text':
+          return [
+            <div className="margin-top-2" key={fieldConfig.key}>
+              <span className="display-flex flex-align-center line-height-sans-1">
+                <label
+                  className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
+                  htmlFor={`input-${fieldConfig.key}`}
+                >
+                  {fieldConfig.label}
+                </label>
+                {tooltip && (
+                  <InfoTooltip
+                    description={`${fieldConfig.label} tooltip`}
+                    text={tooltip}
+                    className="margin-left-05"
+                  />
+                )}
+              </span>
+              <div className="margin-top-1">
+                <input
+                  className="border border-gray-30 radius-md usa-input maxw-none width-full"
+                  id={`input-${fieldConfig.key}`}
+                  onChange={
+                    filterHandlers[fieldConfig.key] as SingleValueInputHandler
+                  }
+                  title={fieldConfig.label}
+                  placeholder="Text..."
+                  type="text"
+                  value={filterState[fieldConfig.key] as string}
+                />
+              </div>
+            </div>,
+            fieldConfig.key,
+          ];
         default:
           return null;
       }
@@ -618,11 +654,17 @@ function FilterFieldInputs({
 
   return (
     <div className="grid-gap-2 grid-row">
-      {fieldsJsx.map(([field, key]) => (
-        <div className="desktop:grid-col-4 tablet:grid-col-6" key={key}>
-          {field}
-        </div>
-      ))}
+      {fieldsJsx.map(([field, key]) =>
+        key === 'docTxt' ? (
+          <div className="width-full" key={key}>
+            {field}
+          </div>
+        ) : (
+          <div className="desktop:grid-col-4 tablet:grid-col-6" key={key}>
+            {field}
+          </div>
+        ),
+      )}
     </div>
   );
 }
@@ -1683,8 +1725,14 @@ function isSingleOptionField(field: FilterField): field is SingleOptionField {
 }
 
 // Type narrowing
-function isSingleValueField(field: FilterField): field is SingleValueField {
+function isSingleValueRangeField(
+  field: FilterField,
+): field is SingleValueRangeField {
   return field.type === 'date' || field.type === 'year';
+}
+
+function isSingleValueField(field: FilterField): field is SingleValueField {
+  return field.type === 'text' || isSingleValueRangeField(field);
 }
 
 // Type narrowing

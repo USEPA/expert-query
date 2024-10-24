@@ -210,6 +210,11 @@
       "label": "Delisted Reason",
       "type": "multiselect"
     },
+    "docTxt": {
+      "key": "docTxt",
+      "label": "Search Text / Keyword",
+      "type": "text"
+    },
     "epaIrCategory": {
       "key": "epaIrCategory",
       "label": "EPA IR Category",
@@ -493,6 +498,7 @@
     "assessmentUnit": "Search for a specific Assessment Unit",
     "associatedAction": "Search by Associated Action",
     "catchmentAssessmentUnit": "Search by Assessment Unit or NHDPlus Catchment",
+    "documentText": "Search by Document Text",
     "impairmentCause": "Search by Cause of Impairment",
     "impairmentSource": "Search by Probable Source of Impairment",
     "overallStatus": "Search by Overall Status",
@@ -532,10 +538,21 @@
       { "key": "actionsAssessmentUnit", "fields": ["assessmentUnitId"] },
       {
         "key": "timeFrame",
-        "fields": [
-          "fiscalYearEstablishedLo",
-          "fiscalYearEstablishedHi"
-        ]
+        "fields": ["fiscalYearEstablishedLo", "fiscalYearEstablishedHi"]
+      }
+    ],
+    "actionsDocuments": [
+      {
+        "key": "documentText",
+        "fields": ["docTxt"]
+      },
+      {
+        "key": "areaOfInterest",
+        "fields": ["region", "state", "organizationType", "organizationId"]
+      },
+      {
+        "key": "action",
+        "fields": ["actionId"]
       }
     ],
     "assessments": [
@@ -706,7 +723,13 @@
       },
       {
         "key": "pollutantParameter",
-        "fields": ["pollutantGroup", "pollutant", "addressedParameterGroup", "addressedParameter", "sourceType"]
+        "fields": [
+          "pollutantGroup",
+          "pollutant",
+          "addressedParameterGroup",
+          "addressedParameter",
+          "sourceType"
+        ]
       },
       { "key": "permitId", "fields": ["npdesIdentifier", "otherIdentifier"] },
       {
