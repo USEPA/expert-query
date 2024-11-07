@@ -386,7 +386,7 @@ export function QueryBuilder() {
 
         {profile.key === 'actionsDocuments' && (
           <>
-            <div className="display-flex flex-justify-center margin-top-3 width-full">
+            <div className="display-flex flex-justify-center margin-y-3 width-full">
               {preview.status === 'pending' ? (
                 <button
                   className="cursor-default display-flex flex-justify-center height-5 usa-button hover:bg-primary"
@@ -421,7 +421,7 @@ export function QueryBuilder() {
                     <table className="usa-table usa-table--striped">
                       <thead>
                         <tr>
-                          <th scope="col">Rank</th>
+                          <th scope="col">Rank (%)</th>
                           <th scope="col">Document URL</th>
                           <th scope="col">Action ID</th>
                           <th scope="col">Region</th>

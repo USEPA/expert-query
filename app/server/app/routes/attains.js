@@ -342,7 +342,8 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
         )
       : null;
 
-  function getSelectText() {
+  // build select statement of the query
+  if (!countOnly) {
     // filter down to requested columns, if the user provided that option
     const columnsToReturn = [];
     const columns = queryParams.columns ?? [];
@@ -358,14 +359,21 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
       columnsToReturn.length > 0
         ? columnsToReturn
         : profile.columns.filter((col) => col.output !== false);
-    return selectColumns.map((col) =>
+    const selectText = selectColumns.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS "${col.alias}"`,
     );
-  }
-
-  // build select statement of the query
-  if (!countOnly) {
-    query.select(getSelectText()).orderBy('objectid', 'asc');
+    if (profile.tableName === 'actions_documents') {
+      const rankText = 'ts_rank_cd(doc_tsv, query, 1 | 32)';
+      query
+        .select(
+          knex.raw(
+            `to_char(${rankText} * 100, 'FM999') AS rank, ${selectText}`,
+          ),
+        )
+        .orderBy(knex.raw(rankText), 'desc');
+    } else {
+      query.select(selectText).orderBy('objectid', 'asc');
+    }
   }
 
   // build where clause of the query
@@ -382,17 +390,6 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
           [exactArg],
         );
         query.whereRaw('query @@ doc_tsv');
-        if (!countOnly) {
-          const rankText = 'ts_rank_cd(doc_tsv, query, 1 | 32)';
-          const selectText = getSelectText();
-          query
-            .select(
-              knex.raw(
-                `to_char(${rankText} * 100, 'FM999') || '%' AS rank, ${selectText}`,
-              ),
-            )
-            .orderBy(knex.raw(rankText), 'desc');
-        }
       } else {
         appendToWhere(query, col.name, exactArg);
       }
