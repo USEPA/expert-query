@@ -1427,7 +1427,7 @@ function filterDynamicOptions({
     return {
       options:
         !lastLoadedOption && defaultOption // only include default option in first page
-          ? [defaultOption, ...options, ...additionalOptions]
+          ? [defaultOption, ...additionalOptions, ...options]
           : options,
       hasMore: options.length >= limit,
     };
