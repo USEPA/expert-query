@@ -511,6 +511,7 @@ function FilterFieldInputs({
             ? sourceState[sourceFieldConfig.id]
             : null;
           const selectProps = {
+            additionalOptions: 'additionalOptions' in fieldConfig ? fieldConfig.additionalOptions : [],
             apiKey,
             apiUrl,
             contextFilters: getContextFilters(
@@ -797,6 +798,7 @@ function SourceSelectFilter(props: SourceSelectFilterProps) {
 type FilterFunction = LoadOptions<Option, GroupBase<Option>, unknown>;
 
 function SelectFilter({
+  additionalOptions,
   apiKey,
   apiUrl,
   contextFilters,
@@ -819,6 +821,7 @@ function SelectFilter({
   // Create the filter function from the HOF
   const filterFunc: FilterFunction = useMemo(() => {
     return filterOptions({
+      additionalOptions,
       apiKey,
       apiUrl,
       defaultOption,
@@ -1363,6 +1366,7 @@ function createSourceReducer(sourceFields: SourceFields) {
 
 // Filters options that require fetching values from the database
 function filterDynamicOptions({
+  additionalOptions = [],
   apiKey,
   apiUrl,
   defaultOption,
@@ -1374,6 +1378,7 @@ function filterDynamicOptions({
   profile,
   secondaryFieldName,
 }: {
+  additionalOptions?: Option[];
   apiKey: string;
   apiUrl: string;
   defaultOption?: Option | null;
@@ -1422,7 +1427,7 @@ function filterDynamicOptions({
     return {
       options:
         !lastLoadedOption && defaultOption // only include default option in first page
-          ? [defaultOption, ...options]
+          ? [defaultOption, ...additionalOptions, ...options]
           : options,
       hasMore: options.length >= limit,
     };
@@ -1431,6 +1436,7 @@ function filterDynamicOptions({
 
 // Filters options by search input, returning a maximum number of options
 function filterOptions({
+  additionalOptions = [],
   apiKey,
   apiUrl,
   defaultOption,
@@ -1443,6 +1449,7 @@ function filterOptions({
   staticOptions,
   secondaryFieldName,
 }: {
+  additionalOptions?: Option[];
   apiKey: string;
   apiUrl: string;
   defaultOption?: Option | null;
@@ -1462,6 +1469,7 @@ function filterOptions({
     );
   } else {
     return filterDynamicOptions({
+      additionalOptions,
       apiKey,
       apiUrl,
       defaultOption,
@@ -1979,6 +1987,7 @@ type RangeFilterProps = {
 };
 
 type SelectFilterProps = {
+  additionalOptions?: Option[];
   apiKey: string;
   apiUrl: string;
   contextFilters: FilterQueryData;

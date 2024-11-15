@@ -380,6 +380,9 @@
       "key": "reportingCycle",
       "label": "Reporting Cycle",
       "type": "select",
+      "additionalOptions": [
+        { "value": -1, "label": "Any" }
+      ],
       "default": { "value": "", "label": "Latest" },
       "direction": "desc",
       "contextFields": ["organizationId", "region", "state"]
