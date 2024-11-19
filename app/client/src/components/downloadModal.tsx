@@ -12,13 +12,13 @@ import { clientUrl } from 'config';
 // styles
 import '@reach/dialog/styles.css';
 // types
-import type { FetchState, Status, Value } from 'types';
+import type { FetchState, QueryData, Status } from 'types';
 
 /*
 ## Components
 */
 
-export function DownloadModal<D extends PostData>({
+export function DownloadModal<D extends QueryData>({
   apiKey,
   dataId,
   downloadStatus,
@@ -231,7 +231,7 @@ export function DownloadModal<D extends PostData>({
 ## Types
 */
 
-type DownloadModalProps<D extends PostData> = {
+type DownloadModalProps<D extends QueryData> = {
   apiKey: string;
   dataId?: string;
   downloadStatus: Status;
@@ -240,14 +240,4 @@ type DownloadModalProps<D extends PostData> = {
   queryData: D;
   queryUrl: string | null;
   setDownloadStatus: (status: Status) => void;
-};
-
-type PostData = {
-  columns: string[];
-  filters: {
-    [field: string]: Value | Value[];
-  };
-  options: {
-    [field: string]: Value;
-  };
 };

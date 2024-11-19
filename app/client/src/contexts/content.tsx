@@ -66,6 +66,7 @@ export type Content = {
   };
   parameters: {
     debounceMilliseconds: number;
+    searchPreviewPageSize: number;
     selectOptionsPageSize: number;
   };
   profileConfig: {

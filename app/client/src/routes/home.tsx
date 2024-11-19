@@ -21,6 +21,7 @@ import { Loading, LoadingButtonIcon } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
 import { MenuList as CustomMenuList } from 'components/menuList';
+import { PreviewModal } from 'components/previewModal';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { StepIndicator } from 'components/stepIndicator';
@@ -219,6 +220,7 @@ function HomeContent({ content }: Readonly<{ content: Content }>) {
                 format,
                 formatHandler: setFormat,
                 glossary,
+                previewLimit: content.parameters.searchPreviewPageSize,
                 profile,
                 queryParams,
                 resetFilters,
@@ -268,6 +270,7 @@ export function QueryBuilder() {
     format,
     formatHandler,
     glossary,
+    previewLimit,
     profile,
     resetFilters,
     sourceFields,
@@ -277,16 +280,22 @@ export function QueryBuilder() {
   } = useHomeContext();
 
   const {
-    clearConfirmationVisible,
-    closeClearConfirmation,
-    openClearConfirmation,
-  } = useClearConfirmationVisibility();
+    visible: clearConfirmationVisible,
+    close: closeClearConfirmation,
+    open: openClearConfirmation,
+  } = useModalVisibility();
 
   const {
-    closeDownloadConfirmation,
-    downloadConfirmationVisible,
-    openDownloadConfirmation,
-  } = useDownloadConfirmationVisibility();
+    close: closeDownloadConfirmation,
+    visible: downloadConfirmationVisible,
+    open: openDownloadConfirmation,
+  } = useModalVisibility();
+
+  const {
+    close: closeSearchPreview,
+    visible: searchPreviewVisible,
+    open: openSearchPreview,
+  } = useModalVisibility();
 
   const [downloadStatus, setDownloadStatus] = useDownloadStatus(
     profile,
@@ -306,12 +315,19 @@ export function QueryBuilder() {
 
     setPreview({ data: null, status: 'pending' });
     postData({
-      url: `${apiUrl}/${profile.resource}/preview`,
+      url: `${apiUrl}/${profile.resource}`,
       apiKey,
-      data: queryParams,
+      data: {
+        ...queryParams,
+        options: {
+          ...queryParams.options,
+          format: 'json',
+          pageSize: previewLimit,
+        },
+      },
     })
       .then((res) => {
-        setPreview({ data: res, status: 'success' });
+        setPreview({ data: res.data, status: 'success' });
       })
       .catch((err) => {
         if (isAbort(err)) return;
@@ -324,33 +340,21 @@ export function QueryBuilder() {
 
   return (
     <>
-      {downloadConfirmationVisible && (
-        <DownloadModal
-          apiKey={apiKey}
-          dataId="attains"
-          filename={profile && format ? `${profile.key}.${format.value}` : null}
-          downloadStatus={downloadStatus}
-          onClose={closeDownloadConfirmation}
-          queryData={queryParams}
-          queryUrl={profile ? `${apiUrl}/${profile.resource}` : null}
-          setDownloadStatus={setDownloadStatus}
-        />
-      )}
-      {clearConfirmationVisible && (
-        <ClearSearchModal
-          onContinue={() => {
-            resetFilters();
-            navigate('/attains', { replace: true });
-          }}
-          onClose={closeClearConfirmation}
-        />
-      )}
       <div>
         <div className="margin-top-2">
           <Button onClick={openClearConfirmation} color="white">
             Clear Search
           </Button>
         </div>
+        {clearConfirmationVisible && (
+          <ClearSearchModal
+            onContinue={() => {
+              resetFilters();
+              navigate('/attains', { replace: true });
+            }}
+            onClose={closeClearConfirmation}
+          />
+        )}
         <InPageNavAnchor
           id="apply-filters"
           label={
@@ -384,7 +388,7 @@ export function QueryBuilder() {
           staticOptions={staticOptions}
         />
 
-        {profile.key === 'actionsDocuments' && (
+        {/*profile.key === 'actionsDocuments' && (
           <>
             <div className="display-flex flex-justify-center margin-y-3 width-full">
               {preview.status === 'pending' ? (
@@ -407,7 +411,7 @@ export function QueryBuilder() {
                     role="img"
                     focusable="false"
                   />
-                  <span className="margin-y-auto">Search</span>
+                  <span className="margin-y-auto">Preview</span>
                 </button>
               )}
             </div>
@@ -417,8 +421,8 @@ export function QueryBuilder() {
                 {preview.data.length === 0 ? (
                   <Alert type="info">No results found</Alert>
                 ) : (
-                  <div className="overflow-scroll maxh-mobile tablet:maxh-tablet">
-                    <table className="usa-table usa-table--striped">
+                  <div className="overflow-auto margin-x-auto width-mobile width-fit maxh-mobile tablet:maxh-tablet">
+                    <table className="usa-table usa-table--stacked width-full">
                       <thead>
                         <tr>
                           <th scope="col">Rank (%)</th>
@@ -433,7 +437,7 @@ export function QueryBuilder() {
                       <tbody>
                         {preview.data.map((row) => (
                           <tr key={row.objectId}>
-                            <td>{row.rank}</td>
+                            <td>{row.rankPercent}</td>
                             <td>
                               <a
                                 href={row.docUrl as string}
@@ -455,6 +459,35 @@ export function QueryBuilder() {
                   </div>
                 )}
               </>
+            )}
+          </>
+        )*/}
+
+        {profile.key === 'actionsDocuments' && (
+          <>
+            <div className="display-flex flex-justify-center margin-y-3 width-full">
+              <button
+                className="display-flex flex-justify-center usa-button"
+                onClick={openSearchPreview}
+                type="button"
+              >
+                <Search
+                  aria-hidden="true"
+                  className="height-205 margin-right-1 usa-icon width-205"
+                  role="img"
+                  focusable="false"
+                />
+                <span className="margin-y-auto">Preview</span>
+              </button>
+            </div>
+            {searchPreviewVisible && (
+              <PreviewModal
+                apiKey={apiKey}
+                limit={previewLimit}
+                onClose={closeSearchPreview}
+                queryData={queryParams}
+                queryUrl={`${apiUrl}/${profile.resource}`}
+              />
             )}
           </>
         )}
@@ -496,6 +529,20 @@ export function QueryBuilder() {
           />
           <span className="margin-y-auto">Download</span>
         </button>
+        {downloadConfirmationVisible && (
+          <DownloadModal
+            apiKey={apiKey}
+            dataId="attains"
+            filename={
+              profile && format ? `${profile.key}.${format.value}` : null
+            }
+            downloadStatus={downloadStatus}
+            onClose={closeDownloadConfirmation}
+            queryData={queryParams}
+            queryUrl={profile ? `${apiUrl}/${profile.resource}` : null}
+            setDownloadStatus={setDownloadStatus}
+          />
+        )}
         {downloadStatus === 'success' && (
           <Alert
             styles={['margin-top-3', 'tablet:margin-top-6']}
@@ -1089,41 +1136,21 @@ function SelectFilter({
 ## Hooks
 */
 
-function useClearConfirmationVisibility() {
-  const [clearConfirmationVisible, setClearConfirmationVisible] =
-    useState(false);
+function useModalVisibility() {
+  const [visible, setVisible] = useState(false);
 
-  const closeClearConfirmation = useCallback(() => {
-    setClearConfirmationVisible(false);
+  const close = useCallback(() => {
+    setVisible(false);
   }, []);
 
-  const openClearConfirmation = useCallback(() => {
-    setClearConfirmationVisible(true);
-  }, []);
-
-  return {
-    clearConfirmationVisible,
-    closeClearConfirmation,
-    openClearConfirmation,
-  };
-}
-
-function useDownloadConfirmationVisibility() {
-  const [downloadConfirmationVisible, setDownloadConfirmationVisible] =
-    useState(false);
-
-  const closeDownloadConfirmation = useCallback(() => {
-    setDownloadConfirmationVisible(false);
-  }, []);
-
-  const openDownloadConfirmation = useCallback(() => {
-    setDownloadConfirmationVisible(true);
+  const open = useCallback(() => {
+    setVisible(true);
   }, []);
 
   return {
-    closeDownloadConfirmation,
-    downloadConfirmationVisible,
-    openDownloadConfirmation,
+    visible,
+    close,
+    open,
   };
 }
 
@@ -2068,6 +2095,8 @@ type FilterQueryData = {
 };
 
 type HomeContext = {
+  apiKey: string;
+  apiUrl: string;
   filterFields: FilterFields;
   filterGroups: FilterGroup[];
   filterGroupLabels: FilterGroupLabels;
@@ -2076,10 +2105,9 @@ type HomeContext = {
   format: Option;
   formatHandler: (format: Option) => void;
   glossary: Content['glossary'];
+  previewLimit: number;
   profile: Profile;
   queryParams: QueryData;
-  apiKey: string;
-  apiUrl: string;
   resetFilters: () => void;
   sourceFields: SourceFields;
   sourceHandlers: SourceFieldInputHandlers;

@@ -80,6 +80,16 @@ export type Option = {
   value: Value;
 };
 
+export type QueryData = {
+  columns: string[];
+  filters: {
+    [field: string]: Value | Value[];
+  };
+  options: {
+    [field: string]: Value;
+  };
+};
+
 export type SingleOptionField = BaseFilterFieldConfig & {
   type: 'select';
 };

@@ -94,7 +94,12 @@ type HeaderLinkProps = {
   href: string;
 };
 
-function HeaderLink({ className, children, icon, href }: Readonly<HeaderLinkProps>) {
+function HeaderLink({
+  className,
+  children,
+  icon,
+  href,
+}: Readonly<HeaderLinkProps>) {
   const Icon = icon;
 
   return (

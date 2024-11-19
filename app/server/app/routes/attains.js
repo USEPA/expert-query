@@ -17,9 +17,8 @@ import { getPrivateConfig, getS3Client } from '../utilities/s3.js';
 import StreamingService from '../utilities/streamingService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const jsonPageSize = parseInt(process.env.JSON_PAGE_SIZE);
-const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE);
-const previewSize = parseInt(process.env.PREVIEW_SIZE || 500);
+const maxPageSize = parseInt(process.env.MAX_PAGE_SIZE || 500);
+const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE || 1_000_000);
 
 const minDateTime = new Date(-8640000000000000);
 const maxDateTime = new Date(8640000000000000);
@@ -38,10 +37,10 @@ class DuplicateParameterException extends Error {
 }
 
 class InvalidParameterException extends Error {
-  constructor(parameter) {
+  constructor(parameter, context) {
     super();
     this.httpStatusCode = 400;
-    this.message = `The parameter '${parameter}' is not valid for the specified profile`;
+    this.message = `The parameter '${parameter}' is not valid for the specified ${context}`;
   }
 }
 
@@ -126,7 +125,7 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
   const columnsForFilter = [];
   const columnNamesForFilter = [];
   columns.forEach((col) => {
-    if (params.filters.hasOwnProperty(col.alias)) {
+    if (col.output !== false && params.filters.hasOwnProperty(col.alias)) {
       columnsForFilter.push(col);
       columnNamesForFilter.push(col.name);
     }
@@ -158,19 +157,17 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
 /**
  * Creates a stream object from a query.
  * @param {Object} query KnexJS query object
- * @param {Express.Request} req
  * @param {Express.Response} res
  * @param {string} format the format of the file attachment
  * @param {Object} excelDoc Excel workbook and worksheet objects
- * @param {number} nextId starting objectid for the next page
+ * @param {Object} pageOptions page number and page size for paginated JSON
  */
 async function createStream(
   query,
-  req,
   res,
   format,
   wbObject = null,
-  nextId = null,
+  pageOptions = null,
 ) {
   pool.connect((err, client, done) => {
     if (err) throw err;
@@ -182,7 +179,7 @@ async function createStream(
     const stream = client.query(qStream);
     stream.on('end', done);
 
-    StreamingService.streamResponse(res, stream, format, wbObject, nextId);
+    StreamingService.streamResponse(res, stream, format, wbObject, pageOptions);
   });
 }
 
@@ -209,37 +206,24 @@ async function streamFile(query, req, res, format, baseName) {
     });
     const worksheet = workbook.addWorksheet('data');
 
-    createStream(query, req, res, format, { workbook, worksheet });
+    createStream(query, res, format, { workbook, worksheet });
   } else {
-    createStream(query, req, res, format);
+    createStream(query, res, format);
   }
 }
 
 /**
  * Streams the results of a query as paginated JSON.
  * @param {Object} query KnexJS query object
- * @param {Express.Response} req
  * @param {Express.Response} res
- * @param {number} startId current objectid to start returning results from
+ * @param {number} pageNumber current page of results
+ * @param {number} pageSize number of results per page
  */
-async function streamJson(query, req, res, startId) {
-  if (startId) query.where('objectid', '>=', startId);
+async function streamJson(query, res, pageNumber, pageSize) {
+  if (pageNumber > 1) query.offset((pageNumber - 1) * pageSize);
+  query.limit(pageSize);
 
-  const nextId =
-    (
-      await queryPool(
-        knex
-          .select('objectId')
-          .from(query.clone().limit(maxQuerySize).as('q'))
-          .offset(jsonPageSize)
-          .limit(1),
-        true,
-      )
-    )?.objectId ?? null;
-
-  query.limit(jsonPageSize);
-
-  createStream(query, req, res, 'json', null, nextId);
+  createStream(query, res, 'json', null, { pageNumber, pageSize });
 }
 
 /**
@@ -302,7 +286,7 @@ function getQueryParams(req) {
   }
 
   // organize GET parameters to follow what we expect from POST
-  const optionsParams = ['f', 'format', 'limit', 'startId'];
+  const optionsParams = ['f', 'format', 'limit', 'pageNumber', 'pageSize'];
   const parameters = {
     filters: {},
     options: {},
@@ -367,7 +351,7 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
       query
         .select(
           knex.raw(
-            `to_char(${rankText} * 100, 'FM999') AS rank, ${selectText}`,
+            `to_char(${rankText} * 100, 'FM999') AS "rankPercent", ${selectText}`,
           ),
         )
         .orderBy(knex.raw(rankText), 'desc');
@@ -485,10 +469,12 @@ async function executeQuery(profile, req, res) {
     if (['csv', 'tsv', 'xlsx'].includes(format)) {
       await streamFile(query, req, res, format, profile.tableName);
     } else {
-      const startId = queryParams.options.startId
-        ? parseInt(queryParams.options.startId)
-        : null;
-      await streamJson(query, req, res, startId);
+      await streamJson(
+        query,
+        res,
+        parseInt(queryParams.options.pageNumber || 1),
+        parseInt(queryParams.options.pageSize || 20),
+      );
     }
   } catch (error) {
     log.error(
@@ -512,14 +498,29 @@ async function executeQuery(profile, req, res) {
  */
 function validateQueryParams(queryParams, profile) {
   Object.entries(queryParams.options).forEach(([name, value]) => {
+    // Each option should only be used once.
     if (Array.isArray(value)) throw new DuplicateParameterException(name);
+
+    // 'pageNumber' and 'pageSize' are only allowed to be used with 'json' format.
+    const format = queryParams.options.format ?? queryParams.options.f;
+    if (
+      ['pageNumber', 'pageSize'].includes(name) &&
+      ['csv', 'tsv', 'xlsx'].includes(format)
+    ) {
+      throw new InvalidParameterException(name, 'response format');
+    }
+
+    // 'pageSize' must be less than or equal to the maximum page size.
+    if (name === 'pageSize' && parseInt(value) > maxPageSize) {
+      throw new LimitExceededException(value, maxPageSize);
+    }
   });
   Object.entries(queryParams.filters).forEach(([name, value]) => {
     const column = profile.columns.find((c) => {
       if (c.lowParam === name || c.highParam === name || c.alias === name)
         return c;
     });
-    if (!column) throw new InvalidParameterException(name);
+    if (!column) throw new InvalidParameterException(name, 'profile');
     if (Array.isArray(value)) {
       if (
         column.lowParam === name ||
@@ -642,7 +643,7 @@ async function executeValuesQuery(profile, req, res) {
 
     if (!params.text && !params.limit) {
       throw new NoParametersException(
-        `Please provide either a text filter or a limit that does not exceed ${process.env.MAX_VALUES_QUERY_SIZE}.`,
+        `Please provide either a text filter or a limit that does not exceed ${process.env.MAX_PAGE_SIZE}.`,
       );
     }
 
@@ -793,11 +794,11 @@ async function queryColumnValues(profile, columns, params, schema) {
     });
   }
 
-  const maxValuesQuerySize = parseInt(process.env.MAX_VALUES_QUERY_SIZE);
-  if (params.limit > maxValuesQuerySize) {
-    throw new LimitExceededException(params.limit, maxValuesQuerySize);
+  const limit = params.limit ?? maxPageSize;
+  if (limit > maxPageSize) {
+    throw new LimitExceededException(params.limit, maxPageSize);
   }
-  query.limit(params.limit ?? maxValuesQuerySize);
+  query.limit(limit);
 
   return await queryPool(query);
 }
@@ -981,10 +982,6 @@ export default function (app, basePath) {
         await executeValuesQuery(profile, req, res);
       });
 
-      router.post(`/${profileName}/preview`, async function (req, res) {
-        await executeQueryPreview(profile, req, res);
-      });
-
       // create get requests
       router.get(`/${profileName}`, async function (req, res) {
         await executeQuery(profile, req, res);
@@ -1001,16 +998,21 @@ export default function (app, basePath) {
         await executeQueryCountOnly(profile, req, res);
       });
 
-      // get bean counts
-      router.get(`/${profileName}/countPerOrgCycle`, async function (req, res) {
-        await executeQueryCountPerOrgCycle(profile, req, res);
-      });
-      router.post(
-        `/${profileName}/countPerOrgCycle`,
-        async function (req, res) {
-          await executeQueryCountPerOrgCycle(profile, req, res);
-        },
-      );
+      if (profileName !== 'actionsDocuments') {
+        // get bean counts
+        router.get(
+          `/${profileName}/countPerOrgCycle`,
+          async function (req, res) {
+            await executeQueryCountPerOrgCycle(profile, req, res);
+          },
+        );
+        router.post(
+          `/${profileName}/countPerOrgCycle`,
+          async function (req, res) {
+            await executeQueryCountPerOrgCycle(profile, req, res);
+          },
+        );
+      }
     },
   );
 

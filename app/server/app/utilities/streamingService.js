@@ -79,12 +79,17 @@ export default class StreamingService {
   /**
    * Transforms the streaming data to json.
    * @param {function} preHook function for writing initial headers
-   * @param {number} nextId starting objectid for the next page
+   * @param {Object} pageOptions page number and page size for paginated JSON
    * @returns Transform object
    */
-  static getJsonTransform = (preHook, nextId) => {
+  static getJsonTransform = (preHook, pageOptions = {}) => {
+    const { pageNumber, pageSize } = pageOptions;
     const start = '{ "data": [';
-    const end = ']' + (nextId ? `, "nextId": ${nextId}` : '') + '}';
+    const end =
+      ']' +
+      (pageNumber ? `, "pageNumber": ${pageNumber}` : '') +
+      (pageSize ? `, "pageSize": ${pageSize}` : '') +
+      '}';
     return new Transform({
       writableObjectMode: true,
       transform(data, _encoding, callback) {
@@ -153,14 +158,14 @@ export default class StreamingService {
    * @param {Transform} inStream readable stream from database query
    * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
    * @param {Object} excelDoc Excel workbook and worksheet objects
-   * @param {number} nextId starting objectid for the next page
+   * @param {Object} pageOptions page number and page size for paginated JSON
    */
   static streamResponse = (
     outStream,
     inStream,
     format,
     excelDoc = null,
-    nextId = null,
+    pageOptions = null,
   ) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,
@@ -173,7 +178,7 @@ export default class StreamingService {
       outStream.end();
     });
 
-    let transform = StreamingService.getJsonTransform(preHook, nextId);
+    let transform = StreamingService.getJsonTransform(preHook, pageOptions);
     if (format === 'csv' || format === 'tsv') {
       transform = StreamingService.getBasicTransform(preHook, format);
     }

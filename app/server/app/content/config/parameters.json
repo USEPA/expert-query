@@ -1,4 +1,5 @@
 {
   "debounceMilliseconds": 250,
+  "searchPreviewPageSize": 500,
   "selectOptionsPageSize": 20
 }
