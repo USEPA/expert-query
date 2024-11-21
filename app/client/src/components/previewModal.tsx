@@ -1,16 +1,17 @@
-import { uniqueId } from 'lodash';
 import { Dialog } from '@reach/dialog';
-import { useEffect, useState } from 'react';
 import Close from 'images/close.svg?react';
+import { uniqueId } from 'lodash';
+import { useEffect, useMemo, useState } from 'react';
 // components
 import { Alert } from 'components/alert';
 import { Loading } from 'components/loading';
+import { Table } from 'components/table';
 // utils
 import { isAbort, postData, useAbort } from 'utils';
 // styles
 import '@reach/dialog/styles.css';
 // types
-import type { FetchState, QueryData, Value } from 'types';
+import type { FetchState, QueryData } from 'types';
 
 export function PreviewModal<D extends QueryData>({
   apiKey,
@@ -28,8 +29,9 @@ export function PreviewModal<D extends QueryData>({
 
   const [id] = useState(uniqueId('modal-'));
 
+  // Data to be displayed in the preview table.
   const [preview, setPreview] = useState<
-    FetchState<Array<Record<string, Value | null>>>
+    FetchState<Array<ActionsDocumentsRow>>
   >({
     data: null,
     status: 'idle',
@@ -51,7 +53,26 @@ export function PreviewModal<D extends QueryData>({
       signal: getSignal(),
     })
       .then((res) => {
-        setPreview({ data: res.data, status: 'success' });
+        const data = res.data.map((row: ActionsDocumentsRow) => ({
+          rankPercent: row.rankPercent,
+          docUrl: {
+            sortValue: row.docFilename,
+            value: (
+              <a
+                href={row.docUrl as string}
+                target="_blank"
+                rel="noopener,noreferrer"
+              >
+                {row.docFilename}
+              </a>
+            ),
+          },
+          actionId: row.actionId,
+          region: row.region,
+          state: row.state,
+          organizationId: row.organizationId,
+        }));
+        setPreview({ data, status: 'success' });
       })
       .catch((err) => {
         if (isAbort(err)) return;
@@ -60,22 +81,32 @@ export function PreviewModal<D extends QueryData>({
       });
   }, [apiKey, queryData, queryUrl]);
 
+  const columns = useMemo(
+    () => [
+      { id: 'rankPercent', name: 'Rank (%)', sortable: true },
+      { id: 'docUrl', name: 'Document URL', sortable: true },
+      { id: 'actionId', name: 'Action ID', sortable: false },
+      { id: 'region', name: 'Region', sortable: false },
+      { id: 'state', name: 'State', sortable: false },
+      { id: 'organizationId', name: 'Organization ID', sortable: false },
+    ],
+    [],
+  );
+
   return (
     <Dialog
       isOpen
       onDismiss={closeModal}
-      className="usa-modal maxw-desktop maxh-mobile tablet:maxh-tablet"
+      className="usa-modal maxw-desktop-lg maxh-mobile tablet:maxh-tablet desktop:maxh-tablet-lg"
       aria-labelledby={`${id}-heading`}
       aria-describedby={`${id}-description`}
     >
       <div className="usa-modal__content">
         <div className="usa-modal__main width-full">
-          <h2 className="usa-modal__heading">
+          <h2 className="usa-modal__heading margin-bottom-05">
             Results Preview{' '}
-            <small className="font-heading-2xs">
-              (limited to {limit} rows)
-            </small>
           </h2>
+          <small className="text-italic">Limited to {limit} rows</small>
           {preview.status === 'pending' && (
             <div className="usa-prose">
               <Loading />
@@ -93,53 +124,16 @@ export function PreviewModal<D extends QueryData>({
                 <Alert type="info">No results found</Alert>
               ) : (
                 <>
-                  <div className="border usa-table-container--scrollable overflow-y-scroll">
-                    <table className="usa-table usa-table--sticky-header usa-table--striped width-full border-0">
-                      {/*<div className="overflow-y-scroll margin-x-auto width-mobile width-fit">
-                    <table className="usa-table usa-table--stacked width-full">*/}
-                      <thead>
-                        <tr>
-                          <th data-sortable scope="col">
-                            Rank (%)
-                          </th>
-                          <th data-sortable scope="col">
-                            Document URL
-                          </th>
-                          <th scope="col">Action ID</th>
-                          <th scope="col">Region</th>
-                          <th scope="col">State</th>
-                          <th scope="col">Organization ID</th>
-                          <th scope="col">HMW Plan Summary URL</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {preview.data.map((row) => (
-                          <tr key={row.objectId}>
-                            <td data-label="Rank (%)">{row.rankPercent}</td>
-                            <td
-                              data-label="Document URL"
-                              data-sort-value={row.docUrl}
-                            >
-                              <a
-                                href={row.docUrl as string}
-                                target="_blank"
-                                rel="noopener,noreferrer"
-                              >
-                                {row.docFilename}
-                              </a>
-                            </td>
-                            <td data-label="ActionID">{row.actionId}</td>
-                            <td data-label="Region">{row.region}</td>
-                            <td data-label="State">{row.state}</td>
-                            <td data-label="Organization ID">
-                              {row.organizationId}
-                            </td>
-                            <td data-label="HMW Plan Summary URL"></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table
+                    columns={columns}
+                    data={preview.data}
+                    id={`${id}-table`}
+                    scrollable={true}
+                    initialSortDir="descending"
+                    sortable={true}
+                    stacked={true}
+                    striped={true}
+                  />
                 </>
               )}
             </>
@@ -166,6 +160,17 @@ export function PreviewModal<D extends QueryData>({
 /*
 ## Types
 */
+
+type ActionsDocumentsRow = {
+  actionId: string;
+  docFilename: string;
+  docUrl: string;
+  objectId: string;
+  organizationId: string;
+  rankPercent: number;
+  region: string;
+  state: string;
+};
 
 type PreviewModalProps<D extends QueryData> = {
   apiKey: string;
