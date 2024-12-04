@@ -618,7 +618,7 @@ function FilterFieldInputs({
   staticOptions,
 }: FilterFieldInputsProps) {
   // Store each field's element in a tuple with its key
-  const fieldsJsx: Array<[JSX.Element, string]> = removeNulls(
+  const fieldsJsx: Array<[JSX.Element, string, string]> = removeNulls(
     fields.map((fieldConfig) => {
       const sourceFieldConfig =
         'source' in fieldConfig &&
@@ -653,6 +653,7 @@ function FilterFieldInputs({
                 tooltip={tooltip}
               />,
               fieldConfig.key,
+              fieldConfig.type,
             ];
           }
 
@@ -724,6 +725,7 @@ function FilterFieldInputs({
               </div>
             </div>,
             fieldConfig.key,
+            fieldConfig.type,
           ];
         case 'date':
         case 'year':
@@ -760,6 +762,7 @@ function FilterFieldInputs({
               type={fieldConfig.type}
             />,
             fieldConfig.domain,
+            fieldConfig.type,
           ];
         case 'text':
           return [
@@ -794,6 +797,7 @@ function FilterFieldInputs({
               </div>
             </div>,
             fieldConfig.key,
+            fieldConfig.type,
           ];
         default:
           return null;
@@ -803,17 +807,18 @@ function FilterFieldInputs({
 
   return (
     <div className="grid-gap-2 grid-row">
-      {fieldsJsx.map(([field, key]) =>
-        key === 'docTxt' ? (
-          <div className="width-full" key={key}>
-            {field}
-          </div>
-        ) : (
-          <div className="desktop:grid-col-4 tablet:grid-col-6" key={key}>
-            {field}
-          </div>
-        ),
-      )}
+      {fieldsJsx.map(([field, key, type]) => (
+        <div
+          className={
+            type === 'text'
+              ? 'width-full'
+              : 'desktop:grid-col-4 tablet:grid-col-6'
+          }
+          key={key}
+        >
+          {field}
+        </div>
+      ))}
     </div>
   );
 }

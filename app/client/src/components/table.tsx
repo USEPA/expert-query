@@ -1,7 +1,7 @@
 /** Adapted from https://github.com/MetroStar/comet/blob/main/packages/comet-uswds/src/components/table/table.tsx */
 import table from '@uswds/uswds/js/usa-table';
 import classNames from 'classnames';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 
 function isCellSpec(value: any): value is TableCell {
   return (

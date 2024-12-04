@@ -195,15 +195,19 @@
       }
     ]
   },
-  "actionsDocuments": {
-    "tableName": "actions_documents",
+  "actionDocuments": {
+    "tableName": "action_documents",
     "idColumn": "objectid",
-    "createQuery": "CREATE TABLE IF NOT EXISTS search.actions_documents ( objectid serial PRIMARY KEY, actionid VARCHAR(45), actionname VARCHAR(255), doc_id text, doc_txt text, doc_url text, doc_filename text, doc_errors text, organizationid VARCHAR(30), organizationname VARCHAR(150), organizationtype VARCHAR(30), region VARCHAR(2), state VARCHAR(4000) )",
+    "createQuery": "CREATE TABLE IF NOT EXISTS action_documents ( objectid INTEGER PRIMARY KEY, documentkey INTEGER, actionid VARCHAR(45), actiontypename VARCHAR(50), organizationid VARCHAR(30), regionid VARCHAR(2), state VARCHAR(4000), actionname VARCHAR(255), completiondate DATE, tmdldate DATE, actiondocumenturl TEXT )",
     "columns": [
       {
         "name": "objectid",
         "alias": "objectId",
         "skipIndex": true
+      },
+      {
+        "name": "actiondocumenturl",
+        "alias": "actionDocumentUrl"
       },
       {
         "name": "actionid",
@@ -214,46 +218,41 @@
         "alias": "actionName"
       },
       {
-        "name": "doc_id",
-        "alias": "docId"
+        "name": "actiontypename",
+        "alias": "actionTypeName"
       },
       {
-        "name": "doc_txt",
-        "alias": "docTxt",
-        "output": false
+        "name": "completiondate",
+        "alias": "completionDate",
+        "lowParam": "completionDateLo",
+        "highParam": "completionDateHi",
+        "type": "date",
+        "indexOrder": "desc"
       },
       {
-        "name": "doc_url",
-        "alias": "docUrl"
-      },
-      {
-        "name": "doc_filename",
-        "alias": "docFilename"
-      },
-      {
-        "name": "doc_errors",
-        "alias": "docErrors"
+        "name": "documentkey",
+        "alias": "documentKey",
+        "type": "numeric"
       },
       {
         "name": "organizationid",
         "alias": "organizationId"
       },
       {
-        "name": "organizationname",
-        "alias": "organizationName"
-      },
-      {
-        "name": "organizationtype",
-        "alias": "organizationType",
-        "skipIndex": true
-      },
-      {
-        "name": "region",
-        "alias": "region"
+        "name": "regionid",
+        "alias": "regionId"
       },
       {
         "name": "state",
         "alias": "state"
+      },
+      {
+        "name": "tmdldate",
+        "alias": "tmdlDate",
+        "lowParam": "tmdlDateLo",
+        "highParam": "tmdlDateHi",
+        "type": "date",
+        "indexOrder": "desc"
       }
     ],
     "materializedViewColumns": [
@@ -264,7 +263,7 @@
     ],
     "materializedViews": [
       {
-        "name": "actionsdocuments_actions",
+        "name": "actiondocuments_actions",
         "columns": [
           {
             "name": "actionid"
@@ -276,13 +275,7 @@
             "name": "organizationid"
           },
           {
-            "name": "organizationname"
-          },
-          {
-            "name": "organizationtype"
-          },
-          {
-            "name": "region"
+            "name": "regionid"
           },
           {
             "name": "state"
@@ -1242,6 +1235,50 @@
         ]
       }
     ]
+  },
+  "documentsText": {
+    "tableName": "documents_text",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS documents_text ( objectid INTEGER PRIMARY KEY, documentkey INTEGER, documentname TEXT, documentdesc TEXT, documentfilename TEXT, documentfiletypename TEXT, documenttypename TEXT, documenttext TEXT )",
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "documentdesc",
+        "alias": "documentDesc"
+      },
+      {
+        "name": "documentfilename",
+        "alias": "documentFileName"
+      },
+      {
+        "name": "documentfiletypename",
+        "alias": "documentFileTypeName"
+      },
+      {
+        "name": "documentkey",
+        "alias": "documentKey",
+        "type": "numeric"
+      },
+      {
+        "name": "documentname",
+        "alias": "documentName"
+      },
+      {
+        "name": "documenttext",
+        "alias": "documentText",
+        "skipIndex": true
+      },
+      {
+        "name": "documenttypename",
+        "alias": "documentTypeName"
+      }
+    ],
+    "materializedViewColumns": [],
+    "materializedViews": []
   },
   "sources": {
     "tableName": "sources",

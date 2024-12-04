@@ -882,6 +882,9 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
     (c) => c.name === 'reportingcycle',
   );
   const hasCycleId = table.columns.find((c) => c.name === 'cycleid');
+  const hasAssessmentUnitId = table.columns.find(
+    (c) => c.name === 'assessmentunitid',
+  );
 
   const orderByArray = [];
   if (hasOrgId) {
@@ -898,7 +901,8 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
   }
 
   let mvName = `${tableName}_countperorgcycle`;
-  await client.query(`
+  if (hasAssessmentUnitId) {
+    await client.query(`
     CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
     AS
     SELECT ${groupByColumns.join(
@@ -918,7 +922,8 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
     WITH DATA;
   `);
 
-  log.info(`${tableName}: Created countPerOrgCycle materialized view`);
+    log.info(`${tableName}: Created countPerOrgCycle materialized view`);
+  }
 
   mvName = `${tableName}_count`;
   await client.query(`
@@ -1014,19 +1019,31 @@ function getProfileEtl(
     // Extract, transform, and load the new data
     try {
       if (isLocal) {
-        const profileName = `profile_${tableName}`;
-        let res = await extract(profileName, s3Config);
-        let chunksProcessed = 0;
-        const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
-        while (
-          res.data !== null &&
-          (!maxChunks || chunksProcessed < maxChunks)
-        ) {
-          const query = await transform(tableName, columns, res.data);
-          await client.query(query);
-          log.info(`Next record offset for table ${tableName}: ${res.next}`);
-          res = await extract(profileName, s3Config, res.next);
-          chunksProcessed += 1;
+        // TODO: Remove this once we have a better way to load local data.
+        if (['action_documents', 'documents_text'].includes(tableName)) {
+          const fileLocation = process.env[`LOCAL_${tableName.toUpperCase()}`];
+          if (!fileLocation) {
+            log.warn(`No local data found for ${tableName}`);
+            return;
+          }
+          await client.query(`
+            COPY ${tableName} FROM '${fileLocation}' DELIMITER ',' CSV HEADER;
+          `);
+        } else {
+          const profileName = `profile_${tableName}`;
+          let res = await extract(profileName, s3Config);
+          let chunksProcessed = 0;
+          const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
+          while (
+            res.data !== null &&
+            (!maxChunks || chunksProcessed < maxChunks)
+          ) {
+            const query = await transform(tableName, columns, res.data);
+            await client.query(query);
+            log.info(`Next record offset for table ${tableName}: ${res.next}`);
+            res = await extract(profileName, s3Config, res.next);
+            chunksProcessed += 1;
+          }
         }
       } else {
         await client.query(
