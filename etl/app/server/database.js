@@ -996,6 +996,112 @@ async function transform(tableName, columns, data) {
   return pgp.helpers.insert(rows, insertColumns, tableName);
 }
 
+// Create the documents_text_search table and triggers.
+async function setupTextSearch(client) {
+  try {
+    await client.query('DROP TABLE IF EXISTS documents_text_search');
+
+    // Create the table.
+    await client.query(`
+      CREATE TABLE documents_text_search (
+        objectid SERIAL PRIMARY KEY,
+        documentid INTEGER,
+        documenttsv TSVECTOR,
+        CONSTRAINT fk_documentstextsearch_documentstext
+        FOREIGN KEY (documentid)
+        REFERENCES documents_text (objectid)
+        ON DELETE CASCADE
+      )
+    `);
+
+    // Create the index on the vector column.
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS documentstextsearch_documenttsv
+        ON documents_text_search USING gin (documenttsv)
+        TABLESPACE pg_default
+    `);
+
+    // Create the trigger function.
+    const weights = {
+      documenttext: 'A',
+      documentdesc: 'A',
+      documentname: 'B',
+    };
+    await client.query(`
+      CREATE OR REPLACE FUNCTION process_document (new_row RECORD, chunk_size integer)
+          RETURNS VOID
+          AS $$
+      DECLARE
+          tsv tsvector;
+          chunk text;
+          start_idx integer := 1;
+          end_idx integer;
+          text_length integer := octet_length(new_row.documenttext);
+      BEGIN
+          LOOP
+              -- Process the document in chunks
+              WHILE start_idx <= text_length LOOP
+                  end_idx := LEAST (start_idx + chunk_size - 1, text_length);
+                  chunk := substr(new_row.documenttext, start_idx, end_idx - start_idx + 1);
+                  tsv := setweight(to_tsvector('pg_catalog.english', coalesce(chunk, '')), '${weights.documenttext}');
+                  INSERT INTO documents_text_search (documentid, documenttsv)
+                      VALUES (new_row.objectid, tsv);
+                  start_idx := end_idx + 1;
+              END LOOP;
+              -- Add document description and name as a single row
+              tsv := setweight(to_tsvector('pg_catalog.english', coalesce(new_row.documentdesc, '')), '${weights.documentdesc}') ||
+                     setweight(to_tsvector('pg_catalog.english', coalesce(new_row.documentname, '')), '${weights.documentname}');
+              INSERT INTO documents_text_search (documentid, documenttsv)
+                  VALUES (new_row.objectid, tsv);
+              RETURN;
+          END LOOP;
+      END
+      $$
+      LANGUAGE plpgsql;
+    `);
+    await client.query(`
+      CREATE OR REPLACE FUNCTION documentstext_trigger_fn ()
+          RETURNS TRIGGER
+          AS $$
+      DECLARE
+          -- Initial chunk size of 1 MB.
+          chunk_size integer := 1024 * 1024;
+      BEGIN
+          LOOP
+              BEGIN
+                  -- Call the external function to process the document
+                  PERFORM
+                      process_document (NEW, chunk_size);
+                  RETURN NEW;
+                  -- Exit on success
+              EXCEPTION
+                  WHEN OTHERS THEN
+                      -- Reduce the chunk size and retry
+                      chunk_size := chunk_size / 2;
+              -- If chunk size is too small, raise an error
+              IF chunk_size < 1024 THEN
+                  RAISE EXCEPTION 'Chunk size too small, unable to process document: %', NEW.objectid;
+                  END IF;
+              END;
+          END LOOP;
+      END
+      $$
+      LANGUAGE plpgsql;
+    `);
+
+    // Create the trigger.
+    await client.query(`
+      CREATE TRIGGER documentstext_trigger
+          AFTER INSERT ON documents_text
+          FOR EACH ROW
+          EXECUTE FUNCTION documentstext_trigger_fn ();
+    `);
+  } catch (err) {
+    log.warn('Failed to create documents_text_search table');
+    throw err;
+  }
+}
+
 // Get the ETL task for a particular profile
 function getProfileEtl(
   { createQuery, columns, maxChunksOverride, overrideWorkMemory, tableName },
@@ -1007,13 +1113,18 @@ function getProfileEtl(
     try {
       await client.query(`SET search_path TO ${schemaName}`);
 
-      await client.query(`DROP TABLE IF EXISTS ${tableName}`);
+      await client.query(`DROP TABLE IF EXISTS ${tableName} CASCADE`);
       await client.query(createQuery);
 
       log.info(`Table ${tableName} created`);
     } catch (err) {
       log.warn(`Failed to create table ${tableName}: ${err}`);
       throw err;
+    }
+
+    // Create the search vector table and triggers for `documents_text`.
+    if (tableName === 'documents_text') {
+      await setupTextSearch(client);
     }
 
     // Extract, transform, and load the new data

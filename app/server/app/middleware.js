@@ -63,12 +63,7 @@ async function getActiveSchema(req, res, next) {
     );
 
     // Add activeSchema to the request object
-    // TODO: Revert this when documents brought in with other data.
-    if (req.path.includes('/actionsDocuments')) {
-      req.activeSchema = 'search';
-    } else {
-      req.activeSchema = schema.schema_name;
-    }
+    req.activeSchema = schema.schema_name;
 
     next();
   } catch (error) {
