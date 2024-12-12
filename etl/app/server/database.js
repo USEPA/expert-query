@@ -587,6 +587,36 @@ async function loadUtilityTables(pool, s3Config, schemaName) {
   log.info('Utility tables finished updating');
 }
 
+async function createProfileViews(pool, schemaName, profile) {
+  if (!profile.views) return;
+
+  const client = await getClient(pool);
+  try {
+    await client.query(`SET search_path TO ${schemaName}`);
+    let count = 0;
+    for (const view of profile.views) {
+      const joinClause = (join) =>
+        `JOIN ${join.table} ON ${join.joinKey[0]} = ${join.joinKey[1]}`;
+      await client.query(`
+      CREATE OR REPLACE VIEW ${view.name}
+      AS
+      SELECT ${view.columns
+        .map((col) => (col.table ? `${col.table}.${col.name}` : col.name))
+        .join(', ')}
+      FROM ${profile.tableName} ${
+        view.joins ? view.joins.map(joinClause).join(' ') : ''
+      }
+    `);
+      count++;
+      log.info(
+        `${profile.tableName}: Created materialized view (${count} of ${profile.views.length}): ${view.name}`,
+      );
+    }
+  } finally {
+    client.release();
+  }
+}
+
 export async function runLoad(pool, s3Config, s3Julian, logId) {
   log.info('Running ETL process!');
 
@@ -602,10 +632,19 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
     await loadUtilityTables(pool, s3Config, schemaName);
 
     // Add tables to schema and import new data
-    const loadTasks = Object.values(s3Config.tableConfig).map((profile) => {
-      return loadProfile(profile, pool, schemaName, s3Config, s3Julian);
-    });
+    const loadTasks = Object.values(s3Config.tableConfig)
+      .filter((profile) => profile.source?.toLowerCase === 'attains')
+      .map((profile) => {
+        return loadProfile(profile, pool, schemaName, s3Config, s3Julian);
+      });
     await Promise.all(loadTasks);
+
+    // Create views
+    await Promise.all(
+      Object.values(s3Config.tableConfig).map((profile) => {
+        return createProfileViews(pool, schemaName, profile);
+      }),
+    );
 
     const profileStats = await getProfileStats(pool, schemaName, s3Julian);
 
@@ -882,9 +921,6 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
     (c) => c.name === 'reportingcycle',
   );
   const hasCycleId = table.columns.find((c) => c.name === 'cycleid');
-  const hasAssessmentUnitId = table.columns.find(
-    (c) => c.name === 'assessmentunitid',
-  );
 
   const orderByArray = [];
   if (hasOrgId) {
@@ -901,7 +937,7 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
   }
 
   let mvName = `${tableName}_countperorgcycle`;
-  if (hasAssessmentUnitId) {
+  if (table.includeCycleCount) {
     await client.query(`
     CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
     AS
@@ -996,6 +1032,7 @@ async function transform(tableName, columns, data) {
   return pgp.helpers.insert(rows, insertColumns, tableName);
 }
 
+// TODO: Make this a bit more configurable.
 // Create the documents_text_search table and triggers.
 async function setupTextSearch(client) {
   try {
@@ -1006,11 +1043,7 @@ async function setupTextSearch(client) {
       CREATE TABLE documents_text_search (
         objectid SERIAL PRIMARY KEY,
         documentid INTEGER,
-        documenttsv TSVECTOR,
-        CONSTRAINT fk_documentstextsearch_documentstext
-        FOREIGN KEY (documentid)
-        REFERENCES documents_text (objectid)
-        ON DELETE CASCADE
+        documenttsv TSVECTOR
       )
     `);
 

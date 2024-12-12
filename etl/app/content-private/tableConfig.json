@@ -1,8 +1,10 @@
 {
   "actions": {
+    "source": "attains",
     "tableName": "actions",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS actions ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, fiscalyearestablished VARCHAR (4), parameter VARCHAR(240), parametergroup VARCHAR(60), locationdescription VARCHAR(2000), actiontype VARCHAR(50) NOT NULL, watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), actionagency VARCHAR(10) NOT NULL, inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1), plansummarylink VARCHAR(116) )",
+    "includeCycleCount": true,
     "columns": [
       {
         "name": "objectid",
@@ -196,6 +198,7 @@
     ]
   },
   "actionDocuments": {
+    "source": "attains",
     "tableName": "action_documents",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS action_documents ( objectid INTEGER PRIMARY KEY, documentkey INTEGER, actionid VARCHAR(45), actiontypename VARCHAR(50), organizationid VARCHAR(30), regionid VARCHAR(2), state VARCHAR(4000), actionname VARCHAR(255), completiondate DATE, tmdldate DATE, actiondocumenturl TEXT )",
@@ -291,12 +294,90 @@
           }
         ]
       }
+    ],
+    "views": [
+      {
+        "name": "action_documents_view",
+        "columns": [
+          {
+            "name": "objectid",
+            "table": "action_documents"
+          },
+          {
+            "name": "actiondocumenturl"
+          },
+          {
+            "name": "actionid"
+          },
+          {
+            "name": "actionname"
+          },
+          {
+            "name": "actiontypename"
+          },
+          {
+            "name": "completiondate"
+          },
+          {
+            "name": "organizationid"
+          },
+          {
+            "name": "regionid"
+          },
+          {
+            "name": "state"
+          },
+          {
+            "name": "tmdldate"
+          },
+          {
+            "name": "documentdesc"
+          },
+          {
+            "name": "documentfilename"
+          },
+          {
+            "name": "documentfiletypename"
+          },
+          {
+            "name": "documentkey",
+            "table": "documents_text"
+          },
+          {
+            "name": "documentname"
+          },
+          {
+            "name": "documenttsv"
+          },
+          {
+            "name": "documenttypename"
+          }
+        ],
+        "joins": [
+          {
+            "table": "documents_text",
+            "joinKey": [
+              "documents_text.documentkey",
+              "action_documents.documentkey"
+            ]
+          },
+          {
+            "table": "documents_text_search",
+            "joinKey": [
+              "documents_text_search.documentid",
+              "documents_text.objectid"
+            ]
+          }
+        ]
+      }
     ]
   },
   "assessments": {
+    "source": "attains",
     "tableName": "assessments",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS assessments ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), cyclelastassessed NUMERIC(4,0) NOT NULL, overallstatus VARCHAR(4000), epaircategory VARCHAR(5), stateircategory VARCHAR(5), parametergroup VARCHAR(60), parametername VARCHAR(240), parameterstatus VARCHAR(240), usegroup VARCHAR(500), usename VARCHAR(255), useircategory VARCHAR(5), usestateircategory VARCHAR(5), usesupport VARCHAR(1), parameterattainment VARCHAR(50), parameterircategory VARCHAR(5), parameterstateircategory VARCHAR(5), cyclefirstlisted NUMERIC(4,0), associatedactionid VARCHAR(45), associatedactionname VARCHAR(255), associatedactiontype VARCHAR(50), locationdescription VARCHAR(2000), watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), sizesource VARCHAR(100), sourcescale VARCHAR(30), assessmentunitstatus VARCHAR(1), useclassname VARCHAR(50), assessmentdate DATE, assessmentbasis VARCHAR(30), monitoringstartdate DATE, monitoringenddate DATE, assessmentmethods VARCHAR(150), assessmenttypes VARCHAR(30), delisted VARCHAR(1), delistedreason VARCHAR(100), seasonstartdate DATE, seasonenddate DATE, pollutantindicator VARCHAR(1), cyclescheduledfortmdl NUMERIC(4,0), cycleexpectedtoattain NUMERIC(4,0), cwa303dpriorityranking VARCHAR(25), vision303dpriority VARCHAR(1), alternatelistingidentifier VARCHAR(50), consentdecreecycle NUMERIC(4,0), associatedactionstatus VARCHAR(30), associatedactionagency VARCHAR(10) )",
+    "includeCycleCount": true,
     "overrideWorkMemory": "1GB",
     "columns": [
       {
@@ -771,9 +852,11 @@
     ]
   },
   "assessmentUnits": {
+    "source": "attains",
     "tableName": "assessment_units",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30), locationtypecode VARCHAR(22), locationtext VARCHAR(100) )",
+    "includeCycleCount": true,
     "columns": [
       {
         "name": "objectid",
@@ -938,9 +1021,11 @@
     ]
   },
   "assessmentUnitsMonitoringLocations": {
+    "source": "attains",
     "tableName": "assessment_units_monitoring_locations",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units_monitoring_locations ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, monitoringlocationorgid VARCHAR(30), monitoringlocationid VARCHAR(35), monitoringlocationdatalink VARCHAR(255), assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30) )",
+    "includeCycleCount": true,
     "columns": [
       {
         "name": "objectid",
@@ -1111,9 +1196,11 @@
     ]
   },
   "catchmentCorrespondence": {
+    "source": "attains",
     "tableName": "catchment_correspondence",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS catchment_correspondence ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, catchmentnhdplusid NUMERIC(38,0) )",
+    "includeCycleCount": true,
     "overrideWorkMemory": "790MB",
     "columns": [
       {
@@ -1237,9 +1324,11 @@
     ]
   },
   "documentsText": {
+    "source": "attains",
     "tableName": "documents_text",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS documents_text ( objectid INTEGER PRIMARY KEY, documentkey INTEGER, documentname TEXT, documentdesc TEXT, documentfilename TEXT, documentfiletypename TEXT, documenttypename TEXT, documenttext TEXT )",
+    "hidden": true,
     "columns": [
       {
         "name": "objectid",
@@ -1280,10 +1369,37 @@
     "materializedViewColumns": [],
     "materializedViews": []
   },
+  "documentsTextSearch": {
+    "tableName": "documents_text_search",
+    "idColumn": "objectid",
+    "createQuery": "CREATE TABLE IF NOT EXISTS documents_text ( objectid SERIAL PRIMARY KEY, documentid INTEGER, documenttsv TSVECTOR )",
+    "hidden": true,
+    "columns": [
+      {
+        "name": "objectid",
+        "alias": "objectId",
+        "skipIndex": true
+      },
+      {
+        "name": "documentid",
+        "alias": "documentId"
+      },
+      {
+        "name": "documenttsv",
+        "alias": "documentQuery",
+        "type": "tsvector",
+        "output": false
+      }
+    ],
+    "materializedViewColumns": [],
+    "materializedViews": []
+  },
   "sources": {
+    "source": "attains",
     "tableName": "sources",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS sources ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, overallstatus VARCHAR(4000), epaircategory VARCHAR(5), stateircategory VARCHAR(5), sourcename VARCHAR(240) NOT NULL, confirmed VARCHAR(1) NOT NULL, parametergroup VARCHAR(60) NOT NULL, causename VARCHAR(240) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL )",
+    "includeCycleCount": true,
     "columns": [
       {
         "name": "objectid",
@@ -1464,9 +1580,11 @@
     ]
   },
   "tmdl": {
+    "source": "attains",
     "tableName": "tmdl",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS tmdl ( objectid INTEGER PRIMARY KEY, state VARCHAR(4000), region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, assessmentunitid VARCHAR(50), assessmentunitname VARCHAR(255), actionid VARCHAR(45) NOT NULL, actionname VARCHAR(255) NOT NULL, completiondate DATE, tmdldate DATE, fiscalyearestablished VARCHAR(4), pollutant VARCHAR(240), pollutantgroup VARCHAR(60), sourcetype VARCHAR(40), addressedparameter VARCHAR(240), addressedparametergroup VARCHAR(60), locationdescription VARCHAR(2000), watertype VARCHAR(40), watersize NUMERIC(18,4), watersizeunits VARCHAR(15), actionagency VARCHAR(10) NOT NULL, loadallocation NUMERIC(21,3), loadallocationunits VARCHAR(40), explicitmarginofsafety VARCHAR(255), implicitmarginofsafety VARCHAR(255), tmdlendpoint1 TEXT, tmdlendpoint2 TEXT, tmdlendpoint3 TEXT, npdesidentifier VARCHAR(60), otheridentifier VARCHAR(4000), wasteloadallocation NUMERIC(24,3), inindiancountry VARCHAR(1), includeinmeasure VARCHAR(1), plansummarylink VARCHAR(116), tmdlendpoint TEXT GENERATED ALWAYS AS (coalesce(tmdlendpoint1, '') || coalesce(tmdlendpoint2, '') || coalesce(tmdlendpoint3, '')) STORED )",
+    "includeCycleCount": true,
     "overrideWorkMemory": "790MB",
     "columns": [
       {

@@ -63,7 +63,7 @@ class NoParametersException extends Error {
 /**
  * Searches for a materialized view, associated with the profile, that is applicable to the provided columns/filters.
  * @param {Object} profile definition of the profile being queried
- * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
+ * @param {Array<Object>} columns definitions of columns to return
  * @param {Array<string>} columnsForFilter names of columns that can be used to filter
  * @returns definition of a materialized view that is applicable to the desired columns/filters or null if none are suitable
  */
@@ -75,6 +75,43 @@ function findMaterializedView(profile, columns, columnsForFilter) {
       if (!mv.columns.find((mvCol) => mvCol.name === col)) return;
     }
     return mv;
+  });
+}
+
+/**
+ * Searches for a view, associated with the profile, that is applicable to the provided columns.
+ * @param {Object} profile definition of the profile being queried
+ * @param {Array<string>} columns aliases of columns to return
+ * @returns definition of a view that is applicable to the desired columns, or null if none are suitable
+ */
+function findView(profile, columns) {
+  if (!profile.views) return;
+
+  const expandedViews = profile.views?.map((view) => ({
+    ...view,
+    columns: view.columns.map((vCol) => {
+      const pCol = (
+        vCol.table
+          ? Object.values(privateConfig.tableConfig).find(
+              (p) => p.tableName === vCol.table,
+            )
+          : profile.columns
+      )?.columns.find((c) => c.name === vCol.name);
+      if (!pCol) {
+        throw new Error(
+          `The view column ${vCol.name} does not exist on the specified profile`,
+        );
+      }
+
+      return pCol;
+    }),
+  }));
+
+  return expandedViews.find((view) => {
+    for (const col of columns) {
+      if (!view.columns.find((vCol) => vCol.alias === col)) return;
+    }
+    return view;
   });
 }
 
@@ -125,7 +162,7 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
   const columnsForFilter = [];
   const columnNamesForFilter = [];
   columns.forEach((col) => {
-    if (col.output !== false && params.filters.hasOwnProperty(col.alias)) {
+    if (params.filters.hasOwnProperty(col.alias)) {
       columnsForFilter.push(col);
       columnNamesForFilter.push(col.name);
     }
@@ -334,30 +371,16 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     if (!columns.includes('objectId')) columns.push('objectId');
     columns.forEach((col) => {
       const profileCol = profile.columns.find((pc) => pc.alias === col);
-      if (profileCol && profileCol.output !== false)
-        columnsToReturn.push(profileCol);
+      if (profileCol) columnsToReturn.push(profileCol);
     });
 
     // build the select query
     const selectColumns =
-      columnsToReturn.length > 0
-        ? columnsToReturn
-        : profile.columns.filter((col) => col.output !== false);
+      columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
     const selectText = selectColumns.map((col) =>
       col.name === col.alias ? col.name : `${col.name} AS "${col.alias}"`,
     );
-    if (profile.tableName === 'actions_documents') {
-      const rankText = 'ts_rank_cd(doc_tsv, query, 1 | 32)';
-      query
-        .select(
-          knex.raw(
-            `to_char(${rankText} * 100, 'FM999') AS "rankPercent", ${selectText}`,
-          ),
-        )
-        .orderBy(knex.raw(rankText), 'desc');
-    } else {
-      query.select(selectText).orderBy('objectid', 'asc');
-    }
+    query.select(selectText).orderBy('objectid', 'asc');
   }
 
   // build where clause of the query
@@ -368,15 +391,7 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
     } else if (exactArg !== undefined) {
-      if (profile.tableName === 'actions_documents' && col.alias === 'docTxt') {
-        query.fromRaw(
-          `${req.activeSchema}.${profile.tableName}, websearch_to_tsquery(?) query`,
-          [exactArg],
-        );
-        query.whereRaw('query @@ doc_tsv');
-      } else {
-        appendToWhere(query, col.name, exactArg);
-      }
+      appendToWhere(query, col.name, exactArg);
     }
   });
 
@@ -386,42 +401,78 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
   }
 }
 
-/**
- * Runs a query against the provided profile name and streams the a portion
- * of the result to the client as inline json.
- * @param {Object} profile definition of the profile being queried
- * @param {express.Request} req
- * @param {express.Response} res
- */
-async function executeQueryPreview(profile, req, res) {
-  const metadataObj = populateMetdataObjFromRequest(req);
-
-  try {
-    const queryParams = getQueryParams(req);
-    validateQueryParams(queryParams, profile);
-
-    const query = knex
-      .withSchema(req.activeSchema)
-      .from(profile.tableName)
-      .limit(previewSize);
-
-    parseCriteria(req, query, profile, queryParams);
-
-    const queryRes = await queryPool(query);
-
-    return res.status(200).json(queryRes);
-  } catch (error) {
-    log.error(
-      formatLogMsg(
-        metadataObj,
-        `Failed to get data from the "${profile.tableName}" table:`,
-        error,
-      ),
-    );
-    return res
-      .status(error.httpStatusCode ?? 500)
-      .json({ error: error.toString() });
+function parseDocumentSearchCriteria(
+  query,
+  profile,
+  queryParams,
+  countOnly = false,
+) {
+  const columnsForFilter = Object.keys(queryParams.filters);
+  const columnsToReturn = queryParams.columns ?? [];
+  const view = findView(profile, columnsForFilter.concat(columnsToReturn));
+  if (view) query.from(view.name);
+  const target = view ?? profile;
+  // NOTE:XXX: This will need to change if we ever have multiple tsvector columns in a single table.
+  const documentQueryColumn = target.columns.find(
+    (col) => col.type === 'tsvector',
+  );
+  const isDocumentSearch =
+    documentQueryColumn && columnsForFilter.includes(documentQueryColumn.alias);
+  if (!isDocumentSearch && !columnsToReturn.includes('objectId')) {
+    columnsToReturn.push('objectId');
   }
+  const columnsToReturnDefs = target.columns.filter(
+    (col) => col.output !== false && columnsToReturn.includes(col.alias),
+  );
+
+  // Build the select query, filtering down to requested columns, if the user provided that option.
+  const selectText = (
+    columnsToReturn.length > 0 ? columnsToReturnDefs : target.columns
+  ).map((col) =>
+    col.name === col.alias ? col.name : `${col.name} AS "${col.alias}"`,
+  );
+  if (isDocumentSearch) {
+    const rankQuery = knex.raw(
+      `ts_rank_cd(${documentQueryColumn.name}, websearch_to_tsquery(?), 1 | 32) AS rank`,
+      [queryParams.filters[documentQueryColumn.alias]],
+    );
+    query
+      .with('ranked', (qb) => {
+        return qb
+          .select(selectText.concat(rankQuery))
+          .from(target.tableName)
+          .whereRaw(`${documentQueryColumn.name} @@ websearch_to_tsquery(?)`, [
+            queryParams.filters[documentQueryColumn.alias],
+          ]);
+      })
+      .from('ranked')
+      .groupBy('actionid', 'documentkey'); // TODO: Remove hard-coded columns
+    if (!countOnly) {
+      query
+        .select(
+          selectText.concat(
+            knex.raw('ROUND(SUM(rank) * 100, 1) AS "rankPercent"'),
+          ),
+        )
+        .orderBy('rankPercent', 'desc');
+    }
+  } else if (!countOnly) {
+    query.select(selectText).orderBy('objectid', 'asc');
+  }
+
+  // build where clause of the query
+  profile.columns.forEach((col) => {
+    if (col.type === 'tsvector') return;
+
+    const lowArg = 'lowParam' in col && queryParams.filters[col.lowParam];
+    const highArg = 'highParam' in col && queryParams.filters[col.highParam];
+    const exactArg = queryParams.filters[col.alias];
+    if (lowArg || highArg) {
+      appendRangeToWhere(query, col, lowArg, highArg);
+    } else if (exactArg !== undefined) {
+      appendToWhere(query, col.name, exactArg);
+    }
+  });
 }
 
 /**
@@ -454,7 +505,11 @@ async function executeQuery(profile, req, res) {
       throw new NoParametersException('Please provide at least one parameter');
     }
 
-    parseCriteria(req, query, profile, queryParams);
+    if (profile.tableName === 'action_documents') {
+      parseDocumentSearchCriteria(query, profile, queryParams);
+    } else {
+      parseCriteria(req, query, profile, queryParams);
+    }
 
     // Check that the query doesn't exceed the MAX_QUERY_SIZE.
     if (await exceedsMaxSize(query)) {
@@ -520,7 +575,6 @@ function validateQueryParams(queryParams, profile) {
       if (c.lowParam === name || c.highParam === name || c.alias === name)
         return c;
     });
-    if (!column) throw new InvalidParameterException(name, 'profile');
     if (Array.isArray(value)) {
       if (
         column.lowParam === name ||
@@ -529,6 +583,7 @@ function validateQueryParams(queryParams, profile) {
       )
         throw new DuplicateParameterException(name);
     }
+    if (!column) throw new InvalidParameterException(name, 'profile');
   });
 }
 
@@ -569,7 +624,11 @@ async function executeQueryCountOnly(profile, req, res) {
     const queryParams = getQueryParams(req);
 
     // query against the ..._count mv when no filters are applied, for better performance
-    if (Object.keys(queryParams.filters).length === 0) {
+    // TODO: Remove hard-coded table name.
+    if (
+      Object.keys(queryParams.filters).length === 0 &&
+      profile.tableName !== 'action_documents'
+    ) {
       const query = knex
         .withSchema(req.activeSchema)
         .from(`${profile.tableName}_count`);
@@ -579,7 +638,11 @@ async function executeQueryCountOnly(profile, req, res) {
 
     validateQueryParams(queryParams, profile);
 
-    parseCriteria(req, query, profile, queryParams, true);
+    if (profile.tableName === 'action_documents') {
+      parseDocumentSearchCriteria(query, profile, queryParams, true);
+    } else {
+      parseCriteria(req, query, profile, queryParams, true);
+    }
 
     const count = (await queryPool(query.count(), true)).count;
     return res.status(200).json({ count, maxCount: maxQuerySize });
@@ -977,6 +1040,8 @@ export default function (app, basePath) {
 
   Object.entries(privateConfig.tableConfig).forEach(
     ([profileName, profile]) => {
+      if (profile.hidden) return;
+
       // get column domain values
       router.post(`/${profileName}/values/:column`, async function (req, res) {
         await executeValuesQuery(profile, req, res);
@@ -998,7 +1063,7 @@ export default function (app, basePath) {
         await executeQueryCountOnly(profile, req, res);
       });
 
-      if (profileName !== 'actionsDocuments') {
+      if (profile.includeCycleCount) {
         // get bean counts
         router.get(
           `/${profileName}/countPerOrgCycle`,
