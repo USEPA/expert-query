@@ -30,26 +30,30 @@
     "label": "Actions",
     "resource": "actions"
   },
-  "actionsDocuments": {
-    "key": "actionsDocuments",
+  "actionDocuments": {
+    "key": "actionDocuments",
     "description": "Contains information on documents associated with actions to restore and protect water quality.",
     "columns": [
       "objectId",
+      "actionDocumentUrl",
       "actionId",
       "actionName",
-      "docId",
-      "docUrl",
-      "docFilename",
-      "docErrors",
-      "docTxt",
+      "actionTypeName",
+      "completionDate",
+      "documentDesc",
+      "documentFileName",
+      "documentFileTypeName",
+      "documentKey",
+      "documentName",
+      "documentQuery",
+      "documentTypeName",
       "organizationId",
-      "organizationName",
-      "organizationType",
-      "region",
-      "state"
+      "regionId",
+      "state",
+      "tmdlDate"
     ],
     "label": "Actions Document Search",
-    "resource": "actionsDocuments"
+    "resource": "actionDocuments"
   },
   "assessments": {
     "key": "assessments",

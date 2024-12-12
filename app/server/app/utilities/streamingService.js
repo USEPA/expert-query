@@ -164,8 +164,8 @@ export default class StreamingService {
     outStream,
     inStream,
     format,
-    excelDoc = null,
-    pageOptions = null,
+    excelDoc,
+    pageOptions,
   ) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,

@@ -25,9 +25,6 @@ export const Table = ({
   className,
   tabIndex = -1,
 }: TableProps): React.ReactElement => {
-  const [sortDir, setSortDir] = useState(initialSortDir);
-  const [sortIndex, setSortIndex] = useState(initialSortIndex);
-
   // Swap sort direction.
   const getSortDirection = (prevSortDir: 'ascending' | 'descending') => {
     if (prevSortDir === 'descending') {
@@ -36,6 +33,11 @@ export const Table = ({
       return 'descending';
     }
   };
+
+  const [sortDir, setSortDir] = useState<'ascending' | 'descending'>(
+    getSortDirection(initialSortDir), // FIXME: This is a bug (possible race condition with `epa.js`), it should be `initialSortDir`
+  );
+  const [sortIndex, setSortIndex] = useState(initialSortIndex);
 
   // If a header of a sortable column is clicked, sort the column or change the sort direction.
   const handleHeaderClick = (index: number) => {

@@ -10,7 +10,7 @@
   ],
   "dataProfile": [
     { "value": "actions", "label": "Actions" },
-    { "value": "actionsDocuments", "label": "Actions Document Search" },
+    { "value": "actionDocuments", "label": "Actions Document Search" },
     { "value": "assessmentUnits", "label": "Assessment Units" },
     {
       "value": "assessmentUnitsMonitoringLocations",

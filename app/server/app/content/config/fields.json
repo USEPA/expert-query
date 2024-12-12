@@ -210,8 +210,8 @@
       "label": "Delisted Reason",
       "type": "multiselect"
     },
-    "docTxt": {
-      "key": "docTxt",
+    "documentQuery": {
+      "key": "documentQuery",
       "label": "Search Text / Keyword",
       "type": "text"
     },
@@ -381,6 +381,7 @@
       "type": "multiselect"
     },
     "region": { "key": "region", "label": "Region", "type": "multiselect" },
+    "regionId": { "key": "regionId", "label": "Region", "type": "multiselect" },
     "reportingCycle": {
       "key": "reportingCycle",
       "label": "Reporting Cycle",
@@ -541,14 +542,14 @@
         "fields": ["fiscalYearEstablishedLo", "fiscalYearEstablishedHi"]
       }
     ],
-    "actionsDocuments": [
+    "actionDocuments": [
       {
         "key": "documentText",
-        "fields": ["docTxt"]
+        "fields": ["documentQuery"]
       },
       {
         "key": "areaOfInterest",
-        "fields": ["region", "state", "organizationType", "organizationId"]
+        "fields": ["regionId", "state"]
       },
       {
         "key": "action",

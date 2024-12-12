@@ -388,7 +388,7 @@ export function QueryBuilder() {
           staticOptions={staticOptions}
         />
 
-        {/*profile.key === 'actionsDocuments' && (
+        {/*profile.key === 'actionDocuments' && (
           <>
             <div className="display-flex flex-justify-center margin-y-3 width-full">
               {preview.status === 'pending' ? (
@@ -463,7 +463,7 @@ export function QueryBuilder() {
           </>
         )*/}
 
-        {profile.key === 'actionsDocuments' && (
+        {profile.key === 'actionDocuments' && (
           <>
             <div className="display-flex flex-justify-center margin-y-3 width-full">
               <button

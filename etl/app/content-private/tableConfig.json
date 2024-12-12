@@ -331,26 +331,32 @@
             "name": "tmdldate"
           },
           {
-            "name": "documentdesc"
+            "name": "documentdesc",
+            "table": "documents_text"
           },
           {
-            "name": "documentfilename"
+            "name": "documentfilename",
+            "table": "documents_text"
           },
           {
-            "name": "documentfiletypename"
+            "name": "documentfiletypename",
+            "table": "documents_text"
           },
           {
             "name": "documentkey",
             "table": "documents_text"
           },
           {
-            "name": "documentname"
+            "name": "documentname",
+            "table": "documents_text"
           },
           {
-            "name": "documenttsv"
+            "name": "documenttsv",
+            "table": "documents_text_search"
           },
           {
-            "name": "documenttypename"
+            "name": "documenttypename",
+            "table": "documents_text"
           }
         ],
         "joins": [
@@ -1387,8 +1393,7 @@
       {
         "name": "documenttsv",
         "alias": "documentQuery",
-        "type": "tsvector",
-        "output": false
+        "type": "tsvector"
       }
     ],
     "materializedViewColumns": [],

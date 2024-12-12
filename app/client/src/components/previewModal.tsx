@@ -1,3 +1,4 @@
+// TODO: Move all table fields to configuration.
 import { Dialog } from '@reach/dialog';
 import Close from 'images/close.svg?react';
 import { uniqueId } from 'lodash';
@@ -30,12 +31,12 @@ export function PreviewModal<D extends QueryData>({
   const [id] = useState(uniqueId('modal-'));
 
   // Data to be displayed in the preview table.
-  const [preview, setPreview] = useState<
-    FetchState<Array<ActionsDocumentsRow>>
-  >({
-    data: null,
-    status: 'idle',
-  });
+  const [preview, setPreview] = useState<FetchState<Array<ActionDocumentsRow>>>(
+    {
+      data: null,
+      status: 'idle',
+    },
+  );
 
   useEffect(() => {
     setPreview({ data: null, status: 'pending' });
@@ -53,22 +54,22 @@ export function PreviewModal<D extends QueryData>({
       signal: getSignal(),
     })
       .then((res) => {
-        const data = res.data.map((row: ActionsDocumentsRow) => ({
+        const data = res.data.map((row: ActionDocumentsRow) => ({
           rankPercent: row.rankPercent,
-          docUrl: {
-            sortValue: row.docFilename,
+          actionDocumentUrl: {
+            sortValue: row.documentFileName,
             value: (
               <a
-                href={row.docUrl as string}
+                href={row.actionDocumentUrl}
                 target="_blank"
                 rel="noopener,noreferrer"
               >
-                {row.docFilename}
+                {row.documentFileName}
               </a>
             ),
           },
           actionId: row.actionId,
-          region: row.region,
+          regionId: row.regionId,
           state: row.state,
           organizationId: row.organizationId,
         }));
@@ -84,9 +85,9 @@ export function PreviewModal<D extends QueryData>({
   const columns = useMemo(
     () => [
       { id: 'rankPercent', name: 'Rank (%)', sortable: true },
-      { id: 'docUrl', name: 'Document URL', sortable: true },
+      { id: 'actionDocumentUrl', name: 'Document URL', sortable: true },
       { id: 'actionId', name: 'Action ID', sortable: false },
-      { id: 'region', name: 'Region', sortable: false },
+      { id: 'regionId', name: 'Region', sortable: false },
       { id: 'state', name: 'State', sortable: false },
       { id: 'organizationId', name: 'Organization ID', sortable: false },
     ],
@@ -161,15 +162,22 @@ export function PreviewModal<D extends QueryData>({
 ## Types
 */
 
-type ActionsDocumentsRow = {
+type ActionDocumentsRow = {
+  actionDocumentUrl: string;
   actionId: string;
-  docFilename: string;
-  docUrl: string;
-  objectId: string;
+  actionName: string;
+  actionTypeName: string;
+  completionDate: string;
+  documentFileName: string;
+  documentFileTypeName: string;
+  documentKey: number;
+  documentName: string;
+  documentTypeName: string;
   organizationId: string;
   rankPercent: number;
-  region: string;
+  regionId: string;
   state: string;
+  tmdlDate: string;
 };
 
 type PreviewModalProps<D extends QueryData> = {
