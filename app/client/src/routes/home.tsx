@@ -54,8 +54,6 @@ import type {
 ## Components
 */
 
-export default Home;
-
 function HomeContent({ content }: Readonly<{ content: Content }>) {
   const {
     domainValues,
@@ -2221,3 +2219,5 @@ type SourceSelectFilterProps = SelectFilterProps & {
 };
 
 type UrlQueryParam = [Value, Value];
+
+export default Home;

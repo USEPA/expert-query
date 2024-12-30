@@ -113,8 +113,9 @@ function findView(profile, columns) {
         !view.columns.find((vCol) =>
           [vCol.alias, vCol.lowParam, vCol.highParam].includes(col),
         )
-      )
+      ) {
         return;
+      }
     }
     return view;
   });
@@ -400,13 +401,7 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
   }
 }
 
-function parseDocumentSearchCriteria(
-  req,
-  query,
-  profile,
-  queryParams,
-  countOnly = false,
-) {
+function parseDocumentSearchCriteria(req, query, profile, queryParams) {
   const columnsForFilter = Object.keys(queryParams.filters);
   let columnsToReturn = queryParams.columns ?? [];
   const view = findView(profile, columnsForFilter.concat(columnsToReturn));
@@ -512,7 +507,8 @@ async function executeQuery(profile, req, res) {
       throw new NoParametersException('Please provide at least one parameter');
     }
 
-    if (profile.tableName === 'action_documents') {
+    // TODO: Merge this into one function.
+    if (profile.id === 'actionDocuments') {
       parseDocumentSearchCriteria(req, query, profile, queryParams);
     } else {
       parseCriteria(req, query, profile, queryParams);
@@ -524,6 +520,12 @@ async function executeQuery(profile, req, res) {
         message: `The current query exceeds the maximum query size of ${maxQuerySize.toLocaleString()} rows. Please refine the search, or visit ${
           process.env.SERVER_URL
         }/national-downloads to download a compressed dataset`,
+      });
+    }
+
+    if (await isEmptyResult(query)) {
+      return res.status(200).json({
+        message: 'No results found for the current query',
       });
     }
 
@@ -616,6 +618,20 @@ async function exceedsMaxSize(query) {
 }
 
 /**
+ * Checks if the query result is empty.
+ * @param {Object} query KnexJS query object
+ * @returns {Promise<boolean>} true if the query result is empty
+ */
+async function isEmptyResult(query) {
+  const count = await queryPool(
+    knex.from(query.clone().limit(1).as('q')).count(),
+    true,
+  );
+
+  return count.count === 0;
+}
+
+/**
  * Runs a query against the provided profile name and returns the number of records.
  * @param {Object} profile definition of the profile being queried
  * @param {express.Request} req
@@ -631,11 +647,7 @@ async function executeQueryCountOnly(profile, req, res) {
     const queryParams = getQueryParams(req);
 
     // query against the ..._count mv when no filters are applied, for better performance
-    // TODO: Remove hard-coded table name.
-    if (
-      Object.keys(queryParams.filters).length === 0 &&
-      profile.tableName !== 'action_documents'
-    ) {
+    if (Object.keys(queryParams.filters).length === 0) {
       const query = knex
         .withSchema(req.activeSchema)
         .from(`${profile.tableName}_count`);
@@ -646,9 +658,9 @@ async function executeQueryCountOnly(profile, req, res) {
     // TODO: Make this work with views.
     //validateQueryParams(queryParams, profile);
 
-    // TODO: Remove hard-coded table name.
-    if (profile.tableName === 'action_documents') {
-      parseDocumentSearchCriteria(req, query, profile, queryParams, true);
+    // TODO: Merge this into one function.
+    if (profile.id === 'actionDocuments') {
+      parseDocumentSearchCriteria(req, query, profile, queryParams);
     } else {
       parseCriteria(req, query, profile, queryParams, true);
     }
@@ -656,7 +668,6 @@ async function executeQueryCountOnly(profile, req, res) {
     const count = (
       await queryPool(knex.from(query.clone().as('q')).count(), true)
     ).count;
-    //const count = (await queryPool(query.count(), true)).count;
     return res.status(200).json({ count, maxCount: maxQuerySize });
   } catch (error) {
     log.error(

@@ -37,9 +37,11 @@ export function PreviewModal<D extends QueryData>({
       status: 'idle',
     },
   );
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     setPreview({ data: null, status: 'pending' });
+    setErrorMsg(null);
     postData({
       url: queryUrl,
       apiKey,
@@ -54,10 +56,16 @@ export function PreviewModal<D extends QueryData>({
       signal: getSignal(),
     })
       .then((res) => {
+        if (!Array.isArray(res.data)) {
+          setErrorMsg(res.message);
+          setPreview({ data: null, status: 'failure' });
+          return;
+        }
+
         const data = res.data.map((row: ActionDocumentsRow) => ({
           rankPercent: row.rankPercent,
           actionDocumentUrl: {
-            sortValue: row.documentFileName,
+            sortValue: row.documentName,
             value: (
               <a
                 href={row.actionDocumentUrl}
@@ -85,7 +93,7 @@ export function PreviewModal<D extends QueryData>({
   const columns = useMemo(
     () => [
       { id: 'rankPercent', name: 'Rank (%)', sortable: true },
-      { id: 'actionDocumentUrl', name: 'Document URL', sortable: true },
+      { id: 'actionDocumentUrl', name: 'Document', sortable: true },
       { id: 'actionId', name: 'Action ID', sortable: false },
       { id: 'regionId', name: 'Region', sortable: false },
       { id: 'state', name: 'State', sortable: false },
@@ -116,7 +124,8 @@ export function PreviewModal<D extends QueryData>({
           )}
           {preview.status === 'failure' && (
             <Alert type="error">
-              The specified query could not be executed at this time.
+              {errorMsg ??
+                'The specified query could not be executed at this time.'}
             </Alert>
           )}
           {preview.status === 'success' && (

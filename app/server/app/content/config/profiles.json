@@ -47,7 +47,9 @@
       "documentName",
       "documentQuery",
       "documentTypeName",
+      "organizationType",
       "organizationId",
+      "organizationName",
       "regionId",
       "state",
       "tmdlDate"

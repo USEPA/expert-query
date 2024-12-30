@@ -1,5 +1,6 @@
 {
   "actions": {
+    "id": "actions",
     "source": "attains",
     "tableName": "actions",
     "idColumn": "objectid",
@@ -198,10 +199,11 @@
     ]
   },
   "actionDocuments": {
+    "id": "actionDocuments",
     "source": "attains",
     "tableName": "action_documents",
     "idColumn": "objectid",
-    "createQuery": "CREATE TABLE IF NOT EXISTS action_documents ( objectid INTEGER PRIMARY KEY, documentkey INTEGER, actionid VARCHAR(45), actiontypename VARCHAR(50), organizationid VARCHAR(30), regionid VARCHAR(2), state VARCHAR(4000), actionname VARCHAR(255), completiondate DATE, tmdldate DATE, actiondocumenturl TEXT )",
+    "createQuery": "CREATE TABLE IF NOT EXISTS action_documents ( objectid INTEGER PRIMARY KEY, documentkey INTEGER, actionid VARCHAR(45), actiontypename VARCHAR(50), organizationid VARCHAR(30), organizationtype VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, regionid VARCHAR(2), state VARCHAR(4000), actionname VARCHAR(255), completiondate DATE, tmdldate DATE, actiondocumenturl TEXT )",
     "columns": [
       {
         "name": "objectid",
@@ -242,6 +244,15 @@
         "alias": "organizationId"
       },
       {
+        "name": "organizationname",
+        "alias": "organizationName"
+      },
+      {
+        "name": "organizationtype",
+        "alias": "organizationType",
+        "skipIndex": true
+      },
+      {
         "name": "regionid",
         "alias": "regionId"
       },
@@ -259,6 +270,14 @@
       }
     ],
     "materializedViewColumns": [
+      {
+        "name": "documentfilename",
+        "alias": "documentFileName"
+      },
+      {
+        "name": "documentname",
+        "alias": "documentName"
+      },
       {
         "name": "statename",
         "alias": "stateName"
@@ -293,6 +312,26 @@
             "joinKey": ["state", "statecode"]
           }
         ]
+      },
+      {
+        "name": "actiondocuments_documents",
+        "columns": [
+          {
+            "name": "documentfilename"
+          },
+          {
+            "name": "documentname"
+          }
+        ],
+        "joins": [
+          {
+            "table": "documents_text",
+            "joinKey": [
+              "documents_text.documentkey",
+              "action_documents.documentkey"
+            ]
+          }
+        ]
       }
     ],
     "views": [
@@ -320,6 +359,12 @@
           },
           {
             "name": "organizationid"
+          },
+          {
+            "name": "organizationname"
+          },
+          {
+            "name": "organizationtype"
           },
           {
             "name": "regionid"
@@ -379,6 +424,7 @@
     ]
   },
   "assessments": {
+    "id": "assessments",
     "source": "attains",
     "tableName": "assessments",
     "idColumn": "objectid",
@@ -858,6 +904,7 @@
     ]
   },
   "assessmentUnits": {
+    "id": "assessmentUnits",
     "source": "attains",
     "tableName": "assessment_units",
     "idColumn": "objectid",
@@ -1027,6 +1074,7 @@
     ]
   },
   "assessmentUnitsMonitoringLocations": {
+    "id": "assessmentUnitsMonitoringLocations",
     "source": "attains",
     "tableName": "assessment_units_monitoring_locations",
     "idColumn": "objectid",
@@ -1202,6 +1250,7 @@
     ]
   },
   "catchmentCorrespondence": {
+    "id": "catchmentCorrespondence",
     "source": "attains",
     "tableName": "catchment_correspondence",
     "idColumn": "objectid",
@@ -1330,6 +1379,7 @@
     ]
   },
   "documentsText": {
+    "id": "documentsText",
     "source": "attains",
     "tableName": "documents_text",
     "idColumn": "objectid",
@@ -1373,9 +1423,22 @@
       }
     ],
     "materializedViewColumns": [],
-    "materializedViews": []
+    "materializedViews": [
+      {
+        "name": "documentstext_documentname",
+        "columns": [
+          {
+            "name": "documentname"
+          },
+          {
+            "name": "documentfilename"
+          }
+        ]
+      }
+    ]
   },
   "documentsTextSearch": {
+    "id": "documentsTextSearch",
     "tableName": "documents_text_search",
     "idColumn": "objectid",
     "createQuery": "CREATE TABLE IF NOT EXISTS documents_text ( objectid SERIAL PRIMARY KEY, documentid INTEGER, documenttsv TSVECTOR )",
@@ -1400,6 +1463,7 @@
     "materializedViews": []
   },
   "sources": {
+    "id": "sources",
     "source": "attains",
     "tableName": "sources",
     "idColumn": "objectid",
@@ -1585,6 +1649,7 @@
     ]
   },
   "tmdl": {
+    "id": "tmdl",
     "source": "attains",
     "tableName": "tmdl",
     "idColumn": "objectid",

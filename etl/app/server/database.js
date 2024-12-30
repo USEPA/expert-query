@@ -587,6 +587,121 @@ async function loadUtilityTables(pool, s3Config, schemaName) {
   log.info('Utility tables finished updating');
 }
 
+async function createProfileMaterializedViews(pool, schemaName, profile) {
+  const { columns, includeCycleCount, materializedViews, tableName } = profile;
+
+  const client = await getClient(pool);
+  try {
+    await client.query(`SET search_path TO ${schemaName}`);
+    let count = 0;
+    for (const mv of materializedViews) {
+      // optionally join columns from other tables
+      const joinClause = (join) =>
+        `LEFT JOIN ${join.table} ON ${join.joinKey[0]} = ${join.joinKey[1]}`;
+      await client.query(`
+      CREATE MATERIALIZED VIEW IF NOT EXISTS ${mv.name}
+      AS
+      SELECT DISTINCT ${mv.columns.map((col) => col.name).join(', ')}
+      FROM ${tableName} ${mv.joins ? mv.joins.map(joinClause).join(' ') : ''}
+
+      WITH DATA;
+    `);
+      count += 1;
+      log.info(
+        `${tableName}: Created materialized view (${count} of ${materializedViews.length}): ${mv.name}`,
+      );
+
+      const indexableColumnsMv = mv.columns.filter((col) => !col.skipIndex);
+
+      // create indexes for the materialized view
+      let mvIndexCount = 0;
+      const mvIndexTableName = mv.name.replaceAll('_', '');
+      for (const column of indexableColumnsMv) {
+        mvIndexCount = await createIndividualIndex(
+          client,
+          column,
+          mvIndexCount,
+          indexableColumnsMv.length,
+          mvIndexTableName,
+          mv.name,
+        );
+      }
+    }
+
+    // create countPerOrgCycle view
+    const groupByColumns = [];
+    const hasOrgId = columns.find((c) => c.name === 'organizationid');
+    const hasReportingCycleId = columns.find(
+      (c) => c.name === 'reportingcycle',
+    );
+    const hasCycleId = columns.find((c) => c.name === 'cycleid');
+
+    const orderByArray = [];
+    if (hasOrgId) {
+      groupByColumns.push('organizationid');
+      orderByArray.push({ column: 'organizationid', order: 'ASC' });
+    }
+    if (hasReportingCycleId) {
+      groupByColumns.push('reportingcycle');
+      orderByArray.push({ column: 'reportingcycle', order: 'DESC' });
+    }
+    if (hasCycleId) {
+      groupByColumns.push('cycleid');
+      orderByArray.push({ column: 'cycleid', order: 'ASC' });
+    }
+
+    let mvName = `${tableName}_countperorgcycle`;
+    if (includeCycleCount) {
+      await client.query(`
+    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
+    AS
+    SELECT ${groupByColumns.join(
+      ', ',
+    )}, count(*), count(distinct "assessmentunitid") as "assessmentUnitIdCount"
+    FROM ${tableName}
+    ${
+      tableName === 'catchment_correspondence'
+        ? 'WHERE catchmentnhdplusid IS NOT NULL'
+        : ''
+    }
+    GROUP BY ${groupByColumns.join(', ')}
+    ORDER BY ${orderByArray
+      .map((col) => `${col.column} ${col.order}`)
+      .join(', ')}
+
+    WITH DATA;
+  `);
+
+      log.info(`${tableName}: Created countPerOrgCycle materialized view`);
+    }
+
+    mvName = `${tableName}_count`;
+    const indexTableName = tableName.replaceAll('_', '');
+    await client.query(`
+    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
+    AS
+    SELECT count(*)
+    FROM ${tableName}
+    ${
+      hasReportingCycleId
+        ? `WHERE ("organizationid", "reportingcycle") IN (
+          SELECT "organizationid", MAX("reportingcycle")
+          FROM ${indexTableName}_reportingcycle
+          GROUP BY "organizationid"
+        )
+        `
+        : ''
+    }
+
+    WITH DATA;
+  `);
+
+    log.info(`${tableName}: Created count materialized view`);
+  } finally {
+    client.release();
+  }
+}
+
 async function createProfileViews(pool, schemaName, profile) {
   if (!profile.views) return;
 
@@ -609,7 +724,7 @@ async function createProfileViews(pool, schemaName, profile) {
     `);
       count++;
       log.info(
-        `${profile.tableName}: Created materialized view (${count} of ${profile.views.length}): ${view.name}`,
+        `${profile.tableName}: Created view (${count} of ${profile.views.length}): ${view.name}`,
       );
     }
   } finally {
@@ -633,16 +748,17 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
 
     // Add tables to schema and import new data
     const loadTasks = Object.values(s3Config.tableConfig)
-      .filter((profile) => profile.source?.toLowerCase === 'attains')
+      .filter((profile) => profile.source?.toLowerCase() === 'attains')
       .map((profile) => {
         return loadProfile(profile, pool, schemaName, s3Config, s3Julian);
       });
     await Promise.all(loadTasks);
 
-    // Create views
+    // Create views and materialized views.
     await Promise.all(
-      Object.values(s3Config.tableConfig).map((profile) => {
-        return createProfileViews(pool, schemaName, profile);
+      Object.values(s3Config.tableConfig).map(async (profile) => {
+        await createProfileMaterializedViews(pool, schemaName, profile);
+        await createProfileViews(pool, schemaName, profile);
       }),
     );
 
@@ -877,111 +993,6 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
       tableName,
     );
   }
-
-  // create materialized views for the table
-  count = 0;
-  for (const mv of table.materializedViews) {
-    // optionally join columns from other tables
-    const joinClause = (join) =>
-      `LEFT JOIN ${join.table} ON ${join.joinKey[0]} = ${join.joinKey[1]}`;
-    await client.query(`
-      CREATE MATERIALIZED VIEW IF NOT EXISTS ${mv.name}
-      AS
-      SELECT DISTINCT ${mv.columns.map((col) => col.name).join(', ')}
-      FROM ${tableName} ${mv.joins ? mv.joins.map(joinClause).join(' ') : ''}
-
-      WITH DATA;
-    `);
-    count += 1;
-    log.info(
-      `${tableName}: Created materialized view (${count} of ${table.materializedViews.length}): ${mv.name}`,
-    );
-
-    const indexableColumnsMv = mv.columns.filter((col) => !col.skipIndex);
-
-    // create indexes for the materialized view
-    let mvIndexCount = 0;
-    const mvIndexTableName = mv.name.replaceAll('_', '');
-    for (const column of indexableColumnsMv) {
-      mvIndexCount = await createIndividualIndex(
-        client,
-        column,
-        mvIndexCount,
-        indexableColumnsMv.length,
-        mvIndexTableName,
-        mv.name,
-      );
-    }
-  }
-
-  // create countPerOrgCycle view
-  const groupByColumns = [];
-  const hasOrgId = table.columns.find((c) => c.name === 'organizationid');
-  const hasReportingCycleId = table.columns.find(
-    (c) => c.name === 'reportingcycle',
-  );
-  const hasCycleId = table.columns.find((c) => c.name === 'cycleid');
-
-  const orderByArray = [];
-  if (hasOrgId) {
-    groupByColumns.push('organizationid');
-    orderByArray.push({ column: 'organizationid', order: 'ASC' });
-  }
-  if (hasReportingCycleId) {
-    groupByColumns.push('reportingcycle');
-    orderByArray.push({ column: 'reportingcycle', order: 'DESC' });
-  }
-  if (hasCycleId) {
-    groupByColumns.push('cycleid');
-    orderByArray.push({ column: 'cycleid', order: 'ASC' });
-  }
-
-  let mvName = `${tableName}_countperorgcycle`;
-  if (table.includeCycleCount) {
-    await client.query(`
-    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
-    AS
-    SELECT ${groupByColumns.join(
-      ', ',
-    )}, count(*), count(distinct "assessmentunitid") as "assessmentUnitIdCount"
-    FROM ${tableName}
-    ${
-      tableName === 'catchment_correspondence'
-        ? 'WHERE catchmentnhdplusid IS NOT NULL'
-        : ''
-    }
-    GROUP BY ${groupByColumns.join(', ')}
-    ORDER BY ${orderByArray
-      .map((col) => `${col.column} ${col.order}`)
-      .join(', ')}
-
-    WITH DATA;
-  `);
-
-    log.info(`${tableName}: Created countPerOrgCycle materialized view`);
-  }
-
-  mvName = `${tableName}_count`;
-  await client.query(`
-    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
-    AS
-    SELECT count(*)
-    FROM ${tableName}
-    ${
-      hasReportingCycleId
-        ? `WHERE ("organizationid", "reportingcycle") IN (
-          SELECT "organizationid", MAX("reportingcycle")
-          FROM ${indexTableName}_reportingcycle
-          GROUP BY "organizationid"
-        )
-        `
-        : ''
-    }
-
-    WITH DATA;
-  `);
-
-  log.info(`${tableName}: Created count materialized view`);
 }
 
 // Extracts data from ordspub services
@@ -1137,7 +1148,14 @@ async function setupTextSearch(client) {
 
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  { createQuery, columns, maxChunksOverride, overrideWorkMemory, tableName },
+  {
+    createQuery,
+    columns,
+    id,
+    maxChunksOverride,
+    overrideWorkMemory,
+    tableName,
+  },
   s3Config,
   s3Julian,
 ) {
@@ -1163,8 +1181,8 @@ function getProfileEtl(
     // Extract, transform, and load the new data
     try {
       if (isLocal) {
-        // TODO: Remove this once we have a better way to load local data.
-        if (['action_documents', 'documents_text'].includes(tableName)) {
+        // TODO: Remove this once we have a better way to load data in local environment.
+        if (['actionDocuments', 'documentsText'].includes(id)) {
           const fileLocation = process.env[`LOCAL_${tableName.toUpperCase()}`];
           if (!fileLocation) {
             log.warn(`No local data found for ${tableName}`);

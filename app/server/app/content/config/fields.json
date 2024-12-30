@@ -210,6 +210,12 @@
       "label": "Delisted Reason",
       "type": "multiselect"
     },
+    "documentName": {
+      "key": "documentName",
+      "label": "Document Name (File Name)",
+      "type": "multiselect",
+      "secondaryKey": "documentFileName"
+    },
     "documentQuery": {
       "key": "documentQuery",
       "label": "Search Text / Keyword",
@@ -545,11 +551,11 @@
     "actionDocuments": [
       {
         "key": "documentText",
-        "fields": ["documentQuery"]
+        "fields": ["documentQuery", "documentName"]
       },
       {
         "key": "areaOfInterest",
-        "fields": ["regionId", "state"]
+        "fields": ["regionId", "state", "organizationType", "organizationId"]
       },
       {
         "key": "action",
