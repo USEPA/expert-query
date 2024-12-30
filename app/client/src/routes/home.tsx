@@ -17,7 +17,7 @@ import { Checkboxes } from 'components/checkboxes';
 import { CopyBox } from 'components/copyBox';
 import { InfoTooltip } from 'components/tooltip';
 import { InPageNavAnchor, NumberedInPageNavLabel } from 'components/inPageNav';
-import { Loading, LoadingButtonIcon } from 'components/loading';
+import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
 import { MenuList as CustomMenuList } from 'components/menuList';
@@ -39,7 +39,6 @@ import type { GroupBase } from 'react-select';
 import type { LoadOptions } from 'react-select-async-paginate';
 import type {
   DomainOptions,
-  FetchState,
   MultiOptionField,
   Option,
   SingleOptionField,
@@ -302,38 +301,6 @@ export function QueryBuilder() {
     downloadConfirmationVisible || clearConfirmationVisible,
   );
 
-  const [preview, setPreview] = useState<
-    FetchState<Array<Record<string, Value | null>>>
-  >({
-    data: null,
-    status: 'idle',
-  });
-  const executeSearchPreview = () => {
-    if (preview.status === 'pending') return;
-
-    setPreview({ data: null, status: 'pending' });
-    postData({
-      url: `${apiUrl}/${profile.resource}`,
-      apiKey,
-      data: {
-        ...queryParams,
-        options: {
-          ...queryParams.options,
-          format: 'json',
-          pageSize: previewLimit,
-        },
-      },
-    })
-      .then((res) => {
-        setPreview({ data: res.data, status: 'success' });
-      })
-      .catch((err) => {
-        if (isAbort(err)) return;
-        console.error(err);
-        setPreview({ data: null, status: 'failure' });
-      });
-  };
-
   const navigate = useNavigate();
 
   return (
@@ -385,81 +352,6 @@ export function QueryBuilder() {
           sourceState={sourceState}
           staticOptions={staticOptions}
         />
-
-        {/*profile.key === 'actionDocuments' && (
-          <>
-            <div className="display-flex flex-justify-center margin-y-3 width-full">
-              {preview.status === 'pending' ? (
-                <button
-                  className="cursor-default display-flex flex-justify-center height-5 usa-button hover:bg-primary"
-                  onClick={undefined}
-                  type="button"
-                >
-                  Working <LoadingButtonIcon />
-                </button>
-              ) : (
-                <button
-                  className="display-flex flex-justify-center usa-button"
-                  onClick={executeSearchPreview}
-                  type="button"
-                >
-                  <Search
-                    aria-hidden="true"
-                    className="height-205 margin-right-1 usa-icon width-205"
-                    role="img"
-                    focusable="false"
-                  />
-                  <span className="margin-y-auto">Preview</span>
-                </button>
-              )}
-            </div>
-
-            {preview.status === 'success' && (
-              <>
-                {preview.data.length === 0 ? (
-                  <Alert type="info">No results found</Alert>
-                ) : (
-                  <div className="overflow-auto margin-x-auto width-mobile width-fit maxh-mobile tablet:maxh-tablet">
-                    <table className="usa-table usa-table--stacked width-full">
-                      <thead>
-                        <tr>
-                          <th scope="col">Rank (%)</th>
-                          <th scope="col">Document URL</th>
-                          <th scope="col">Action ID</th>
-                          <th scope="col">Region</th>
-                          <th scope="col">State</th>
-                          <th scope="col">Organization ID</th>
-                          <th scope="col">HMW Plan Summary URL</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {preview.data.map((row) => (
-                          <tr key={row.objectId}>
-                            <td>{row.rankPercent}</td>
-                            <td>
-                              <a
-                                href={row.docUrl as string}
-                                target="_blank"
-                                rel="noopener,noreferrer"
-                              >
-                                {row.docFilename}
-                              </a>
-                            </td>
-                            <td>{row.actionId}</td>
-                            <td>{row.region}</td>
-                            <td>{row.state}</td>
-                            <td>{row.organizationId}</td>
-                            <td></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )*/}
 
         {profile.key === 'actionDocuments' && (
           <>
@@ -616,200 +508,205 @@ function FilterFieldInputs({
   staticOptions,
 }: FilterFieldInputsProps) {
   // Store each field's element in a tuple with its key
-  const fieldsJsx: Array<[JSX.Element, string, string]> = removeNulls(
-    fields.map((fieldConfig) => {
-      const sourceFieldConfig =
-        'source' in fieldConfig &&
-        (fieldConfig.source as string) in sourceFields
-          ? sourceFields[fieldConfig.source as string]
-          : null;
+  const fieldsJsx: Array<[JSX.Element, string, number | undefined]> =
+    removeNulls(
+      fields.map((fieldConfig) => {
+        const sourceFieldConfig =
+          'source' in fieldConfig &&
+          (fieldConfig.source as string) in sourceFields
+            ? sourceFields[fieldConfig.source as string]
+            : null;
 
-      const tooltip =
-        fieldConfig.label in glossary
-          ? glossary[fieldConfig.label].definition
-          : null;
+        const tooltip =
+          fieldConfig.label in glossary
+            ? glossary[fieldConfig.label].definition
+            : null;
 
-      switch (fieldConfig.type) {
-        case 'multiselect':
-        case 'select':
-          if (
-            !sourceFieldConfig &&
-            fieldConfig.type === 'multiselect' &&
-            fieldConfig.key in staticOptions &&
-            staticOptions[fieldConfig.key].length <= 5
-          ) {
+        switch (fieldConfig.type) {
+          case 'multiselect':
+          case 'select':
+            if (
+              !sourceFieldConfig &&
+              fieldConfig.type === 'multiselect' &&
+              fieldConfig.key in staticOptions &&
+              staticOptions[fieldConfig.key].length <= 5
+            ) {
+              return [
+                <Checkboxes
+                  key={fieldConfig.key}
+                  label={fieldConfig.label}
+                  onChange={
+                    filterHandlers[fieldConfig.key] as OptionInputHandler
+                  }
+                  options={staticOptions[fieldConfig.key]}
+                  selected={
+                    (filterState[fieldConfig.key] as MultiOptionState) ?? []
+                  }
+                  className="margin-top-2"
+                  tooltip={tooltip}
+                />,
+                fieldConfig.key,
+                fieldConfig.width,
+              ];
+            }
+
+            const sourceKey = sourceFieldConfig?.key ?? null;
+            const sourceValue = sourceFieldConfig
+              ? sourceState[sourceFieldConfig.id]
+              : null;
+            const selectProps = {
+              apiKey,
+              apiUrl,
+              contextFilters: getContextFilters(
+                fieldConfig,
+                Object.values(filterFields).concat(Object.values(sourceFields)),
+                profile,
+                {
+                  ...queryParams.filters,
+                  ...(sourceKey && sourceValue
+                    ? { [sourceKey]: sourceValue.value }
+                    : {}),
+                },
+              ),
+              defaultOption:
+                'default' in fieldConfig ? fieldConfig.default : null,
+              filterHandler: filterHandlers[fieldConfig.key],
+              filterKey: fieldConfig.key,
+              filterLabel: fieldConfig.label,
+              filterValue: filterState[fieldConfig.key],
+              isMulti: isMultiOptionField(fieldConfig),
+              profile,
+              secondaryFilterKey:
+                'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
+              sortDirection:
+                'direction' in fieldConfig
+                  ? (fieldConfig.direction as SortDirection)
+                  : 'asc',
+              sourceKey,
+              sourceValue,
+              staticOptions,
+            } as SelectFilterProps;
+
             return [
-              <Checkboxes
+              <div className="margin-top-2" key={fieldConfig.key}>
+                <span className="display-flex flex-align-center line-height-sans-1">
+                  <label
+                    className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
+                    htmlFor={`input-${fieldConfig.key}`}
+                  >
+                    {fieldConfig.label}
+                  </label>
+                  {tooltip && (
+                    <InfoTooltip
+                      description={`${fieldConfig.label} tooltip`}
+                      text={tooltip}
+                      className="margin-left-05"
+                    />
+                  )}
+                </span>
+                <div className="margin-top-1">
+                  {sourceFieldConfig ? (
+                    <SourceSelectFilter
+                      {...selectProps}
+                      sourceHandler={sourceHandlers[sourceFieldConfig.id]}
+                      sourceKey={sourceFieldConfig.key}
+                      sourceLabel={sourceFieldConfig.label}
+                    />
+                  ) : (
+                    <SelectFilter {...selectProps} />
+                  )}
+                </div>
+              </div>,
+              fieldConfig.key,
+              fieldConfig.width,
+            ];
+          case 'date':
+          case 'year':
+            // Prevents range fields from rendering twice
+            if (fieldConfig.boundary === 'high') return null;
+
+            const pairedField = fields.find(
+              (otherField) =>
+                otherField.key !== fieldConfig.key &&
+                otherField.type === fieldConfig.type &&
+                otherField.domain === fieldConfig.domain,
+            );
+            // All range inputs should have a high and a low boundary field
+            if (!pairedField || !isSingleValueRangeField(pairedField))
+              return null;
+
+            return [
+              <RangeFilter
+                className="margin-top-2"
+                domain={fieldConfig.domain}
+                highHandler={
+                  filterHandlers[pairedField.key] as SingleValueInputHandler
+                }
+                highKey={pairedField.key}
+                highValue={filterState[pairedField.key] as string}
                 key={fieldConfig.key}
                 label={fieldConfig.label}
-                onChange={filterHandlers[fieldConfig.key] as OptionInputHandler}
-                options={staticOptions[fieldConfig.key]}
-                selected={
-                  (filterState[fieldConfig.key] as MultiOptionState) ?? []
+                lowHandler={
+                  filterHandlers[fieldConfig.key] as SingleValueInputHandler
                 }
-                className="margin-top-2"
+                lowKey={fieldConfig.key}
+                lowValue={filterState[fieldConfig.key] as string}
                 tooltip={tooltip}
+                type={fieldConfig.type}
               />,
-              fieldConfig.key,
-              fieldConfig.type,
+              fieldConfig.domain,
+              fieldConfig.width,
             ];
-          }
-
-          const sourceKey = sourceFieldConfig?.key ?? null;
-          const sourceValue = sourceFieldConfig
-            ? sourceState[sourceFieldConfig.id]
-            : null;
-          const selectProps = {
-            apiKey,
-            apiUrl,
-            contextFilters: getContextFilters(
-              fieldConfig,
-              Object.values(filterFields).concat(Object.values(sourceFields)),
-              profile,
-              {
-                ...queryParams.filters,
-                ...(sourceKey && sourceValue
-                  ? { [sourceKey]: sourceValue.value }
-                  : {}),
-              },
-            ),
-            defaultOption:
-              'default' in fieldConfig ? fieldConfig.default : null,
-            filterHandler: filterHandlers[fieldConfig.key],
-            filterKey: fieldConfig.key,
-            filterLabel: fieldConfig.label,
-            filterValue: filterState[fieldConfig.key],
-            isMulti: isMultiOptionField(fieldConfig),
-            profile,
-            secondaryFilterKey:
-              'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
-            sortDirection:
-              'direction' in fieldConfig
-                ? (fieldConfig.direction as SortDirection)
-                : 'asc',
-            sourceKey,
-            sourceValue,
-            staticOptions,
-          } as SelectFilterProps;
-
-          return [
-            <div className="margin-top-2" key={fieldConfig.key}>
-              <span className="display-flex flex-align-center line-height-sans-1">
-                <label
-                  className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
-                  htmlFor={`input-${fieldConfig.key}`}
-                >
-                  {fieldConfig.label}
-                </label>
-                {tooltip && (
-                  <InfoTooltip
-                    description={`${fieldConfig.label} tooltip`}
-                    text={tooltip}
-                    className="margin-left-05"
+          case 'text':
+            return [
+              <div className="margin-top-2" key={fieldConfig.key}>
+                <span className="display-flex flex-align-center line-height-sans-1">
+                  <label
+                    className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
+                    htmlFor={`input-${fieldConfig.key}`}
+                  >
+                    {fieldConfig.label}
+                  </label>
+                  {tooltip && (
+                    <InfoTooltip
+                      description={`${fieldConfig.label} tooltip`}
+                      text={tooltip}
+                      className="margin-left-05"
+                    />
+                  )}
+                </span>
+                <div className="margin-top-1">
+                  <input
+                    className="border border-gray-30 radius-md usa-input maxw-none width-full"
+                    id={`input-${fieldConfig.key}`}
+                    onChange={
+                      filterHandlers[fieldConfig.key] as SingleValueInputHandler
+                    }
+                    title={fieldConfig.label}
+                    placeholder="Text..."
+                    type="text"
+                    value={filterState[fieldConfig.key] as string}
                   />
-                )}
-              </span>
-              <div className="margin-top-1">
-                {sourceFieldConfig ? (
-                  <SourceSelectFilter
-                    {...selectProps}
-                    sourceHandler={sourceHandlers[sourceFieldConfig.id]}
-                    sourceKey={sourceFieldConfig.key}
-                    sourceLabel={sourceFieldConfig.label}
-                  />
-                ) : (
-                  <SelectFilter {...selectProps} />
-                )}
-              </div>
-            </div>,
-            fieldConfig.key,
-            fieldConfig.type,
-          ];
-        case 'date':
-        case 'year':
-          // Prevents range fields from rendering twice
-          if (fieldConfig.boundary === 'high') return null;
-
-          const pairedField = fields.find(
-            (otherField) =>
-              otherField.key !== fieldConfig.key &&
-              otherField.type === fieldConfig.type &&
-              otherField.domain === fieldConfig.domain,
-          );
-          // All range inputs should have a high and a low boundary field
-          if (!pairedField || !isSingleValueRangeField(pairedField))
+                </div>
+              </div>,
+              fieldConfig.key,
+              fieldConfig.width,
+            ];
+          default:
             return null;
+        }
+      }),
+    );
 
-          return [
-            <RangeFilter
-              className="margin-top-2"
-              domain={fieldConfig.domain}
-              highHandler={
-                filterHandlers[pairedField.key] as SingleValueInputHandler
-              }
-              highKey={pairedField.key}
-              highValue={filterState[pairedField.key] as string}
-              key={fieldConfig.key}
-              label={fieldConfig.label}
-              lowHandler={
-                filterHandlers[fieldConfig.key] as SingleValueInputHandler
-              }
-              lowKey={fieldConfig.key}
-              lowValue={filterState[fieldConfig.key] as string}
-              tooltip={tooltip}
-              type={fieldConfig.type}
-            />,
-            fieldConfig.domain,
-            fieldConfig.type,
-          ];
-        case 'text':
-          return [
-            <div className="margin-top-2" key={fieldConfig.key}>
-              <span className="display-flex flex-align-center line-height-sans-1">
-                <label
-                  className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
-                  htmlFor={`input-${fieldConfig.key}`}
-                >
-                  {fieldConfig.label}
-                </label>
-                {tooltip && (
-                  <InfoTooltip
-                    description={`${fieldConfig.label} tooltip`}
-                    text={tooltip}
-                    className="margin-left-05"
-                  />
-                )}
-              </span>
-              <div className="margin-top-1">
-                <input
-                  className="border border-gray-30 radius-md usa-input maxw-none width-full"
-                  id={`input-${fieldConfig.key}`}
-                  onChange={
-                    filterHandlers[fieldConfig.key] as SingleValueInputHandler
-                  }
-                  title={fieldConfig.label}
-                  placeholder="Text..."
-                  type="text"
-                  value={filterState[fieldConfig.key] as string}
-                />
-              </div>
-            </div>,
-            fieldConfig.key,
-            fieldConfig.type,
-          ];
-        default:
-          return null;
-      }
-    }),
-  );
+  const gridCols = [...Array(12).keys()].map((i) => i + 1);
 
   return (
     <div className="grid-gap-2 grid-row">
-      {fieldsJsx.map(([field, key, type]) => (
+      {fieldsJsx.map(([field, key, width]) => (
         <div
           className={
-            type === 'text'
-              ? 'width-full'
+            width && gridCols.includes(width)
+              ? `tablet:grid-col-${width}`
               : 'desktop:grid-col-4 tablet:grid-col-6'
           }
           key={key}
