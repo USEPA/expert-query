@@ -254,7 +254,7 @@
       },
       {
         "name": "regionid",
-        "alias": "regionId"
+        "alias": "region"
       },
       {
         "name": "state",
@@ -1456,7 +1456,8 @@
       {
         "name": "documenttsv",
         "alias": "documentQuery",
-        "type": "tsvector"
+        "type": "tsvector",
+        "acceptsMultiple": false
       }
     ],
     "materializedViewColumns": [],

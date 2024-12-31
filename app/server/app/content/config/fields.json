@@ -394,7 +394,6 @@
       "type": "multiselect"
     },
     "region": { "key": "region", "label": "Region", "type": "multiselect" },
-    "regionId": { "key": "regionId", "label": "Region", "type": "multiselect" },
     "reportingCycle": {
       "key": "reportingCycle",
       "label": "Reporting Cycle",
@@ -562,7 +561,7 @@
       },
       {
         "key": "areaOfInterest",
-        "fields": ["regionId", "state", "organizationType", "organizationId"]
+        "fields": ["region", "state", "organizationType", "organizationId"]
       },
       {
         "key": "action",

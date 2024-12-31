@@ -1077,32 +1077,36 @@ async function setupTextSearch(client) {
           AS $$
       DECLARE
           tsv tsvector;
+          tsv_list tsvector[] := '{}';
           chunk text;
           start_idx integer := 1;
           end_idx integer;
           text_length integer := octet_length(new_row.documenttext);
       BEGIN
-          LOOP
-              -- Process the document in chunks
-              WHILE start_idx <= text_length LOOP
-                  end_idx := LEAST (start_idx + chunk_size - 1, text_length);
-                  chunk := substr(new_row.documenttext, start_idx, end_idx - start_idx + 1);
-                  tsv := setweight(to_tsvector('pg_catalog.english', coalesce(chunk, '')), '${weights.documenttext}');
-                  INSERT INTO documents_text_search (documentid, documenttsv)
-                      VALUES (new_row.objectid, tsv);
-                  start_idx := end_idx + 1;
-              END LOOP;
-              -- Add document description and name as a single row
-              tsv := setweight(to_tsvector('pg_catalog.english', coalesce(new_row.documentdesc, '')), '${weights.documentdesc}') ||
-                     setweight(to_tsvector('pg_catalog.english', coalesce(new_row.documentname, '')), '${weights.documentname}');
-              INSERT INTO documents_text_search (documentid, documenttsv)
-                  VALUES (new_row.objectid, tsv);
-              RETURN;
+          -- Process the document in chunks
+          WHILE start_idx <= text_length LOOP
+              end_idx := LEAST (start_idx + chunk_size - 1, text_length);
+              chunk := substr(new_row.documenttext, start_idx, end_idx - start_idx + 1);
+              tsv := to_tsvector('pg_catalog.english', coalesce(chunk, ''));
+              tsv_list := array_append(tsv_list, tsv);
+              start_idx := end_idx + 1;
           END LOOP;
+          -- Add document description search vector
+          tsv := to_tsvector('pg_catalog.english', coalesce(new_row.documentdesc, ''));
+          tsv_list := array_append(tsv_list, tsv);
+          BEGIN
+              FOR i IN array_lower(tsv_list, 1)..array_upper(tsv_list, 1)
+              LOOP
+                  INSERT INTO documents_text_search (documentid, documenttsv)
+                      VALUES (new_row.objectid, tsv_list[i]);
+              END LOOP;
+          END;
+          RETURN;
       END
       $$
       LANGUAGE plpgsql;
     `);
+
     await client.query(`
       CREATE OR REPLACE FUNCTION documentstext_trigger_fn ()
           RETURNS TRIGGER
@@ -1116,8 +1120,8 @@ async function setupTextSearch(client) {
                   -- Call the external function to process the document
                   PERFORM
                       process_document (NEW, chunk_size);
-                  RETURN NEW;
                   -- Exit on success
+                  RETURN NEW;
               EXCEPTION
                   WHEN OTHERS THEN
                       -- Reduce the chunk size and retry

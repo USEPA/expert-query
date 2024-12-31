@@ -31,12 +31,12 @@ export function PreviewModal<D extends QueryData>({
   const [id] = useState(uniqueId('modal-'));
 
   // Data to be displayed in the preview table.
-  const [preview, setPreview] = useState<
-    FetchState<Array<ActionDocumentsRow> | string>
-  >({
-    data: null,
-    status: 'idle',
-  });
+  const [preview, setPreview] = useState<FetchState<Array<ActionDocumentsRow>>>(
+    {
+      data: null,
+      status: 'idle',
+    },
+  );
 
   useEffect(() => {
     setPreview({ data: null, status: 'pending' });
@@ -54,11 +54,6 @@ export function PreviewModal<D extends QueryData>({
       signal: getSignal(),
     })
       .then((res) => {
-        if (!Array.isArray(res.data)) {
-          setPreview({ data: res.message, status: 'success' });
-          return;
-        }
-
         const data = res.data.map((row: ActionDocumentsRow) => ({
           rankPercent: row.rankPercent,
           actionDocumentUrl: {
@@ -69,12 +64,12 @@ export function PreviewModal<D extends QueryData>({
                 target="_blank"
                 rel="noopener,noreferrer"
               >
-                {row.documentFileName}
+                {row.documentName}
               </a>
             ),
           },
           actionId: row.actionId,
-          regionId: row.regionId,
+          region: row.region,
           state: row.state,
           organizationId: row.organizationId,
         }));
@@ -92,7 +87,7 @@ export function PreviewModal<D extends QueryData>({
       { id: 'rankPercent', name: 'Rank (%)', sortable: true },
       { id: 'actionDocumentUrl', name: 'Document', sortable: true, width: 300 },
       { id: 'actionId', name: 'Action ID', sortable: true },
-      { id: 'regionId', name: 'Region', sortable: true },
+      { id: 'region', name: 'Region', sortable: true },
       { id: 'state', name: 'State', sortable: true },
       { id: 'organizationId', name: 'Organization ID', sortable: true },
     ],
@@ -126,26 +121,22 @@ export function PreviewModal<D extends QueryData>({
           )}
           {preview.status === 'success' && (
             <>
-              {typeof preview.data === 'string' ? (
-                <Alert type="info">{preview.data}</Alert>
+              {preview.data.length === 0 ? (
+                <Alert type="info">
+                  No results found for the current query.
+                </Alert>
               ) : (
                 <>
-                  {preview.data.length === 0 ? (
-                    <Alert type="info">No results found</Alert>
-                  ) : (
-                    <>
-                      <Table
-                        columns={columns}
-                        data={preview.data}
-                        id={`${id}-table`}
-                        scrollable={true}
-                        initialSortDir="descending"
-                        sortable={true}
-                        stacked={true}
-                        striped={true}
-                      />
-                    </>
-                  )}
+                  <Table
+                    columns={columns}
+                    data={preview.data}
+                    id={`${id}-table`}
+                    scrollable={true}
+                    initialSortDir="descending"
+                    sortable={true}
+                    stacked={true}
+                    striped={true}
+                  />
                 </>
               )}
             </>
@@ -186,7 +177,7 @@ type ActionDocumentsRow = {
   documentName: string;
   organizationId: string;
   rankPercent: number;
-  regionId: string;
+  region: string;
   state: string;
   tmdlDate: string;
 };

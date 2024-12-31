@@ -158,6 +158,31 @@
         }
       }
     },
+    "/attains/actionDocuments/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
     "/attains/assessments/values/{column}": {
       "post": {
         "tags": ["ATTAINS - Values"],

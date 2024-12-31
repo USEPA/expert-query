@@ -17,6 +17,7 @@ import { getPrivateConfig, getS3Client } from '../utilities/s3.js';
 import StreamingService from '../utilities/streamingService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const defaultPageSize = 20;
 const maxPageSize = parseInt(process.env.MAX_PAGE_SIZE || 500);
 const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE || 1_000_000);
 
@@ -293,8 +294,8 @@ function appendRangeToWhere(query, column, lowParamValue, highParamValue) {
 /**
  * Creates an ISO date string with no timezone offset from a given date string.
  * @param {string} value the date string to be converted to ISO format
- * @param {boolean} whether the returned time should represent midnight at the start or end of day
- * @returns {string}
+ * @param {boolean} endOfDay whether the returned time should represent midnight at the start or end of day
+ * @returns {string | null}
  */
 function dateToUtcTime(value, endOfDay = false) {
   if (!value) return null;
@@ -414,9 +415,7 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
   const documentQuery = queryParams.filters[documentQueryColumn.alias];
   const isDocumentSearch =
     documentQueryColumn && columnsForFilter.includes(documentQueryColumn.alias);
-  if (isDocumentSearch) {
-    columnsToReturn = columnsToReturn.filter((col) => col !== 'objectId');
-  } else if (!columnsToReturn.includes('objectId')) {
+  if (!isDocumentSearch && !columnsToReturn.includes('objectId')) {
     columnsToReturn.push('objectId');
   }
   const selectColumns = (
@@ -433,7 +432,7 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
       .with('ranked', (qb) => {
         qb.select(
           selectColumns
-            .map(asAlias)
+            .map((col) => col.name)
             .concat(
               knex.raw(
                 `ts_rank_cd(${documentQueryColumn.name}, websearch_to_tsquery(?), 1 | 32) AS rank`,
@@ -451,13 +450,13 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
       .from('ranked')
       .select(
         selectColumns
-          .map((col) => col.alias)
+          .map(asAlias)
           .concat(
             knex.raw('ROUND((AVG(rank) * 100)::numeric, 1) AS "rankPercent"'),
           ),
       )
       .orderBy('rankPercent', 'desc')
-      .groupBy(selectColumns.map((col) => col.alias));
+      .groupBy(selectColumns.map((col) => col.name));
   } else {
     query.select(selectColumns.map(asAlias)).orderBy('objectid', 'asc');
   }
@@ -523,9 +522,12 @@ async function executeQuery(profile, req, res) {
       });
     }
 
+    // Check if the query result is empty.
     if (await isEmptyResult(query)) {
       return res.status(200).json({
-        message: 'No results found for the current query',
+        data: [],
+        pageNumber: 1,
+        pageSize: queryParams.options.pageSize || defaultPageSize,
       });
     }
 
@@ -537,7 +539,7 @@ async function executeQuery(profile, req, res) {
         query,
         res,
         parseInt(queryParams.options.pageNumber || 1),
-        parseInt(queryParams.options.pageSize || 20),
+        parseInt(queryParams.options.pageSize || defaultPageSize),
       );
     }
   } catch (error) {

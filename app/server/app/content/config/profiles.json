@@ -50,7 +50,7 @@
       "organizationType",
       "organizationId",
       "organizationName",
-      "regionId",
+      "region",
       "state",
       "tmdlDate"
     ],
