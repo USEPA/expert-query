@@ -508,7 +508,7 @@ function FilterFieldInputs({
   staticOptions,
 }: FilterFieldInputsProps) {
   // Store each field's element in a tuple with its key
-  const fieldsJsx: Array<[JSX.Element, string, number | undefined]> =
+  const fieldsJsx: Array<[JSX.Element, string, string | undefined]> =
     removeNulls(
       fields.map((fieldConfig) => {
         const sourceFieldConfig =
@@ -546,7 +546,7 @@ function FilterFieldInputs({
                   tooltip={tooltip}
                 />,
                 fieldConfig.key,
-                fieldConfig.width,
+                fieldConfig.size,
               ];
             }
 
@@ -618,7 +618,7 @@ function FilterFieldInputs({
                 </div>
               </div>,
               fieldConfig.key,
-              fieldConfig.width,
+              fieldConfig.size,
             ];
           case 'date':
           case 'year':
@@ -655,7 +655,7 @@ function FilterFieldInputs({
                 type={fieldConfig.type}
               />,
               fieldConfig.domain,
-              fieldConfig.width,
+              fieldConfig.size,
             ];
           case 'text':
             return [
@@ -690,7 +690,7 @@ function FilterFieldInputs({
                 </div>
               </div>,
               fieldConfig.key,
-              fieldConfig.width,
+              fieldConfig.size,
             ];
           default:
             return null;
@@ -698,16 +698,16 @@ function FilterFieldInputs({
       }),
     );
 
-  const gridCols = [...Array(12).keys()].map((i) => i + 1);
-
   return (
     <div className="grid-gap-2 grid-row">
-      {fieldsJsx.map(([field, key, width]) => (
+      {fieldsJsx.map(([field, key, size]) => (
         <div
           className={
-            width && gridCols.includes(width)
-              ? `tablet:grid-col-${width}`
-              : 'desktop:grid-col-4 tablet:grid-col-6'
+            size === 'large'
+              ? 'width-full'
+              : size === 'medium'
+                ? 'tablet:grid-col-6'
+                : 'desktop:grid-col-4 tablet:grid-col-6'
           }
           key={key}
         >

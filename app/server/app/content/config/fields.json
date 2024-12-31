@@ -215,13 +215,13 @@
       "label": "Document Name (File Name)",
       "type": "multiselect",
       "secondaryKey": "documentFileName",
-      "width": 12
+      "size": "large"
     },
     "documentQuery": {
       "key": "documentQuery",
       "label": "Search Text / Keyword",
       "type": "text",
-      "width": 12
+      "size": "large"
     },
     "epaIrCategory": {
       "key": "epaIrCategory",

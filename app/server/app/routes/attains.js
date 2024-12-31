@@ -411,6 +411,7 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
   const documentQueryColumn = target.columns.find(
     (col) => col.type === 'tsvector',
   );
+  const documentQuery = queryParams.filters[documentQueryColumn.alias];
   const isDocumentSearch =
     documentQueryColumn && columnsForFilter.includes(documentQueryColumn.alias);
   if (isDocumentSearch) {
@@ -436,14 +437,14 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
             .concat(
               knex.raw(
                 `ts_rank_cd(${documentQueryColumn.name}, websearch_to_tsquery(?), 1 | 32) AS rank`,
-                [queryParams.filters[documentQueryColumn.alias]],
+                [documentQuery],
               ),
             ),
         )
           .withSchema(req.activeSchema)
           .from(target.tableName ?? target.name)
           .whereRaw(`${documentQueryColumn.name} @@ websearch_to_tsquery(?)`, [
-            queryParams.filters[documentQueryColumn.alias],
+            documentQuery,
           ]);
       })
       .withSchema()
@@ -452,7 +453,7 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
         selectColumns
           .map((col) => col.alias)
           .concat(
-            knex.raw('ROUND((SUM(rank) * 100)::numeric, 1) AS "rankPercent"'),
+            knex.raw('ROUND((AVG(rank) * 100)::numeric, 1) AS "rankPercent"'),
           ),
       )
       .orderBy('rankPercent', 'desc')

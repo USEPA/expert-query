@@ -71,9 +71,12 @@ export const Table = ({
           { 'usa-table--striped': striped },
           { 'usa-table--stacked': stacked },
           { 'usa-table--sticky-header': stickyHeader },
+          'layout-fixed',
+          'width-full',
+          'whitespace-wrap',
           className,
         )}
-        tabIndex={tabIndex}
+        tabIndex={scrollable ? Math.max(0, tabIndex) : tabIndex}
       >
         <caption hidden={!caption} className="text-italic">
           {caption}
@@ -98,6 +101,7 @@ export const Table = ({
                       : undefined
                   }
                   onClick={() => handleHeaderClick(index)}
+                  style={{ width: column.width ? `${column.width}px` : 'auto' }}
                 >
                   {column.name}
                 </th>
@@ -218,6 +222,7 @@ type TableColumn = {
   id: string;
   name: string;
   sortable?: boolean;
+  width?: number;
 };
 
 type TableCell = {

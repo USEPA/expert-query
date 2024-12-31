@@ -27,7 +27,7 @@ type BaseFilterFieldConfig = {
   secondaryKey?: string;
   source?: string;
   type: 'date' | 'multiselect' | 'select' | 'text' | 'year';
-  width?: number;
+  size?: 'small' | 'medium' | 'large';
 };
 
 // Fields provided in the `domainValues` of the Content context

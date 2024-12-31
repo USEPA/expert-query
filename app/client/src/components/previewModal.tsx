@@ -93,11 +93,11 @@ export function PreviewModal<D extends QueryData>({
   const columns = useMemo(
     () => [
       { id: 'rankPercent', name: 'Rank (%)', sortable: true },
-      { id: 'actionDocumentUrl', name: 'Document', sortable: true },
-      { id: 'actionId', name: 'Action ID', sortable: false },
-      { id: 'regionId', name: 'Region', sortable: false },
-      { id: 'state', name: 'State', sortable: false },
-      { id: 'organizationId', name: 'Organization ID', sortable: false },
+      { id: 'actionDocumentUrl', name: 'Document', sortable: true, width: 300 },
+      { id: 'actionId', name: 'Action ID', sortable: true },
+      { id: 'regionId', name: 'Region', sortable: true },
+      { id: 'state', name: 'State', sortable: true },
+      { id: 'organizationId', name: 'Organization ID', sortable: true },
     ],
     [],
   );
