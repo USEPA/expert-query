@@ -1213,7 +1213,7 @@ function getProfileEtl(
           SELECT aws_s3.table_import_from_s3(
             table_name := $1,
             column_list := '',
-            options := '(format csv, header true)',
+            options := '(format csv, header true, encoding utf8)',
             s3_info := aws_commons.create_s3_uri(
               bucket := $2,
               file_path := $3,

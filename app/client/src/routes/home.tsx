@@ -44,6 +44,7 @@ import type {
   SingleOptionField,
   SingleValueField,
   SingleValueRangeField,
+  SingleValueTextField,
   StaticOptions,
   Status,
   Value,
@@ -1699,6 +1700,8 @@ async function getUrlInputs(
         newState[key] = matchDate(params[key] ?? null);
       } else if (isYearField(filterField)) {
         newState[key] = matchYear(params[key] ?? null);
+      } else if (isSingleValueTextField(filterField)) {
+        newState[key] = (params[key] ?? '').toString();
       }
     }),
   ]);
@@ -1754,14 +1757,22 @@ function isSingleOptionField(field: FilterField): field is SingleOptionField {
 }
 
 // Type narrowing
+function isSingleValueField(field: FilterField): field is SingleValueField {
+  return isSingleValueTextField(field) || isSingleValueRangeField(field);
+}
+
+// Type narrowing
 function isSingleValueRangeField(
   field: FilterField,
 ): field is SingleValueRangeField {
   return field.type === 'date' || field.type === 'year';
 }
 
-function isSingleValueField(field: FilterField): field is SingleValueField {
-  return field.type === 'text' || isSingleValueRangeField(field);
+// Type narrowing
+function isSingleValueTextField(
+  field: FilterField,
+): field is SingleValueTextField {
+  return field.type === 'text';
 }
 
 // Type narrowing

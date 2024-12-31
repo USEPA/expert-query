@@ -496,8 +496,7 @@ async function executeQuery(profile, req, res) {
 
     const queryParams = getQueryParams(req);
 
-    // TODO: Make this work with views.
-    //validateQueryParams(queryParams, profile);
+    validateQueryParams(queryParams, profile);
 
     // verify atleast 1 parameter was provided, excluding the columns parameter
     if (
@@ -580,8 +579,10 @@ function validateQueryParams(queryParams, profile) {
       throw new LimitExceededException(value, maxPageSize);
     }
   });
+
+  const target = findView(profile, Object.keys(queryParams.filters)) ?? profile;
   Object.entries(queryParams.filters).forEach(([name, value]) => {
-    const column = profile.columns.find((c) => {
+    const column = target.columns.find((c) => {
       if (c.lowParam === name || c.highParam === name || c.alias === name)
         return c;
     });
@@ -656,8 +657,7 @@ async function executeQueryCountOnly(profile, req, res) {
       return res.status(200).json({ count, maxCount: maxQuerySize });
     }
 
-    // TODO: Make this work with views.
-    //validateQueryParams(queryParams, profile);
+    validateQueryParams(queryParams, profile);
 
     // TODO: Merge this into one function.
     if (profile.id === 'actionDocuments') {
