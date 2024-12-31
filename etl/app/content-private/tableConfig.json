@@ -224,7 +224,7 @@
       },
       {
         "name": "actiontypename",
-        "alias": "actionTypeName"
+        "alias": "actionType"
       },
       {
         "name": "completiondate",
@@ -1419,7 +1419,7 @@
       },
       {
         "name": "documenttypename",
-        "alias": "documentTypeName"
+        "alias": "documentType"
       }
     ],
     "materializedViewColumns": [],

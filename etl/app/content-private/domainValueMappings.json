@@ -27,6 +27,10 @@
     "columns": ["delistedReason"],
     "valueField": "name"
   },
+  "documentType": {
+    "domainName": "ActionDocumentType",
+    "columns": ["documentType"]
+  },
   "locationTypeCode": {
     "domainName": "LocationTypeCode",
     "columns": ["locationTypeCode"]

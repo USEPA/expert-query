@@ -215,13 +215,18 @@
       "label": "Document Name (File Name)",
       "type": "multiselect",
       "secondaryKey": "documentFileName",
-      "size": "large"
+      "size": "medium"
     },
     "documentQuery": {
       "key": "documentQuery",
       "label": "Search Text / Keyword",
       "type": "text",
       "size": "large"
+    },
+    "documentType": {
+      "key": "documentType",
+      "label": "Document Type",
+      "type": "multiselect"
     },
     "epaIrCategory": {
       "key": "epaIrCategory",
@@ -507,7 +512,7 @@
     "assessmentUnit": "Search for a specific Assessment Unit",
     "associatedAction": "Search by Associated Action",
     "catchmentAssessmentUnit": "Search by Assessment Unit or NHDPlus Catchment",
-    "documentText": "Search by Document Text",
+    "documentText": "Search by Document",
     "impairmentCause": "Search by Cause of Impairment",
     "impairmentSource": "Search by Probable Source of Impairment",
     "overallStatus": "Search by Overall Status",
@@ -553,7 +558,7 @@
     "actionDocuments": [
       {
         "key": "documentText",
-        "fields": ["documentQuery", "documentName"]
+        "fields": ["documentQuery", "documentName", "documentType"]
       },
       {
         "key": "areaOfInterest",
@@ -561,7 +566,16 @@
       },
       {
         "key": "action",
-        "fields": ["actionId"]
+        "fields": ["actionType", "actionId"]
+      },
+      {
+        "key": "timeFrame",
+        "fields": [
+          "completionDateLo",
+          "completionDateHi",
+          "tmdlDateLo",
+          "tmdlDateHi"
+        ]
       }
     ],
     "assessments": [

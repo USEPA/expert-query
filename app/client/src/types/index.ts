@@ -38,6 +38,7 @@ export type ConcreteField =
   | 'assessmentUnitStatus'
   | 'associatedActionStatus'
   | 'delistedReason'
+  | 'documentType'
   | 'locationTypeCode'
   | 'parameterGroup'
   | 'parameterName'

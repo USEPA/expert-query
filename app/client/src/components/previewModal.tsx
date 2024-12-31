@@ -31,17 +31,15 @@ export function PreviewModal<D extends QueryData>({
   const [id] = useState(uniqueId('modal-'));
 
   // Data to be displayed in the preview table.
-  const [preview, setPreview] = useState<FetchState<Array<ActionDocumentsRow>>>(
-    {
-      data: null,
-      status: 'idle',
-    },
-  );
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [preview, setPreview] = useState<
+    FetchState<Array<ActionDocumentsRow> | string>
+  >({
+    data: null,
+    status: 'idle',
+  });
 
   useEffect(() => {
     setPreview({ data: null, status: 'pending' });
-    setErrorMsg(null);
     postData({
       url: queryUrl,
       apiKey,
@@ -57,8 +55,7 @@ export function PreviewModal<D extends QueryData>({
     })
       .then((res) => {
         if (!Array.isArray(res.data)) {
-          setErrorMsg(res.message);
-          setPreview({ data: null, status: 'failure' });
+          setPreview({ data: res.message, status: 'success' });
           return;
         }
 
@@ -124,26 +121,31 @@ export function PreviewModal<D extends QueryData>({
           )}
           {preview.status === 'failure' && (
             <Alert type="error">
-              {errorMsg ??
-                'The specified query could not be executed at this time.'}
+              The specified query could not be executed at this time.
             </Alert>
           )}
           {preview.status === 'success' && (
             <>
-              {preview.data.length === 0 ? (
-                <Alert type="info">No results found</Alert>
+              {typeof preview.data === 'string' ? (
+                <Alert type="info">{preview.data}</Alert>
               ) : (
                 <>
-                  <Table
-                    columns={columns}
-                    data={preview.data}
-                    id={`${id}-table`}
-                    scrollable={true}
-                    initialSortDir="descending"
-                    sortable={true}
-                    stacked={true}
-                    striped={true}
-                  />
+                  {preview.data.length === 0 ? (
+                    <Alert type="info">No results found</Alert>
+                  ) : (
+                    <>
+                      <Table
+                        columns={columns}
+                        data={preview.data}
+                        id={`${id}-table`}
+                        scrollable={true}
+                        initialSortDir="descending"
+                        sortable={true}
+                        stacked={true}
+                        striped={true}
+                      />
+                    </>
+                  )}
                 </>
               )}
             </>
@@ -175,13 +177,13 @@ type ActionDocumentsRow = {
   actionDocumentUrl: string;
   actionId: string;
   actionName: string;
-  actionTypeName: string;
+  actionType: string;
   completionDate: string;
   documentFileName: string;
   documentFileTypeName: string;
   documentKey: number;
   documentName: string;
-  documentTypeName: string;
+  documentType: string;
   organizationId: string;
   rankPercent: number;
   regionId: string;
