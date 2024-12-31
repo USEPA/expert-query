@@ -4,6 +4,10 @@
     "columns": ["actionAgency", "associatedActionAgency"],
     "valueField": "name"
   },
+  "actionDocumentType": {
+    "domainName": "ActionDocumentType",
+    "columns": ["actionDocumentType"]
+  },
   "actionType": {
     "domainName": "ActionType",
     "columns": ["actionType", "associatedActionType"],
@@ -26,10 +30,6 @@
     "domainName": "DelistingReasonCode",
     "columns": ["delistedReason"],
     "valueField": "name"
-  },
-  "documentType": {
-    "domainName": "ActionDocumentType",
-    "columns": ["documentType"]
   },
   "locationTypeCode": {
     "domainName": "LocationTypeCode",

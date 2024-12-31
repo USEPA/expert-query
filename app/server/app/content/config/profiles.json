@@ -35,6 +35,7 @@
     "description": "Contains information on documents associated with actions to restore and protect water quality.",
     "columns": [
       "objectId",
+      "actionDocumentType",
       "actionDocumentUrl",
       "actionId",
       "actionName",
@@ -46,7 +47,6 @@
       "documentKey",
       "documentName",
       "documentQuery",
-      "documentType",
       "organizationType",
       "organizationId",
       "organizationName",

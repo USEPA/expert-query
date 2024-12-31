@@ -33,12 +33,12 @@ type BaseFilterFieldConfig = {
 // Fields provided in the `domainValues` of the Content context
 export type ConcreteField =
   | 'actionAgency'
+  | 'actionDocumentType'
   | 'actionType'
   | 'assessmentTypes'
   | 'assessmentUnitStatus'
   | 'associatedActionStatus'
   | 'delistedReason'
-  | 'documentType'
   | 'locationTypeCode'
   | 'parameterGroup'
   | 'parameterName'

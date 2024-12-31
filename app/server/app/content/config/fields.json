@@ -5,6 +5,11 @@
       "label": "Action Agency",
       "type": "multiselect"
     },
+    "actionDocumentType": {
+      "key": "actionDocumentType",
+      "label": "Document Type",
+      "type": "multiselect"
+    },
     "actionId": {
       "key": "actionId",
       "label": "Action ID (Name)",
@@ -222,11 +227,6 @@
       "label": "Search Text / Keyword",
       "type": "text",
       "size": "large"
-    },
-    "documentType": {
-      "key": "documentType",
-      "label": "Document Type",
-      "type": "multiselect"
     },
     "epaIrCategory": {
       "key": "epaIrCategory",
@@ -558,7 +558,7 @@
     "actionDocuments": [
       {
         "key": "documentText",
-        "fields": ["documentQuery", "documentName", "documentType"]
+        "fields": ["documentQuery", "documentName", "actionDocumentType"]
       },
       {
         "key": "areaOfInterest",

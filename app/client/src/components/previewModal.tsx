@@ -174,6 +174,7 @@ export function PreviewModal<D extends QueryData>({
 */
 
 type ActionDocumentsRow = {
+  actionDocumentType: string;
   actionDocumentUrl: string;
   actionId: string;
   actionName: string;
@@ -183,7 +184,6 @@ type ActionDocumentsRow = {
   documentFileTypeName: string;
   documentKey: number;
   documentName: string;
-  documentType: string;
   organizationId: string;
   rankPercent: number;
   regionId: string;

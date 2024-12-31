@@ -1419,7 +1419,7 @@
       },
       {
         "name": "documenttypename",
-        "alias": "documentType"
+        "alias": "actionDocumentType"
       }
     ],
     "materializedViewColumns": [],
