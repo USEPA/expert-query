@@ -1066,11 +1066,6 @@ async function setupTextSearch(client) {
     `);
 
     // Create the trigger function.
-    const weights = {
-      documenttext: 'A',
-      documentdesc: 'A',
-      documentname: 'B',
-    };
     await client.query(`
       CREATE OR REPLACE FUNCTION process_document (new_row RECORD, chunk_size integer)
           RETURNS VOID
