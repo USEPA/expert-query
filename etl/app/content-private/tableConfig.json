@@ -114,7 +114,7 @@
         "alias": "waterType"
       }
     ],
-    "materializedViewColumns": [
+    "referencedColumns": [
       {
         "name": "statename",
         "alias": "stateName"
@@ -269,14 +269,34 @@
         "indexOrder": "desc"
       }
     ],
-    "materializedViewColumns": [
+    "referencedColumns": [
+      {
+        "name": "documentdesc",
+        "alias": "documentDesc"
+      },
       {
         "name": "documentfilename",
         "alias": "documentFileName"
       },
       {
+        "name": "documentfiletypename",
+        "alias": "documentFileTypeName"
+      },
+      {
+        "name": "documentkey",
+        "alias": "documentKey"
+      },
+      {
         "name": "documentname",
         "alias": "documentName"
+      },
+      {
+        "name": "documenttsv",
+        "alias": "documentQuery"
+      },
+      {
+        "name": "documenttypename",
+        "alias": "actionDocumentType"
       },
       {
         "name": "statename",
@@ -709,7 +729,7 @@
         "alias": "waterType"
       }
     ],
-    "materializedViewColumns": [
+    "referencedColumns": [
       {
         "name": "statename",
         "alias": "stateName"
@@ -1003,7 +1023,7 @@
         "alias": "waterType"
       }
     ],
-    "materializedViewColumns": [
+    "referencedColumns": [
       {
         "name": "statename",
         "alias": "stateName"
@@ -1179,7 +1199,7 @@
         "alias": "waterType"
       }
     ],
-    "materializedViewColumns": [
+    "referencedColumns": [
       {
         "name": "statename",
         "alias": "stateName"
@@ -1310,7 +1330,7 @@
         "alias": "state"
       }
     ],
-    "materializedViewColumns": [
+    "referencedColumns": [
       {
         "name": "statename",
         "alias": "stateName"
@@ -1422,7 +1442,7 @@
         "alias": "actionDocumentType"
       }
     ],
-    "materializedViewColumns": [],
+    "referencedColumns": [],
     "materializedViews": [
       {
         "name": "documentstext_documentname",
@@ -1460,7 +1480,7 @@
         "acceptsMultiple": false
       }
     ],
-    "materializedViewColumns": [],
+    "referencedColumns": [],
     "materializedViews": []
   },
   "sources": {
@@ -1566,7 +1586,7 @@
         "alias": "waterType"
       }
     ],
-    "materializedViewColumns": [
+    "referencedColumns": [
       {
         "name": "statename",
         "alias": "stateName"
@@ -1820,7 +1840,7 @@
         "alias": "waterType"
       }
     ],
-    "materializedViewColumns": [
+    "referencedColumns": [
       {
         "name": "statename",
         "alias": "stateName"

@@ -82,7 +82,7 @@ function findMaterializedView(profile, columns, columnsForFilter) {
 /**
  * Searches for a view, associated with the profile, that is applicable to the provided columns.
  * @param {Object} profile definition of the profile being queried
- * @param {Array<string>} columns aliases of columns to return
+ * @param {Array<string>} columns parameter names of columns to return
  * @returns definition of a view that is applicable to the desired columns, or null if none are suitable
  */
 function findView(profile, columns) {
@@ -132,7 +132,7 @@ function getColumnsFromAliases(columnAliases, profile) {
   const columns = [];
   for (const alias of columnAliases) {
     const column = profile.columns
-      .concat(profile.materializedViewColumns ?? [])
+      .concat(profile.referencedColumns ?? [])
       .find((col) => col.alias === alias);
     if (!column) {
       throw new Error(alias);
@@ -748,12 +748,20 @@ async function executeValuesQuery(profile, req, res) {
       });
     }
 
-    const values = await queryColumnValues(
-      profile,
-      columns,
-      params,
-      req.activeSchema,
-    );
+    let values;
+    try {
+      values = await queryColumnValues(
+        res,
+        profile,
+        columns,
+        params,
+        req.activeSchema,
+      );
+    } catch (err) {
+      return res.status(400).json({
+        message: err.message,
+      });
+    }
     return res.status(200).json(values);
   } catch (error) {
     log.error(
@@ -796,12 +804,13 @@ function getQueryParamsValues(req) {
 
 /**
  * Craft the database query for distinct column values
+ * @param {express.Response} res
  * @param {Object} profile definition of the profile being queried
  * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
  * @param {Object} params parameters to apply to the query
  * @param {string} schema the currently active database schema
  */
-async function queryColumnValues(profile, columns, params, schema) {
+async function queryColumnValues(res, profile, columns, params, schema) {
   const primaryColumn = columns[0];
 
   // get columns for where clause
@@ -814,19 +823,20 @@ async function queryColumnValues(profile, columns, params, schema) {
 
   // search through tableconfig.materializedViews to see if the column
   // we need is in here
-  const materializedView = findMaterializedView(
-    profile,
-    columns,
-    columnsForFilter,
-  );
+  const view =
+    findMaterializedView(profile, columns, columnsForFilter) ??
+    findView(
+      profile,
+      Object.keys(params.filters).concat(columns.map((c) => c.alias)),
+    );
 
-  // ensure no mv-only columns exist if no mv was found
-  if (!materializedView) {
+  // ensure no view-only columns exist if no view was found
+  if (!view) {
     for (const col of columns) {
       if (!profile.columns.find((c) => c.name === col.name)) {
-        return res.status(404).json({
-          message: `The column ${col.alias} is not available with the current query`,
-        });
+        throw new Error(
+          `The column ${col.alias} is not available with the current query`,
+        );
       }
     }
   }
@@ -834,7 +844,7 @@ async function queryColumnValues(profile, columns, params, schema) {
   // query table directly if a suitable materialized view was not found
   const query = knex
     .withSchema(schema)
-    .from(materializedView ? materializedView.name : profile.tableName)
+    .from(view?.name ?? profile.tableName)
     .column(
       columns.reduce(
         (current, col) => ({ ...current, [col.alias]: col.name }),
