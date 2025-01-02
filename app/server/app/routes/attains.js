@@ -525,9 +525,7 @@ async function executeQuery(profile, req, res) {
     // Check if the query result is empty.
     if (await isEmptyResult(query)) {
       return res.status(200).json({
-        data: [],
-        pageNumber: 1,
-        pageSize: queryParams.options.pageSize || defaultPageSize,
+        message: `No results found for the current query. Please refine the search.`,
       });
     }
 
