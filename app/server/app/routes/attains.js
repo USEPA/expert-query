@@ -354,15 +354,19 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
   // so that we can apply the same filters to the subquery
   const latestColumn = profile.columns.find((col) => col.default === 'latest');
   const subQuery =
-    latestColumn && !queryParams.filters.hasOwnProperty(latestColumn.alias)
-      ? createLatestSubquery(
-          req,
-          profile,
-          queryParams,
-          latestColumn.name,
-          latestColumn.type,
-        )
-      : null;
+    latestColumn &&
+    queryParams.filters.hasOwnProperty(latestColumn.alias) &&
+    queryParams.filters[latestColumn.alias] === -1
+      ? null
+      : latestColumn && !queryParams.filters.hasOwnProperty(latestColumn.alias)
+        ? createLatestSubquery(
+            req,
+            profile,
+            queryParams,
+            latestColumn.name,
+            latestColumn.type,
+          )
+        : null;
 
   // build select statement of the query
   if (!countOnly) {
@@ -386,6 +390,9 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
+    if (col.default === 'latest' && queryParams.filters[col.alias] === -1)
+      return;
+
     const lowArg = 'lowParam' in col && queryParams.filters[col.lowParam];
     const highArg = 'highParam' in col && queryParams.filters[col.highParam];
     const exactArg = queryParams.filters[col.alias];

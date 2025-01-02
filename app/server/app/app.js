@@ -59,7 +59,7 @@ app.use(function (req, res, next) {
   else {
     res.sendStatus(401);
     const metadataObj = populateMetdataObjFromRequest(req);
-    log.error(
+    log.debug(
       formatLogMsg(
         metadataObj,
         `Attempted use of unsupported HTTP method. HTTP method = ${req.method}`,
