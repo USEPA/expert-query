@@ -2,6 +2,8 @@
 import table from '@uswds/uswds/js/usa-table';
 import classNames from 'classnames';
 import { useState } from 'react';
+// types
+import type { ReactNode } from 'react';
 
 function isCellSpec(value: any): value is TableCell {
   return (
@@ -111,20 +113,20 @@ export const Table = ({
         <tbody>
           {data.map((row, i: number) => {
             const rowData: TableCell[] = [];
-            for (const key in row) {
+            row.forEach((cell: string | number | TableCell) => {
               if (sortable) {
                 rowData.push({
-                  value: isCellSpec(row[key]) ? row[key].value : row[key],
-                  sortValue: isCellSpec(row[key])
-                    ? row[key].sortValue ?? row[key].value
-                    : row[key],
+                  value: isCellSpec(cell) ? cell.value : cell,
+                  sortValue: isCellSpec(cell)
+                    ? (cell.sortValue ?? cell.value ?? '').toString()
+                    : cell,
                 });
               } else {
                 rowData.push({
-                  value: isCellSpec(row[key]) ? row[key].value : row[key],
+                  value: isCellSpec(cell) ? cell.value : cell,
                 });
               }
-            }
+            });
 
             return (
               <tr key={`tr-${i}`}>
@@ -226,8 +228,8 @@ type TableColumn = {
 };
 
 type TableCell = {
-  value: string;
-  sortValue?: string;
+  value: ReactNode;
+  sortValue?: string | number;
 };
 
 export default Table;

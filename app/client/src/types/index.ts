@@ -30,6 +30,21 @@ type BaseFilterFieldConfig = {
   size?: 'small' | 'medium' | 'large';
 };
 
+export type ColumnConfig = {
+  key: string;
+  preview?: {
+    label?: string;
+    order?: number;
+    sortable?: boolean;
+    transform?: {
+      type: 'link';
+      args: string[];
+    };
+    width?: number;
+  };
+  ranked?: boolean;
+};
+
 // Fields provided in the `domainValues` of the Content context
 export type ConcreteField =
   | 'actionAgency'

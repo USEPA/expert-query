@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer } from 'react';
 import type { Dispatch, ReactNode } from 'react';
 import type {
+  ColumnConfig,
   DomainOptions,
   MultiOptionField,
   SingleOptionField,
@@ -73,7 +74,7 @@ export type Content = {
     [key: string]: {
       key: string;
       description: string;
-      columns: Set<string>;
+      columns: Array<ColumnConfig>;
       label: string;
       resource: string;
     };
@@ -86,17 +87,6 @@ export type Content = {
       content: string;
       type: 'error' | 'info' | 'success' | 'summary' | 'warning';
     }>;
-  };
-};
-
-export type JsonContent = Omit<Content, 'profileConfig'> & {
-  profileConfig: {
-    [key: string]: {
-      description: string;
-      columns: string[];
-      label: string;
-      resource: string;
-    };
   };
 };
 

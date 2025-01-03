@@ -1,4 +1,3 @@
-// TODO: Move all table fields to configuration.
 import { Dialog } from '@reach/dialog';
 import Close from 'images/close.svg?react';
 import { uniqueId } from 'lodash';
@@ -12,16 +11,48 @@ import { isAbort, postData, useAbort } from 'utils';
 // styles
 import '@reach/dialog/styles.css';
 // types
-import type { FetchState, QueryData } from 'types';
+import type { ColumnConfig, FetchState, QueryData, Value } from 'types';
+
+const RANK_KEY = 'rankPercent';
 
 export function PreviewModal<D extends QueryData>({
   apiKey,
+  columns,
   limit,
   onClose,
+  ranked = true,
   queryData,
   queryUrl,
 }: Readonly<PreviewModalProps<D>>) {
   const { abort, getSignal } = useAbort();
+
+  const tableColumns = useMemo(() => {
+    const columnsToShow = columns.filter((column) =>
+      column.hasOwnProperty('preview'),
+    ) as Array<Required<ColumnConfig>>;
+    const columnsOrdered = columnsToShow.toSorted(
+      (a, b) => (a.preview.order ?? Infinity) - (b.preview.order ?? Infinity),
+    );
+    const columnDefs = columnsOrdered.map((column) => ({
+      id: column.key,
+      name: column.preview.label || column.key,
+      sortable: column.preview.sortable ?? false,
+      width: column.preview.width ?? 100,
+    }));
+    if (ranked) {
+      return [
+        {
+          id: RANK_KEY,
+          name: 'Rank (%)',
+          sortable: true,
+          width: 100,
+        },
+        ...columnDefs,
+      ];
+    }
+
+    return columnDefs;
+  }, [columns]);
 
   const closeModal = () => {
     abort();
@@ -31,9 +62,7 @@ export function PreviewModal<D extends QueryData>({
   const [id] = useState(uniqueId('modal-'));
 
   // Data to be displayed in the preview table.
-  const [preview, setPreview] = useState<
-    FetchState<Array<ActionDocumentsRow> | string>
-  >({
+  const [preview, setPreview] = useState<FetchState<Array<DataRow> | string>>({
     data: null,
     status: 'idle',
   });
@@ -59,25 +88,50 @@ export function PreviewModal<D extends QueryData>({
           return;
         }
 
-        const data = res.data.map((row: ActionDocumentsRow) => ({
-          rankPercent: row.rankPercent,
-          actionDocumentUrl: {
-            sortValue: row.documentName,
-            value: (
-              <a
-                href={row.actionDocumentUrl}
-                target="_blank"
-                rel="noopener,noreferrer"
-              >
-                {row.documentName}
-              </a>
-            ),
+        const columnMap = columns.reduce<Record<string, ColumnConfig>>(
+          (acc, column) => {
+            acc[column.key] = column;
+            return acc;
           },
-          actionId: row.actionId,
-          region: row.region,
-          state: row.state,
-          organizationId: row.organizationId,
-        }));
+          {},
+        );
+        const data = res.data.map((row: DataRow) =>
+          Object.entries(row)
+            .filter(
+              ([key, _value]) =>
+                key === RANK_KEY || columnMap[key].hasOwnProperty('preview'),
+            )
+            .toSorted(([a], [b]) => {
+              if (ranked) {
+                if (a === RANK_KEY) return -1;
+                if (b === RANK_KEY) return 1;
+              }
+              return (
+                (columnMap[a].preview?.order ?? Infinity) -
+                (columnMap[b].preview?.order ?? Infinity)
+              );
+            })
+            .map(([key, value]) => {
+              const column = columnMap[key];
+              if (column?.preview?.transform?.type === 'link') {
+                const textColumn = column.preview.transform.args[0];
+                return {
+                  sortValue: row[textColumn],
+                  value: (
+                    <a
+                      href={value.toString()}
+                      target="_blank"
+                      rel="noopener,noreferrer"
+                    >
+                      {row[textColumn]}
+                    </a>
+                  ),
+                };
+              } else {
+                return value;
+              }
+            }),
+        );
         setPreview({ data, status: 'success' });
       })
       .catch((err) => {
@@ -86,23 +140,6 @@ export function PreviewModal<D extends QueryData>({
         setPreview({ data: null, status: 'failure' });
       });
   }, [apiKey, queryData, queryUrl]);
-
-  const columns = useMemo(
-    () => [
-      { id: 'rankPercent', name: 'Rank (%)', sortable: true, width: 100 },
-      { id: 'actionDocumentUrl', name: 'Document', sortable: true, width: 300 },
-      { id: 'actionId', name: 'Action ID', sortable: true, width: 110 },
-      { id: 'regionId', name: 'Region', sortable: true, width: 110 },
-      { id: 'state', name: 'State', sortable: true, width: 100 },
-      {
-        id: 'organizationId',
-        name: 'Organization ID',
-        sortable: true,
-        width: 160,
-      },
-    ],
-    [],
-  );
 
   return (
     <Dialog
@@ -144,7 +181,7 @@ export function PreviewModal<D extends QueryData>({
                         </small>
                       )}
                       <Table
-                        columns={columns}
+                        columns={tableColumns}
                         data={preview.data}
                         id={`${id}-table`}
                         scrollable={true}
@@ -182,28 +219,14 @@ export function PreviewModal<D extends QueryData>({
 ## Types
 */
 
-type ActionDocumentsRow = {
-  actionDocumentType: string;
-  actionDocumentUrl: string;
-  actionId: string;
-  actionName: string;
-  actionType: string;
-  completionDate: string;
-  documentFileName: string;
-  documentFileTypeName: string;
-  documentKey: number;
-  documentName: string;
-  organizationId: string;
-  rankPercent: number;
-  region: string;
-  state: string;
-  tmdlDate: string;
-};
+type DataRow = Record<string, Value>;
 
 type PreviewModalProps<D extends QueryData> = {
   apiKey: string;
+  columns: ColumnConfig[];
   limit: number;
   onClose: () => void;
+  ranked?: boolean;
   queryData: D;
   queryUrl: string;
 };

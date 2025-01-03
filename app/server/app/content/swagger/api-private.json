@@ -899,7 +899,46 @@
                       "columns": {
                         "type": "array",
                         "items": {
-                          "type": "string"
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "preview": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string"
+                                },
+                                "order": {
+                                  "type": "integer"
+                                },
+                                "sortable": {
+                                  "type": "boolean"
+                                },
+                                "transform": {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string"
+                                    },
+                                    "args": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                },
+                                "width": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "ranked": {
+                              "type": "boolean"
+                            }
+                          }
                         }
                       },
                       "description": {

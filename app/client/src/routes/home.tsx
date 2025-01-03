@@ -374,10 +374,15 @@ export function QueryBuilder() {
             {searchPreviewVisible && (
               <PreviewModal
                 apiKey={apiKey}
+                columns={profile.columns}
                 limit={previewLimit}
                 onClose={closeSearchPreview}
                 queryData={queryParams}
                 queryUrl={`${apiUrl}/${profile.resource}`}
+                ranked={Object.keys(queryParams.filters).some((key) => {
+                  const column = profile.columns.find((col) => col.key === key);
+                  return column?.ranked === true;
+                })}
               />
             )}
           </>
@@ -1222,7 +1227,7 @@ function useQueryParams({
     return {
       filters: buildFilterData(filterFields, filterState, profile),
       options: { format },
-      columns: Array.from(profile.columns),
+      columns: profile.columns.map((column) => column.key),
     };
   }, [filterFields, filterState, format, profile]);
 
@@ -1753,8 +1758,9 @@ function isOption(maybeOption: Option | string): maybeOption is Option {
 
 function isProfileField(field: FilterField, profile: Profile) {
   const profileColumns = profile.columns;
-  if (profileColumns.has(field.key)) return true;
-  if ('domain' in field && profileColumns.has(field.domain)) return true;
+  if (profileColumns.some((c) => c.key === field.key)) return true;
+  if ('domain' in field && profileColumns.some((c) => c.key === field.domain))
+    return true;
   return false;
 }
 
