@@ -455,13 +455,10 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
       })
       .withSchema()
       .from('ranked')
-      .select(
-        selectColumns
-          .map(asAlias)
-          .concat(
-            knex.raw('ROUND((AVG(rank) * 100)::numeric, 1) AS "rankPercent"'),
-          ),
-      )
+      .select([
+        knex.raw('ROUND((AVG(rank) * 100)::numeric, 1) AS "rankPercent"'),
+        ...selectColumns.map(asAlias),
+      ])
       .orderBy('rankPercent', 'desc')
       .groupBy(selectColumns.map((col) => col.name));
   } else {
