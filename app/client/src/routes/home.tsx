@@ -561,6 +561,7 @@ function FilterFieldInputs({
               ? sourceState[sourceFieldConfig.id]
               : null;
             const selectProps = {
+              additionalOptions: 'additionalOptions' in fieldConfig ? fieldConfig.additionalOptions : [],
               apiKey,
               apiUrl,
               contextFilters: getContextFilters(
