@@ -92,6 +92,14 @@
   cursor: pointer;
 }
 
+.layout-fixed {
+  table-layout: fixed;
+}
+
+.maxh-90vh {
+  max-height: 90vh;
+}
+
 .sr-only {
   border: 0;
   clip: rect(0, 0, 0, 0);
@@ -113,6 +121,10 @@
 
 .text-shadow {
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.whitespace-wrap tbody td {
+  white-space: normal;
 }
 
 .width-fit {

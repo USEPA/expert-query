@@ -33,7 +33,6 @@ log.info(
   `STREAM_HIGH_WATER_MARK: ${parseInt(process.env.STREAM_HIGH_WATER_MARK)}`,
 );
 log.info(`MAX_QUERY_SIZE: ${parseInt(process.env.MAX_QUERY_SIZE)}`);
-log.info(`JSON_PAGE_SIZE: ${parseInt(process.env.JSON_PAGE_SIZE)}`);
 
 // Setup parsers for ensuring output matches datatype in database
 // (i.e., return count as 124 instead of "124")

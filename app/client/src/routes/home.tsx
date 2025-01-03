@@ -9,6 +9,7 @@ import {
 import Select from 'react-select';
 import { AsyncPaginate, wrapMenuList } from 'react-select-async-paginate';
 import Download from 'images/file_download.svg?react';
+import Search from 'images/search.svg?react';
 // components
 import { AccordionItem } from 'components/accordion';
 import { Alert } from 'components/alert';
@@ -20,6 +21,7 @@ import { Loading } from 'components/loading';
 import { DownloadModal } from 'components/downloadModal';
 import { ClearSearchModal } from 'components/clearSearchModal';
 import { MenuList as CustomMenuList } from 'components/menuList';
+import { PreviewModal } from 'components/previewModal';
 import { RadioButtons } from 'components/radioButtons';
 import { SourceSelect } from 'components/sourceSelect';
 import { StepIndicator } from 'components/stepIndicator';
@@ -41,6 +43,8 @@ import type {
   Option,
   SingleOptionField,
   SingleValueField,
+  SingleValueRangeField,
+  SingleValueTextField,
   StaticOptions,
   Status,
   Value,
@@ -49,8 +53,6 @@ import type {
 /*
 ## Components
 */
-
-export default Home;
 
 function HomeContent({ content }: Readonly<{ content: Content }>) {
   const {
@@ -216,6 +218,7 @@ function HomeContent({ content }: Readonly<{ content: Content }>) {
                 format,
                 formatHandler: setFormat,
                 glossary,
+                previewLimit: content.parameters.searchPreviewPageSize,
                 profile,
                 queryParams,
                 resetFilters,
@@ -265,6 +268,7 @@ export function QueryBuilder() {
     format,
     formatHandler,
     glossary,
+    previewLimit,
     profile,
     resetFilters,
     sourceFields,
@@ -274,16 +278,22 @@ export function QueryBuilder() {
   } = useHomeContext();
 
   const {
-    clearConfirmationVisible,
-    closeClearConfirmation,
-    openClearConfirmation,
-  } = useClearConfirmationVisibility();
+    visible: clearConfirmationVisible,
+    close: closeClearConfirmation,
+    open: openClearConfirmation,
+  } = useModalVisibility();
 
   const {
-    closeDownloadConfirmation,
-    downloadConfirmationVisible,
-    openDownloadConfirmation,
-  } = useDownloadConfirmationVisibility();
+    close: closeDownloadConfirmation,
+    visible: downloadConfirmationVisible,
+    open: openDownloadConfirmation,
+  } = useModalVisibility();
+
+  const {
+    close: closeSearchPreview,
+    visible: searchPreviewVisible,
+    open: openSearchPreview,
+  } = useModalVisibility();
 
   const [downloadStatus, setDownloadStatus] = useDownloadStatus(
     profile,
@@ -296,33 +306,21 @@ export function QueryBuilder() {
 
   return (
     <>
-      {downloadConfirmationVisible && (
-        <DownloadModal
-          apiKey={apiKey}
-          dataId="attains"
-          filename={profile && format ? `${profile.key}.${format.value}` : null}
-          downloadStatus={downloadStatus}
-          onClose={closeDownloadConfirmation}
-          queryData={queryParams}
-          queryUrl={profile ? `${apiUrl}/${profile.resource}` : null}
-          setDownloadStatus={setDownloadStatus}
-        />
-      )}
-      {clearConfirmationVisible && (
-        <ClearSearchModal
-          onContinue={() => {
-            resetFilters();
-            navigate('/attains', { replace: true });
-          }}
-          onClose={closeClearConfirmation}
-        />
-      )}
       <div>
         <div className="margin-top-2">
           <Button onClick={openClearConfirmation} color="white">
             Clear Search
           </Button>
         </div>
+        {clearConfirmationVisible && (
+          <ClearSearchModal
+            onContinue={() => {
+              resetFilters();
+              navigate('/attains', { replace: true });
+            }}
+            onClose={closeClearConfirmation}
+          />
+        )}
         <InPageNavAnchor
           id="apply-filters"
           label={
@@ -355,6 +353,40 @@ export function QueryBuilder() {
           sourceState={sourceState}
           staticOptions={staticOptions}
         />
+
+        {profile.key === 'actionDocuments' && (
+          <>
+            <div className="display-flex flex-justify-center margin-y-3 width-full">
+              <button
+                className="display-flex flex-justify-center usa-button"
+                onClick={openSearchPreview}
+                type="button"
+              >
+                <Search
+                  aria-hidden="true"
+                  className="height-205 margin-right-1 usa-icon width-205"
+                  role="img"
+                  focusable="false"
+                />
+                <span className="margin-y-auto">Preview</span>
+              </button>
+            </div>
+            {searchPreviewVisible && (
+              <PreviewModal
+                apiKey={apiKey}
+                columns={profile.columns}
+                limit={previewLimit}
+                onClose={closeSearchPreview}
+                queryData={queryParams}
+                queryUrl={`${apiUrl}/${profile.resource}`}
+                ranked={Object.keys(queryParams.filters).some((key) => {
+                  const column = profile.columns.find((col) => col.key === key);
+                  return column?.ranked === true;
+                })}
+              />
+            )}
+          </>
+        )}
 
         <InPageNavAnchor
           id="download"
@@ -393,6 +425,20 @@ export function QueryBuilder() {
           />
           <span className="margin-y-auto">Download</span>
         </button>
+        {downloadConfirmationVisible && (
+          <DownloadModal
+            apiKey={apiKey}
+            dataId="attains"
+            filename={
+              profile && format ? `${profile.key}.${format.value}` : null
+            }
+            downloadStatus={downloadStatus}
+            onClose={closeDownloadConfirmation}
+            queryData={queryParams}
+            queryUrl={profile ? `${apiUrl}/${profile.resource}` : null}
+            setDownloadStatus={setDownloadStatus}
+          />
+        )}
         {downloadStatus === 'success' && (
           <Alert
             styles={['margin-top-3', 'tablet:margin-top-6']}
@@ -468,159 +514,210 @@ function FilterFieldInputs({
   staticOptions,
 }: FilterFieldInputsProps) {
   // Store each field's element in a tuple with its key
-  const fieldsJsx: Array<[JSX.Element, string]> = removeNulls(
-    fields.map((fieldConfig) => {
-      const sourceFieldConfig =
-        'source' in fieldConfig &&
-        (fieldConfig.source as string) in sourceFields
-          ? sourceFields[fieldConfig.source as string]
-          : null;
+  const fieldsJsx: Array<[JSX.Element, string, string | undefined]> =
+    removeNulls(
+      fields.map((fieldConfig) => {
+        const sourceFieldConfig =
+          'source' in fieldConfig &&
+          (fieldConfig.source as string) in sourceFields
+            ? sourceFields[fieldConfig.source as string]
+            : null;
 
-      const tooltip =
-        fieldConfig.label in glossary
-          ? glossary[fieldConfig.label].definition
-          : null;
+        const tooltip =
+          fieldConfig.label in glossary
+            ? glossary[fieldConfig.label].definition
+            : null;
 
-      switch (fieldConfig.type) {
-        case 'multiselect':
-        case 'select':
-          if (
-            !sourceFieldConfig &&
-            fieldConfig.type === 'multiselect' &&
-            fieldConfig.key in staticOptions &&
-            staticOptions[fieldConfig.key].length <= 5
-          ) {
+        switch (fieldConfig.type) {
+          case 'multiselect':
+          case 'select':
+            if (
+              !sourceFieldConfig &&
+              fieldConfig.type === 'multiselect' &&
+              fieldConfig.key in staticOptions &&
+              staticOptions[fieldConfig.key].length <= 5
+            ) {
+              return [
+                <Checkboxes
+                  key={fieldConfig.key}
+                  label={fieldConfig.label}
+                  onChange={
+                    filterHandlers[fieldConfig.key] as OptionInputHandler
+                  }
+                  options={staticOptions[fieldConfig.key]}
+                  selected={
+                    (filterState[fieldConfig.key] as MultiOptionState) ?? []
+                  }
+                  className="margin-top-2"
+                  tooltip={tooltip}
+                />,
+                fieldConfig.key,
+                fieldConfig.size,
+              ];
+            }
+
+            const sourceKey = sourceFieldConfig?.key ?? null;
+            const sourceValue = sourceFieldConfig
+              ? sourceState[sourceFieldConfig.id]
+              : null;
+            const selectProps = {
+              additionalOptions: 'additionalOptions' in fieldConfig ? fieldConfig.additionalOptions : [],
+              apiKey,
+              apiUrl,
+              contextFilters: getContextFilters(
+                fieldConfig,
+                Object.values(filterFields).concat(Object.values(sourceFields)),
+                profile,
+                {
+                  ...queryParams.filters,
+                  ...(sourceKey && sourceValue
+                    ? { [sourceKey]: sourceValue.value }
+                    : {}),
+                },
+              ),
+              defaultOption:
+                'default' in fieldConfig ? fieldConfig.default : null,
+              filterHandler: filterHandlers[fieldConfig.key],
+              filterKey: fieldConfig.key,
+              filterLabel: fieldConfig.label,
+              filterValue: filterState[fieldConfig.key],
+              isMulti: isMultiOptionField(fieldConfig),
+              profile,
+              secondaryFilterKey:
+                'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
+              sortDirection:
+                'direction' in fieldConfig
+                  ? (fieldConfig.direction as SortDirection)
+                  : 'asc',
+              sourceKey,
+              sourceValue,
+              staticOptions,
+            } as SelectFilterProps;
+
             return [
-              <Checkboxes
+              <div className="margin-top-2" key={fieldConfig.key}>
+                <span className="display-flex flex-align-center line-height-sans-1">
+                  <label
+                    className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
+                    htmlFor={`input-${fieldConfig.key}`}
+                  >
+                    {fieldConfig.label}
+                  </label>
+                  {tooltip && (
+                    <InfoTooltip
+                      description={`${fieldConfig.label} tooltip`}
+                      text={tooltip}
+                      className="margin-left-05"
+                    />
+                  )}
+                </span>
+                <div className="margin-top-1">
+                  {sourceFieldConfig ? (
+                    <SourceSelectFilter
+                      {...selectProps}
+                      sourceHandler={sourceHandlers[sourceFieldConfig.id]}
+                      sourceKey={sourceFieldConfig.key}
+                      sourceLabel={sourceFieldConfig.label}
+                    />
+                  ) : (
+                    <SelectFilter {...selectProps} />
+                  )}
+                </div>
+              </div>,
+              fieldConfig.key,
+              fieldConfig.size,
+            ];
+          case 'date':
+          case 'year':
+            // Prevents range fields from rendering twice
+            if (fieldConfig.boundary === 'high') return null;
+
+            const pairedField = fields.find(
+              (otherField) =>
+                otherField.key !== fieldConfig.key &&
+                otherField.type === fieldConfig.type &&
+                otherField.domain === fieldConfig.domain,
+            );
+            // All range inputs should have a high and a low boundary field
+            if (!pairedField || !isSingleValueRangeField(pairedField))
+              return null;
+
+            return [
+              <RangeFilter
+                className="margin-top-2"
+                domain={fieldConfig.domain}
+                highHandler={
+                  filterHandlers[pairedField.key] as SingleValueInputHandler
+                }
+                highKey={pairedField.key}
+                highValue={filterState[pairedField.key] as string}
                 key={fieldConfig.key}
                 label={fieldConfig.label}
-                onChange={filterHandlers[fieldConfig.key] as OptionInputHandler}
-                options={staticOptions[fieldConfig.key]}
-                selected={
-                  (filterState[fieldConfig.key] as MultiOptionState) ?? []
+                lowHandler={
+                  filterHandlers[fieldConfig.key] as SingleValueInputHandler
                 }
-                className="margin-top-2"
+                lowKey={fieldConfig.key}
+                lowValue={filterState[fieldConfig.key] as string}
                 tooltip={tooltip}
+                type={fieldConfig.type}
               />,
-              fieldConfig.key,
+              fieldConfig.domain,
+              fieldConfig.size,
             ];
-          }
-
-          const sourceKey = sourceFieldConfig?.key ?? null;
-          const sourceValue = sourceFieldConfig
-            ? sourceState[sourceFieldConfig.id]
-            : null;
-          const selectProps = {
-            additionalOptions: 'additionalOptions' in fieldConfig ? fieldConfig.additionalOptions : [],
-            apiKey,
-            apiUrl,
-            contextFilters: getContextFilters(
-              fieldConfig,
-              Object.values(filterFields).concat(Object.values(sourceFields)),
-              profile,
-              {
-                ...queryParams.filters,
-                ...(sourceKey && sourceValue
-                  ? { [sourceKey]: sourceValue.value }
-                  : {}),
-              },
-            ),
-            defaultOption:
-              'default' in fieldConfig ? fieldConfig.default : null,
-            filterHandler: filterHandlers[fieldConfig.key],
-            filterKey: fieldConfig.key,
-            filterLabel: fieldConfig.label,
-            filterValue: filterState[fieldConfig.key],
-            isMulti: isMultiOptionField(fieldConfig),
-            profile,
-            secondaryFilterKey:
-              'secondaryKey' in fieldConfig ? fieldConfig.secondaryKey : null,
-            sortDirection:
-              'direction' in fieldConfig
-                ? (fieldConfig.direction as SortDirection)
-                : 'asc',
-            sourceKey,
-            sourceValue,
-            staticOptions,
-          } as SelectFilterProps;
-
-          return [
-            <div className="margin-top-2" key={fieldConfig.key}>
-              <span className="display-flex flex-align-center line-height-sans-1">
-                <label
-                  className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
-                  htmlFor={`input-${fieldConfig.key}`}
-                >
-                  {fieldConfig.label}
-                </label>
-                {tooltip && (
-                  <InfoTooltip
-                    description={`${fieldConfig.label} tooltip`}
-                    text={tooltip}
-                    className="margin-left-05"
+          case 'text':
+            return [
+              <div className="margin-top-2" key={fieldConfig.key}>
+                <span className="display-flex flex-align-center line-height-sans-1">
+                  <label
+                    className="font-sans-2xs margin-top-0 text-bold text-uppercase usa-label"
+                    htmlFor={`input-${fieldConfig.key}`}
+                  >
+                    {fieldConfig.label}
+                  </label>
+                  {tooltip && (
+                    <InfoTooltip
+                      description={`${fieldConfig.label} tooltip`}
+                      text={tooltip}
+                      className="margin-left-05"
+                    />
+                  )}
+                </span>
+                <div className="margin-top-1">
+                  <input
+                    className="border border-gray-30 radius-md usa-input maxw-none width-full"
+                    id={`input-${fieldConfig.key}`}
+                    onChange={
+                      filterHandlers[fieldConfig.key] as SingleValueInputHandler
+                    }
+                    title={fieldConfig.label}
+                    placeholder="Text..."
+                    type="text"
+                    value={filterState[fieldConfig.key] as string}
                   />
-                )}
-              </span>
-              <div className="margin-top-1">
-                {sourceFieldConfig ? (
-                  <SourceSelectFilter
-                    {...selectProps}
-                    sourceHandler={sourceHandlers[sourceFieldConfig.id]}
-                    sourceKey={sourceFieldConfig.key}
-                    sourceLabel={sourceFieldConfig.label}
-                  />
-                ) : (
-                  <SelectFilter {...selectProps} />
-                )}
-              </div>
-            </div>,
-            fieldConfig.key,
-          ];
-        case 'date':
-        case 'year':
-          // Prevents range fields from rendering twice
-          if (fieldConfig.boundary === 'high') return null;
-
-          const pairedField = fields.find(
-            (otherField) =>
-              otherField.key !== fieldConfig.key &&
-              otherField.type === fieldConfig.type &&
-              otherField.domain === fieldConfig.domain,
-          );
-          // All range inputs should have a high and a low boundary field
-          if (!pairedField || !isSingleValueField(pairedField)) return null;
-
-          return [
-            <RangeFilter
-              className="margin-top-2"
-              domain={fieldConfig.domain}
-              highHandler={
-                filterHandlers[pairedField.key] as SingleValueInputHandler
-              }
-              highKey={pairedField.key}
-              highValue={filterState[pairedField.key] as string}
-              key={fieldConfig.key}
-              label={fieldConfig.label}
-              lowHandler={
-                filterHandlers[fieldConfig.key] as SingleValueInputHandler
-              }
-              lowKey={fieldConfig.key}
-              lowValue={filterState[fieldConfig.key] as string}
-              tooltip={tooltip}
-              type={fieldConfig.type}
-            />,
-            fieldConfig.domain,
-          ];
-        default:
-          return null;
-      }
-    }),
-  );
+                </div>
+              </div>,
+              fieldConfig.key,
+              fieldConfig.size,
+            ];
+          default:
+            return null;
+        }
+      }),
+    );
 
   return (
     <div className="grid-gap-2 grid-row">
-      {fieldsJsx.map(([field, key]) => (
-        <div className="desktop:grid-col-4 tablet:grid-col-6" key={key}>
+      {fieldsJsx.map(([field, key, size]) => (
+        <div
+          className={`flex-align-self-end ${
+            size === 'large'
+              ? 'width-full'
+              : size === 'medium'
+                ? 'desktop:grid-col-8 tablet:grid-col-6'
+                : 'desktop:grid-col-4 tablet:grid-col-6'
+          }`}
+          key={key}
+        >
           {field}
         </div>
       ))}
@@ -948,41 +1045,21 @@ function SelectFilter({
 ## Hooks
 */
 
-function useClearConfirmationVisibility() {
-  const [clearConfirmationVisible, setClearConfirmationVisible] =
-    useState(false);
+function useModalVisibility() {
+  const [visible, setVisible] = useState(false);
 
-  const closeClearConfirmation = useCallback(() => {
-    setClearConfirmationVisible(false);
+  const close = useCallback(() => {
+    setVisible(false);
   }, []);
 
-  const openClearConfirmation = useCallback(() => {
-    setClearConfirmationVisible(true);
-  }, []);
-
-  return {
-    clearConfirmationVisible,
-    closeClearConfirmation,
-    openClearConfirmation,
-  };
-}
-
-function useDownloadConfirmationVisibility() {
-  const [downloadConfirmationVisible, setDownloadConfirmationVisible] =
-    useState(false);
-
-  const closeDownloadConfirmation = useCallback(() => {
-    setDownloadConfirmationVisible(false);
-  }, []);
-
-  const openDownloadConfirmation = useCallback(() => {
-    setDownloadConfirmationVisible(true);
+  const open = useCallback(() => {
+    setVisible(true);
   }, []);
 
   return {
-    closeDownloadConfirmation,
-    downloadConfirmationVisible,
-    openDownloadConfirmation,
+    visible,
+    close,
+    open,
   };
 }
 
@@ -1151,7 +1228,7 @@ function useQueryParams({
     return {
       filters: buildFilterData(filterFields, filterState, profile),
       options: { format },
-      columns: Array.from(profile.columns),
+      columns: profile.columns.map((column) => column.key),
     };
   }, [filterFields, filterState, format, profile]);
 
@@ -1636,6 +1713,8 @@ async function getUrlInputs(
         newState[key] = matchDate(params[key] ?? null);
       } else if (isYearField(filterField)) {
         newState[key] = matchYear(params[key] ?? null);
+      } else if (isSingleValueTextField(filterField)) {
+        newState[key] = (params[key] ?? '').toString();
       }
     }),
   ]);
@@ -1680,8 +1759,9 @@ function isOption(maybeOption: Option | string): maybeOption is Option {
 
 function isProfileField(field: FilterField, profile: Profile) {
   const profileColumns = profile.columns;
-  if (profileColumns.has(field.key)) return true;
-  if ('domain' in field && profileColumns.has(field.domain)) return true;
+  if (profileColumns.some((c) => c.key === field.key)) return true;
+  if ('domain' in field && profileColumns.some((c) => c.key === field.domain))
+    return true;
   return false;
 }
 
@@ -1692,7 +1772,21 @@ function isSingleOptionField(field: FilterField): field is SingleOptionField {
 
 // Type narrowing
 function isSingleValueField(field: FilterField): field is SingleValueField {
+  return isSingleValueTextField(field) || isSingleValueRangeField(field);
+}
+
+// Type narrowing
+function isSingleValueRangeField(
+  field: FilterField,
+): field is SingleValueRangeField {
   return field.type === 'date' || field.type === 'year';
+}
+
+// Type narrowing
+function isSingleValueTextField(
+  field: FilterField,
+): field is SingleValueTextField {
+  return field.type === 'text';
 }
 
 // Type narrowing
@@ -1926,6 +2020,8 @@ type FilterQueryData = {
 };
 
 type HomeContext = {
+  apiKey: string;
+  apiUrl: string;
   filterFields: FilterFields;
   filterGroups: FilterGroup[];
   filterGroupLabels: FilterGroupLabels;
@@ -1934,10 +2030,9 @@ type HomeContext = {
   format: Option;
   formatHandler: (format: Option) => void;
   glossary: Content['glossary'];
+  previewLimit: number;
   profile: Profile;
   queryParams: QueryData;
-  apiKey: string;
-  apiUrl: string;
   resetFilters: () => void;
   sourceFields: SourceFields;
   sourceHandlers: SourceFieldInputHandlers;
@@ -2047,3 +2142,5 @@ type SourceSelectFilterProps = SelectFilterProps & {
 };
 
 type UrlQueryParam = [Value, Value];
+
+export default Home;

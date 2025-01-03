@@ -69,7 +69,9 @@ type NationalDownloadsDataProps = {
   content: FetchState<Content>;
 };
 
-function NationalDownloadsData({ content }: Readonly<NationalDownloadsDataProps>) {
+function NationalDownloadsData({
+  content,
+}: Readonly<NationalDownloadsDataProps>) {
   if (content.status !== 'success') return null;
 
   return (
@@ -144,7 +146,7 @@ function NationalDownloadsData({ content }: Readonly<NationalDownloadsDataProps>
 
 function ParagraphNoMargin(
   props: React.ClassAttributes<HTMLParagraphElement> &
-    React.HTMLAttributes<HTMLParagraphElement>
+    React.HTMLAttributes<HTMLParagraphElement>,
 ) {
   return <p className="margin-0">{props.children}</p>;
 }

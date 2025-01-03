@@ -5,6 +5,11 @@
       "label": "Action Agency",
       "type": "multiselect"
     },
+    "actionDocumentType": {
+      "key": "actionDocumentType",
+      "label": "Document Type",
+      "type": "multiselect"
+    },
     "actionId": {
       "key": "actionId",
       "label": "Action ID (Name)",
@@ -209,6 +214,19 @@
       "key": "delistedReason",
       "label": "Delisted Reason",
       "type": "multiselect"
+    },
+    "documentName": {
+      "key": "documentName",
+      "label": "Document Name (File Name)",
+      "type": "multiselect",
+      "secondaryKey": "documentFileName",
+      "size": "medium"
+    },
+    "documentQuery": {
+      "key": "documentQuery",
+      "label": "Search Text / Keyword",
+      "type": "text",
+      "size": "large"
     },
     "epaIrCategory": {
       "key": "epaIrCategory",
@@ -496,6 +514,7 @@
     "assessmentUnit": "Search for a specific Assessment Unit",
     "associatedAction": "Search by Associated Action",
     "catchmentAssessmentUnit": "Search by Assessment Unit or NHDPlus Catchment",
+    "documentText": "Search by Document",
     "impairmentCause": "Search by Cause of Impairment",
     "impairmentSource": "Search by Probable Source of Impairment",
     "overallStatus": "Search by Overall Status",
@@ -535,9 +554,29 @@
       { "key": "actionsAssessmentUnit", "fields": ["assessmentUnitId"] },
       {
         "key": "timeFrame",
+        "fields": ["fiscalYearEstablishedLo", "fiscalYearEstablishedHi"]
+      }
+    ],
+    "actionDocuments": [
+      {
+        "key": "documentText",
+        "fields": ["documentQuery", "documentName", "actionDocumentType"]
+      },
+      {
+        "key": "areaOfInterest",
+        "fields": ["region", "state", "organizationType", "organizationId"]
+      },
+      {
+        "key": "action",
+        "fields": ["actionType", "actionId"]
+      },
+      {
+        "key": "timeFrame",
         "fields": [
-          "fiscalYearEstablishedLo",
-          "fiscalYearEstablishedHi"
+          "completionDateLo",
+          "completionDateHi",
+          "tmdlDateLo",
+          "tmdlDateHi"
         ]
       }
     ],
@@ -709,7 +748,13 @@
       },
       {
         "key": "pollutantParameter",
-        "fields": ["pollutantGroup", "pollutant", "addressedParameterGroup", "addressedParameter", "sourceType"]
+        "fields": [
+          "pollutantGroup",
+          "pollutant",
+          "addressedParameterGroup",
+          "addressedParameter",
+          "sourceType"
+        ]
       },
       { "key": "permitId", "fields": ["npdesIdentifier", "otherIdentifier"] },
       {
