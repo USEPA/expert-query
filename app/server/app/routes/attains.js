@@ -498,7 +498,7 @@ async function executeQuery(profile, req, res) {
     const query = knex
       .withSchema(req.activeSchema)
       .from(profile.tableName)
-      .limit(parseInt(process.env.MAX_QUERY_SIZE));
+      .limit(maxQuerySize);
 
     const queryParams = getQueryParams(req);
 
@@ -737,7 +737,7 @@ async function executeValuesQuery(profile, req, res) {
 
     if (!params.text && !params.limit) {
       throw new NoParametersException(
-        `Please provide either a text filter or a limit that does not exceed ${process.env.MAX_PAGE_SIZE}.`,
+        `Please provide either a text filter or a limit that does not exceed ${maxPageSize}.`,
       );
     }
 

@@ -89,12 +89,17 @@ export function PreviewModal<D extends QueryData>({
 
   const columns = useMemo(
     () => [
-      { id: 'rankPercent', name: 'Rank (%)', sortable: true },
+      { id: 'rankPercent', name: 'Rank (%)', sortable: true, width: 100 },
       { id: 'actionDocumentUrl', name: 'Document', sortable: true, width: 300 },
-      { id: 'actionId', name: 'Action ID', sortable: true },
-      { id: 'regionId', name: 'Region', sortable: true },
-      { id: 'state', name: 'State', sortable: true },
-      { id: 'organizationId', name: 'Organization ID', sortable: true },
+      { id: 'actionId', name: 'Action ID', sortable: true, width: 110 },
+      { id: 'regionId', name: 'Region', sortable: true, width: 110 },
+      { id: 'state', name: 'State', sortable: true, width: 100 },
+      {
+        id: 'organizationId',
+        name: 'Organization ID',
+        sortable: true,
+        width: 160,
+      },
     ],
     [],
   );
@@ -103,7 +108,7 @@ export function PreviewModal<D extends QueryData>({
     <Dialog
       isOpen
       onDismiss={closeModal}
-      className="usa-modal maxw-desktop-lg maxh-mobile tablet:maxh-tablet desktop:maxh-tablet-lg"
+      className="usa-modal maxh-90vh maxw-desktop-lg"
       aria-labelledby={`${id}-heading`}
       aria-describedby={`${id}-description`}
     >
@@ -112,7 +117,6 @@ export function PreviewModal<D extends QueryData>({
           <h2 className="usa-modal__heading margin-bottom-05">
             Results Preview{' '}
           </h2>
-          <small className="text-italic">Limited to {limit} rows</small>
           {preview.status === 'pending' && (
             <div className="usa-prose">
               <Loading />
@@ -134,6 +138,11 @@ export function PreviewModal<D extends QueryData>({
                     <Alert type="info">No results found</Alert>
                   ) : (
                     <>
+                      {preview.data.length >= limit && (
+                        <small className="text-italic">
+                          Limited to {limit} rows
+                        </small>
+                      )}
                       <Table
                         columns={columns}
                         data={preview.data}
