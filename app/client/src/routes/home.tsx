@@ -561,7 +561,10 @@ function FilterFieldInputs({
               ? sourceState[sourceFieldConfig.id]
               : null;
             const selectProps = {
-              additionalOptions: 'additionalOptions' in fieldConfig ? fieldConfig.additionalOptions : [],
+              additionalOptions:
+                'additionalOptions' in fieldConfig
+                  ? fieldConfig.additionalOptions
+                  : [],
               apiKey,
               apiUrl,
               contextFilters: getContextFilters(
@@ -1624,8 +1627,10 @@ function getContextFilters(
 
 // Returns the default state for inputs
 function getDefaultFilterState(filterFields: FilterFields) {
+  const hasParams =
+    Array.from(new URLSearchParams(window.location.search)).length > 0;
   return Object.values(filterFields).reduce((a, b) => {
-    const defaultValue = getDefaultValue(b);
+    const defaultValue = hasParams ? null : getDefaultValue(b);
     const defaultState =
       defaultValue && isMultiOptionField(b) ? [defaultValue] : defaultValue;
     return { ...a, [b.key]: defaultState };
