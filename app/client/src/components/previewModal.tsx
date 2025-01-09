@@ -181,6 +181,7 @@ export function PreviewModal<D extends QueryData>({
                         </small>
                       )}
                       <Table
+                        className="margin-top-2"
                         columns={tableColumns}
                         data={preview.data}
                         id={`${id}-table`}
