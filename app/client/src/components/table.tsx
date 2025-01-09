@@ -68,14 +68,14 @@ export const Table = ({
   return (
     <div className={className}>
       <div
-        className="overflow-x-scroll"
+        className="scroll-container"
         onScroll={handleScroll}
         ref={topScrollbarRef}
       >
         <div
+          className="scrollbar"
           id={`${id}-top-scrollbar`}
           style={{
-            height: '8px',
             width,
           }}
         ></div>
@@ -86,6 +86,7 @@ export const Table = ({
           { 'usa-table-container': !scrollable },
           { 'usa-table-container--scrollable': scrollable },
           'margin-top-0',
+          'scroll-container',
         )}
         onScroll={handleScroll}
         ref={(node) => {
