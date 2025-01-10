@@ -177,7 +177,7 @@ describe('Home Page', () => {
     cy.findByText('No options').should('exist');
   });
 
-  it.only('Document text search preview window displays with results', () => {
+  it('Document text search preview window displays with results', () => {
     cy.selectProfile('Actions Document Search');
     cy.wait(500);
     cy.findByRole('textbox', {
