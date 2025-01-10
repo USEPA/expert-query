@@ -1504,11 +1504,21 @@ function filterDynamicOptions({
       const label = secondaryValue || value;
       return { label, value };
     });
+    if (!lastLoadedOption) {
+      (additionalOptions ?? [])
+        .concat(defaultOption ? [defaultOption] : [])
+        .forEach((option) => {
+          if (
+            !inputValue ||
+            (typeof option.label === 'string' &&
+              option.label.toLowerCase().includes(inputValue.toLowerCase()))
+          ) {
+            options.unshift(option);
+          }
+        });
+    }
     return {
-      options:
-        !lastLoadedOption && defaultOption // only include default option in first page
-          ? [defaultOption, ...additionalOptions, ...options]
-          : options,
+      options,
       hasMore: options.length >= limit,
     };
   };
