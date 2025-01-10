@@ -17,6 +17,7 @@ describe('Home Page', () => {
 
   it('All data profile option are select one by one and check Clear Search button is available ', () => {
     const profiles = [
+      'Actions Document Search',
       'Actions',
       'Assessment Units',
       'Assessments',
@@ -133,7 +134,10 @@ describe('Home Page', () => {
       'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
 
     const queryValue = `/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=R&state=TX&format=tsv&api_key=<YOUR_API_KEY>`;
-    cy.selectCopyBox('api-query-copy-box-container', `${serverUrl}${queryValue}`);
+    cy.selectCopyBox(
+      'api-query-copy-box-container',
+      `${serverUrl}${queryValue}`,
+    );
 
     cy.findAllByRole('button', { name: 'Clear Search' }).each(
       ($elem, index) => {
@@ -171,5 +175,16 @@ describe('Home Page', () => {
 
     cy.findByText('Loading...').should('not.exist');
     cy.findByText('No options').should('exist');
+  });
+
+  it('Document text search preview window displays with results', () => {
+    cy.selectProfile('Actions Document Search');
+    cy.wait(500);
+    cy.findByRole('textbox', {
+      name: 'Search Text / Keyword',
+    }).type('water');
+    cy.findByRole('button', { name: 'Preview' }).click();
+    cy.wait(2000);
+    cy.findByRole('table').should('exist');
   });
 });

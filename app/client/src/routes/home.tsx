@@ -712,13 +712,13 @@ function FilterFieldInputs({
     <div className="grid-gap-2 grid-row">
       {fieldsJsx.map(([field, key, size]) => (
         <div
-          className={`flex-align-self-end ${
+          className={
             size === 'large'
               ? 'width-full'
               : size === 'medium'
                 ? 'desktop:grid-col-8 tablet:grid-col-6'
                 : 'desktop:grid-col-4 tablet:grid-col-6'
-          }`}
+          }
           key={key}
         >
           {field}
@@ -1504,11 +1504,21 @@ function filterDynamicOptions({
       const label = secondaryValue || value;
       return { label, value };
     });
+    if (!lastLoadedOption) {
+      (additionalOptions ?? [])
+        .concat(defaultOption ? [defaultOption] : [])
+        .forEach((option) => {
+          if (
+            !inputValue ||
+            (typeof option.label === 'string' &&
+              option.label.toLowerCase().includes(inputValue.toLowerCase()))
+          ) {
+            options.unshift(option);
+          }
+        });
+    }
     return {
-      options:
-        !lastLoadedOption && defaultOption // only include default option in first page
-          ? [defaultOption, ...additionalOptions, ...options]
-          : options,
+      options,
       hasMore: options.length >= limit,
     };
   };
