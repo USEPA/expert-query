@@ -618,7 +618,7 @@
         "description": "The column name for which values are queried.",
         "in": "path",
         "required": true,
-        "example": "assessmentUnitId",
+        "example": "state",
         "schema": {
           "type": "string"
         }
@@ -636,7 +636,7 @@
                 "filters": {
                   "objectId": [42]
                 },
-                "additionalColumns": ["assessmentUnitId"]
+                "additionalColumns": ["state"]
               },
               "properties": {
                 "text": {

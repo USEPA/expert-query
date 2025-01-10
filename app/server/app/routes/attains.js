@@ -419,7 +419,9 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
   const documentQueryColumn = target.columns.find(
     (col) => col.type === 'tsvector',
   );
-  const documentQuery = queryParams.filters[documentQueryColumn.alias];
+  const documentQuery = documentQueryColumn
+    ? queryParams.filters[documentQueryColumn.alias]
+    : '';
   const isDocumentSearch =
     documentQueryColumn && columnsForFilter.includes(documentQueryColumn.alias);
   if (!isDocumentSearch && !columnsToReturn.includes('objectId')) {

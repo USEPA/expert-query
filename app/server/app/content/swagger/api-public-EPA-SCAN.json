@@ -34,6 +34,232 @@
     }
   },
   "paths": {
+    "/attains/actionDocuments": {
+      "get": {
+        "tags": ["ATTAINS - Action Documents"],
+        "summary": "Query Action Documents profile data",
+        "description": "Query the Action Documents profile on the <a href='/expertquery/attains/actionDocuments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/outputFormatParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageNumberParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageSizeParam"
+          },
+          {
+            "$ref": "#/components/parameters/columnsParam"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionDocumentTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionDocumentUrlParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentFileNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentFileTypeNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentKeyParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentQueryParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/tmdlDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/tmdlDateHiParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ActionDocumentsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["ATTAINS - Action Documents"],
+        "summary": "Query Action Documents profile data",
+        "description": "Query the Action Documents profile on the <a href='/expertquery/attains/actionDocuments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ActionDocumentsQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ActionDocumentsQuerySuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/actionDocuments/count": {
+      "get": {
+        "summary": "Row count of Action Documents profile query",
+        "description": "Query the Action Documents profile on the <a href='/expertquery/attains/actionDocuments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Action Documents"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/objectIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionDocumentTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionDocumentUrlParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/actionTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/completionDateHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentFileNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentFileTypeNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentKeyParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/documentQueryParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationIdParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
+            "$ref": "#/components/parameters/regionParam"
+          },
+          {
+            "$ref": "#/components/parameters/stateParam"
+          },
+          {
+            "$ref": "#/components/parameters/tmdlDateLoParam"
+          },
+          {
+            "$ref": "#/components/parameters/tmdlDateHiParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Row count of Action Documents profile query",
+        "description": "Query the Action Documents profile on the <a href='/expertquery/attains/actionDocuments' target='_blank' rel='noreferrer'>ATTAINS Query</a> page.",
+        "tags": ["ATTAINS - Action Documents"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ActionDocumentsCountRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/QueryCountSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
     "/attains/actions": {
       "get": {
         "tags": ["ATTAINS - Actions"],
@@ -47,7 +273,10 @@
             "$ref": "#/components/parameters/outputFormatParam"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
+            "$ref": "#/components/parameters/pageNumberParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageSizeParam"
           },
           {
             "$ref": "#/components/parameters/columnsParam"
@@ -96,6 +325,9 @@
           },
           {
             "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
           },
           {
             "$ref": "#/components/parameters/parameterParam"
@@ -205,6 +437,9 @@
             "$ref": "#/components/parameters/organizationNameParam"
           },
           {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
             "$ref": "#/components/parameters/parameterParam"
           },
           {
@@ -270,7 +505,10 @@
             "$ref": "#/components/parameters/outputFormatParam"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
+            "$ref": "#/components/parameters/pageNumberParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageSizeParam"
           },
           {
             "$ref": "#/components/parameters/columnsParam"
@@ -382,6 +620,9 @@
           },
           {
             "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
           },
           {
             "$ref": "#/components/parameters/overallStatusParam"
@@ -605,6 +846,9 @@
             "$ref": "#/components/parameters/organizationNameParam"
           },
           {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
             "$ref": "#/components/parameters/overallStatusParam"
           },
           {
@@ -721,7 +965,10 @@
             "$ref": "#/components/parameters/outputFormatParam"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
+            "$ref": "#/components/parameters/pageNumberParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageSizeParam"
           },
           {
             "$ref": "#/components/parameters/columnsParam"
@@ -752,6 +999,9 @@
           },
           {
             "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
           },
           {
             "$ref": "#/components/parameters/regionParam"
@@ -843,6 +1093,9 @@
             "$ref": "#/components/parameters/organizationNameParam"
           },
           {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
             "$ref": "#/components/parameters/regionParam"
           },
           {
@@ -908,7 +1161,10 @@
             "$ref": "#/components/parameters/outputFormatParam"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
+            "$ref": "#/components/parameters/pageNumberParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageSizeParam"
           },
           {
             "$ref": "#/components/parameters/columnsParam"
@@ -939,6 +1195,9 @@
           },
           {
             "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
           },
           {
             "$ref": "#/components/parameters/regionParam"
@@ -1030,6 +1289,9 @@
             "$ref": "#/components/parameters/organizationNameParam"
           },
           {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
             "$ref": "#/components/parameters/regionParam"
           },
           {
@@ -1095,7 +1357,10 @@
             "$ref": "#/components/parameters/outputFormatParam"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
+            "$ref": "#/components/parameters/pageNumberParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageSizeParam"
           },
           {
             "$ref": "#/components/parameters/columnsParam"
@@ -1120,6 +1385,9 @@
           },
           {
             "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
           },
           {
             "$ref": "#/components/parameters/regionParam"
@@ -1199,6 +1467,9 @@
             "$ref": "#/components/parameters/organizationNameParam"
           },
           {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
             "$ref": "#/components/parameters/regionParam"
           },
           {
@@ -1258,7 +1529,10 @@
             "$ref": "#/components/parameters/outputFormatParam"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
+            "$ref": "#/components/parameters/pageNumberParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageSizeParam"
           },
           {
             "$ref": "#/components/parameters/columnsParam"
@@ -1289,6 +1563,9 @@
           },
           {
             "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
           },
           {
             "$ref": "#/components/parameters/overallStatusParam"
@@ -1389,6 +1666,9 @@
             "$ref": "#/components/parameters/organizationNameParam"
           },
           {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
             "$ref": "#/components/parameters/overallStatusParam"
           },
           {
@@ -1463,7 +1743,10 @@
             "$ref": "#/components/parameters/outputFormatParam"
           },
           {
-            "$ref": "#/components/parameters/startIdParam"
+            "$ref": "#/components/parameters/pageNumberParam"
+          },
+          {
+            "$ref": "#/components/parameters/pageSizeParam"
           },
           {
             "$ref": "#/components/parameters/columnsParam"
@@ -1524,6 +1807,9 @@
           },
           {
             "$ref": "#/components/parameters/organizationNameParam"
+          },
+          {
+            "$ref": "#/components/parameters/organizationTypeParam"
           },
           {
             "$ref": "#/components/parameters/otherIdentifierParam"
@@ -1657,6 +1943,9 @@
             "$ref": "#/components/parameters/organizationNameParam"
           },
           {
+            "$ref": "#/components/parameters/organizationTypeParam"
+          },
+          {
             "$ref": "#/components/parameters/otherIdentifierParam"
           },
           {
@@ -1754,6 +2043,196 @@
   },
   "components": {
     "schemas": {
+      "ActionDocumentsFilters": {
+        "type": "object",
+        "properties": {
+          "objectId": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "actionDocumentType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionDocumentUrl": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actionType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "completionDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "completionDateHi": {
+            "type": "string",
+            "format": "date"
+          },
+          "documentFileName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "documentFileTypeName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "documentKey": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "documentName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "documentQuery": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "state": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tmdlDateLo": {
+            "type": "string",
+            "format": "date"
+          },
+          "tmdlDateHi": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "ActionDocumentsQueryOutput": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "objectId": {
+                  "type": "integer"
+                },
+                "actionDocumentType": {
+                  "type": "string"
+                },
+                "actionDocumentUrl": {
+                  "type": "string"
+                },
+                "actionId": {
+                  "type": "string"
+                },
+                "actionName": {
+                  "type": "string"
+                },
+                "actionType": {
+                  "type": "string"
+                },
+                "completionDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "documentDesc": {
+                  "type": "string"
+                },
+                "documentFileName": {
+                  "type": "string"
+                },
+                "documentFileTypeName": {
+                  "type": "string"
+                },
+                "documentKey": {
+                  "type": "integer"
+                },
+                "documentName": {
+                  "type": "string"
+                },
+                "organizationId": {
+                  "type": "string"
+                },
+                "organizationName": {
+                  "type": "string"
+                },
+                "organizationType": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "tmdlDate": {
+                  "type": "string",
+                  "format": "date"
+                }
+              }
+            }
+          }
+        },
+        "required": ["data", "pageNumber", "pageSize"]
+      },
       "ActionsFilters": {
         "type": "object",
         "properties": {
@@ -1837,6 +2316,12 @@
               "type": "string"
             }
           },
+          "organizationType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "parameter": {
             "type": "array",
             "items": {
@@ -1872,7 +2357,10 @@
       "ActionsQueryOutput": {
         "type": "object",
         "properties": {
-          "nextId": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
             "type": "integer"
           },
           "data": {
@@ -1955,7 +2443,7 @@
             }
           }
         },
-        "required": ["data"]
+        "required": ["data", "pageNumber", "pageSize"]
       },
       "AssessmentsFilters": {
         "type": "object",
@@ -2134,6 +2622,12 @@
               "type": "string"
             }
           },
+          "organizationType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "overallStatus": {
             "type": "array",
             "items": {
@@ -2272,7 +2766,10 @@
       "AssessmentsQueryOutput": {
         "type": "object",
         "properties": {
-          "nextId": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
             "type": "integer"
           },
           "data": {
@@ -2456,7 +2953,7 @@
             }
           }
         },
-        "required": ["data"]
+        "required": ["data", "pageNumber", "pageSize"]
       },
       "AssessmentUnitsFilters": {
         "type": "object",
@@ -2510,6 +3007,12 @@
             }
           },
           "organizationName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizationType": {
             "type": "array",
             "items": {
               "type": "string"
@@ -2601,6 +3104,12 @@
               "type": "string"
             }
           },
+          "organizationType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "region": {
             "type": "array",
             "items": {
@@ -2633,7 +3142,10 @@
       "AssessmentUnitsQueryOutput": {
         "type": "object",
         "properties": {
-          "nextId": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
             "type": "integer"
           },
           "data": {
@@ -2706,12 +3218,15 @@
             }
           }
         },
-        "required": ["data"]
+        "required": ["data", "pageNumber", "pageSize"]
       },
       "AssessmentUnitsMonitoringLocationsQueryOutput": {
         "type": "object",
         "properties": {
-          "nextId": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
             "type": "integer"
           },
           "data": {
@@ -2787,7 +3302,7 @@
             }
           }
         },
-        "required": ["data"]
+        "required": ["data", "pageNumber", "pageSize"]
       },
       "CatchmentCorrespondenceFilters": {
         "type": "object",
@@ -2834,6 +3349,12 @@
               "type": "string"
             }
           },
+          "organizationType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "region": {
             "type": "array",
             "items": {
@@ -2854,7 +3375,10 @@
       "CatchmentCorrespondenceQueryOutput": {
         "type": "object",
         "properties": {
-          "nextId": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
             "type": "integer"
           },
           "data": {
@@ -2899,7 +3423,7 @@
             }
           }
         },
-        "required": ["data"]
+        "required": ["data", "pageNumber", "pageSize"]
       },
       "FileAttachmentCsv": {
         "type": "string",
@@ -2917,7 +3441,10 @@
       "Options": {
         "type": "object",
         "properties": {
-          "startId": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
             "type": "integer"
           },
           "format": {
@@ -2997,6 +3524,12 @@
               "type": "string"
             }
           },
+          "organizationType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "overallStatus": {
             "type": "array",
             "items": {
@@ -3047,7 +3580,10 @@
       "SourcesQueryOutput": {
         "type": "object",
         "properties": {
-          "nextId": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
             "type": "integer"
           },
           "data": {
@@ -3123,7 +3659,7 @@
             }
           }
         },
-        "required": ["data"]
+        "required": ["data", "pageNumber", "pageSize"]
       },
       "TmdlFilters": {
         "type": "object",
@@ -3232,6 +3768,12 @@
               "type": "string"
             }
           },
+          "organizationType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "otherIdentifier": {
             "type": "array",
             "items": {
@@ -3287,7 +3829,10 @@
       "TmdlQueryOutput": {
         "type": "object",
         "properties": {
-          "nextId": {
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
             "type": "integer"
           },
           "data": {
@@ -3406,15 +3951,39 @@
             }
           }
         },
-        "required": ["data"]
+        "required": ["data", "pageNumber", "pageSize"]
       }
     },
     "parameters": {
       "actionAgencyParam": {
         "name": "actionAgency",
         "in": "query",
-        "example": ["State"],
+        "example": "State",
         "explode": true,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "actionDocumentTypeParam": {
+        "name": "actionDocumentType",
+        "in": "query",
+        "explode": true,
+        "example": "TMDL Report",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "actionDocumentUrlParam": {
+        "name": "actionDocumentUrl",
+        "in": "query",
+        "explode": true,
+        "example": "https://attains.epa.gov/attains-public/api/documents/actions/21MSWQ/22502/102354",
         "schema": {
           "type": "array",
           "items": {
@@ -3426,7 +3995,7 @@
         "name": "actionId",
         "in": "query",
         "explode": true,
-        "example": ["64808"],
+        "example": "64808",
         "schema": {
           "type": "array",
           "items": {
@@ -3438,7 +4007,7 @@
         "name": "actionName",
         "in": "query",
         "explode": true,
-        "example": ["12-Mile Creek"],
+        "example": "12-Mile Creek",
         "schema": {
           "type": "array",
           "items": {
@@ -3450,7 +4019,7 @@
         "name": "actionType",
         "in": "query",
         "explode": true,
-        "example": ["Implementation Completed"],
+        "example": "Implementation Completed",
         "schema": {
           "type": "array",
           "items": {
@@ -3462,7 +4031,7 @@
         "name": "addressedParameterGroup",
         "in": "query",
         "explode": true,
-        "example": ["AMMONIA"],
+        "example": "AMMONIA",
         "schema": {
           "type": "array",
           "items": {
@@ -3474,7 +4043,7 @@
         "name": "addressedParameter",
         "in": "query",
         "explode": true,
-        "example": ["AMMONIA"],
+        "example": "AMMONIA",
         "schema": {
           "type": "array",
           "items": {
@@ -3486,7 +4055,7 @@
         "name": "alternateListingIdentifier",
         "in": "query",
         "explode": true,
-        "example": ["SD-CH-L-SHERIDAN_01"],
+        "example": "SD-CH-L-SHERIDAN_01",
         "schema": {
           "type": "array",
           "items": {
@@ -3508,7 +4077,7 @@
         "name": "assessmentBasis",
         "in": "query",
         "explode": true,
-        "example": ["Monitored Data"],
+        "example": "Monitored Data",
         "schema": {
           "type": "array",
           "items": {
@@ -3538,7 +4107,7 @@
         "name": "assessmentMethods",
         "in": "query",
         "explode": true,
-        "example": ["2002 Assessment Methodology"],
+        "example": "2002 Assessment Methodology",
         "schema": {
           "type": "array",
           "items": {
@@ -3550,7 +4119,7 @@
         "name": "assessmentTypes",
         "in": "query",
         "explode": true,
-        "example": ["PHYSICAL/CHEMICAL"],
+        "example": "PHYSICAL/CHEMICAL",
         "schema": {
           "type": "array",
           "items": {
@@ -3562,7 +4131,7 @@
         "name": "assessmentUnitId",
         "in": "query",
         "explode": true,
-        "example": ["AZ150200001-010_00"],
+        "example": "AZ150200001-010_00",
         "schema": {
           "type": "array",
           "items": {
@@ -3574,7 +4143,7 @@
         "name": "assessmentUnitName",
         "in": "query",
         "explode": true,
-        "example": ["Abbott Branch"],
+        "example": "Abbott Branch",
         "schema": {
           "type": "array",
           "items": {
@@ -3586,7 +4155,7 @@
         "name": "assessmentUnitStatus",
         "in": "query",
         "explode": true,
-        "example": ["A"],
+        "example": "A",
         "schema": {
           "type": "array",
           "items": {
@@ -3598,7 +4167,7 @@
         "name": "associatedActionAgency",
         "in": "query",
         "explode": true,
-        "example": ["State"],
+        "example": "State",
         "schema": {
           "type": "array",
           "items": {
@@ -3610,7 +4179,7 @@
         "name": "associatedActionId",
         "in": "query",
         "explode": true,
-        "example": ["64808"],
+        "example": "64808",
         "schema": {
           "type": "array",
           "items": {
@@ -3622,7 +4191,7 @@
         "name": "associatedActionName",
         "in": "query",
         "explode": true,
-        "example": ["12-Mile Creek"],
+        "example": "12-Mile Creek",
         "schema": {
           "type": "array",
           "items": {
@@ -3634,7 +4203,7 @@
         "name": "associatedActionStatus",
         "in": "query",
         "explode": true,
-        "example": ["EPA Final Action"],
+        "example": "EPA Final Action",
         "schema": {
           "type": "array",
           "items": {
@@ -3646,7 +4215,7 @@
         "name": "associatedActionType",
         "in": "query",
         "explode": true,
-        "example": ["Implementation Completed"],
+        "example": "Implementation Completed",
         "schema": {
           "type": "array",
           "items": {
@@ -3658,7 +4227,7 @@
         "name": "causeName",
         "in": "query",
         "explode": true,
-        "example": ["EUTROPHICATION"],
+        "example": "EUTROPHICATION",
         "schema": {
           "type": "array",
           "items": {
@@ -3671,7 +4240,7 @@
         "description": "The columns to return in the result set, and the order in which to return them.",
         "in": "query",
         "explode": true,
-        "example": ["assessmentUnitId", "assessmentUnitName"],
+        "example": "assessmentUnitId",
         "schema": {
           "type": "array",
           "items": {
@@ -3701,7 +4270,7 @@
         "name": "confirmed",
         "in": "query",
         "explode": true,
-        "example": ["Y"],
+        "example": "Y",
         "schema": {
           "type": "array",
           "items": {
@@ -3729,7 +4298,7 @@
         "name": "cwa303dPriorityRanking",
         "in": "query",
         "explode": true,
-        "example": ["High"],
+        "example": "High",
         "schema": {
           "type": "array",
           "items": {
@@ -3775,7 +4344,10 @@
         "explode": true,
         "example": -504164,
         "schema": {
-          "type": "integer"
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
         }
       },
       "cycleIdParam": {
@@ -3784,7 +4356,10 @@
         "explode": true,
         "example": 2346,
         "schema": {
-          "type": "integer"
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
         }
       },
       "cycleLastAssessedLoParam": {
@@ -3823,7 +4398,7 @@
         "name": "delisted",
         "in": "query",
         "explode": true,
-        "example": ["Y"],
+        "example": "Y",
         "schema": {
           "type": "array",
           "items": {
@@ -3835,7 +4410,7 @@
         "name": "delistedReason",
         "in": "query",
         "explode": true,
-        "example": ["Not specified"],
+        "example": "Not specified",
         "schema": {
           "type": "array",
           "items": {
@@ -3843,11 +4418,67 @@
           }
         }
       },
+      "documentFileNameParam": {
+        "name": "documentFileName",
+        "in": "query",
+        "explode": true,
+        "example": "54524_Hatchie_North Indpendent ph TMDL final.pdf",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "documentFileTypeNameParam": {
+        "name": "documentFileTypeName",
+        "in": "query",
+        "explode": true,
+        "example": "application/pdf",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "documentKeyParam": {
+        "name": "documentKey",
+        "in": "query",
+        "explode": true,
+        "example": 102600,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "documentNameParam": {
+        "name": "documentName",
+        "in": "query",
+        "explode": true,
+        "example": "North Indpendent ph TMDL final ERRATA",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "documentQueryParam": {
+        "name": "documentQuery",
+        "in": "query",
+        "example": "Tuscumbia River Canal",
+        "schema": {
+          "type": "string"
+        }
+      },
       "epaIrCategoryParam": {
         "name": "epaIrCategory",
         "in": "query",
         "explode": true,
-        "example": ["4A"],
+        "example": "4A",
         "schema": {
           "type": "array",
           "items": {
@@ -3859,7 +4490,7 @@
         "name": "explicitMarginOfSafety",
         "in": "query",
         "explode": true,
-        "example": ["10%"],
+        "example": "10%",
         "schema": {
           "type": "array",
           "items": {
@@ -3870,7 +4501,7 @@
       "fiscalYearEstablishedLoParam": {
         "name": "fiscalYearEstablishedLo",
         "in": "query",
-        "example": ["1994"],
+        "example": "1994",
         "schema": {
           "type": "string"
         }
@@ -3878,7 +4509,7 @@
       "fiscalYearEstablishedHiParam": {
         "name": "fiscalYearEstablishedHi",
         "in": "query",
-        "example": ["2002"],
+        "example": "2002",
         "schema": {
           "type": "string"
         }
@@ -3887,7 +4518,7 @@
         "name": "implicitMarginOfSafety",
         "in": "query",
         "explode": true,
-        "example": ["conservative assumptions"],
+        "example": "conservative assumptions",
         "schema": {
           "type": "array",
           "items": {
@@ -3899,7 +4530,7 @@
         "name": "includeInMeasure",
         "in": "query",
         "explode": true,
-        "example": ["Y"],
+        "example": "Y",
         "schema": {
           "type": "array",
           "items": {
@@ -3911,7 +4542,7 @@
         "name": "inIndianCountry",
         "in": "query",
         "explode": true,
-        "example": ["N"],
+        "example": "N",
         "schema": {
           "type": "array",
           "items": {
@@ -3923,7 +4554,7 @@
         "name": "locationText",
         "in": "query",
         "explode": true,
-        "example": ["01010001"],
+        "example": "01010001",
         "schema": {
           "type": "array",
           "items": {
@@ -3935,7 +4566,7 @@
         "name": "locationTypeCode",
         "in": "query",
         "explode": true,
-        "example": ["Basin"],
+        "example": "Basin",
         "schema": {
           "type": "array",
           "items": {
@@ -3987,7 +4618,7 @@
         "name": "monitoringLocationId",
         "in": "query",
         "explode": true,
-        "example": ["1083"],
+        "example": "1083",
         "schema": {
           "type": "array",
           "items": {
@@ -3999,7 +4630,7 @@
         "name": "monitoringLocationOrgId",
         "in": "query",
         "explode": true,
-        "example": ["21AWIC"],
+        "example": "21AWIC",
         "schema": {
           "type": "array",
           "items": {
@@ -4011,7 +4642,7 @@
         "name": "npdesIdentifier",
         "in": "query",
         "explode": true,
-        "example": ["KS0099571"],
+        "example": "KS0099571",
         "schema": {
           "type": "array",
           "items": {
@@ -4026,14 +4657,17 @@
         "explode": true,
         "example": 42,
         "schema": {
-          "type": "integer"
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
         }
       },
       "organizationIdParam": {
         "name": "organizationId",
         "in": "query",
         "explode": true,
-        "example": ["21AWIC"],
+        "example": "21AWIC",
         "schema": {
           "type": "array",
           "items": {
@@ -4045,7 +4679,19 @@
         "name": "organizationName",
         "in": "query",
         "explode": true,
-        "example": ["Georgia Environmental Protection Division"],
+        "example": "Georgia Environmental Protection Division",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "organizationTypeParam": {
+        "name": "organizationType",
+        "in": "query",
+        "explode": true,
+        "example": "State",
         "schema": {
           "type": "array",
           "items": {
@@ -4067,7 +4713,7 @@
         "name": "otherIdentifier",
         "in": "query",
         "explode": true,
-        "example": ["City of  Wellington"],
+        "example": "City of  Wellington",
         "schema": {
           "type": "array",
           "items": {
@@ -4079,7 +4725,7 @@
         "name": "overallStatus",
         "in": "query",
         "explode": true,
-        "example": ["Fully Supporting"],
+        "example": "Fully Supporting",
         "schema": {
           "type": "array",
           "items": {
@@ -4087,11 +4733,27 @@
           }
         }
       },
+      "pageNumberParam": {
+        "name": "pageNumber",
+        "in": "query",
+        "example": 2,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "pageSizeParam": {
+        "name": "pageSize",
+        "in": "query",
+        "example": 20,
+        "schema": {
+          "type": "integer"
+        }
+      },
       "parameterAttainmentParam": {
         "name": "parameterAttainment",
         "in": "query",
         "explode": true,
-        "example": ["1,2-DICHLOROBENZENE"],
+        "example": "1,2-DICHLOROBENZENE",
         "schema": {
           "type": "array",
           "items": {
@@ -4103,7 +4765,7 @@
         "name": "parameterGroup",
         "in": "query",
         "explode": true,
-        "example": ["BIOTOXINS"],
+        "example": "BIOTOXINS",
         "schema": {
           "type": "array",
           "items": {
@@ -4115,7 +4777,7 @@
         "name": "parameterIrCategory",
         "in": "query",
         "explode": true,
-        "example": ["4A"],
+        "example": "4A",
         "schema": {
           "type": "array",
           "items": {
@@ -4127,7 +4789,7 @@
         "name": "parameterName",
         "in": "query",
         "explode": true,
-        "example": ["EUTROPHICATION"],
+        "example": "EUTROPHICATION",
         "schema": {
           "type": "array",
           "items": {
@@ -4139,7 +4801,7 @@
         "name": "parameter",
         "in": "query",
         "explode": true,
-        "example": ["EUTROPHICATION"],
+        "example": "EUTROPHICATION",
         "schema": {
           "type": "array",
           "items": {
@@ -4151,7 +4813,7 @@
         "name": "parameterStateIrCategory",
         "in": "query",
         "explode": true,
-        "example": ["5"],
+        "example": "5",
         "schema": {
           "type": "array",
           "items": {
@@ -4163,7 +4825,7 @@
         "name": "parameterStatus",
         "in": "query",
         "explode": true,
-        "example": ["Observed effect"],
+        "example": "Observed effect",
         "schema": {
           "type": "array",
           "items": {
@@ -4175,7 +4837,7 @@
         "name": "pollutantGroup",
         "in": "query",
         "explode": true,
-        "example": ["AMMONIA"],
+        "example": "AMMONIA",
         "schema": {
           "type": "array",
           "items": {
@@ -4187,7 +4849,7 @@
         "name": "pollutant",
         "in": "query",
         "explode": true,
-        "example": ["ACID"],
+        "example": "ACID",
         "schema": {
           "type": "array",
           "items": {
@@ -4199,7 +4861,7 @@
         "name": "pollutantIndicator",
         "in": "query",
         "explode": true,
-        "example": ["Y"],
+        "example": "Y",
         "schema": {
           "type": "array",
           "items": {
@@ -4211,7 +4873,7 @@
         "name": "region",
         "in": "query",
         "explode": true,
-        "example": ["01"],
+        "example": "01",
         "schema": {
           "type": "array",
           "items": {
@@ -4224,6 +4886,7 @@
         "in": "query",
         "example": 2020,
         "explode": true,
+        "description": "Filter the summary to a specific reporting cycle in terms of the four-digit year the reporting cycle ended (e.g., for the 4/2/2016 – 3/31/2018 reporting cycle, the four-digit reporting cycle is “2018”). If left blank, the service will return the most recent cycle. If -1 is used, the service will return all reporting cycles.",
         "schema": {
           "type": "integer"
         }
@@ -4268,7 +4931,7 @@
         "name": "sourceName",
         "in": "query",
         "explode": true,
-        "example": ["ACID MINE DRAINAGE"],
+        "example": "ACID MINE DRAINAGE",
         "schema": {
           "type": "array",
           "items": {
@@ -4280,7 +4943,7 @@
         "name": "sourceType",
         "in": "query",
         "explode": true,
-        "example": ["Nonpoint source"],
+        "example": "Nonpoint source",
         "schema": {
           "type": "array",
           "items": {
@@ -4288,19 +4951,11 @@
           }
         }
       },
-      "startIdParam": {
-        "name": "startId",
-        "in": "query",
-        "example": 20,
-        "schema": {
-          "type": "integer"
-        }
-      },
       "stateIrCategoryParam": {
         "name": "stateIrCategory",
         "in": "query",
         "explode": true,
-        "example": ["4A"],
+        "example": "4A",
         "schema": {
           "type": "array",
           "items": {
@@ -4312,7 +4967,7 @@
         "name": "state",
         "in": "query",
         "explode": true,
-        "example": ["OH"],
+        "example": "OH",
         "schema": {
           "type": "array",
           "items": {
@@ -4350,7 +5005,7 @@
         "name": "useClassName",
         "in": "query",
         "explode": true,
-        "example": ["CLASS B"],
+        "example": "CLASS B",
         "schema": {
           "type": "array",
           "items": {
@@ -4362,7 +5017,7 @@
         "name": "useGroup",
         "in": "query",
         "explode": true,
-        "example": ["AGRICULTURAL"],
+        "example": "AGRICULTURAL",
         "schema": {
           "type": "array",
           "items": {
@@ -4374,7 +5029,7 @@
         "name": "useIrCategory",
         "in": "query",
         "explode": true,
-        "example": ["4A"],
+        "example": "4A",
         "schema": {
           "type": "array",
           "items": {
@@ -4386,7 +5041,7 @@
         "name": "useName",
         "in": "query",
         "explode": true,
-        "example": ["Aquaculture"],
+        "example": "Aquaculture",
         "schema": {
           "type": "array",
           "items": {
@@ -4398,7 +5053,7 @@
         "name": "useStateIrCategory",
         "in": "query",
         "explode": true,
-        "example": ["5"],
+        "example": "5",
         "schema": {
           "type": "array",
           "items": {
@@ -4410,7 +5065,7 @@
         "name": "useSupport",
         "in": "query",
         "explode": true,
-        "example": ["Fully Supporting"],
+        "example": "Fully Supporting",
         "schema": {
           "type": "array",
           "items": {
@@ -4422,7 +5077,7 @@
         "name": "vision303dPriority",
         "in": "query",
         "explode": true,
-        "example": ["Y"],
+        "example": "Y",
         "schema": {
           "type": "array",
           "items": {
@@ -4434,7 +5089,7 @@
         "name": "wasteLoadAllocation",
         "in": "query",
         "explode": true,
-        "example": [7.09],
+        "example": 7.09,
         "schema": {
           "type": "array",
           "items": {
@@ -4447,7 +5102,7 @@
         "name": "waterType",
         "in": "query",
         "explode": true,
-        "example": ["ESTUARY"],
+        "example": "ESTUARY",
         "schema": {
           "type": "array",
           "items": {
@@ -4457,6 +5112,45 @@
       }
     },
     "requestBodies": {
+      "ActionDocumentsCountRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filters": {
+                  "$ref": "#/components/schemas/ActionDocumentsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
+      "ActionDocumentsQueryRequestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "$ref": "#/components/schemas/Options"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "filters": {
+                  "$ref": "#/components/schemas/ActionDocumentsFilters"
+                }
+              }
+            }
+          }
+        },
+        "required": true
+      },
       "ActionsCountRequestBody": {
         "content": {
           "application/json": {
@@ -4732,6 +5426,59 @@
       }
     },
     "responses": {
+      "ActionDocumentsQuerySuccess": {
+        "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ActionDocumentsQueryOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "application/octet-stream": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentXlsx"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/csv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentCsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          },
+          "text/tsv": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/FileAttachmentTsv"
+                },
+                {
+                  "$ref": "#/components/schemas/QuerySizeExceededMessage"
+                }
+              ]
+            }
+          }
+        }
+      },
       "ActionsQuerySuccess": {
         "description": "The query executed successfully. The response contains the query results or a message indicating that the maximum query size was exceeded.",
         "content": {
