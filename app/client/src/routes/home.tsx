@@ -1637,8 +1637,10 @@ function getContextFilters(
 
 // Returns the default state for inputs
 function getDefaultFilterState(filterFields: FilterFields) {
+  const hasParams =
+    Array.from(new URLSearchParams(window.location.search)).length > 0;
   return Object.values(filterFields).reduce((a, b) => {
-    const defaultValue = getDefaultValue(b);
+    const defaultValue = getDefaultValue(b, !hasParams);
     const defaultState =
       defaultValue && isMultiOptionField(b) ? [defaultValue] : defaultValue;
     return { ...a, [b.key]: defaultState };
@@ -1654,8 +1656,12 @@ function getDefaultSourceState(sourceFields: SourceFields) {
   }, {}) as SourceFieldState;
 }
 
-function getDefaultValue(field: FilterField | SourceField) {
-  const defaultValue = 'default' in field ? field.default : null;
+function getDefaultValue(
+  field: FilterField | SourceField,
+  useConfiguredDefault = true,
+) {
+  const defaultValue =
+    useConfiguredDefault && 'default' in field ? field.default : null;
   return defaultValue ?? (isSingleValueField(field) ? '' : null);
 }
 

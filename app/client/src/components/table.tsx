@@ -1,9 +1,9 @@
 /** Adapted from https://github.com/MetroStar/comet/blob/main/packages/comet-uswds/src/components/table/table.tsx */
 import table from '@uswds/uswds/js/usa-table';
 import classNames from 'classnames';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 // types
-import type { ReactNode } from 'react';
+import type { ReactNode, UIEvent } from 'react';
 
 function isCellSpec(value: any): value is TableCell {
   return (
@@ -27,6 +27,16 @@ export const Table = ({
   className,
   tabIndex = -1,
 }: TableProps): React.ReactElement => {
+  const topScrollbarRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  const handleScroll = (e: UIEvent<HTMLDivElement>) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    if (contentRef.current) contentRef.current.scrollLeft = scrollLeft;
+    if (topScrollbarRef.current)
+      topScrollbarRef.current.scrollLeft = scrollLeft;
+  };
+
   // Swap sort direction.
   const getSortDirection = (prevSortDir: 'ascending' | 'descending') => {
     if (prevSortDir === 'descending') {
@@ -53,102 +63,131 @@ export const Table = ({
     }
   };
 
-  return (
-    <div
-      id={`${id}-container`}
-      className={classNames(
-        { 'usa-table-container': !scrollable },
-        { 'usa-table-container--scrollable': scrollable },
-      )}
-      ref={(node) => {
-        if (node && sortable) {
-          table.on(node);
-        }
-      }}
-    >
-      <table
-        className={classNames(
-          'usa-table',
-          { 'usa-table--borderless': borderless },
-          { 'usa-table--striped': striped },
-          { 'usa-table--stacked': stacked },
-          { 'usa-table--sticky-header': stickyHeader },
-          'layout-fixed',
-          'width-full',
-          'whitespace-wrap',
-          className,
-        )}
-        tabIndex={scrollable ? Math.max(0, tabIndex) : tabIndex}
-      >
-        <caption hidden={!caption} className="text-italic">
-          {caption}
-        </caption>
-        <thead>
-          <tr>
-            {columns
-              .map((obj) => ({
-                ...obj,
-                sortable: obj.sortable !== undefined ? obj.sortable : true,
-              }))
-              .map((column: TableColumn, index: number) => (
-                <th
-                  id={`${id}-${column.id}`}
-                  key={column.id}
-                  data-sortable={(sortable && column.sortable) || null}
-                  scope="col"
-                  role="columnheader"
-                  aria-sort={
-                    sortable && column.sortable && sortIndex === index
-                      ? sortDir
-                      : undefined
-                  }
-                  onClick={() => handleHeaderClick(index)}
-                  style={{ width: column.width ? `${column.width}px` : 'auto' }}
-                >
-                  {column.name}
-                </th>
-              ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, i: number) => {
-            const rowData: TableCell[] = [];
-            row.forEach((cell: string | number | TableCell) => {
-              if (sortable) {
-                rowData.push({
-                  value: isCellSpec(cell) ? cell.value : cell,
-                  sortValue: isCellSpec(cell)
-                    ? (cell.sortValue ?? cell.value ?? '').toString()
-                    : cell,
-                });
-              } else {
-                rowData.push({
-                  value: isCellSpec(cell) ? cell.value : cell,
-                });
-              }
-            });
+  const [width, setWidth] = useState(0);
 
-            return (
-              <tr key={`tr-${i}`}>
-                {rowData.map((col, j) => (
-                  <td
-                    key={`td-${j}`}
-                    data-sort-value={sortable ? col.sortValue : col.value}
-                  >
-                    {col.value}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {sortable && (
+  return (
+    <div className={className}>
+      <div
+        className="scroll-container"
+        onScroll={handleScroll}
+        ref={topScrollbarRef}
+      >
         <div
-          className="usa-sr-only usa-table__announcement-region"
-          aria-live="polite"
+          className="scrollbar"
+          id={`${id}-top-scrollbar`}
+          style={{
+            width,
+          }}
         ></div>
-      )}
+      </div>
+      <div
+        id={`${id}-container`}
+        className={classNames(
+          { 'usa-table-container': !scrollable },
+          { 'usa-table-container--scrollable': scrollable },
+          'margin-top-0',
+          'scroll-container',
+        )}
+        onScroll={handleScroll}
+        ref={(node) => {
+          contentRef.current = node;
+          if (node && sortable) {
+            table.on(node);
+          }
+        }}
+      >
+        <table
+          className={classNames(
+            'usa-table',
+            { 'usa-table--borderless': borderless },
+            { 'usa-table--striped': striped },
+            { 'usa-table--stacked': stacked },
+            { 'usa-table--sticky-header': stickyHeader },
+            'layout-fixed',
+            'width-full',
+            'whitespace-wrap',
+          )}
+          ref={(node) => {
+            if (!node) {
+              setWidth(0);
+              return;
+            }
+            setWidth(node.offsetWidth);
+          }}
+          tabIndex={scrollable ? Math.max(0, tabIndex) : tabIndex}
+        >
+          <caption hidden={!caption} className="text-italic">
+            {caption}
+          </caption>
+          <thead>
+            <tr>
+              {columns
+                .map((obj) => ({
+                  ...obj,
+                  sortable: obj.sortable !== undefined ? obj.sortable : true,
+                }))
+                .map((column: TableColumn, index: number) => (
+                  <th
+                    id={`${id}-${column.id}`}
+                    key={column.id}
+                    data-sortable={(sortable && column.sortable) || null}
+                    scope="col"
+                    role="columnheader"
+                    aria-sort={
+                      sortable && column.sortable && sortIndex === index
+                        ? sortDir
+                        : undefined
+                    }
+                    onClick={() => handleHeaderClick(index)}
+                    style={{
+                      width: column.width ? `${column.width}px` : 'auto',
+                    }}
+                  >
+                    {column.name}
+                  </th>
+                ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, i: number) => {
+              const rowData: TableCell[] = [];
+              row.forEach((cell: string | number | TableCell) => {
+                if (sortable) {
+                  rowData.push({
+                    value: isCellSpec(cell) ? cell.value : cell,
+                    sortValue: isCellSpec(cell)
+                      ? (cell.sortValue ?? cell.value ?? '').toString()
+                      : cell,
+                  });
+                } else {
+                  rowData.push({
+                    value: isCellSpec(cell) ? cell.value : cell,
+                  });
+                }
+              });
+
+              return (
+                <tr key={`tr-${i}`}>
+                  {rowData.map((col, j) => (
+                    <td
+                      key={`td-${j}`}
+                      data-sort-value={sortable ? col.sortValue : col.value}
+                    >
+                      {col.value}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {sortable && (
+          <div
+            className="usa-sr-only usa-table__announcement-region"
+            aria-live="polite"
+          ></div>
+        )}
+      </div>
     </div>
   );
 };
