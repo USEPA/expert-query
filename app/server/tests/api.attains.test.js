@@ -158,7 +158,7 @@ describe('API Attains Tests', () => {
       .expect('Content-Type', /json/);
 
     expect(response.body).toEqual({
-      message: 'The requested profile does not exist',
+      message: 'The api route does not exist.',
     });
   });
 
@@ -327,7 +327,8 @@ describe('API Attains Tests', () => {
   });
 
   test('POST /api/attains/assessments limit exceeded exception', async () => {
-    const body = { text: '', limit: 120 };
+    const limit = 520;
+    const body = { text: '', limit };
     const response = await supertest(app)
       .post(`/api/attains/assessments/values/assessmentUnitId`)
       .send(body)
@@ -335,8 +336,7 @@ describe('API Attains Tests', () => {
       .expect('Content-Type', /json/);
 
     expect(response.body).toEqual({
-      error:
-        'Error: The provided limit (120) exceeds the maximum 100 allowable limit.',
+      error: `Error: The provided limit (${limit}) exceeds the maximum 500 allowable limit.`,
     });
   });
 
@@ -396,5 +396,16 @@ describe('API Attains Tests', () => {
       .expect('Content-Type', /json/);
 
     expect(Array.isArray(response.body)).toBe(true);
+  });
+
+  test('GET /api/attains/actionDocuments query returns ranked results', async () => {
+    const response = await supertest(app)
+      .get(
+        '/api/attains/actionDocuments?columns=objectId&documentQuery=test&limit=10',
+      )
+      .expect(200);
+
+    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(response.body.data.pop()).toHaveProperty('rankPercent');
   });
 });

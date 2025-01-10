@@ -561,7 +561,10 @@ function FilterFieldInputs({
               ? sourceState[sourceFieldConfig.id]
               : null;
             const selectProps = {
-              additionalOptions: 'additionalOptions' in fieldConfig ? fieldConfig.additionalOptions : [],
+              additionalOptions:
+                'additionalOptions' in fieldConfig
+                  ? fieldConfig.additionalOptions
+                  : [],
               apiKey,
               apiUrl,
               contextFilters: getContextFilters(
@@ -709,13 +712,13 @@ function FilterFieldInputs({
     <div className="grid-gap-2 grid-row">
       {fieldsJsx.map(([field, key, size]) => (
         <div
-          className={`flex-align-self-end ${
+          className={
             size === 'large'
               ? 'width-full'
               : size === 'medium'
                 ? 'desktop:grid-col-8 tablet:grid-col-6'
                 : 'desktop:grid-col-4 tablet:grid-col-6'
-          }`}
+          }
           key={key}
         >
           {field}

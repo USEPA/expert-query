@@ -753,19 +753,13 @@ async function executeValuesQuery(profile, req, res) {
     }
 
     let values;
-    try {
-      values = await queryColumnValues(
-        res,
-        profile,
-        columns,
-        params,
-        req.activeSchema,
-      );
-    } catch (err) {
-      return res.status(400).json({
-        message: err.message,
-      });
-    }
+    values = await queryColumnValues(
+      res,
+      profile,
+      columns,
+      params,
+      req.activeSchema,
+    );
     return res.status(200).json(values);
   } catch (error) {
     log.error(
