@@ -28,6 +28,7 @@
       { "key": "planSummaryLink" }
     ],
     "label": "Actions",
+    "provideBulkDownload": true,
     "resource": "actions"
   },
   "actionDocuments": {
@@ -171,6 +172,7 @@
       { "key": "waterSizeUnits" }
     ],
     "label": "Assessments",
+    "provideBulkDownload": true,
     "resource": "assessments"
   },
   "assessmentUnits": {
@@ -199,6 +201,7 @@
       { "key": "waterSizeUnits" }
     ],
     "label": "Assessment Units",
+    "provideBulkDownload": true,
     "resource": "assessmentUnits"
   },
   "assessmentUnitsMonitoringLocations": {
@@ -228,6 +231,7 @@
       { "key": "waterSizeUnits" }
     ],
     "label": "Assessment Units with Monitoring Locations",
+    "provideBulkDownload": true,
     "resource": "assessmentUnitsMonitoringLocations"
   },
   "catchmentCorrespondence": {
@@ -247,6 +251,7 @@
       { "key": "cycleId" }
     ],
     "label": "Catchment Correspondence",
+    "provideBulkDownload": true,
     "resource": "catchmentCorrespondence"
   },
   "sources": {
@@ -276,6 +281,7 @@
       { "key": "waterSizeUnits" }
     ],
     "label": "Sources",
+    "provideBulkDownload": true,
     "resource": "sources"
   },
   "tmdl": {
@@ -318,6 +324,7 @@
       { "key": "planSummaryLink" }
     ],
     "label": "Total Maximum Daily Load",
+    "provideBulkDownload": true,
     "resource": "tmdl"
   }
 }

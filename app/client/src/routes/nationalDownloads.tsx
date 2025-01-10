@@ -110,6 +110,11 @@ function NationalDownloadsData({
         <tbody>
           {Object.entries(content.data.metadata)
             .sort((a, b) => a[0].localeCompare(b[0]))
+            .filter(([profile]) => {
+              const config = content.data.profileConfig[profile];
+              if (config?.provideBulkDownload) return true;
+              return false;
+            })
             .map(([profile, fileInfo]) => (
               <tr key={profile}>
                 <th scope="row" data-label="Download link (CSV ZIP)">
