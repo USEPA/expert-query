@@ -76,6 +76,7 @@ export type Content = {
       description: string;
       columns: Array<ColumnConfig>;
       label: string;
+      provideBulkDownload: boolean;
       resource: string;
     };
   };
