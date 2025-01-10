@@ -26,12 +26,29 @@ type BaseFilterFieldConfig = {
   label: string;
   secondaryKey?: string;
   source?: string;
-  type: 'date' | 'multiselect' | 'select' | 'year';
+  type: 'date' | 'multiselect' | 'select' | 'text' | 'year';
+  size?: 'small' | 'medium' | 'large';
+};
+
+export type ColumnConfig = {
+  key: string;
+  preview?: {
+    label?: string;
+    order?: number;
+    sortable?: boolean;
+    transform?: {
+      type: 'link';
+      args: string[];
+    };
+    width?: number;
+  };
+  ranked?: boolean;
 };
 
 // Fields provided in the `domainValues` of the Content context
 export type ConcreteField =
   | 'actionAgency'
+  | 'actionDocumentType'
   | 'actionType'
   | 'assessmentTypes'
   | 'assessmentUnitStatus'
@@ -80,11 +97,27 @@ export type Option = {
   value: Value;
 };
 
+export type QueryData = {
+  columns: string[];
+  filters: {
+    [field: string]: Value | Value[];
+  };
+  options: {
+    [field: string]: Value;
+  };
+};
+
 export type SingleOptionField = BaseFilterFieldConfig & {
   type: 'select';
 };
 
-export type SingleValueField = BaseFilterFieldConfig & {
+export type SingleValueField = SingleValueTextField | SingleValueRangeField;
+
+export type SingleValueTextField = BaseFilterFieldConfig & {
+  type: 'text';
+};
+
+export type SingleValueRangeField = BaseFilterFieldConfig & {
   boundary: 'low' | 'high';
   domain: string;
   type: 'date' | 'year';

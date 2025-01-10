@@ -17,13 +17,14 @@ import { getPrivateConfig, getS3Client } from '../utilities/s3.js';
 import StreamingService from '../utilities/streamingService.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const jsonPageSize = parseInt(process.env.JSON_PAGE_SIZE);
-const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE);
+const defaultPageSize = 20;
+const maxPageSize = parseInt(process.env.MAX_PAGE_SIZE || 500);
+const maxQuerySize = parseInt(process.env.MAX_QUERY_SIZE || 1_000_000);
 
 const minDateTime = new Date(-8640000000000000);
 const maxDateTime = new Date(8640000000000000);
 
-const environment = getEnvironment();
+const { isLocal, isTest } = getEnvironment();
 
 // get config from private S3 bucket
 const privateConfig = await getPrivateConfig();
@@ -37,18 +38,18 @@ class DuplicateParameterException extends Error {
 }
 
 class InvalidParameterException extends Error {
-  constructor(parameter) {
+  constructor(parameter, context) {
     super();
     this.httpStatusCode = 400;
-    this.message = `The parameter '${parameter}' is not valid for the specified profile`;
+    this.message = `The parameter '${parameter}' is not valid for the specified ${context}`;
   }
 }
 
 class LimitExceededException extends Error {
-  constructor(limit) {
+  constructor(value, maximum = maxQuerySize) {
     super();
     this.httpStatusCode = 400;
-    this.message = `The provided limit (${limit}) exceeds the maximum ${process.env.MAX_VALUES_QUERY_SIZE} allowable limit.`;
+    this.message = `The provided limit (${value.toLocaleString()}) exceeds the maximum ${maximum.toLocaleString()} allowable limit.`;
   }
 }
 
@@ -63,7 +64,7 @@ class NoParametersException extends Error {
 /**
  * Searches for a materialized view, associated with the profile, that is applicable to the provided columns/filters.
  * @param {Object} profile definition of the profile being queried
- * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
+ * @param {Array<Object>} columns definitions of columns to return
  * @param {Array<string>} columnsForFilter names of columns that can be used to filter
  * @returns definition of a materialized view that is applicable to the desired columns/filters or null if none are suitable
  */
@@ -79,6 +80,49 @@ function findMaterializedView(profile, columns, columnsForFilter) {
 }
 
 /**
+ * Searches for a view, associated with the profile, that is applicable to the provided columns.
+ * @param {Object} profile definition of the profile being queried
+ * @param {Array<string>} columns parameter names of columns to return
+ * @returns definition of a view that is applicable to the desired columns, or null if none are suitable
+ */
+function findView(profile, columns) {
+  if (!profile.views) return;
+
+  const expandedViews = profile.views?.map((view) => ({
+    ...view,
+    columns: view.columns.map((vCol) => {
+      const pCol = (
+        vCol.table
+          ? Object.values(privateConfig.tableConfig).find(
+              (p) => p.tableName === vCol.table,
+            )
+          : profile
+      )?.columns.find((c) => c.name === vCol.name);
+      if (!pCol) {
+        throw new Error(
+          `The view column ${vCol.name} does not exist on the specified profile`,
+        );
+      }
+
+      return pCol;
+    }),
+  }));
+
+  return expandedViews.find((view) => {
+    for (const col of columns) {
+      if (
+        !view.columns.find((vCol) =>
+          [vCol.alias, vCol.lowParam, vCol.highParam].includes(col),
+        )
+      ) {
+        return;
+      }
+    }
+    return view;
+  });
+}
+
+/**
  * Finds full column definitions for the provided array of column aliases
  * @param {Array<string>} columnAliases array of column aliases to get full column definitions for
  * @param {Object} profile definition of the profile being queried
@@ -88,7 +132,7 @@ function getColumnsFromAliases(columnAliases, profile) {
   const columns = [];
   for (const alias of columnAliases) {
     const column = profile.columns
-      .concat(profile.materializedViewColumns ?? [])
+      .concat(profile.referencedColumns ?? [])
       .find((col) => col.alias === alias);
     if (!column) {
       throw new Error(alias);
@@ -100,10 +144,12 @@ function getColumnsFromAliases(columnAliases, profile) {
 }
 
 /** Get a subquery if "Latest" is used
- * @param {Object} query KnexJS query object
+ * @param {Express.Request} req
+ * @param {Object} profile definition of the profile being queried
+ * @param {Object} params URL query value
  * @param {Object} columnName name of the "Latest" column
  * @param {Object} columnType data type of the "Latest" column
- * @returns {Object} a different KnexJS query object
+ * @returns {Object} an updated KnexJS query object
  */
 function createLatestSubquery(req, profile, params, columnName, columnType) {
   if (!['date', 'numeric', 'timestamptz'].includes(columnType)) return;
@@ -155,13 +201,12 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
 /**
  * Creates a stream object from a query.
  * @param {Object} query KnexJS query object
- * @param {Express.Response} req
  * @param {Express.Response} res
  * @param {string} format the format of the file attachment
  * @param {Object} excelDoc Excel workbook and worksheet objects
- * @param {number} nextId starting objectid for the next page
+ * @param {Object} pageOptions page number and page size for paginated JSON
  */
-async function createStream(query, req, res, format, wbObject, nextId) {
+async function createStream(query, res, format, wbObject, pageOptions) {
   pool.connect((err, client, done) => {
     if (err) throw err;
 
@@ -172,7 +217,7 @@ async function createStream(query, req, res, format, wbObject, nextId) {
     const stream = client.query(qStream);
     stream.on('end', done);
 
-    StreamingService.streamResponse(res, stream, format, wbObject, nextId);
+    StreamingService.streamResponse(res, stream, format, wbObject, pageOptions);
   });
 }
 
@@ -199,37 +244,24 @@ async function streamFile(query, req, res, format, baseName) {
     });
     const worksheet = workbook.addWorksheet('data');
 
-    createStream(query, req, res, format, { workbook, worksheet });
+    createStream(query, res, format, { workbook, worksheet });
   } else {
-    createStream(query, req, res, format);
+    createStream(query, res, format);
   }
 }
 
 /**
  * Streams the results of a query as paginated JSON.
  * @param {Object} query KnexJS query object
- * @param {Express.Response} req
  * @param {Express.Response} res
- * @param {number} startId current objectid to start returning results from
+ * @param {number} pageNumber current page of results
+ * @param {number} pageSize number of results per page
  */
-async function streamJson(query, req, res, startId) {
-  if (startId) query.where('objectid', '>=', startId);
+async function streamJson(query, res, pageNumber, pageSize) {
+  if (pageNumber > 1) query.offset((pageNumber - 1) * pageSize);
+  query.limit(pageSize);
 
-  const nextId =
-    (
-      await queryPool(
-        knex
-          .select('objectId')
-          .from(query.clone().limit(maxQuerySize).as('q'))
-          .offset(jsonPageSize)
-          .limit(1),
-        true,
-      )
-    )?.objectId ?? null;
-
-  query.limit(jsonPageSize);
-
-  createStream(query, req, res, 'json', null, nextId);
+  createStream(query, res, 'json', null, { pageNumber, pageSize });
 }
 
 /**
@@ -262,8 +294,8 @@ function appendRangeToWhere(query, column, lowParamValue, highParamValue) {
 /**
  * Creates an ISO date string with no timezone offset from a given date string.
  * @param {string} value the date string to be converted to ISO format
- * @param {boolean} whether the returned time should represent midnight at the start or end of day
- * @returns {string}
+ * @param {boolean} endOfDay whether the returned time should represent midnight at the start or end of day
+ * @returns {string | null}
  */
 function dateToUtcTime(value, endOfDay = false) {
   if (!value) return null;
@@ -292,7 +324,7 @@ function getQueryParams(req) {
   }
 
   // organize GET parameters to follow what we expect from POST
-  const optionsParams = ['f', 'format', 'startId'];
+  const optionsParams = ['f', 'format', 'limit', 'pageNumber', 'pageSize'];
   const parameters = {
     filters: {},
     options: {},
@@ -311,6 +343,7 @@ function getQueryParams(req) {
 /**
  * Builds the select clause and where clause of the query based on the provided
  * profile name.
+ * @param {express.Request} req
  * @param {Object} query KnexJS query object
  * @param {Object} profile definition of the profile being queried
  * @param {Object} queryParams URL query value
@@ -321,15 +354,19 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
   // so that we can apply the same filters to the subquery
   const latestColumn = profile.columns.find((col) => col.default === 'latest');
   const subQuery =
-    latestColumn && !queryParams.filters.hasOwnProperty(latestColumn.alias)
-      ? createLatestSubquery(
-          req,
-          profile,
-          queryParams,
-          latestColumn.name,
-          latestColumn.type,
-        )
-      : null;
+    latestColumn &&
+    queryParams.filters.hasOwnProperty(latestColumn.alias) &&
+    queryParams.filters[latestColumn.alias] === -1
+      ? null
+      : latestColumn && !queryParams.filters.hasOwnProperty(latestColumn.alias)
+        ? createLatestSubquery(
+            req,
+            profile,
+            queryParams,
+            latestColumn.name,
+            latestColumn.type,
+          )
+        : null;
 
   // build select statement of the query
   if (!countOnly) {
@@ -353,13 +390,16 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
 
   // build where clause of the query
   profile.columns.forEach((col) => {
+    if (col.default === 'latest' && queryParams.filters[col.alias] === -1)
+      return;
+
     const lowArg = 'lowParam' in col && queryParams.filters[col.lowParam];
     const highArg = 'highParam' in col && queryParams.filters[col.highParam];
     const exactArg = queryParams.filters[col.alias];
     if (lowArg || highArg) {
       appendRangeToWhere(query, col, lowArg, highArg);
     } else if (exactArg !== undefined) {
-      appendToWhere(query, col.name, queryParams.filters[col.alias]);
+      appendToWhere(query, col.name, exactArg);
     }
   });
 
@@ -367,6 +407,79 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     // add the "latest" subquery to the where clause
     query.whereIn(['organizationid', latestColumn.name], subQuery);
   }
+}
+
+function parseDocumentSearchCriteria(req, query, profile, queryParams) {
+  const columnsForFilter = Object.keys(queryParams.filters);
+  let columnsToReturn = queryParams.columns ?? [];
+  const view = findView(profile, columnsForFilter.concat(columnsToReturn));
+  if (view) query.from(view.name);
+  const target = view ?? profile;
+  // NOTE:XXX: This will need to change if we ever have multiple `tsvector` columns in a single table.
+  const documentQueryColumn = target.columns.find(
+    (col) => col.type === 'tsvector',
+  );
+  const documentQuery = documentQueryColumn
+    ? queryParams.filters[documentQueryColumn.alias]
+    : '';
+  const isDocumentSearch =
+    documentQueryColumn && columnsForFilter.includes(documentQueryColumn.alias);
+  if (!isDocumentSearch && !columnsToReturn.includes('objectId')) {
+    columnsToReturn.push('objectId');
+  }
+  const selectColumns = (
+    columnsToReturn.length > 0
+      ? target.columns.filter((col) => columnsToReturn.includes(col.alias))
+      : target.columns
+  ).filter((col) => col.type !== 'tsvector');
+
+  // Build the select query, filtering down to requested columns, if the user provided that option.
+  const asAlias = (col) =>
+    col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`;
+  if (isDocumentSearch) {
+    query
+      .with('ranked', (qb) => {
+        qb.select(
+          selectColumns
+            .map((col) => col.name)
+            .concat(
+              knex.raw(
+                `ts_rank_cd(${documentQueryColumn.name}, websearch_to_tsquery(?), 1 | 32) AS rank`,
+                [documentQuery],
+              ),
+            ),
+        )
+          .withSchema(req.activeSchema)
+          .from(target.tableName ?? target.name)
+          .whereRaw(`${documentQueryColumn.name} @@ websearch_to_tsquery(?)`, [
+            documentQuery,
+          ]);
+      })
+      .withSchema()
+      .from('ranked')
+      .select([
+        knex.raw('ROUND((AVG(rank) * 100)::numeric, 1) AS "rankPercent"'),
+        ...selectColumns.map(asAlias),
+      ])
+      .orderBy('rankPercent', 'desc')
+      .groupBy(selectColumns.map((col) => col.name));
+  } else {
+    query.select(selectColumns.map(asAlias)).orderBy('objectid', 'asc');
+  }
+
+  // build where clause of the query
+  target.columns.forEach((col) => {
+    if (col.type === 'tsvector') return;
+
+    const lowArg = 'lowParam' in col && queryParams.filters[col.lowParam];
+    const highArg = 'highParam' in col && queryParams.filters[col.highParam];
+    const exactArg = queryParams.filters[col.alias];
+    if (lowArg || highArg) {
+      appendRangeToWhere(query, col, lowArg, highArg);
+    } else if (exactArg !== undefined) {
+      appendToWhere(query, col.name, exactArg);
+    }
+  });
 }
 
 /**
@@ -384,7 +497,7 @@ async function executeQuery(profile, req, res) {
     const query = knex
       .withSchema(req.activeSchema)
       .from(profile.tableName)
-      .limit(parseInt(process.env.MAX_QUERY_SIZE));
+      .limit(maxQuerySize);
 
     const queryParams = getQueryParams(req);
 
@@ -399,7 +512,12 @@ async function executeQuery(profile, req, res) {
       throw new NoParametersException('Please provide at least one parameter');
     }
 
-    parseCriteria(req, query, profile, queryParams);
+    // TODO: Merge this into one function.
+    if (profile.id === 'actionDocuments') {
+      parseDocumentSearchCriteria(req, query, profile, queryParams);
+    } else {
+      parseCriteria(req, query, profile, queryParams);
+    }
 
     // Check that the query doesn't exceed the MAX_QUERY_SIZE.
     if (await exceedsMaxSize(query)) {
@@ -410,14 +528,23 @@ async function executeQuery(profile, req, res) {
       });
     }
 
+    // Check if the query result is empty.
+    if (await isEmptyResult(query)) {
+      return res.status(200).json({
+        message: `No results found for the current query. Please refine the search.`,
+      });
+    }
+
     const format = queryParams.options.format ?? queryParams.options.f;
     if (['csv', 'tsv', 'xlsx'].includes(format)) {
       await streamFile(query, req, res, format, profile.tableName);
     } else {
-      const startId = queryParams.options.startId
-        ? parseInt(queryParams.options.startId)
-        : null;
-      await streamJson(query, req, res, startId);
+      await streamJson(
+        query,
+        res,
+        parseInt(queryParams.options.pageNumber || 1),
+        parseInt(queryParams.options.pageSize || defaultPageSize),
+      );
     }
   } catch (error) {
     log.error(
@@ -436,19 +563,35 @@ async function executeQuery(profile, req, res) {
 /**
  * Throws an error if multiple instances of a parameter were provided
  * for an option or filter that accepts a single argument only
- * @param {Object} queryFilters URL query value for filters
+ * @param {Object} queryParams URL query value for filters
  * @param {Object} profile definition of the profile being queried
  */
 function validateQueryParams(queryParams, profile) {
   Object.entries(queryParams.options).forEach(([name, value]) => {
+    // Each option should only be used once.
     if (Array.isArray(value)) throw new DuplicateParameterException(name);
+
+    // 'pageNumber' and 'pageSize' are only allowed to be used with 'json' format.
+    const format = queryParams.options.format ?? queryParams.options.f;
+    if (
+      ['pageNumber', 'pageSize'].includes(name) &&
+      ['csv', 'tsv', 'xlsx'].includes(format)
+    ) {
+      throw new InvalidParameterException(name, 'response format');
+    }
+
+    // 'pageSize' must be less than or equal to the maximum page size.
+    if (name === 'pageSize' && parseInt(value) > maxPageSize) {
+      throw new LimitExceededException(value, maxPageSize);
+    }
   });
+
+  const target = findView(profile, Object.keys(queryParams.filters)) ?? profile;
   Object.entries(queryParams.filters).forEach(([name, value]) => {
-    const column = profile.columns.find((c) => {
+    const column = target.columns.find((c) => {
       if (c.lowParam === name || c.highParam === name || c.alias === name)
         return c;
     });
-    if (!column) throw new InvalidParameterException(name);
     if (Array.isArray(value)) {
       if (
         column.lowParam === name ||
@@ -457,6 +600,7 @@ function validateQueryParams(queryParams, profile) {
       )
         throw new DuplicateParameterException(name);
     }
+    if (!column) throw new InvalidParameterException(name, 'profile');
   });
 }
 
@@ -479,6 +623,20 @@ async function exceedsMaxSize(query) {
   );
 
   return count.count > maxQuerySize;
+}
+
+/**
+ * Checks if the query result is empty.
+ * @param {Object} query KnexJS query object
+ * @returns {Promise<boolean>} true if the query result is empty
+ */
+async function isEmptyResult(query) {
+  const count = await queryPool(
+    knex.from(query.clone().limit(1).as('q')).count(),
+    true,
+  );
+
+  return count.count === 0;
 }
 
 /**
@@ -507,9 +665,16 @@ async function executeQueryCountOnly(profile, req, res) {
 
     validateQueryParams(queryParams, profile);
 
-    parseCriteria(req, query, profile, queryParams, true);
+    // TODO: Merge this into one function.
+    if (profile.id === 'actionDocuments') {
+      parseDocumentSearchCriteria(req, query, profile, queryParams);
+    } else {
+      parseCriteria(req, query, profile, queryParams, true);
+    }
 
-    const count = (await queryPool(query.count(), true)).count;
+    const count = (
+      await queryPool(knex.from(query.clone().as('q')).count(), true)
+    ).count;
     return res.status(200).json({ count, maxCount: maxQuerySize });
   } catch (error) {
     log.error(
@@ -547,7 +712,7 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
     log.error(
       formatLogMsg(
         metadataObj,
-        `Failed to get counts per organizaiton and reporting cycle from the "${profile.tableName}" table:`,
+        `Failed to get counts per organization and reporting cycle from the "${profile.tableName}" table:`,
         error,
       ),
     );
@@ -559,25 +724,19 @@ async function executeQueryCountPerOrgCycle(profile, req, res) {
 
 /**
  * Retrieves the domain values for a single table column.
+ * @param {Object} profile definition of the profile being queried
  * @param {express.Request} req
  * @param {express.Response} res
  */
-async function executeValuesQuery(req, res) {
+async function executeValuesQuery(profile, req, res) {
   const metadataObj = populateMetdataObjFromRequest(req);
 
   try {
-    const profile = privateConfig.tableConfig[req.params.profile];
-    if (!profile) {
-      return res
-        .status(404)
-        .json({ message: 'The requested profile does not exist' });
-    }
-
     const { additionalColumns, ...params } = getQueryParamsValues(req);
 
     if (!params.text && !params.limit) {
       throw new NoParametersException(
-        `Please provide either a text filter or a limit that does not exceed ${process.env.MAX_VALUES_QUERY_SIZE}.`,
+        `Please provide either a text filter or a limit that does not exceed ${maxPageSize}.`,
       );
     }
 
@@ -595,7 +754,9 @@ async function executeValuesQuery(req, res) {
       });
     }
 
-    const values = await queryColumnValues(
+    let values;
+    values = await queryColumnValues(
+      res,
       profile,
       columns,
       params,
@@ -643,12 +804,13 @@ function getQueryParamsValues(req) {
 
 /**
  * Craft the database query for distinct column values
+ * @param {express.Response} res
  * @param {Object} profile definition of the profile being queried
  * @param {Array<Object>} columns definitions of columns to return, where the first is the primary column
  * @param {Object} params parameters to apply to the query
  * @param {string} schema the currently active database schema
  */
-async function queryColumnValues(profile, columns, params, schema) {
+async function queryColumnValues(res, profile, columns, params, schema) {
   const primaryColumn = columns[0];
 
   // get columns for where clause
@@ -661,19 +823,20 @@ async function queryColumnValues(profile, columns, params, schema) {
 
   // search through tableconfig.materializedViews to see if the column
   // we need is in here
-  const materializedView = findMaterializedView(
-    profile,
-    columns,
-    columnsForFilter,
-  );
+  const view =
+    findMaterializedView(profile, columns, columnsForFilter) ??
+    findView(
+      profile,
+      Object.keys(params.filters).concat(columns.map((c) => c.alias)),
+    );
 
-  // ensure no mv-only columns exist if no mv was found
-  if (!materializedView) {
+  // ensure no view-only columns exist if no view was found
+  if (!view) {
     for (const col of columns) {
       if (!profile.columns.find((c) => c.name === col.name)) {
-        return res.status(404).json({
-          message: `The column ${col.alias} is not available with the current query`,
-        });
+        throw new Error(
+          `The column ${col.alias} is not available with the current query`,
+        );
       }
     }
   }
@@ -681,7 +844,7 @@ async function queryColumnValues(profile, columns, params, schema) {
   // query table directly if a suitable materialized view was not found
   const query = knex
     .withSchema(schema)
-    .from(materializedView ? materializedView.name : profile.tableName)
+    .from(view?.name ?? profile.tableName)
     .column(
       columns.reduce(
         (current, col) => ({ ...current, [col.alias]: col.name }),
@@ -728,11 +891,11 @@ async function queryColumnValues(profile, columns, params, schema) {
     });
   }
 
-  const maxValuesQuerySize = parseInt(process.env.MAX_VALUES_QUERY_SIZE);
-  if (params.limit > maxValuesQuerySize) {
-    throw new LimitExceededException(params.limit);
+  const limit = params.limit ?? maxPageSize;
+  if (limit > maxPageSize) {
+    throw new LimitExceededException(params.limit, maxPageSize);
   }
-  query.limit(params.limit ?? maxValuesQuerySize);
+  query.limit(limit);
 
   return await queryPool(query);
 }
@@ -858,7 +1021,7 @@ async function checkDomainValuesHealth(req, res) {
     let timeSinceLastUpdate = minDateTime;
 
     // verify file update date is within the last week
-    if (environment.isLocal) {
+    if (isLocal || isTest) {
       const path = resolve(__dirname, `../content-etl/domainValues`);
 
       // get hours since file last modified
@@ -911,6 +1074,13 @@ export default function (app, basePath) {
 
   Object.entries(privateConfig.tableConfig).forEach(
     ([profileName, profile]) => {
+      if (profile.hidden) return;
+
+      // get column domain values
+      router.post(`/${profileName}/values/:column`, async function (req, res) {
+        await executeValuesQuery(profile, req, res);
+      });
+
       // create get requests
       router.get(`/${profileName}`, async function (req, res) {
         await executeQuery(profile, req, res);
@@ -927,31 +1097,31 @@ export default function (app, basePath) {
         await executeQueryCountOnly(profile, req, res);
       });
 
-      // get column domain values
-      router.post('/:profile/values/:column', async function (req, res) {
-        await executeValuesQuery(req, res);
-      });
-
-      // get bean counts
-      router.get(`/${profileName}/countPerOrgCycle`, async function (req, res) {
-        await executeQueryCountPerOrgCycle(profile, req, res);
-      });
-      router.post(
-        `/${profileName}/countPerOrgCycle`,
-        async function (req, res) {
-          await executeQueryCountPerOrgCycle(profile, req, res);
-        },
-      );
-
-      router.get('/health/etlDatabase', async function (req, res) {
-        await checkDatabaseHealth(req, res);
-      });
-
-      router.get('/health/etlDomainValues', async function (req, res) {
-        await checkDomainValuesHealth(req, res);
-      });
+      if (profile.includeCycleCount) {
+        // get bean counts
+        router.get(
+          `/${profileName}/countPerOrgCycle`,
+          async function (req, res) {
+            await executeQueryCountPerOrgCycle(profile, req, res);
+          },
+        );
+        router.post(
+          `/${profileName}/countPerOrgCycle`,
+          async function (req, res) {
+            await executeQueryCountPerOrgCycle(profile, req, res);
+          },
+        );
+      }
     },
   );
+
+  router.get('/health/etlDatabase', async function (req, res) {
+    await checkDatabaseHealth(req, res);
+  });
+
+  router.get('/health/etlDomainValues', async function (req, res) {
+    await checkDomainValuesHealth(req, res);
+  });
 
   app.use(`${basePath}api/attains`, router);
 }

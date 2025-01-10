@@ -92,6 +92,35 @@
   cursor: pointer;
 }
 
+.layout-fixed {
+  table-layout: fixed;
+}
+
+.maxh-90vh {
+  max-height: 90vh;
+}
+
+.scroll-container {
+  overflow: auto; /* Ensure the scrollbar is present */
+  scrollbar-width: thin; /* For Firefox, make the scrollbar thin */
+  scrollbar-color: darkgray; /* Thumb and track colors */
+}
+
+/* For WebKit browsers */
+.scroll-container::-webkit-scrollbar {
+  width: 12px; /* Width of the scrollbar */
+  height: 12px; /* Height of the scrollbar for horizontal scrolling */
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background-color: darkgray; /* Color of the scrollbar thumb */
+  border-radius: 6px; /* Round edges */
+}
+
+.scrollbar {
+  height: 12px;
+}
+
 .sr-only {
   border: 0;
   clip: rect(0, 0, 0, 0);
@@ -113,6 +142,10 @@
 
 .text-shadow {
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.whitespace-wrap tbody td {
+  white-space: normal;
 }
 
 .width-fit {

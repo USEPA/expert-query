@@ -1,3 +1,5 @@
+import { clientUrl, serverUrl } from '../constants';
+
 describe('Data Profile Catchment Correspondence', () => {
   beforeEach(() => {
     cy.visit('/');
@@ -10,26 +12,20 @@ describe('Data Profile Catchment Correspondence', () => {
   const columnsValueCurl =
     '"columns":["objectId","region","state","organizationType","organizationId","organizationName","assessmentUnitId","assessmentUnitName","catchmentNhdPlusId","reportingCycle","cycleId"]';
 
-  const location = window.location;
-  const origin =
-    location.hostname === 'localhost'
-      ? `${location.protocol}//${location.hostname}:3000`
-      : window.location.origin;
-
   it('Verify copy box text flavor 1', () => {
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence?`,
+      `${clientUrl}/attains/catchmentCorrespondence?`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/catchmentCorrespondence?${columnsValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -44,17 +40,17 @@ describe('Data Profile Catchment Correspondence', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence?${queryValue}`,
+      `${clientUrl}/attains/catchmentCorrespondence?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=csv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AS-04O"],"organizationId":["21HI"]},"options":{"format":"csv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -73,17 +69,17 @@ describe('Data Profile Catchment Correspondence', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence?${queryValue}`,
+      `${clientUrl}/attains/catchmentCorrespondence?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AL03150106-0503-101"],"organizationId":["CA_SWRCB"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -105,17 +101,17 @@ describe('Data Profile Catchment Correspondence', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence?${queryValue}`,
+      `${clientUrl}/attains/catchmentCorrespondence?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=xlsx&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AS-04O"],"organizationId":["MTDEQ"],"reportingCycle":2018},"options":{"format":"xlsx"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 
@@ -145,17 +141,17 @@ describe('Data Profile Catchment Correspondence', () => {
 
     cy.selectCopyBox(
       'current-query-copy-box-container',
-      `${origin}/attains/catchmentCorrespondence?${queryValue}`,
+      `${clientUrl}/attains/catchmentCorrespondence?${queryValue}`,
     );
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/catchmentCorrespondence?${columnsValue}&${queryValue}&format=tsv&api_key=<YOUR_API_KEY>`,
     );
     cy.selectCopyBox(
       'curl-copy-box-container',
       `curl -X POST --json ${JSON.stringify(
         `{"filters":{"assessmentUnitId":["AS-01O","AS-07O"],"organizationId":["21PA","CA_SWRCB"],"region":["06"],"reportingCycle":2016,"state":["TX"]},"options":{"format":"tsv"},${columnsValueCurl}}`,
-      )} ${origin}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
+      )} ${serverUrl}/api/attains/catchmentCorrespondence -H "X-Api-Key: <YOUR_API_KEY>"`,
     );
   });
 });

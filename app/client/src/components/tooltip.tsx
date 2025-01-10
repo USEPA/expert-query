@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { uniqueId } from 'lodash';
 import { useEffect, useMemo, useRef, useState } from 'react';
 // components
-import { ReactComponent as Info } from 'images/info.svg';
+import Info from 'images/info.svg?react';
 // types
 import type { ReactNode } from 'react';
 

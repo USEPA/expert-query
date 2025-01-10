@@ -9,7 +9,7 @@ let privateConfig = null;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const environment = getEnvironment();
+const { isLocal, isTest, isDevelopment, isStaging } = getEnvironment();
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)
 export function getS3Client({
@@ -33,7 +33,7 @@ export async function getPrivateConfig() {
 
   // NOTE: static content files found in `etl/app/content-private/` directory
   const filenames = ['tableConfig.json'];
-  const isDevOrStage = environment.isDevelopment || environment.isStaging;
+  const isDevOrStage = isDevelopment || isStaging;
   if (isDevOrStage) {
     filenames.push('approvedUsersDevStage.json');
   }
@@ -41,7 +41,7 @@ export async function getPrivateConfig() {
   try {
     // setup private s3 bucket
     let s3;
-    if (!environment.isLocal) {
+    if (!isLocal && !isTest) {
       s3 = getS3Client({
         accessKeyId: process.env.CF_S3_PRIV_ACCESS_KEY,
         secretAccessKey: process.env.CF_S3_PRIV_SECRET_KEY,
@@ -53,7 +53,7 @@ export async function getPrivateConfig() {
     for (const filename of filenames) {
       // local development: read files directly from disk
       // Cloud.gov: fetch files from the public s3 bucket
-      if (environment.isLocal) {
+      if (isLocal || isTest) {
         promises.push(
           readFile(
             resolve(__dirname, '../../../../etl/app/content-private', filename),

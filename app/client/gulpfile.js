@@ -1,4 +1,4 @@
-const uswds = require('@uswds/compile');
+import * as uswds from '@uswds/compile';
 
 uswds.settings.version = 3;
 
@@ -8,8 +8,9 @@ uswds.paths.dist.fonts = './public/uswds/fonts';
 uswds.paths.dist.js = './public/uswds/js';
 uswds.paths.dist.theme = './public/scss';
 
-exports.init = async () => {
+export const init = async () => {
   await uswds.copyAssets();
   uswds.compile();
 };
-exports.compile = uswds.compile;
+
+export const compile = uswds.compile;

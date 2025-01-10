@@ -1,6 +1,14 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import reportWebVitals from './reportWebVitals';
+/*
+  NOTE: regenerator-runtime is imported to avoid a bug with a GitHub Action
+  workflow including regenerator-runtime in the build as an external dependency.
+  For reference, the GitHub Action workflow's log message stated:
+    "regenerator-runtime/runtime.js" is imported by
+    "regenerator-runtime/runtime.js?commonjs-external", but could not be
+    resolved – treating it as an external dependency.
+*/
+import 'regenerator-runtime';
 // ---
 import { ContentProvider } from 'contexts/content';
 import { ErrorBoundary } from 'components/errorBoundary';
@@ -17,8 +25,3 @@ createRoot(container).render(
     </ErrorBoundary>
   </StrictMode>,
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
