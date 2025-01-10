@@ -113,7 +113,7 @@ describe('Home Page', () => {
     );
     cy.wait(2000);
     cy.findByText('Continue').should('exist').click();
-    cy.url().should('equal', `${clientUrl}/attains`);
+    cy.url().should('equal', `${clientUrl}/attains/sources`);
   });
 
   it('Verify file format after clear the query', () => {
@@ -148,7 +148,6 @@ describe('Home Page', () => {
     cy.findByText('Continue').should('exist').click();
 
     cy.selectProfile('Assessment Units');
-    cy.findByRole('button', { name: 'Advanced Queries' }).click();
 
     cy.selectCopyBox(
       'api-query-copy-box-container',
