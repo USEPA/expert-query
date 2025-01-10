@@ -409,7 +409,7 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
   }
 }
 
-function parseDocumentSearchCriteria(req, res, query, profile, queryParams) {
+function parseDocumentSearchCriteria(req, query, profile, queryParams) {
   const columnsForFilter = Object.keys(queryParams.filters);
   let columnsToReturn = queryParams.columns ?? [];
   const view = findView(profile, columnsForFilter.concat(columnsToReturn));
@@ -419,12 +419,9 @@ function parseDocumentSearchCriteria(req, res, query, profile, queryParams) {
   const documentQueryColumn = target.columns.find(
     (col) => col.type === 'tsvector',
   );
-  if (!documentQueryColumn) {
-    return res.status(200).json({
-      message: `No results found for the current query. Please refine the search.`,
-    });
-  }
-  const documentQuery = queryParams.filters[documentQueryColumn.alias];
+  const documentQuery = documentQueryColumn
+    ? queryParams.filters[documentQueryColumn.alias]
+    : '';
   const isDocumentSearch =
     documentQueryColumn && columnsForFilter.includes(documentQueryColumn.alias);
   if (!isDocumentSearch && !columnsToReturn.includes('objectId')) {
@@ -517,7 +514,7 @@ async function executeQuery(profile, req, res) {
 
     // TODO: Merge this into one function.
     if (profile.id === 'actionDocuments') {
-      parseDocumentSearchCriteria(req, res, query, profile, queryParams);
+      parseDocumentSearchCriteria(req, query, profile, queryParams);
     } else {
       parseCriteria(req, query, profile, queryParams);
     }
@@ -670,7 +667,7 @@ async function executeQueryCountOnly(profile, req, res) {
 
     // TODO: Merge this into one function.
     if (profile.id === 'actionDocuments') {
-      parseDocumentSearchCriteria(req, res, query, profile, queryParams);
+      parseDocumentSearchCriteria(req, query, profile, queryParams);
     } else {
       parseCriteria(req, query, profile, queryParams, true);
     }
