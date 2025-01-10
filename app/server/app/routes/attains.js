@@ -383,7 +383,7 @@ function parseCriteria(req, query, profile, queryParams, countOnly = false) {
     const selectColumns =
       columnsToReturn.length > 0 ? columnsToReturn : profile.columns;
     const selectText = selectColumns.map((col) =>
-      col.name === col.alias ? col.name : `${col.name} AS "${col.alias}"`,
+      col.name === col.alias ? col.name : `${col.name} AS ${col.alias}`,
     );
     query.select(selectText).orderBy('objectid', 'asc');
   }
