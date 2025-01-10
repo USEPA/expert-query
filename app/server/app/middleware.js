@@ -19,6 +19,7 @@ function checkClientRouteExists(req, res, next) {
     '/api-documentation',
     '/api-key-signup',
     '/attains',
+    '/attains/actionDocuments',
     '/attains/actions',
     '/attains/assessments',
     '/attains/assessmentUnits',
