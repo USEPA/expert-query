@@ -16,7 +16,7 @@
     "Max Diebold <max.diebold@erg.com>"
   ],
   "engines": {
-    "node": "20.x"
+    "node": ">=20.x"
   },
   "type": "module",
   "scripts": {

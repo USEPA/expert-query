@@ -13,6 +13,7 @@ applications:
       LOGGER_LEVEL: DEBUG
       OPTIMIZE_MEMORY: true
     services:
+      - log-drain
       - db-service-expert-query-dev
       - s3-pub-expert-query-dev
       - s3-priv-expert-query-dev
