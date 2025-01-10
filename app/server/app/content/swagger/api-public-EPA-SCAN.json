@@ -4888,10 +4888,7 @@
         "explode": true,
         "description": "Filter the summary to a specific reporting cycle in terms of the four-digit year the reporting cycle ended (e.g., for the 4/2/2016 – 3/31/2018 reporting cycle, the four-digit reporting cycle is “2018”). If left blank, the service will return the most recent cycle. If -1 is used, the service will return all reporting cycles.",
         "schema": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
+          "type": "integer"
         }
       },
       "seasonEndDateLoParam": {
