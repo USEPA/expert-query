@@ -76,12 +76,24 @@ function extractProfileName(name) {
     .replace('.csv', '');
 }
 
-async function cacheProfileStats(pool, schemaName, profileStats, s3Stats) {
+async function cacheProfileStats(
+  pool,
+  s3Config,
+  schemaName,
+  profileStats,
+  s3Stats,
+) {
   const client = await getClient(pool);
   try {
     await client.query('BEGIN');
     for (const profile of profileStats.details) {
       const profileName = extractProfileName(profile.name);
+
+      // verify table exists in tableConfig
+      const tableConfig = Object.values(s3Config.tableConfig).find(
+        (table) => table.tableName === profileName,
+      );
+      if (!tableConfig) continue;
 
       // lookup the file size from s3Stats
       const s3Metadata = s3Stats.files.find(
@@ -763,12 +775,23 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
       }),
     );
 
-    const profileStats = await getProfileStats(pool, schemaName, s3Julian);
+    const profileStats = await getProfileStats(
+      pool,
+      s3Config,
+      schemaName,
+      s3Julian,
+    );
 
     // Verify the etl was successfull and the data matches what we expect.
     // We skip this when running locally, since the row counts will never match.
     if (!isLocal) {
-      await certifyEtlComplete(pool, profileStats, schemaId, schemaName);
+      await certifyEtlComplete(
+        pool,
+        s3Config,
+        profileStats,
+        schemaId,
+        schemaName,
+      );
     }
 
     await transferSchema(pool, schemaName, schemaId);
@@ -782,7 +805,7 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
   }
 }
 
-async function getProfileStats(pool, schemaName, s3Julian) {
+async function getProfileStats(pool, s3Config, schemaName, s3Julian) {
   // get profile stats from s3
   const profileStats = await readS3File({
     bucketInfo: {
@@ -805,17 +828,29 @@ async function getProfileStats(pool, schemaName, s3Julian) {
     path: `national-downloads/${s3Julian}/status.json`,
   });
 
-  await cacheProfileStats(pool, schemaName, profileStats, s3Stats);
+  await cacheProfileStats(pool, s3Config, schemaName, profileStats, s3Stats);
 
   return profileStats.details;
 }
 
 // Verify the data pulled in from the ETL matches the materialized views.
-async function certifyEtlComplete(pool, profileStats, logId, schemaName) {
+async function certifyEtlComplete(
+  pool,
+  s3Config,
+  profileStats,
+  logId,
+  schemaName,
+) {
   // loop through and make sure the tables exist and the counts match
   let issuesMessage = '';
   for (const profile of profileStats) {
     const profileName = extractProfileName(profile.name);
+
+    // verify table exists in tableConfig
+    const tableConfig = Object.values(s3Config.tableConfig).find(
+      (table) => table.tableName === profileName,
+    );
+    if (!tableConfig) continue;
 
     // check date
     if (profile.last_refresh_end_time <= profile.last_refresh_date) {
