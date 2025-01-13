@@ -4471,7 +4471,7 @@
       "documentQueryParam": {
         "name": "documentQuery",
         "in": "query",
-        "example": ["Tuscumbia River Canal"],
+        "example": "Tuscumbia River Canal",
         "schema": {
           "type": "string"
         }
