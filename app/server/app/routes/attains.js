@@ -464,7 +464,10 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
       .orderBy('rankPercent', 'desc')
       .groupBy(selectColumns.map((col) => col.name));
   } else {
-    query.select(selectColumns.map(asAlias)).orderBy('objectid', 'asc');
+    query
+      .select(selectColumns.map(asAlias))
+      .orderBy('objectid', 'asc')
+      .groupBy(selectColumns.map((col) => col.name));
   }
 
   // build where clause of the query
