@@ -78,7 +78,6 @@ jobs:
       MAX_QUERY_SIZE: 1000000
       SERVER_BASE_PATH: /expertquery
       SERVER_URL: https://owapps-dev.app.cloud.gov/expertquery
-      SKIP_DOCUMENTS_TEXT_QA: true
       STREAM_BATCH_SIZE: 2000
       STREAM_HIGH_WATER_MARK: 10000
 
@@ -149,7 +148,6 @@ jobs:
           cf set-env $APP_NAME "PUBLIC_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null
           cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
-          cf set-env $APP_NAME "SKIP_DOCUMENTS_TEXT_QA" "$SKIP_DOCUMENTS_TEXT_QA" > /dev/null
           cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
           cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
@@ -208,6 +206,7 @@ jobs:
       EQ_PASSWORD: ${{ secrets.EQ_PASSWORD_DEV }}
       EQ_USERNAME: ${{ secrets.EQ_USER_DEV }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
+      SKIP_DOCUMENTS_TEXT_QA: true
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -243,6 +242,7 @@ jobs:
           cf set-env $APP_NAME "EQ_USERNAME" "$EQ_USERNAME" > /dev/null
           cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "SKIP_DOCUMENTS_TEXT_QA" "$SKIP_DOCUMENTS_TEXT_QA" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
 
       - name: Configure Private AWS Credentials
