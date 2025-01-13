@@ -858,7 +858,11 @@ async function certifyEtlComplete(
     }
 
     // TODO: Remove this continuation once we get counts to align.
-    if (tableConfig.id === 'documentsText') continue;
+    if (
+      process.env.SKIP_DOCUMENTS_TEXT_QA === 'true' &&
+      tableConfig.id === 'documentsText'
+    )
+      continue;
 
     // query to get row count
     const queryRes = await pool.query(
