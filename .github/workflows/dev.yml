@@ -2,11 +2,11 @@
 
 name: Dev Deploy
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the master branch    branches: [ develop ]
   push:
-    branches: [ develop ]
+    branches: [develop]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -18,14 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
 
-    outputs: 
+    outputs:
       workflows: ${{ steps.filter.outputs.workflows }}
       app: ${{ steps.filter.outputs.app }}
       etl: ${{ steps.filter.outputs.etl }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:      
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it 
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
@@ -37,12 +37,12 @@ jobs:
               - 'app/**'
             etl:
               - 'etl/**'
-        
+
   app:
     # Check if this folder has any changes
     needs: changes
-    if: ${{ 
-      needs.changes.outputs.app == 'true' ||  
+    if: ${{
+      needs.changes.outputs.app == 'true' ||
       needs.changes.outputs.workflows == 'true' }}
 
     # The type of runner that the job will run on
@@ -78,6 +78,7 @@ jobs:
       MAX_QUERY_SIZE: 1000000
       SERVER_BASE_PATH: /expertquery
       SERVER_URL: https://owapps-dev.app.cloud.gov/expertquery
+      SKIP_DOCUMENTS_TEXT_QA: true
       STREAM_BATCH_SIZE: 2000
       STREAM_HIGH_WATER_MARK: 10000
 
@@ -85,12 +86,12 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
-      
+
       # Set up node and npm
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      
+
       # Run front-end processes (install, lint, test, bundle)
       - name: Cache node modules
         uses: actions/cache@v4
@@ -148,6 +149,7 @@ jobs:
           cf set-env $APP_NAME "PUBLIC_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null
           cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
+          cf set-env $APP_NAME "SKIP_DOCUMENTS_TEXT_QA" "$SKIP_DOCUMENTS_TEXT_QA" > /dev/null
           cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
           cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
@@ -177,9 +179,9 @@ jobs:
   etl:
     # Check if this folder has any changes
     needs: changes
-    if: ${{ 
-        needs.changes.outputs.etl == 'true' ||  
-        needs.changes.outputs.workflows == 'true' }}
+    if: ${{
+      needs.changes.outputs.etl == 'true' ||
+      needs.changes.outputs.workflows == 'true' }}
 
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -210,7 +212,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
-      
+
       # Set up node and npm
       - uses: actions/setup-node@v4
         with:
