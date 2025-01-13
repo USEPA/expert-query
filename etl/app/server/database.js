@@ -87,6 +87,7 @@ async function cacheProfileStats(pool, schemaName, profileStats, s3Stats) {
       const s3Metadata = s3Stats.files.find(
         (f) => extractProfileName(f.name) === profileName,
       );
+      if (!s3Metadata) continue;
 
       await client.query(
         'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, last_refresh_elapsed, csv_size, gz_size, zip_size, creation_date)' +
