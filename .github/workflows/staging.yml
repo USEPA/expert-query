@@ -79,6 +79,7 @@ jobs:
       MAX_QUERY_SIZE: 1000000
       SERVER_BASE_PATH: /expertquery
       SERVER_URL: https://owapps-stage.app.cloud.gov/expertquery
+      SKIP_DOCUMENTS_TEXT_QA: true
       STREAM_BATCH_SIZE: 2000
       STREAM_HIGH_WATER_MARK: 10000
 
@@ -149,6 +150,7 @@ jobs:
           cf set-env $APP_NAME "PUBLIC_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null
           cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
+          cf set-env $APP_NAME "SKIP_DOCUMENTS_TEXT_QA" "$SKIP_DOCUMENTS_TEXT_QA" > /dev/null
           cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
           cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
