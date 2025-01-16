@@ -27,7 +27,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const environment = getEnvironment();
+const { isLocal } = getEnvironment();
 
 // Setups the config for the s3 bucket (default config is public S3 bucket)
 function getS3Client({
@@ -57,7 +57,7 @@ export async function loadConfig() {
   try {
     // setup private s3 bucket
     let s3;
-    if (!environment.isLocal) {
+    if (!isLocal) {
       s3 = getS3Client({
         accessKeyId: process.env.CF_S3_PRIV_ACCESS_KEY,
         secretAccessKey: process.env.CF_S3_PRIV_SECRET_KEY,
@@ -69,7 +69,7 @@ export async function loadConfig() {
     for (const filename of filenames) {
       // local development: read files directly from disk
       // Cloud.gov: fetch files from the public s3 bucket
-      if (environment.isLocal) {
+      if (isLocal) {
         promises.push(
           readFile(resolve(__dirname, '../content-private', filename), 'utf8'),
         );
@@ -109,7 +109,7 @@ export async function uploadFilePublic(
   try {
     // local development: write files directly to disk on the client app side
     // Cloud.gov: upload files to the public s3 bucket
-    if (environment.isLocal) {
+    if (isLocal) {
       const subFolderPath = resolve(
         __dirname,
         `../../../app/server/app/${subFolder}`,
@@ -304,7 +304,7 @@ export async function syncGlossary(s3Config, retryCount = 0) {
 // Delete directory on S3
 export async function deleteDirectory({ directory, dirsToIgnore }) {
   try {
-    if (environment.isLocal) {
+    if (isLocal) {
       const dirPath = resolve(
         __dirname,
         `../../../app/server/app/content-etl/${directory}`,
@@ -397,7 +397,7 @@ async function queryColumnValues(s3Config, pool, colAlias) {
 export async function readS3File({ bucketInfo, path }) {
   let res = null;
 
-  if (environment.isLocal) {
+  if (isLocal) {
     const fullPath = resolve(__dirname, `../../../app/server/app/${path}`);
 
     res = readFileSync(fullPath, 'utf8');

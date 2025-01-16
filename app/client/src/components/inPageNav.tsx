@@ -113,7 +113,9 @@ function useInPageNavDispatch() {
 ## Components
 */
 
-export function InPageNavLayout({ children }: Readonly<{ children: ReactNode }>) {
+export function InPageNavLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
     <InPageNavProvider>
       <InPageNavLayoutInner>{children}</InPageNavLayoutInner>
