@@ -15,14 +15,15 @@ import {
 import { getPrivateConfig } from '../utilities/s3.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const environment = getEnvironment();
+const { isLocal, isTest, isDevelopment, isStaging, isProduction } =
+  getEnvironment();
 
 const s3Bucket = process.env.CF_S3_PUB_BUCKET_ID;
 const s3Region = process.env.CF_S3_PUB_REGION;
 const s3BucketUrl = `https://${s3Bucket}.s3-${s3Region}.amazonaws.com`;
 
 function logError(error, metadataObj) {
-  if (environment.isLocal) {
+  if (isLocal || isTest) {
     log.error(error);
     return;
   }
@@ -100,7 +101,7 @@ async function getFile(
   encoding = undefined,
   responseType = undefined,
 ) {
-  return environment.isLocal
+  return isLocal || isTest
     ? readFile(resolve(__dirname, '../', filename), encoding)
     : axios({
         method: 'get',
@@ -114,11 +115,11 @@ async function getFile(
 // Cloud.gov: get data from responses
 function parseResponse(res) {
   if (Array.isArray(res)) {
-    return environment.isLocal
+    return isLocal || isTest
       ? res.map((r) => JSON.parse(r))
       : res.map((r) => r.data);
   } else {
-    return environment.isLocal ? JSON.parse(res) : res.data;
+    return isLocal || isTest ? JSON.parse(res) : res.data;
   }
 }
 
@@ -142,7 +143,7 @@ export default function (app, basePath) {
         let responseJson = parseResponse(stringsOrResponses);
 
         // Production: Only allow production in the servers selection in swagger
-        if (environment.isProduction) {
+        if (isProduction) {
           responseJson = {
             ...responseJson,
             servers: responseJson.servers.filter(
@@ -178,13 +179,14 @@ export default function (app, basePath) {
   router.get('/lookupFiles', (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
-    const servicesFilename = environment.isLocal
-      ? 'services-local.json'
-      : environment.isDevelopment
-      ? 'services-dev.json'
-      : environment.isStaging
-      ? 'services-stage.json'
-      : 'services-production.json';
+    const servicesFilename =
+      isLocal || isTest
+        ? 'services-local.json'
+        : isDevelopment
+          ? 'services-dev.json'
+          : isStaging
+            ? 'services-stage.json'
+            : 'services-production.json';
 
     // NOTE: static content files found in `app/server/app/content/` directory
     const filenames = [

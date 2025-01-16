@@ -1,6 +1,6 @@
 import { uniqueId } from 'lodash';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ReactComponent as Filter } from 'images/filter_list.svg';
+import Filter from 'images/filter_list.svg?react';
 // types
 import type { MutableRefObject, ReactNode } from 'react';
 import type { Option } from 'types';
@@ -74,7 +74,7 @@ export function SourceSelect({
     // determine if the sources menu is visible
     const sourcesShown =
       document.getElementById(`${id}-source-menu-div`)?.getBoundingClientRect()
-        .height !== 0 ?? false;
+        .height !== 0;
 
     // determine whether or not the enter button is being used to open/close
     // the sources menu or select a source

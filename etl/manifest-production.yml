@@ -14,6 +14,7 @@ applications:
       LOGGER_LEVEL: ERROR
       OPTIMIZE_MEMORY: true
     services:
+      - log-drain
       - db-service-expert-query-prod
       - s3-pub-expert-query-prod
       - s3-priv-expert-query-prod

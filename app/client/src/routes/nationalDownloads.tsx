@@ -1,4 +1,4 @@
-import { ReactComponent as Exit } from 'images/launch.svg';
+import Exit from 'images/launch.svg?react';
 import { Link } from 'react-router-dom';
 // components
 import { Alert } from 'components/alert';
@@ -69,7 +69,9 @@ type NationalDownloadsDataProps = {
   content: FetchState<Content>;
 };
 
-function NationalDownloadsData({ content }: Readonly<NationalDownloadsDataProps>) {
+function NationalDownloadsData({
+  content,
+}: Readonly<NationalDownloadsDataProps>) {
   if (content.status !== 'success') return null;
 
   return (
@@ -108,6 +110,11 @@ function NationalDownloadsData({ content }: Readonly<NationalDownloadsDataProps>
         <tbody>
           {Object.entries(content.data.metadata)
             .sort((a, b) => a[0].localeCompare(b[0]))
+            .filter(([profile]) => {
+              const config = content.data.profileConfig[profile];
+              if (config?.provideBulkDownload) return true;
+              return false;
+            })
             .map(([profile, fileInfo]) => (
               <tr key={profile}>
                 <th scope="row" data-label="Download link (CSV ZIP)">
@@ -144,7 +151,7 @@ function NationalDownloadsData({ content }: Readonly<NationalDownloadsDataProps>
 
 function ParagraphNoMargin(
   props: React.ClassAttributes<HTMLParagraphElement> &
-    React.HTMLAttributes<HTMLParagraphElement>
+    React.HTMLAttributes<HTMLParagraphElement>,
 ) {
   return <p className="margin-0">{props.children}</p>;
 }

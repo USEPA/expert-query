@@ -16,7 +16,7 @@ import { cloudSpace, serverBasePath, serverUrl } from 'config';
 // utils
 import { getData } from 'utils';
 // types
-import type { Content, JsonContent } from 'contexts/content';
+import type { Content } from 'contexts/content';
 
 declare global {
   interface Window {
@@ -27,19 +27,6 @@ declare global {
   }
 }
 
-// Map profile columns arrays to Sets
-function parseProfileConfig(jsonConfig: JsonContent['profileConfig']) {
-  return Object.entries(jsonConfig).reduce((current, [key, config]) => {
-    return {
-      ...current,
-      [key]: {
-        ...config,
-        columns: new Set(config.columns),
-      },
-    };
-  }, {}) as Content['profileConfig'];
-}
-
 /** Custom hook to fetch static content */
 function useFetchedContent() {
   const contentDispatch = useContentDispatch();
@@ -48,17 +35,14 @@ function useFetchedContent() {
     const controller = new AbortController();
 
     contentDispatch({ type: 'FETCH_CONTENT_REQUEST' });
-    getData<JsonContent>({
+    getData<Content>({
       url: `${serverUrl}/api/lookupFiles`,
       signal: controller.signal,
     })
       .then((res) => {
         contentDispatch({
           type: 'FETCH_CONTENT_SUCCESS',
-          payload: {
-            ...res,
-            profileConfig: parseProfileConfig(res.profileConfig),
-          },
+          payload: res,
         });
       })
       .catch((err: Error) => {
@@ -142,8 +126,8 @@ function useDisclaimerBanner() {
 
 // workaround to preserve the href in the url, without this
 // the ErrorPage will
-// redirect to http://localhost:9090/404.html?src=http://localhost:3000/404
-// instead of  http://localhost:9090/404.html?src=http://localhost:3000/some-url-doesnt-exist
+// redirect to http://localhost:3002/404.html?src=http://localhost:3000/404
+// instead of  http://localhost:3002/404.html?src=http://localhost:3000/some-url-doesnt-exist
 const href = window.location.href;
 
 export function App() {
