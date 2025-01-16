@@ -69,15 +69,14 @@ jobs:
       CF_S3_PRIV_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PRIV_SECRET_KEY }}
       DB_POOL_MAX: 20
       DB_POOL_MIN: 5
+      DB_SSL: true
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
       DB_USERNAME: ${{ secrets.EQ_USER_STAGING }}
       EQ_BASIC_USER_NAME: ${{ secrets.EQ_BASIC_USER_NAME }}
       EQ_BASIC_USER_PWD: ${{ secrets.EQ_BASIC_USER_PWD }}
       EQ_SECRET: ${{ secrets.EQ_SECRET_STAGING }}
-      JSON_PAGE_SIZE: 1000
       MAX_QUERY_SIZE: 1000000
-      MAX_VALUES_QUERY_SIZE: 100
       SERVER_BASE_PATH: /expertquery
       SERVER_URL: https://owapps-stage.app.cloud.gov/expertquery
       STREAM_BATCH_SIZE: 2000
@@ -109,9 +108,8 @@ jobs:
 
       - name: Build front-end files and move to server
         run: |
-          PUBLIC_URL="$SERVER_URL" \
-            REACT_APP_SERVER_BASE_PATH="$SERVER_BASE_PATH" \
-            REACT_APP_CLOUD_SPACE="$CLOUD_SPACE" \
+          VITE_SERVER_BASE_PATH="$SERVER_BASE_PATH" \
+            VITE_CLOUD_SPACE="$CLOUD_SPACE" \
             npm run build
           cd build
           cp -r * ../../server/app/public
@@ -121,7 +119,7 @@ jobs:
       # Run CloudFoundry/Cloud.gov deployment
       - name: Set up Cloud Foundry CLI
         run: |
-          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v7&source=github'
+          curl -v -L -o cf-cli_amd64.deb 'https://packages.cloudfoundry.org/stable?release=debian64&version=8.8.3&source=github-rel'
           sudo dpkg -i cf-cli_amd64.deb
           cf -v
           cf api https://api.fr.cloud.gov
@@ -140,15 +138,14 @@ jobs:
           cf set-env $APP_NAME "CF_S3_PRIV_SECRET_KEY" "$CF_S3_PRIV_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MAX" "$DB_POOL_MAX" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MIN" "$DB_POOL_MIN" > /dev/null
+          cf set-env $APP_NAME "DB_SSL" "$DB_SSL" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
           cf set-env $APP_NAME "DB_USERNAME" "$DB_USERNAME" > /dev/null
           cf set-env $APP_NAME "EQ_BASIC_USER_NAME" "$EQ_BASIC_USER_NAME" > /dev/null
           cf set-env $APP_NAME "EQ_BASIC_USER_PWD" "$EQ_BASIC_USER_PWD" > /dev/null
           cf set-env $APP_NAME "EQ_SECRET" "$EQ_SECRET" > /dev/null
-          cf set-env $APP_NAME "JSON_PAGE_SIZE" "$JSON_PAGE_SIZE" > /dev/null
           cf set-env $APP_NAME "MAX_QUERY_SIZE" "$MAX_QUERY_SIZE" > /dev/null
-          cf set-env $APP_NAME "MAX_VALUES_QUERY_SIZE" "$MAX_VALUES_QUERY_SIZE" > /dev/null
           cf set-env $APP_NAME "PUBLIC_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "SERVER_BASE_PATH" "$SERVER_BASE_PATH" > /dev/null
           cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
@@ -206,9 +203,11 @@ jobs:
       CF_S3_PRIV_REGION: ${{ secrets.CF_STAGING_S3_PRIV_REGION }}
       CF_S3_PRIV_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PRIV_SECRET_KEY }}
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
+      DB_SSL: true
       EQ_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
       EQ_USERNAME: ${{ secrets.EQ_USER_STAGING }}
       GLOSSARY_AUTH: ${{ secrets.GLOSSARY_AUTH }}
+      SKIP_DOCUMENTS_TEXT_QA: true
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -222,7 +221,7 @@ jobs:
       # Run CloudFoundry/Cloud.gov deployment
       - name: Set up Cloud Foundry CLI
         run: |
-          curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&version=v7&source=github'
+          curl -v -L -o cf-cli_amd64.deb 'https://packages.cloudfoundry.org/stable?release=debian64&version=8.8.3&source=github-rel'
           sudo dpkg -i cf-cli_amd64.deb
           cf -v
           cf api https://api.fr.cloud.gov
@@ -240,9 +239,11 @@ jobs:
           cf set-env $APP_NAME "CF_S3_PRIV_REGION" "$CF_S3_PRIV_REGION" > /dev/null
           cf set-env $APP_NAME "CF_S3_PRIV_SECRET_KEY" "$CF_S3_PRIV_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
+          cf set-env $APP_NAME "DB_SSL" "$DB_SSL" > /dev/null
           cf set-env $APP_NAME "EQ_USERNAME" "$EQ_USERNAME" > /dev/null
           cf set-env $APP_NAME "EQ_PASSWORD" "$EQ_PASSWORD" > /dev/null
           cf set-env $APP_NAME "GLOSSARY_AUTH" "$GLOSSARY_AUTH" > /dev/null
+          cf set-env $APP_NAME "SKIP_DOCUMENTS_TEXT_QA" "$SKIP_DOCUMENTS_TEXT_QA" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
 
       - name: Configure Private AWS Credentials

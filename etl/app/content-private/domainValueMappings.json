@@ -4,6 +4,10 @@
     "columns": ["actionAgency", "associatedActionAgency"],
     "valueField": "name"
   },
+  "actionDocumentType": {
+    "domainName": "ActionDocumentType",
+    "columns": ["actionDocumentType"]
+  },
   "actionType": {
     "domainName": "ActionType",
     "columns": ["actionType", "associatedActionType"],

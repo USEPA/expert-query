@@ -10,7 +10,7 @@ import {
 } from './utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const environment = getEnvironment();
+const { isLocal, isTest, isDevelopment, isStaging } = getEnvironment();
 
 function checkClientRouteExists(req, res, next) {
   const subPath = process.env.SERVER_BASE_PATH || '';
@@ -19,6 +19,7 @@ function checkClientRouteExists(req, res, next) {
     '/api-documentation',
     '/api-key-signup',
     '/attains',
+    '/attains/actionDocuments',
     '/attains/actions',
     '/attains/assessments',
     '/attains/assessmentUnits',
@@ -34,7 +35,7 @@ function checkClientRouteExists(req, res, next) {
   clientRoutes.push('/');
 
   if (!clientRoutes.includes(req.path)) {
-    return res.status(404).sendFile(path.join(__dirname, 'public', '400.html'));
+    return res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
   }
 
   next();
@@ -67,9 +68,7 @@ async function getActiveSchema(req, res, next) {
 
     next();
   } catch (error) {
-    log.error(
-      formatLogMsg(metadataObj, 'Failed to get active schema: ', error),
-    );
+    log.error(formatLogMsg(metadataObj, 'Failed to get active schema:', error));
     return res.status(500).json({ message: 'Error !' + error });
   }
 }
@@ -83,7 +82,7 @@ async function getActiveSchema(req, res, next) {
  * @param {express.NextFunction} next
  */
 async function protectRoutes(req, res, next) {
-  if (environment.isLocal) {
+  if (isLocal || isTest) {
     next();
     return;
   }
@@ -100,7 +99,7 @@ async function protectRoutes(req, res, next) {
   if (!eqSecret || eqSecret !== process.env.EQ_SECRET) return handleError();
 
   // For dev and stage only, check if user-id is authorized
-  if (environment.isDevelopment || environment.isStaging) {
+  if (isDevelopment || isStaging) {
     const apiUserId = req.header('x-api-user-id');
 
     // get config from private S3 bucket

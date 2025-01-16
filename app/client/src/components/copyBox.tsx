@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ReactComponent as Copy } from 'images/content_copy.svg';
+import Copy from 'images/content_copy.svg?react';
 import { Alert } from 'components/alert';
 // types
 import type { Status } from 'types';

@@ -18,7 +18,7 @@
       "url": " http://localhost:{port}/api",
       "variables": {
         "port": {
-          "default": "9090"
+          "default": "3002"
         }
       }
     }
@@ -134,6 +134,31 @@
       }
     },
     "/attains/actions/values/{column}": {
+      "post": {
+        "tags": ["ATTAINS - Values"],
+        "summary": "Query distinct column values",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/columnParam"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ValuesQueryRequestBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ValuesQuerySuccess"
+          },
+          "404": {
+            "$ref": "#/components/responses/ColumnNotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/attains/actionDocuments/values/{column}": {
       "post": {
         "tags": ["ATTAINS - Values"],
         "summary": "Query distinct column values",
@@ -593,7 +618,7 @@
         "description": "The column name for which values are queried.",
         "in": "path",
         "required": true,
-        "example": "assessmentUnitId",
+        "example": "state",
         "schema": {
           "type": "string"
         }
@@ -611,7 +636,7 @@
                 "filters": {
                   "objectId": [42]
                 },
-                "additionalColumns": ["assessmentUnitId"]
+                "additionalColumns": ["state"]
               },
               "properties": {
                 "text": {
@@ -874,7 +899,46 @@
                       "columns": {
                         "type": "array",
                         "items": {
-                          "type": "string"
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "preview": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string"
+                                },
+                                "order": {
+                                  "type": "integer"
+                                },
+                                "sortable": {
+                                  "type": "boolean"
+                                },
+                                "transform": {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string"
+                                    },
+                                    "args": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                },
+                                "width": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "ranked": {
+                              "type": "boolean"
+                            }
+                          }
                         }
                       },
                       "description": {
