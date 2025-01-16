@@ -1,9 +1,8 @@
-const { NODE_ENV, REACT_APP_CLOUD_SPACE, REACT_APP_SERVER_BASE_PATH } =
-  process.env;
+const { MODE, VITE_CLOUD_SPACE, VITE_SERVER_BASE_PATH } = import.meta.env;
 
 // allows the app to be accessed from a sub directory of a server (e.g. /expertquery)
 export const serverBasePath =
-  NODE_ENV === 'local' ? '' : REACT_APP_SERVER_BASE_PATH || '';
+  MODE === 'development' ? '' : VITE_SERVER_BASE_PATH || '';
 
 // NOTE: This app is configured to use [Create React App's proxy setup]
 // (https://create-react-app.dev/docs/proxying-api-requests-in-development/)
@@ -16,7 +15,14 @@ export const serverBasePath =
 // When deployed to Cloud.gov, the React app is built and served as static files
 // from the Express app, so it's one app running from a single port so no proxy
 // is needed for production.
-export const serverUrl = window.location.origin + serverBasePath;
+const loc = window.location;
+
+export const clientUrl = loc.origin + serverBasePath;
+
+export const serverUrl =
+  MODE === 'development'
+    ? `${loc.protocol}//${loc.hostname}:3002${serverBasePath}`
+    : clientUrl;
 
 export const cloudSpace =
-  NODE_ENV === 'development' ? 'dev' : REACT_APP_CLOUD_SPACE || '';
+  MODE === 'development' ? 'dev' : VITE_CLOUD_SPACE || '';

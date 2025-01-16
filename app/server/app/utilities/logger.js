@@ -36,7 +36,8 @@ function formatLogMsg(app_metadata, app_message, app_otherinfo) {
   let rtn_obj = { app_metadata: null, app_message: null, app_otherinfo: null };
 
   if (app_metadata != null) rtn_obj.app_metadata = app_metadata;
-  if (app_message != null) rtn_obj.app_message = app_message;
+  if (app_message != null)
+    rtn_obj.app_message = `${app_message} ${app_otherinfo?.toString() ?? ''}`;
   if (app_otherinfo != null) rtn_obj.app_otherinfo = app_otherinfo;
 
   return JSON.stringify(rtn_obj);
@@ -73,6 +74,11 @@ function populateMetdataObjFromRequest(request) {
     request.header('x-api-umbrella-request-id') === undefined
       ? null
       : request.header('x-api-umbrella-request-id');
+  metadata.request = {
+    url: request.url ?? null,
+    method: request.method ?? null,
+    body: request.body ?? null,
+  };
 
   return metadata;
 }

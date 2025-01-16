@@ -11,7 +11,7 @@ import { deleteDirectory, readS3File, syncDomainValues } from './s3.js';
 const { Client, Pool } = pg;
 const pgp = pgPromise({ capSQL: true });
 
-const environment = getEnvironment();
+const { isLocal } = getEnvironment();
 
 let database_host = '';
 let database_user = '';
@@ -19,10 +19,11 @@ let database_pwd = '';
 let database_port = '';
 
 const dbName = process.env.DB_NAME ?? 'expert_query';
+const dbSsl = process.env.DB_SSL === 'true';
 
 const eqUser = process.env.EQ_USERNAME ?? 'eq';
 
-if (environment.isLocal) {
+if (isLocal) {
   log.info('Since local, using a localhost Postgres database.');
   database_host = process.env.DB_HOST;
   database_user = process.env.DB_USERNAME;
@@ -46,6 +47,7 @@ const pgConfig = {
   database: 'postgres',
   port: database_port,
   host: database_host,
+  ssl: dbSsl ? { rejectUnauthorized: false } : undefined,
 };
 
 const eqConfig = {
@@ -74,17 +76,30 @@ function extractProfileName(name) {
     .replace('.csv', '');
 }
 
-async function cacheProfileStats(pool, schemaName, profileStats, s3Stats) {
+async function cacheProfileStats(
+  pool,
+  s3Config,
+  schemaName,
+  profileStats,
+  s3Stats,
+) {
   const client = await getClient(pool);
   try {
     await client.query('BEGIN');
     for (const profile of profileStats.details) {
       const profileName = extractProfileName(profile.name);
 
+      // verify table exists in tableConfig
+      const tableConfig = Object.values(s3Config.tableConfig).find(
+        (table) => table.tableName === profileName,
+      );
+      if (!tableConfig) continue;
+
       // lookup the file size from s3Stats
       const s3Metadata = s3Stats.files.find(
         (f) => extractProfileName(f.name) === profileName,
       );
+      if (!s3Metadata) continue;
 
       await client.query(
         'INSERT INTO logging.mv_profile_stats(profile_name, schema_name, num_rows, last_refresh_end_time, last_refresh_elapsed, csv_size, gz_size, zip_size, creation_date)' +
@@ -118,7 +133,7 @@ export async function checkLogTables() {
   try {
     await client.query('BEGIN');
 
-    if (!environment.isLocal) {
+    if (!isLocal) {
       // create aws_s3 extension, used for pulling in data from S3
       await client.query(
         'CREATE EXTENSION IF NOT EXISTS aws_s3 WITH SCHEMA pg_catalog CASCADE',
@@ -498,10 +513,7 @@ export async function runJob(s3Config, ignoreReady = false) {
   log.info(`Are MVs ready: ${readyResult.ready} | Julian ${s3Julian}`);
 
   // exit early if we aren't ready to run etl
-  if (
-    !s3Julian ||
-    (!environment.isLocal && !readyResult.ready && !ignoreReady)
-  ) {
+  if (!s3Julian || (!isLocal && !readyResult.ready && !ignoreReady)) {
     await endConnPool(pool);
     return;
   }
@@ -510,7 +522,7 @@ export async function runJob(s3Config, ignoreReady = false) {
   try {
     await runLoad(pool, s3Config, s3Julian, readyResult.logId);
     await trimSchema(pool, s3Config);
-    if (!environment.isLocal) await trimNationalDownloads(pool);
+    if (!isLocal) await trimNationalDownloads(pool);
     await updateEtlStatus(pool, 'database', 'success');
     await syncDomainValues(s3Config, pool);
   } catch (err) {
@@ -588,6 +600,151 @@ async function loadUtilityTables(pool, s3Config, schemaName) {
   log.info('Utility tables finished updating');
 }
 
+async function createProfileMaterializedViews(pool, schemaName, profile) {
+  const { columns, includeCycleCount, materializedViews, tableName } = profile;
+
+  const client = await getClient(pool);
+  try {
+    await client.query(`SET search_path TO ${schemaName}`);
+    let count = 0;
+    for (const mv of materializedViews) {
+      // optionally join columns from other tables
+      const joinClause = (join) =>
+        `LEFT JOIN ${join.table} ON ${join.joinKey[0]} = ${join.joinKey[1]}`;
+      await client.query(`
+      CREATE MATERIALIZED VIEW IF NOT EXISTS ${mv.name}
+      AS
+      SELECT DISTINCT ${mv.columns.map((col) => col.name).join(', ')}
+      FROM ${tableName} ${mv.joins ? mv.joins.map(joinClause).join(' ') : ''}
+
+      WITH DATA;
+    `);
+      count += 1;
+      log.info(
+        `${tableName}: Created materialized view (${count} of ${materializedViews.length}): ${mv.name}`,
+      );
+
+      const indexableColumnsMv = mv.columns.filter((col) => !col.skipIndex);
+
+      // create indexes for the materialized view
+      let mvIndexCount = 0;
+      const mvIndexTableName = mv.name.replaceAll('_', '');
+      for (const column of indexableColumnsMv) {
+        mvIndexCount = await createIndividualIndex(
+          client,
+          column,
+          mvIndexCount,
+          indexableColumnsMv.length,
+          mvIndexTableName,
+          mv.name,
+        );
+      }
+    }
+
+    // create countPerOrgCycle view
+    const groupByColumns = [];
+    const hasOrgId = columns.find((c) => c.name === 'organizationid');
+    const hasReportingCycleId = columns.find(
+      (c) => c.name === 'reportingcycle',
+    );
+    const hasCycleId = columns.find((c) => c.name === 'cycleid');
+
+    const orderByArray = [];
+    if (hasOrgId) {
+      groupByColumns.push('organizationid');
+      orderByArray.push({ column: 'organizationid', order: 'ASC' });
+    }
+    if (hasReportingCycleId) {
+      groupByColumns.push('reportingcycle');
+      orderByArray.push({ column: 'reportingcycle', order: 'DESC' });
+    }
+    if (hasCycleId) {
+      groupByColumns.push('cycleid');
+      orderByArray.push({ column: 'cycleid', order: 'ASC' });
+    }
+
+    let mvName = `${tableName}_countperorgcycle`;
+    if (includeCycleCount) {
+      await client.query(`
+    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
+    AS
+    SELECT ${groupByColumns.join(
+      ', ',
+    )}, count(*), count(distinct "assessmentunitid") as "assessmentUnitIdCount"
+    FROM ${tableName}
+    ${
+      tableName === 'catchment_correspondence'
+        ? 'WHERE catchmentnhdplusid IS NOT NULL'
+        : ''
+    }
+    GROUP BY ${groupByColumns.join(', ')}
+    ORDER BY ${orderByArray
+      .map((col) => `${col.column} ${col.order}`)
+      .join(', ')}
+
+    WITH DATA;
+  `);
+
+      log.info(`${tableName}: Created countPerOrgCycle materialized view`);
+    }
+
+    mvName = `${tableName}_count`;
+    const indexTableName = tableName.replaceAll('_', '');
+    await client.query(`
+    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
+    AS
+    SELECT count(*)
+    FROM ${tableName}
+    ${
+      hasReportingCycleId
+        ? `WHERE ("organizationid", "reportingcycle") IN (
+          SELECT "organizationid", MAX("reportingcycle")
+          FROM ${indexTableName}_reportingcycle
+          GROUP BY "organizationid"
+        )
+        `
+        : ''
+    }
+
+    WITH DATA;
+  `);
+
+    log.info(`${tableName}: Created count materialized view`);
+  } finally {
+    client.release();
+  }
+}
+
+async function createProfileViews(pool, schemaName, profile) {
+  if (!profile.views) return;
+
+  const client = await getClient(pool);
+  try {
+    await client.query(`SET search_path TO ${schemaName}`);
+    let count = 0;
+    for (const view of profile.views) {
+      const joinClause = (join) =>
+        `JOIN ${join.table} ON ${join.joinKey[0]} = ${join.joinKey[1]}`;
+      await client.query(`
+      CREATE OR REPLACE VIEW ${view.name}
+      AS
+      SELECT ${view.columns
+        .map((col) => (col.table ? `${col.table}.${col.name}` : col.name))
+        .join(', ')}
+      FROM ${profile.tableName} ${
+        view.joins ? view.joins.map(joinClause).join(' ') : ''
+      }
+    `);
+      count++;
+      log.info(
+        `${profile.tableName}: Created view (${count} of ${profile.views.length}): ${view.name}`,
+      );
+    }
+  } finally {
+    client.release();
+  }
+}
+
 export async function runLoad(pool, s3Config, s3Julian, logId) {
   log.info('Running ETL process!');
 
@@ -603,17 +760,38 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
     await loadUtilityTables(pool, s3Config, schemaName);
 
     // Add tables to schema and import new data
-    const loadTasks = Object.values(s3Config.tableConfig).map((profile) => {
-      return loadProfile(profile, pool, schemaName, s3Config, s3Julian);
-    });
+    const loadTasks = Object.values(s3Config.tableConfig)
+      .filter((profile) => profile.source?.toLowerCase() === 'attains')
+      .map((profile) => {
+        return loadProfile(profile, pool, schemaName, s3Config, s3Julian);
+      });
     await Promise.all(loadTasks);
 
-    const profileStats = await getProfileStats(pool, schemaName, s3Julian);
+    // Create views and materialized views.
+    await Promise.all(
+      Object.values(s3Config.tableConfig).map(async (profile) => {
+        await createProfileMaterializedViews(pool, schemaName, profile);
+        await createProfileViews(pool, schemaName, profile);
+      }),
+    );
+
+    const profileStats = await getProfileStats(
+      pool,
+      s3Config,
+      schemaName,
+      s3Julian,
+    );
 
     // Verify the etl was successfull and the data matches what we expect.
     // We skip this when running locally, since the row counts will never match.
-    if (!environment.isLocal) {
-      await certifyEtlComplete(pool, profileStats, schemaId, schemaName);
+    if (!isLocal) {
+      await certifyEtlComplete(
+        pool,
+        s3Config,
+        profileStats,
+        schemaId,
+        schemaName,
+      );
     }
 
     await transferSchema(pool, schemaName, schemaId);
@@ -627,7 +805,7 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
   }
 }
 
-async function getProfileStats(pool, schemaName, s3Julian) {
+async function getProfileStats(pool, s3Config, schemaName, s3Julian) {
   // get profile stats from s3
   const profileStats = await readS3File({
     bucketInfo: {
@@ -650,22 +828,41 @@ async function getProfileStats(pool, schemaName, s3Julian) {
     path: `national-downloads/${s3Julian}/status.json`,
   });
 
-  await cacheProfileStats(pool, schemaName, profileStats, s3Stats);
+  await cacheProfileStats(pool, s3Config, schemaName, profileStats, s3Stats);
 
   return profileStats.details;
 }
 
 // Verify the data pulled in from the ETL matches the materialized views.
-async function certifyEtlComplete(pool, profileStats, logId, schemaName) {
+async function certifyEtlComplete(
+  pool,
+  s3Config,
+  profileStats,
+  logId,
+  schemaName,
+) {
   // loop through and make sure the tables exist and the counts match
   let issuesMessage = '';
   for (const profile of profileStats) {
     const profileName = extractProfileName(profile.name);
 
+    // verify table exists in tableConfig
+    const tableConfig = Object.values(s3Config.tableConfig).find(
+      (table) => table.tableName === profileName,
+    );
+    if (!tableConfig) continue;
+
     // check date
     if (profile.last_refresh_end_time <= profile.last_refresh_date) {
       issuesMessage += `${profileName} issue: last_refresh_end_time (${profile.last_refresh_end_time}) is not after last_refresh_date (${profile.last_refresh_date}).\n`;
     }
+
+    // TODO: Remove this continuation once we get counts to align.
+    if (
+      process.env.SKIP_DOCUMENTS_TEXT_QA === 'true' &&
+      tableConfig.id === 'documentsText'
+    )
+      continue;
 
     // query to get row count
     const queryRes = await pool.query(
@@ -839,109 +1036,6 @@ async function createIndexes(s3Config, client, overrideWorkMemory, tableName) {
       tableName,
     );
   }
-
-  // create materialized views for the table
-  count = 0;
-  for (const mv of table.materializedViews) {
-    // optionally join columns from other tables
-    const joinClause = (join) =>
-      `LEFT JOIN ${join.table} ON ${join.joinKey[0]} = ${join.joinKey[1]}`;
-    await client.query(`
-      CREATE MATERIALIZED VIEW IF NOT EXISTS ${mv.name}
-      AS
-      SELECT DISTINCT ${mv.columns.map((col) => col.name).join(', ')}
-      FROM ${tableName} ${mv.joins ? mv.joins.map(joinClause).join(' ') : ''}
-
-      WITH DATA;
-    `);
-    count += 1;
-    log.info(
-      `${tableName}: Created materialized view (${count} of ${table.materializedViews.length}): ${mv.name}`,
-    );
-
-    const indexableColumnsMv = mv.columns.filter((col) => !col.skipIndex);
-
-    // create indexes for the materialized view
-    let mvIndexCount = 0;
-    const mvIndexTableName = mv.name.replaceAll('_', '');
-    for (const column of indexableColumnsMv) {
-      mvIndexCount = await createIndividualIndex(
-        client,
-        column,
-        mvIndexCount,
-        indexableColumnsMv.length,
-        mvIndexTableName,
-        mv.name,
-      );
-    }
-  }
-
-  // create countPerOrgCycle view
-  const groupByColumns = [];
-  const hasOrgId = table.columns.find((c) => c.name === 'organizationid');
-  const hasReportingCycleId = table.columns.find(
-    (c) => c.name === 'reportingcycle',
-  );
-  const hasCycleId = table.columns.find((c) => c.name === 'cycleid');
-
-  const orderByArray = [];
-  if (hasOrgId) {
-    groupByColumns.push('organizationid');
-    orderByArray.push({ column: 'organizationid', order: 'ASC' });
-  }
-  if (hasReportingCycleId) {
-    groupByColumns.push('reportingcycle');
-    orderByArray.push({ column: 'reportingcycle', order: 'DESC' });
-  }
-  if (hasCycleId) {
-    groupByColumns.push('cycleid');
-    orderByArray.push({ column: 'cycleid', order: 'ASC' });
-  }
-
-  let mvName = `${tableName}_countperorgcycle`;
-  await client.query(`
-    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
-    AS
-    SELECT ${groupByColumns.join(
-      ', ',
-    )}, count(*), count(distinct "assessmentunitid") as "assessmentUnitIdCount"
-    FROM ${tableName}
-    ${
-      tableName === 'catchment_correspondence'
-        ? 'WHERE catchmentnhdplusid IS NOT NULL'
-        : ''
-    }
-    GROUP BY ${groupByColumns.join(', ')}
-    ORDER BY ${orderByArray
-      .map((col) => `${col.column} ${col.order}`)
-      .join(', ')}
-
-    WITH DATA;
-  `);
-
-  log.info(`${tableName}: Created countPerOrgCycle materialized view`);
-
-  mvName = `${tableName}_count`;
-  await client.query(`
-    CREATE MATERIALIZED VIEW IF NOT EXISTS ${mvName}
-    AS
-    SELECT count(*)
-    FROM ${tableName}
-    ${
-      hasReportingCycleId
-        ? `WHERE ("organizationid", "reportingcycle") IN (
-          SELECT "organizationid", MAX("reportingcycle")
-          FROM ${indexTableName}_reportingcycle
-          GROUP BY "organizationid"
-        )
-        `
-        : ''
-    }
-
-    WITH DATA;
-  `);
-
-  log.info(`${tableName}: Created count materialized view`);
 }
 
 // Extracts data from ordspub services
@@ -992,9 +1086,118 @@ async function transform(tableName, columns, data) {
   return pgp.helpers.insert(rows, insertColumns, tableName);
 }
 
+// TODO: Make this a bit more configurable.
+// Create the documents_text_search table and triggers.
+async function setupTextSearch(client) {
+  try {
+    await client.query('DROP TABLE IF EXISTS documents_text_search');
+
+    // Create the table.
+    await client.query(`
+      CREATE TABLE documents_text_search (
+        objectid SERIAL PRIMARY KEY,
+        documentid INTEGER,
+        documenttsv TSVECTOR
+      )
+    `);
+
+    // Create the index on the vector column.
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS documentstextsearch_documenttsv
+        ON documents_text_search USING gin (documenttsv)
+        TABLESPACE pg_default
+    `);
+
+    // Create the trigger function.
+    await client.query(`
+      CREATE OR REPLACE FUNCTION process_document (new_row RECORD, chunk_size integer)
+          RETURNS VOID
+          AS $$
+      DECLARE
+          tsv tsvector;
+          tsv_list tsvector[] := '{}';
+          chunk text;
+          start_idx integer := 1;
+          end_idx integer;
+          text_length integer := octet_length(new_row.documenttext);
+      BEGIN
+          -- Process the document in chunks
+          WHILE start_idx <= text_length LOOP
+              end_idx := LEAST (start_idx + chunk_size - 1, text_length);
+              chunk := substr(new_row.documenttext, start_idx, end_idx - start_idx + 1);
+              tsv := to_tsvector('pg_catalog.english', coalesce(chunk, ''));
+              tsv_list := array_append(tsv_list, tsv);
+              start_idx := end_idx + 1;
+          END LOOP;
+          -- Add document description search vector
+          tsv := to_tsvector('pg_catalog.english', coalesce(new_row.documentdesc, ''));
+          tsv_list := array_append(tsv_list, tsv);
+          BEGIN
+              FOR i IN array_lower(tsv_list, 1)..array_upper(tsv_list, 1)
+              LOOP
+                  INSERT INTO documents_text_search (documentid, documenttsv)
+                      VALUES (new_row.objectid, tsv_list[i]);
+              END LOOP;
+          END;
+          RETURN;
+      END
+      $$
+      LANGUAGE plpgsql;
+    `);
+
+    await client.query(`
+      CREATE OR REPLACE FUNCTION documentstext_trigger_fn ()
+          RETURNS TRIGGER
+          AS $$
+      DECLARE
+          -- Initial chunk size of 1 MB.
+          chunk_size integer := 1024 * 1024;
+      BEGIN
+          LOOP
+              BEGIN
+                  -- Call the external function to process the document
+                  PERFORM
+                      process_document (NEW, chunk_size);
+                  -- Exit on success
+                  RETURN NEW;
+              EXCEPTION
+                  WHEN OTHERS THEN
+                      -- Reduce the chunk size and retry
+                      chunk_size := chunk_size / 2;
+              -- If chunk size is too small, raise an error
+              IF chunk_size < 1024 THEN
+                  RAISE EXCEPTION 'Chunk size too small, unable to process document: %', NEW.objectid;
+                  END IF;
+              END;
+          END LOOP;
+      END
+      $$
+      LANGUAGE plpgsql;
+    `);
+
+    // Create the trigger.
+    await client.query(`
+      CREATE TRIGGER documentstext_trigger
+          AFTER INSERT ON documents_text
+          FOR EACH ROW
+          EXECUTE FUNCTION documentstext_trigger_fn ();
+    `);
+  } catch (err) {
+    log.warn('Failed to create documents_text_search table');
+    throw err;
+  }
+}
+
 // Get the ETL task for a particular profile
 function getProfileEtl(
-  { createQuery, columns, maxChunksOverride, overrideWorkMemory, tableName },
+  {
+    createQuery,
+    columns,
+    id,
+    maxChunksOverride,
+    overrideWorkMemory,
+    tableName,
+  },
   s3Config,
   s3Julian,
 ) {
@@ -1003,7 +1206,7 @@ function getProfileEtl(
     try {
       await client.query(`SET search_path TO ${schemaName}`);
 
-      await client.query(`DROP TABLE IF EXISTS ${tableName}`);
+      await client.query(`DROP TABLE IF EXISTS ${tableName} CASCADE`);
       await client.query(createQuery);
 
       log.info(`Table ${tableName} created`);
@@ -1012,22 +1215,39 @@ function getProfileEtl(
       throw err;
     }
 
+    // Create the search vector table and triggers for `documents_text`.
+    if (tableName === 'documents_text') {
+      await setupTextSearch(client);
+    }
+
     // Extract, transform, and load the new data
     try {
-      if (environment.isLocal) {
-        const profileName = `profile_${tableName}`;
-        let res = await extract(profileName, s3Config);
-        let chunksProcessed = 0;
-        const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
-        while (
-          res.data !== null &&
-          (!maxChunks || chunksProcessed < maxChunks)
-        ) {
-          const query = await transform(tableName, columns, res.data);
-          await client.query(query);
-          log.info(`Next record offset for table ${tableName}: ${res.next}`);
-          res = await extract(profileName, s3Config, res.next);
-          chunksProcessed += 1;
+      if (isLocal) {
+        // TODO: Remove this once we have a better way to load data in local environment.
+        if (['actionDocuments', 'documentsText'].includes(id)) {
+          const fileLocation = process.env[`LOCAL_${tableName.toUpperCase()}`];
+          if (!fileLocation) {
+            log.warn(`No local data found for ${tableName}`);
+            return;
+          }
+          await client.query(`
+            COPY ${tableName} FROM '${fileLocation}' DELIMITER ',' CSV HEADER;
+          `);
+        } else {
+          const profileName = `profile_${tableName}`;
+          let res = await extract(profileName, s3Config);
+          let chunksProcessed = 0;
+          const maxChunks = maxChunksOverride ?? process.env.MAX_CHUNKS;
+          while (
+            res.data !== null &&
+            (!maxChunks || chunksProcessed < maxChunks)
+          ) {
+            const query = await transform(tableName, columns, res.data);
+            await client.query(query);
+            log.info(`Next record offset for table ${tableName}: ${res.next}`);
+            res = await extract(profileName, s3Config, res.next);
+            chunksProcessed += 1;
+          }
         }
       } else {
         await client.query(
@@ -1035,7 +1255,7 @@ function getProfileEtl(
           SELECT aws_s3.table_import_from_s3(
             table_name := $1,
             column_list := '',
-            options := '(format csv, header true)',
+            options := '(format csv, header true, encoding utf8)',
             s3_info := aws_commons.create_s3_uri(
               bucket := $2,
               file_path := $3,

@@ -1,13 +1,9 @@
+import { clientUrl, serverUrl } from '../constants';
+
 describe('Home Page', () => {
   beforeEach(() => {
     cy.visit('/');
   });
-
-  const location = window.location;
-  const origin =
-    location.hostname === 'localhost'
-      ? `${location.protocol}//${location.hostname}:3000`
-      : window.location.origin;
 
   it('Clear Search button is available when data profile is selected', () => {
     cy.selectProfile('Actions');
@@ -21,6 +17,7 @@ describe('Home Page', () => {
 
   it('All data profile option are select one by one and check Clear Search button is available ', () => {
     const profiles = [
+      'Actions Document Search',
       'Actions',
       'Assessment Units',
       'Assessments',
@@ -66,7 +63,7 @@ describe('Home Page', () => {
 
   it('Verify Download Status Pop-up with stubing api', () => {
     cy.selectProfile('Actions');
-    cy.intercept('POST', `${origin}/api/attains/actions/count`, {
+    cy.intercept('POST', `${serverUrl}/api/attains/actions/count`, {
       count: 510,
       maxCount: 1000,
     }).as('api-response');
@@ -86,7 +83,7 @@ describe('Home Page', () => {
 
   it('Verify disabled button when count is zero', () => {
     cy.selectProfile('Assessments');
-    cy.intercept('POST', `${origin}/api/attains/assessments/count`, {
+    cy.intercept('POST', `${serverUrl}/api/attains/assessments/count`, {
       count: 0,
     }).as('assessments-count');
     cy.findByRole('button', { name: 'Download' }).click();
@@ -106,7 +103,7 @@ describe('Home Page', () => {
 
     cy.url().should(
       'equal',
-      `${origin}/attains/sources?assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`,
+      `${clientUrl}/attains/sources?assessmentUnitId=SD-BA-L-FREEMAN_01&confirmed=N`,
     );
 
     cy.findAllByRole('button', { name: 'Clear Search' }).each(
@@ -116,7 +113,7 @@ describe('Home Page', () => {
     );
     cy.wait(2000);
     cy.findByText('Continue').should('exist').click();
-    cy.url().should('equal', `${origin}/attains`);
+    cy.url().should('equal', `${clientUrl}/attains/sources`);
   });
 
   it('Verify file format after clear the query', () => {
@@ -137,7 +134,10 @@ describe('Home Page', () => {
       'columns=objectId&columns=region&columns=state&columns=organizationType&columns=organizationId&columns=organizationName&columns=waterType&columns=locationTypeCode&columns=locationText&columns=useClassName&columns=assessmentUnitId&columns=assessmentUnitName&columns=assessmentUnitStatus&columns=reportingCycle&columns=cycleId&columns=locationDescription&columns=sizeSource&columns=sourceScale&columns=waterSize&columns=waterSizeUnits';
 
     const queryValue = `/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=R&state=TX&format=tsv&api_key=<YOUR_API_KEY>`;
-    cy.selectCopyBox('api-query-copy-box-container', `${origin}${queryValue}`);
+    cy.selectCopyBox(
+      'api-query-copy-box-container',
+      `${serverUrl}${queryValue}`,
+    );
 
     cy.findAllByRole('button', { name: 'Clear Search' }).each(
       ($elem, index) => {
@@ -148,11 +148,10 @@ describe('Home Page', () => {
     cy.findByText('Continue').should('exist').click();
 
     cy.selectProfile('Assessment Units');
-    cy.findByRole('button', { name: 'Advanced Queries' }).click();
 
     cy.selectCopyBox(
       'api-query-copy-box-container',
-      `${origin}/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=A&format=tsv&api_key=<YOUR_API_KEY>`,
+      `${serverUrl}/api/attains/assessmentUnits?${columnsValue}&assessmentUnitStatus=A&format=tsv&api_key=<YOUR_API_KEY>`,
     );
   });
 
@@ -175,5 +174,16 @@ describe('Home Page', () => {
 
     cy.findByText('Loading...').should('not.exist');
     cy.findByText('No options').should('exist');
+  });
+
+  it('Document text search preview window displays with results', () => {
+    cy.selectProfile('Actions Document Search');
+    cy.wait(500);
+    cy.findByRole('textbox', {
+      name: 'Search Text / Keyword',
+    }).type('water');
+    cy.findByRole('button', { name: 'Preview' }).click();
+    cy.wait(2000);
+    cy.findByRole('table').should('exist');
   });
 });

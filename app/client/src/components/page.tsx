@@ -1,10 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom';
 // components
-import { ReactComponent as Folder } from 'images/folder.svg';
-import { ReactComponent as Contact } from 'images/mail.svg';
+import Folder from 'images/folder.svg?react';
+import Contact from 'images/mail.svg?react';
 import { InPageNavLayout } from 'components/inPageNav';
 // config
-import { serverBasePath, serverUrl } from 'config';
+import { clientUrl, serverBasePath } from 'config';
 // types
 import type { FunctionComponent, ReactNode, SVGProps } from 'react';
 
@@ -32,7 +32,7 @@ export function Page({ children }: Readonly<PageProps>) {
             <HeaderLink
               className="margin-right-3"
               icon={Folder}
-              href={`${serverUrl}/national-downloads`}
+              href={`${clientUrl}/national-downloads`}
             >
               National Downloads
             </HeaderLink>
@@ -94,7 +94,12 @@ type HeaderLinkProps = {
   href: string;
 };
 
-function HeaderLink({ className, children, icon, href }: Readonly<HeaderLinkProps>) {
+function HeaderLink({
+  className,
+  children,
+  icon,
+  href,
+}: Readonly<HeaderLinkProps>) {
   const Icon = icon;
 
   return (
