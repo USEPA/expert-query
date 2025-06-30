@@ -296,6 +296,9 @@ export async function syncGlossary(s3Config, retryCount = 0) {
     await uploadFilePublic('glossary.json', JSON.stringify(terms));
 
     await updateEtlStatus(pool, 'glossary', 'success');
+  } catch (err) {
+    log.warn(`Sync Glossary failed! ${err}`);
+    await updateEtlStatus(pool, 'glossary', 'failed');
   } finally {
     await endConnPool(pool);
   }

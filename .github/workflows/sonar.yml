@@ -5,6 +5,10 @@ on:
       - develop
   pull_request:
     types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
 jobs:
   sonarcloud:
     name: SonarCloud

@@ -1,7 +1,10 @@
 /** Adapted from https://github.com/MetroStar/comet/blob/main/packages/comet-uswds/src/components/table/table.tsx */
-import table from '@uswds/uswds/js/usa-table';
 import classNames from 'classnames';
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
+// components
+import ArrowDown from 'images/sort_arrow_down.svg?react';
+import ArrowUnsorted from 'images/sort_arrow_unsorted.svg?react';
+import ArrowUp from 'images/sort_arrow_up.svg?react';
 // types
 import type { ReactNode, UIEvent } from 'react';
 
@@ -27,9 +30,9 @@ export const Table = ({
   className,
   tabIndex = -1,
 }: TableProps): React.ReactElement => {
-  const topScrollbarRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
+  const topScrollbarRef = useRef<HTMLDivElement | null>(null);
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const scrollLeft = e.currentTarget.scrollLeft;
     if (contentRef.current) contentRef.current.scrollLeft = scrollLeft;
@@ -47,7 +50,7 @@ export const Table = ({
   };
 
   const [sortDir, setSortDir] = useState<'ascending' | 'descending'>(
-    getSortDirection(initialSortDir), // FIXME: This is a bug (possible race condition with `epa.js`), it should be `initialSortDir`
+    initialSortDir,
   );
   const [sortIndex, setSortIndex] = useState(initialSortIndex);
 
@@ -89,12 +92,7 @@ export const Table = ({
           'scroll-container',
         )}
         onScroll={handleScroll}
-        ref={(node) => {
-          contentRef.current = node;
-          if (node && sortable) {
-            table.on(node);
-          }
-        }}
+        ref={contentRef}
       >
         <table
           className={classNames(
@@ -124,61 +122,111 @@ export const Table = ({
               {columns
                 .map((obj) => ({
                   ...obj,
-                  sortable: obj.sortable !== undefined ? obj.sortable : true,
+                  sortable: obj.sortable ?? true, // Default to sortable if not specified
                 }))
-                .map((column: TableColumn, index: number) => (
-                  <th
-                    id={`${id}-${column.id}`}
-                    key={column.id}
-                    data-sortable={(sortable && column.sortable) || null}
-                    scope="col"
-                    role="columnheader"
-                    aria-sort={
-                      sortable && column.sortable && sortIndex === index
-                        ? sortDir
-                        : undefined
+                .map((column: TableColumn, index: number) => {
+                  const colSortable = sortable && column.sortable;
+                  const colSorted = colSortable && sortIndex === index;
+                  const sortIcon = (() => {
+                    if (!colSortable) return null;
+
+                    const attributes = {
+                      className: 'usa-icon',
+                      'aria-hidden': true,
+                      focusable: false,
+                    };
+
+                    if (sortIndex === index) {
+                      return sortDir === 'ascending' ? (
+                        <ArrowUp {...attributes} />
+                      ) : (
+                        <ArrowDown {...attributes} />
+                      );
+                    } else {
+                      return <ArrowUnsorted {...attributes} />;
                     }
-                    onClick={() => handleHeaderClick(index)}
-                    style={{
-                      width: column.width ? `${column.width}px` : 'auto',
-                    }}
-                  >
-                    {column.name}
-                  </th>
-                ))}
+                  })();
+                  return (
+                    <Fragment key={column.id}>
+                      <th
+                        aria-label={
+                          colSortable
+                            ? `${column.name}, sortable column, currently ${colSorted ? `sorted ${sortDir}` : 'unsorted'}`
+                            : undefined
+                        }
+                        aria-sort={colSorted ? sortDir : undefined}
+                        id={`${id}-${column.id}`}
+                        scope="col"
+                        role="columnheader"
+                        style={{
+                          width: column.width ? `${column.width}px` : 'auto',
+                        }}
+                      >
+                        <div className="display-flex flex-align-center flex-justify">
+                          {column.name}
+                          <button
+                            className="usa-button sort-button"
+                            onClick={() => handleHeaderClick(index)}
+                            title={`Click to sort by ${column.name} in ${
+                              colSorted ? getSortDirection(sortDir) : sortDir
+                            } order`}
+                            type="button"
+                          >
+                            {sortIcon}
+                          </button>
+                        </div>
+                      </th>
+                    </Fragment>
+                  );
+                })}
             </tr>
           </thead>
           <tbody>
-            {data.map((row, i: number) => {
-              const rowData: TableCell[] = [];
-              row.forEach((cell: string | number | TableCell) => {
-                if (sortable) {
-                  rowData.push({
-                    value: isCellSpec(cell) ? cell.value : cell,
-                    sortValue: isCellSpec(cell)
-                      ? (cell.sortValue ?? cell.value ?? '').toString()
-                      : cell,
-                  });
-                } else {
-                  rowData.push({
-                    value: isCellSpec(cell) ? cell.value : cell,
-                  });
-                }
-              });
+            {data
+              .map((row) =>
+                row.map((cell) => ({
+                  value: isCellSpec(cell) ? cell.value : cell,
+                  sortValue: isCellSpec(cell)
+                    ? (cell.sortValue ?? cell.value ?? '')
+                    : cell,
+                })),
+              )
+              .sort((a, b) => {
+                if (!sortable || sortIndex < 0) return 0;
 
-              return (
+                const isAscending = sortDir === 'ascending';
+                const value1 = (isAscending ? a : b)[sortIndex].sortValue;
+                const value2 = (isAscending ? b : a)[sortIndex].sortValue;
+
+                // If neither value is empty, and if both values are already numbers, compare numerically.
+                if (
+                  value1 &&
+                  value2 &&
+                  !Number.isNaN(Number(value1)) &&
+                  !Number.isNaN(Number(value2))
+                ) {
+                  return (value1 as number) - (value2 as number);
+                }
+                // Otherwise, compare alphabetically based on current user locale.
+                return value1
+                  .toString()
+                  .localeCompare(value2.toString(), navigator.language, {
+                    numeric: true,
+                    ignorePunctuation: true,
+                  });
+              })
+              .map((row, i: number) => (
                 <tr key={`tr-${i}`}>
-                  {rowData.map((col, j) => (
+                  {row.map((col, j) => (
                     <td
                       key={`td-${j}`}
-                      data-sort-value={sortable ? col.sortValue : col.value}
+                      data-sort-active={j === sortIndex ? 'true' : undefined}
                     >
                       {col.value}
                     </td>
                   ))}
                 </tr>
-              );
-            })}
+              ))}
           </tbody>
         </table>
         {sortable && (
@@ -196,7 +244,7 @@ export const Table = ({
 ## Types
 */
 
-type TableProps<T = any> = {
+type TableProps = {
   /**
    * The unique identifier for this component
    */
@@ -208,7 +256,7 @@ type TableProps<T = any> = {
   /**
    * The data to display in the table rows
    */
-  data: T[];
+  data: TableRow[];
   /**
    * An optional caption to display above the table
    */
@@ -270,5 +318,7 @@ type TableCell = {
   value: ReactNode;
   sortValue?: string | number;
 };
+
+type TableRow = (string | number | TableCell)[];
 
 export default Table;

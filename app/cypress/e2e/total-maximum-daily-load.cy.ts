@@ -34,7 +34,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.findByRole('checkbox', { name: 'EPA' }).click({ force: true });
 
     //NPDES ID
-    cy.selectOption('input-npdesIdentifier', '477001');
+    cy.selectOption('input-npdesIdentifier', 'IA0477001');
 
     const queryValue = 'actionAgency=EPA&npdesIdentifier=IA0477001';
 
@@ -73,7 +73,7 @@ describe('Data Profile Total Maximum Daily Load', () => {
     cy.selectOption('input-implicitMarginOfSafety', 'implicit margin of safety');
 
     //NPDES ID
-    cy.selectOption('input-npdesIdentifier', '477001');
+    cy.selectOption('input-npdesIdentifier', 'IA0477001');
 
     //Source Type
     cy.findByRole('checkbox', { name: 'Point / Nonpoint source' }).click({

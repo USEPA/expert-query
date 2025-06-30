@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from 'vite';
+import { createHtmlPlugin } from 'vite-plugin-html';
 import istanbul from 'vite-plugin-istanbul';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
@@ -12,7 +13,24 @@ export default ({ mode }) => {
 
   // allows the app to be accessed from a sub directory of a server (e.g. /csb)
   const serverBasePath =
-    mode === "development" ? "" : VITE_SERVER_BASE_PATH || "";
+    mode === 'development' ? '' : VITE_SERVER_BASE_PATH || '';
+
+  let productionOnlyPlugins = [];
+  if (mode === 'production') {
+    productionOnlyPlugins.push(
+      createHtmlPlugin({
+        minify: {
+          collapseWhitespace: true,
+          removeComments: true,
+          removeRedundantAttributes: true,
+          collapseBooleanAttributes: true,
+          removeEmptyAttributes: true,
+          minifyCSS: true,
+          minifyJS: true,
+        },
+      }),
+    );
+  }
 
   return defineConfig({
     base: serverBasePath,
@@ -47,6 +65,7 @@ export default ({ mode }) => {
       }),
       svgr(),
       viteTsconfigPaths(),
+      ...productionOnlyPlugins,
     ],
     server: {
       open: true,

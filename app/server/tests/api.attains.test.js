@@ -39,6 +39,7 @@ describe('API Attains Tests', () => {
   test('POST /api/attains/sources should return data', async () => {
     await supertest(app)
       .post('/api/attains/sources')
+      .send({})
       .expect(200)
       .expect('Content-Type', /json/);
   });

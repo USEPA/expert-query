@@ -107,5 +107,8 @@ const pool = new pg.Pool({
   max: parseInt(process.env.DB_POOL_MAX),
   ssl: dbSsl ? { rejectUnauthorized: false } : undefined,
 });
+pool.on('error', (err, client) => {
+  log.error('Unexpected error in PostgreSQL connection pool', err);
+});
 
 export { appendToWhere, knex, pool, queryPool };

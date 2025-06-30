@@ -34,7 +34,7 @@ import { clientUrl, serverUrl } from 'config';
 import { isAbort, postData, useAbort } from 'utils';
 // types
 import type { Content } from 'contexts/content';
-import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import type { ChangeEvent, Dispatch, JSX, SetStateAction } from 'react';
 import type { GroupBase } from 'react-select';
 import type { LoadOptions } from 'react-select-async-paginate';
 import type {
@@ -997,7 +997,7 @@ function SelectFilter({
     [secondaryFilterKey],
   );
 
-  const MenuList = wrapMenuList(CustomMenuList);
+  const MenuList = wrapMenuList(CustomMenuList<Option>);
 
   // Memoize the context filters so options can be cached correctly
   const [contextFiltersMemo, setContextFiltersMemo] = useState(contextFilters);
@@ -1193,9 +1193,9 @@ function useProfile(
         setProfile(profiles[profileArg]);
         setProfileOption(
           'dataProfile' in listOptions
-            ? listOptions.dataProfile.find(
+            ? (listOptions.dataProfile.find(
                 (option) => option.value === profileArg,
-              ) ?? null
+              ) ?? null)
             : null,
         );
       }
@@ -1688,7 +1688,7 @@ function removeNulls<T>(fields: Array<T | null>) {
 
 function getStaticOptions(fieldName: string, staticOptions: StaticOptions) {
   return staticOptions.hasOwnProperty(fieldName)
-    ? staticOptions[fieldName as keyof StaticOptions] ?? []
+    ? (staticOptions[fieldName as keyof StaticOptions] ?? [])
     : null;
 }
 
@@ -1903,7 +1903,7 @@ async function matchOptions(
   }
 
   const matchesArray = Array.from(matches);
-  return multiple ? matchesArray : matchesArray.pop() ?? null;
+  return multiple ? matchesArray : (matchesArray.pop() ?? null);
 }
 
 function matchYear(values: InputValue) {
