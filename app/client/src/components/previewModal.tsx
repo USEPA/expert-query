@@ -43,9 +43,9 @@ export function PreviewModal<D extends QueryData>({
       return [
         {
           id: RANK_KEY,
-          name: 'Rank (%)',
+          name: 'Match (%)',
           sortable: true,
-          width: 100,
+          width: 105,
         },
         ...columnDefs,
       ];

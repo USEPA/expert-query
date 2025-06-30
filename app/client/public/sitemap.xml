@@ -17,6 +17,10 @@
         <changefreq>weekly</changefreq>
     </url>
     <url>
+        <loc>https://owapps.epa.gov/expertquery/attains/actionDocuments</loc>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
         <loc>https://owapps.epa.gov/expertquery/attains/assessmentUnits</loc>
         <changefreq>weekly</changefreq>
     </url>

@@ -1,6 +1,8 @@
 import { defineConfig } from "cypress";
+import { allureCypress } from 'allure-cypress/reporter';
 
 export default defineConfig({
+  chromeWebSecurity: false,
   defaultCommandTimeout: 8000,
   retries: 1,
   video: true,
@@ -16,6 +18,9 @@ export default defineConfig({
     // You may want to clean this up later by importing these.
     setupNodeEvents(on, config) {
       require("@cypress/code-coverage/task")(on, config);
+      allureCypress(on, config, {
+        resultsDir: 'combined_results_reports/results',
+      });
 
       return config;
     },

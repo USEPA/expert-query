@@ -101,7 +101,7 @@ describe('Data Profile Assessment Units', () => {
     cy.findByRole('checkbox', { name: 'Active' }).click({ force: true });
 
     //Organization Id
-    cy.selectOption('input-organizationId', 'montana');
+    cy.selectOption('input-organizationId', 'MTDEQ');
 
     //Use Class Name
     cy.selectOption('input-useClassName', 'a-1');

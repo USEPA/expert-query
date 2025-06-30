@@ -11,6 +11,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   changes:
@@ -90,7 +93,7 @@ jobs:
       # Set up node and npm
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       
       # Run front-end processes (install, lint, test, bundle)
       - name: Cache node modules
@@ -216,7 +219,7 @@ jobs:
       # Set up node and npm
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       # Run CloudFoundry/Cloud.gov deployment
       - name: Set up Cloud Foundry CLI

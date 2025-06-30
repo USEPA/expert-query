@@ -17,37 +17,38 @@ type Props = {
 // set how those components should be rendered.
 export function MarkdownContent({ className, children, components }: Readonly<Props>) {
   return (
-    <ReactMarkdown
-      className={className ?? ''}
-      children={children}
-      remarkPlugins={[remarkGfm]}
-      components={{
-        ...components,
-        a: ({ node, ...props }) => {
-          // NOTE: The only attribute GFM allows you to set on hyperlinks is
-          // title attributes, so authors of the markdown content will need to
-          // set the title attribute to "external" for any links that should
-          // open in a new tab. For example:
-          // [contact EPA](https://www.epa.gov/aboutepa/forms/contact-epa "external")
-          //
-          // If a different title attribute is set in the markdown (unlikely)
-          // the code below will use the title set in the markdown as the
-          // rendered anchor link's title attribute.
-          const title = node?.properties?.title;
-          const externalLink = title === 'external';
-          return (
-            <a
-              {...props}
-              className="usa-link"
-              title={title ? (externalLink ? '' : title.toString()) : ''}
-              target={externalLink ? '_blank' : ''}
-              rel={externalLink ? 'noopener noreferrer' : ''}
-            >
-              {props.children}
-            </a>
-          );
-        },
-      }}
-    />
+    <div className={className ?? ''}>
+      <ReactMarkdown
+        children={children}
+        remarkPlugins={[remarkGfm]}
+        components={{
+          ...components,
+          a: ({ node, ...props }) => {
+            // NOTE: The only attribute GFM allows you to set on hyperlinks is
+            // title attributes, so authors of the markdown content will need to
+            // set the title attribute to "external" for any links that should
+            // open in a new tab. For example:
+            // [contact EPA](https://www.epa.gov/aboutepa/forms/contact-epa "external")
+            //
+            // If a different title attribute is set in the markdown (unlikely)
+            // the code below will use the title set in the markdown as the
+            // rendered anchor link's title attribute.
+            const title = node?.properties?.title;
+            const externalLink = title === 'external';
+            return (
+              <a
+                {...props}
+                className="usa-link"
+                title={title ? (externalLink ? '' : title.toString()) : ''}
+                target={externalLink ? '_blank' : ''}
+                rel={externalLink ? 'noopener noreferrer' : ''}
+              >
+                {props.children}
+              </a>
+            );
+          },
+        }}
+      />
+    </div>
   );
 }

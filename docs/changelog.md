@@ -1,5 +1,21 @@
 # Change Log
 
+## 1.2.1 (July 2025)
+
+### Changed
+
+- Removed unnecessary meta tags.
+
+- Fixed issue with error not being caught when glossary services are down.
+
+- Fixed issue with document preview table initially sorting by Rank ascending, instead of descending.
+
+### Chores
+
+- Updated dependencies.
+
+- Updated automated testing logic to save a report of test results.
+
 ## 1.2.0 (January 2024)
 
 ### Added
