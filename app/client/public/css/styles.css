@@ -92,6 +92,29 @@
   cursor: pointer;
 }
 
+.sort-button,
+.sort-button:focus,
+.sort-button:hover {
+  background-color: transparent;
+  background-position: center;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+  cursor: pointer;
+  display: inline-block;
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.sort-button .usa-icon {
+  height: 1.5rem;
+  vertical-align: middle;
+  width: 1.5rem;
+}
+
 .layout-fixed {
   table-layout: fixed;
 }

@@ -928,7 +928,7 @@
     "source": "attains",
     "tableName": "assessment_units",
     "idColumn": "objectid",
-    "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units ( objectid INTEGER PRIMARY KEY, state VARCHAR, region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30), locationtypecode VARCHAR(22), locationtext VARCHAR(100) )",
+    "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units ( objectid INTEGER PRIMARY KEY, state VARCHAR, region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0), cycleid NUMERIC(38,0), assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30), locationtypecode VARCHAR(22), locationtext VARCHAR(100) )",
     "includeCycleCount": true,
     "columns": [
       {
@@ -1098,7 +1098,7 @@
     "source": "attains",
     "tableName": "assessment_units_monitoring_locations",
     "idColumn": "objectid",
-    "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units_monitoring_locations ( objectid INTEGER PRIMARY KEY, state VARCHAR, region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0) NOT NULL, cycleid NUMERIC(38,0) NOT NULL, assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, monitoringlocationorgid VARCHAR(30), monitoringlocationid VARCHAR(35), monitoringlocationdatalink VARCHAR(255), assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30) )",
+    "createQuery": "CREATE TABLE IF NOT EXISTS assessment_units_monitoring_locations ( objectid INTEGER PRIMARY KEY, state VARCHAR, region VARCHAR(2), organizationid VARCHAR(30) NOT NULL, organizationname VARCHAR(150) NOT NULL, organizationtype VARCHAR(30) NOT NULL, reportingcycle NUMERIC(4,0), cycleid NUMERIC(38,0), assessmentunitid VARCHAR(50) NOT NULL, assessmentunitname VARCHAR(255) NOT NULL, locationdescription VARCHAR(2000) NOT NULL, watertype VARCHAR(40) NOT NULL, watersize NUMERIC(18,4) NOT NULL, watersizeunits VARCHAR(15) NOT NULL, monitoringlocationorgid VARCHAR(30), monitoringlocationid VARCHAR(35), monitoringlocationdatalink VARCHAR(255), assessmentunitstatus VARCHAR(1) NOT NULL, useclassname VARCHAR(50), sizesource VARCHAR(100), sourcescale VARCHAR(30) )",
     "includeCycleCount": true,
     "columns": [
       {

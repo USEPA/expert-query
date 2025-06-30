@@ -75,20 +75,20 @@ describe('API Tests', () => {
     await supertest(app)
       .get('/bogusRoute')
       .expect(404)
-      .expect('Content-type', 'text/html; charset=UTF-8');
+      .expect('Content-type', 'text/html; charset=utf-8');
   });
 
   test('GET /404.html should return 404 and html', async () => {
     await supertest(app)
       .get('/404.html')
       .expect(404)
-      .expect('Content-type', 'text/html; charset=UTF-8');
+      .expect('Content-type', 'text/html; charset=utf-8');
   });
 
   test('GET /500.html should return 200 and html', async () => {
     await supertest(app)
       .get('/500.html')
       .expect(200)
-      .expect('Content-type', 'text/html; charset=UTF-8');
+      .expect('Content-type', 'text/html; charset=utf-8');
   });
 });

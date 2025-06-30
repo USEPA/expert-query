@@ -1,4 +1,5 @@
 import * as uswds from '@uswds/compile';
+import { series } from 'gulp';
 
 uswds.settings.version = 3;
 
@@ -9,8 +10,13 @@ uswds.paths.dist.js = './public/uswds/js';
 uswds.paths.dist.theme = './public/scss';
 
 export const init = async () => {
-  await uswds.copyAssets();
-  uswds.compile();
+  const task = series(
+    uswds.copyFonts,
+    uswds.copyImages,
+    uswds.copyJS,
+    uswds.compile,
+  );
+  await task();
 };
 
 export const compile = uswds.compile;

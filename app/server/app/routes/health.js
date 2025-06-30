@@ -31,11 +31,10 @@ export default function (app, basePath) {
 
     try {
       // check etl status in db
-      const results =
-        (await queryPool(
-          knex.withSchema('logging').from('etl_status').select('glossary'),
-        ),
-        true);
+      const results = await queryPool(
+        knex.withSchema('logging').from('etl_status').select('glossary'),
+        true,
+      );
       if (results.glossary === 'failed') {
         return res.status(200).json({ status: 'FAILED-DB' });
       }
