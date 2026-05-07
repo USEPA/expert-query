@@ -205,6 +205,11 @@
       "domain": "cycleScheduledForTmdl",
       "boundary": "high"
     },
+    "cycleStatus": {
+      "key": "cycleStatus",
+      "label": "Cycle Status",
+      "type": "multiselect"
+    },
     "delisted": {
       "key": "delisted",
       "label": "Delisted",
@@ -594,7 +599,8 @@
         "fields": [
           "reportingCycle",
           "cycleLastAssessedLo",
-          "cycleLastAssessedHi"
+          "cycleLastAssessedHi",
+          "cycleStatus"
         ]
       },
       {
