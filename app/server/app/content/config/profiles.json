@@ -123,7 +123,6 @@
       { "key": "waterType" },
       { "key": "reportingCycle" },
       { "key": "cycleLastAssessed" },
-      { "key": "cycleStatus" },
       { "key": "assessmentUnitId" },
       { "key": "assessmentUnitName" },
       { "key": "assessmentUnitStatus" },
