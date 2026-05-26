@@ -5,5 +5,5 @@
   "domainValues": "https://attains.epa.gov/attains-public/api/domains",
   "glossaryURL": "https://etss.epa.gov/synaptica_rest_services/api/vocabs/name/Expert%20Query%20Glossary/terms/full",
   "materializedViews": "https://ordspub.epa.gov/ords/ow/attains_eq",
-  "stateCodes": "https://attains.epa.gov/attains-public/api/states"
+  "stateCodes": "https://api.epa.gov/attains/states?api_key=VgIEg4j6FpfGKq7jVfEsLRcT3mVze1ERIzi3e4vj"
 }
