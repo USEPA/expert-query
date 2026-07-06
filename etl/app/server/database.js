@@ -548,12 +548,18 @@ export async function getActiveSchema(pool) {
 }
 
 async function fetchStateValues(s3Config, retryCount = 0) {
+  const apiKey = s3Config.services.attains.apiKey;
   const res = await fetchRetry({
-    url: s3Config.services.stateCodes,
+    url: `${s3Config.services.attains.serviceUrl}states`,
     s3Config,
     serviceName: 'States',
     callOptions: {
       timeout: s3Config.config.webServiceTimeout,
+      headers: apiKey
+        ? {
+            'X-Api-Key': apiKey,
+          }
+        : {},
     },
   });
 
