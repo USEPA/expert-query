@@ -444,7 +444,7 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
             .map((col) => col.name)
             .concat(
               knex.raw(
-                `ts_rank_cd(${documentQueryColumn.name}, websearch_to_tsquery('english', ?), 1 | 32) AS rank`,
+                `ts_rank_cd(${documentQueryColumn.name}, websearch_to_tsquery('pg_catalog.english', ?), 1 | 32) AS rank`,
                 [documentQuery],
               ),
             ),
@@ -452,7 +452,7 @@ function parseDocumentSearchCriteria(req, query, profile, queryParams) {
           .withSchema(req.activeSchema)
           .from(target.tableName ?? target.name)
           .whereRaw(
-            `${documentQueryColumn.name} @@ websearch_to_tsquery('english', ?)`,
+            `${documentQueryColumn.name} @@ websearch_to_tsquery('pg_catalog.english', ?)`,
             [documentQuery],
           );
       })
