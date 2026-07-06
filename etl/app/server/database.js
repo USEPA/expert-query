@@ -6,7 +6,12 @@ import { setTimeout } from 'timers/promises';
 // utils
 import { fetchRetry, getEnvironment } from './utilities/index.js';
 import { log } from './utilities/logger.js';
-import { deleteDirectory, readS3File, syncDomainValues } from './s3.js';
+import {
+  deleteDirectory,
+  fetchStateValues,
+  readS3File,
+  syncDomainValues,
+} from './s3.js';
 
 const { Client, Pool } = pg;
 const pgp = pgPromise({ capSQL: true });
@@ -547,31 +552,23 @@ export async function getActiveSchema(pool) {
   return schemas.rows[0].schema_name;
 }
 
-async function fetchStateValues(s3Config, retryCount = 0) {
-  const apiKey = s3Config.services.attains.apiKey;
-  const res = await fetchRetry({
-    url: `${s3Config.services.attains.serviceUrl}states`,
-    s3Config,
-    serviceName: 'States',
-    callOptions: {
-      timeout: s3Config.config.webServiceTimeout,
-      headers: apiKey
-        ? {
-            'X-Api-Key': apiKey,
-          }
-        : {},
-    },
-  });
-
-  return res.data.data;
-}
-
 async function loadStatesTable(pool, s3Config, schemaName) {
   const client = await pool.connect();
   try {
     const uniqueCodes = new Set();
-    const states = (await fetchStateValues(s3Config)).filter((state) => {
-      return uniqueCodes.has(state.code) ? false : uniqueCodes.add(state.code);
+    const statesFromS3 = await readS3File({
+      bucketInfo: {
+        accessKeyId: process.env.CF_S3_PUB_ACCESS_KEY,
+        bucketId: process.env.CF_S3_PUB_BUCKET_ID,
+        region: process.env.CF_S3_PUB_REGION,
+        secretAccessKey: process.env.CF_S3_PUB_SECRET_KEY,
+      },
+      path: `content-etl/domainValues/state.json`,
+    });
+    const states = statesFromS3.state.filter((state) => {
+      return uniqueCodes.has(state.value)
+        ? false
+        : uniqueCodes.add(state.value);
     });
 
     await client.query('BEGIN');
@@ -588,7 +585,7 @@ async function loadStatesTable(pool, s3Config, schemaName) {
     for (const state of states) {
       await client.query(
         'INSERT INTO states(statecode, statename) VALUES ($1, $2)',
-        [state.code, state.name],
+        [state.value, state.label],
       );
     }
     await client.query('COMMIT');
@@ -761,6 +758,16 @@ export async function runLoad(pool, s3Config, s3Julian, logId) {
 
   try {
     const schemaId = await createNewSchema(pool, schemaName, s3Julian, logId);
+
+    // Attempt to refresh the states file in s3.
+    // If it fails continue with old states file in s3.
+    try {
+      await fetchStateValues(pool, s3Config);
+    } catch (err) {
+      console.warn(
+        `Failed to fetch state values, continuing ETL process: ${err}`,
+      );
+    }
 
     // Load tables first that will be used when creating profile materialized views
     await loadUtilityTables(pool, s3Config, schemaName);

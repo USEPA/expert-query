@@ -227,7 +227,7 @@ export async function syncDomainValues(s3Config, poolParam = null) {
 }
 
 // Sync state codes and labels from the states service
-async function fetchStateValues(pool, s3Config) {
+export async function fetchStateValues(pool, s3Config) {
   const apiKey = s3Config.services.attains.apiKey;
   const res = await fetchRetry({
     url: `${s3Config.services.attains.serviceUrl}states`,
