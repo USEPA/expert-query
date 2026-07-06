@@ -435,7 +435,7 @@ async function logEtlExtractError(pool, etlLogId, extractError) {
   try {
     await pool.query(
       'UPDATE logging.etl_log SET extract_error = $1 WHERE id = $2',
-      [JSON.stringify(extractError), etlLogId],
+      [extractError, etlLogId],
     );
     log.info('ETL extract errors logged');
   } catch (err) {
@@ -1352,10 +1352,20 @@ export async function isDataReady(pool) {
     });
 
     if (ready.problems.length > 0) {
-      await logEtlExtractError(pool, etlLogId, ready.problems);
+      await logEtlExtractError(pool, etlLogId, JSON.stringify(ready.problems));
       ready.problems.forEach((problem) => {
         log.error(`Error Building MV Backups: ${problem}`);
       });
+    }
+
+    // verify each profile has at least 1 row
+    const emptyProfiles = ready.details.filter((i) => i.num_rows === 0);
+    if (emptyProfiles.length > 0) {
+      const emptyProfileNames = emptyProfiles.map((p) => p.name).join(', ');
+      const errorMessage = `The following profiles are empty: ${emptyProfileNames}`;
+      log.error(errorMessage);
+      await logEtlExtractError(pool, etlLogId, errorMessage);
+      return { ready: false, julian, logId: etlLogId };
     }
 
     if (ready.ready === 'go') return { ready: true, julian, logId: etlLogId };
