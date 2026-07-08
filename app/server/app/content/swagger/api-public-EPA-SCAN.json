@@ -595,6 +595,9 @@
             "$ref": "#/components/parameters/cycleScheduledForTmdlHiParam"
           },
           {
+            "$ref": "#/components/parameters/cycleStatus"
+          },
+          {
             "$ref": "#/components/parameters/delistedParam"
           },
           {
@@ -817,6 +820,9 @@
           },
           {
             "$ref": "#/components/parameters/cycleScheduledForTmdlHiParam"
+          },
+          {
+            "$ref": "#/components/parameters/cycleStatus"
           },
           {
             "$ref": "#/components/parameters/delistedParam"
@@ -4392,6 +4398,18 @@
         "example": 2002,
         "schema": {
           "type": "integer"
+        }
+      },
+      "cycleStatus": {
+        "name": "cycleStatus",
+        "in": "query",
+        "explode": true,
+        "example": "EPA Final Action",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "delistedParam": {
