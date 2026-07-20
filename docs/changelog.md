@@ -1,5 +1,25 @@
 # Change Log
 
+## 1.3.0 (July 2026)
+
+### Added
+
+- Added a CycleStatus to the assessments profile.
+
+### Changed
+
+- Updated attains service calls in ETL to pass an API key.
+
+- Updated ETL to continue if the attains states service is down. When this happens the ETL will use the last state.json file in the S3 bucket.
+
+- Updated ETL to verify profiles in s3 bucket actually contain data prior to attempting to ingest data.
+
+- Fixed issue of some document search queries not returning anything, even though there is data (i.e. "HAWQS" and "phased").
+
+### Chores
+
+- Updated dependencies.
+
 ## 1.2.1 (July 2025)
 
 ### Changed

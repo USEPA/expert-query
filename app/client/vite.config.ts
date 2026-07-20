@@ -3,7 +3,6 @@ import { createHtmlPlugin } from 'vite-plugin-html';
 import istanbul from 'vite-plugin-istanbul';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
-import viteTsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vitejs.dev/config/
 export default ({ mode }) => {
@@ -51,6 +50,13 @@ export default ({ mode }) => {
         },
       },
     },
+    resolve: {
+      alias: {
+        // swagger-ui-react expects a default export shape for immutable.
+        immutable: 'immutable/dist/immutable.js',
+      },
+      tsconfigPaths: true,
+    },
     define: {
       'process.env': {},
     },
@@ -64,7 +70,6 @@ export default ({ mode }) => {
         requireEnv: false,
       }),
       svgr(),
-      viteTsconfigPaths(),
       ...productionOnlyPlugins,
     ],
     server: {

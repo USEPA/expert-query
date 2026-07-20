@@ -141,11 +141,20 @@ export async function uploadFilePublic(
 
 // Sync the domain values corresponding to a single domain name
 async function fetchSingleDomain(name, mapping, pool, s3Config) {
+  const apiKey = s3Config.services.attains.apiKey;
+  const url = `${s3Config.services.attains.serviceUrl}domains`;
   const res = await fetchRetry({
-    url: `${s3Config.services.domainValues}?domainName=${mapping.domainName}`,
+    url: `${url}?domainName=${mapping.domainName}`,
     s3Config,
     serviceName: `Domain Values (${mapping.domainName})`,
-    callOptions: { timeout: s3Config.config.webServiceTimeout },
+    callOptions: {
+      timeout: s3Config.config.webServiceTimeout,
+      headers: apiKey
+        ? {
+            'X-Api-Key': apiKey,
+          }
+        : {},
+    },
   });
 
   const valuesAdded = new Set();
@@ -218,13 +227,19 @@ export async function syncDomainValues(s3Config, poolParam = null) {
 }
 
 // Sync state codes and labels from the states service
-async function fetchStateValues(pool, s3Config) {
+export async function fetchStateValues(pool, s3Config) {
+  const apiKey = s3Config.services.attains.apiKey;
   const res = await fetchRetry({
-    url: s3Config.services.stateCodes,
+    url: `${s3Config.services.attains.serviceUrl}states`,
     s3Config,
     serviceName: 'States',
     callOptions: {
       timeout: s3Config.config.webServiceTimeout,
+      headers: apiKey
+        ? {
+            'X-Api-Key': apiKey,
+          }
+        : {},
     },
   });
 
