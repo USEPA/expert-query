@@ -3,13 +3,6 @@ import cypress from 'eslint-plugin-cypress';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-// typescript-eslint does not support TS 7 yet (typescript-eslint#10940), which
-// is why this package holds typescript at 6.x alongside the client.
-//
-// Note on structure: flat config requires a plugin to be registered in the same
-// configuration object as any of its rules, so the override blocks below
-// re-declare `@typescript-eslint` rather than riding along on
-// tseslint.configs.recommended.
 export default [
   {
     ignores: [
