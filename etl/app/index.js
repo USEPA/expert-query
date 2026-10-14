@@ -94,9 +94,6 @@ app.on('ready', async () => {
 
         s3.syncGlossary(s3Config);
       },
-      {
-        scheduled: true,
-      },
     );
 
     log.info('Starting poll to run full ETL when new data is available');
@@ -107,9 +104,6 @@ app.on('ready', async () => {
       '*/15 * * * *',
       async () => {
         await etlJob();
-      },
-      {
-        scheduled: true,
       },
     );
   }

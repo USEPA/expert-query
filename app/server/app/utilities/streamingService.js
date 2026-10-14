@@ -4,7 +4,45 @@ import Papa from 'papaparse';
 import { log } from '../utilities/logger.js';
 const setImmediatePromise = util.promisify(setImmediate);
 
+/**
+ * Error codes that indicate the client went away rather than a fault in the application.
+ * These are expected during normal operation and are logged at a lower level.
+ */
+const CLIENT_DISCONNECT_CODES = new Set([
+  'ECONNRESET',
+  'EPIPE',
+  'ERR_STREAM_ALREADY_FINISHED',
+  'ERR_STREAM_DESTROYED',
+  'ERR_STREAM_PREMATURE_CLOSE',
+  'ERR_STREAM_WRITE_AFTER_END',
+]);
+
+/**
+ * Determines whether an error was caused by the client disconnecting.
+ * @param {Error} error
+ * @returns {boolean}
+ */
+function isClientDisconnect(error) {
+  return (
+    CLIENT_DISCONNECT_CODES.has(error?.code) ||
+    error?.message === 'Premature close'
+  );
+}
+
+/**
+ * Determines whether a stream can still accept writes.
+ * @param {import('node:stream').Writable} stream
+ * @returns {boolean}
+ */
+function isWritable(stream) {
+  return Boolean(stream) && !stream.destroyed && !stream.writableEnded;
+}
+
 export default class StreamingService {
+  /**
+   * @param {express.Response} outStream output response stream
+   * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
+   */
   static getOptions = (outStream, format) => {
     return {
       preHook: () => {
@@ -15,7 +53,16 @@ export default class StreamingService {
       },
       errorHandler: (error) => {
         if (!error) return;
-        if (error.message === 'Premature close') return;
+        // exceljs writes the workbook straight to outStream and ends it itself,
+        // so pipeline sees its destination close while the transform is still
+        // finishing and reports a premature close even though the whole file
+        // was delivered. A finished writable means nothing was actually lost.
+        if (outStream?.writableFinished) return;
+
+        if (isClientDisconnect(error)) {
+          log.debug('Out stream closed before completion: ' + error);
+          return;
+        }
 
         log.warn('Out stream Error! ' + error);
       },
@@ -29,6 +76,8 @@ export default class StreamingService {
    * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
    */
   static writeHead = (res, status, format) => {
+    if (res.destroyed) return;
+
     if (typeof res.headersSent === 'boolean' && !res.headersSent) {
       let contentType = 'application/json; charset=utf-8';
       if (format === 'csv') contentType = 'text/csv';
@@ -55,20 +104,25 @@ export default class StreamingService {
     return new Transform({
       writableObjectMode: true,
       transform(data, encoding, callback) {
-        // preHook on first data only
-        if (!this.comma) preHook();
+        try {
+          // preHook on first data only
+          if (!this.comma) preHook();
 
-        // convert the json to csv
-        const unparsedData = Papa.unparse(JSON.stringify([data]), {
-          delimiter: format === 'tsv' ? '\t' : ',',
-          header: !this.comma,
-        });
-        this.push(unparsedData);
+          // convert the json to csv
+          const unparsedData = Papa.unparse(JSON.stringify([data]), {
+            delimiter: format === 'tsv' ? '\t' : ',',
+            header: !this.comma,
+          });
+          this.push(unparsedData);
 
-        // set comma for subsequent data
-        if (!this.comma) this.comma = '\n';
-        this.push(this.comma);
-        callback();
+          // set comma for subsequent data
+          if (!this.comma) this.comma = '\n';
+          this.push(this.comma);
+          callback();
+        } catch (err) {
+          // hand the error to the pipeline instead of throwing out of the stream
+          callback(err);
+        }
       },
       final(callback) {
         callback();
@@ -93,20 +147,29 @@ export default class StreamingService {
     return new Transform({
       writableObjectMode: true,
       transform(data, _encoding, callback) {
-        // preHook on first data only
-        if (!this.comma) preHook();
-        // if first data && error then no open/close brackets
-        const prefix = this.comma || (data.error ? '' : start);
-        const suffix = this.comma && data.error ? end : '';
-        this.push(`${prefix}${JSON.stringify(data)}${suffix}`);
-        // set comma for subsequent data
-        if (!this.comma) this.comma = ',\n';
-        callback();
+        try {
+          // preHook on first data only
+          if (!this.comma) preHook();
+          // if first data && error then no open/close brackets
+          const prefix = this.comma || (data.error ? '' : start);
+          const suffix = this.comma && data.error ? end : '';
+          this.push(`${prefix}${JSON.stringify(data)}${suffix}`);
+          // set comma for subsequent data
+          if (!this.comma) this.comma = ',\n';
+          callback();
+        } catch (err) {
+          // hand the error to the pipeline instead of throwing out of the stream
+          callback(err);
+        }
       },
       final(callback) {
-        if (!this.comma) this.push(start);
-        this.push(end);
-        callback();
+        try {
+          if (!this.comma) this.push(start);
+          this.push(end);
+          callback();
+        } catch (err) {
+          callback(err);
+        }
       },
     });
   };
@@ -122,21 +185,28 @@ export default class StreamingService {
       writableObjectMode: true,
       readableObjectMode: false,
       async transform(data, encoding, callback) {
-        // preHook on first data only
-        if (!this.comma) {
-          excelDoc.worksheet.columns = Object.keys(data).map((key) => {
-            return { header: key, key };
-          });
+        // Transform ignores the return value of an async transform function, so
+        // a rejection here would surface as an unhandled rejection and take down
+        // the process. Catch it and route it through the pipeline instead.
+        try {
+          // preHook on first data only
+          if (!this.comma) {
+            excelDoc.worksheet.columns = Object.keys(data).map((key) => {
+              return { header: key, key };
+            });
+          }
+
+          // convert the json to csv
+          excelDoc.worksheet.addRow(data).commit();
+          await setImmediatePromise();
+
+          // set comma for subsequent data
+          if (!this.comma) this.comma = '\n';
+
+          callback();
+        } catch (err) {
+          callback(err);
         }
-
-        // convert the json to csv
-        excelDoc.worksheet.addRow(data).commit();
-        await setImmediatePromise();
-
-        // set comma for subsequent data
-        if (!this.comma) this.comma = '\n';
-
-        callback();
       },
       final(callback) {
         excelDoc.workbook
@@ -145,7 +215,9 @@ export default class StreamingService {
             callback();
           })
           .catch((err) => {
-            res.status(500).send('Error! ' + err);
+            // the workbook writes straight to the response, so there is no
+            // usable response object here - let the pipeline handle the error
+            callback(err);
           });
       },
     });
@@ -171,11 +243,34 @@ export default class StreamingService {
       outStream,
       format,
     );
+    // This has to stay separate from the pipeline handler below. pipeline()
+    // destroys outStream before invoking its callback, so by then the 500 can
+    // no longer be written and the client just sees a truncated body. This
+    // handler runs before that teardown. The teardown then re-emits 'error' on
+    // inStream, so guard against running twice.
+    let inStreamFailed = false;
     inStream.on('error', (error) => {
-      errorHook();
+      if (inStreamFailed) return;
+      inStreamFailed = true;
+
       log.warn('Streaming in error! ' + error);
-      inStream.push({ error: error.message });
-      outStream.end();
+      try {
+        errorHook();
+        // inStream is usually already destroyed here, so this reaches the
+        // client only when it somehow survived
+        if (!inStream.destroyed && !inStream.readableEnded) {
+          inStream.push({ error: error.message });
+        }
+        if (isWritable(outStream)) outStream.end();
+      } catch (err) {
+        errorHandler(err);
+      }
+    });
+
+    // if the client goes away mid-download, stop reading from the database so
+    // the query stream and its connection are released
+    outStream.on('close', () => {
+      if (!inStream.destroyed) inStream.destroy();
     });
 
     let transform = StreamingService.getJsonTransform(preHook, pageOptions);

@@ -64,7 +64,7 @@
     },
     "assessmentParameterAgency": {
       "key": "assessmentParameterAgency",
-      "label": "Assessment Parameter Agency",
+      "label": "Parameter Agency",
       "type": "multiselect"
     },
     "assessmentTypes": {
@@ -87,7 +87,7 @@
     },
     "assessmentUseAgency": {
       "key": "assessmentUseAgency",
-      "label": "Assessment Use Agency",
+      "label": "Use Agency",
       "type": "multiselect"
     },
     "associatedActionAgency": {

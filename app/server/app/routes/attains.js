@@ -207,18 +207,31 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
  * @param {Object} pageOptions page number and page size for paginated JSON
  */
 async function createStream(query, res, format, wbObject, pageOptions) {
-  pool.connect((err, client, done) => {
-    if (err) throw err;
+  // awaited by the caller, so a failure to connect rejects up to the route
+  // handler instead of throwing from a callback the request can no longer see
+  const client = await pool.connect();
 
-    const qStream = new QueryStream(query.toString(), [], {
-      batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
-      highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
-    });
-    const stream = client.query(qStream);
-    stream.on('end', done);
-
-    StreamingService.streamResponse(res, stream, format, wbObject, pageOptions);
+  const qStream = new QueryStream(query.toString(), [], {
+    batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
+    highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
   });
+  const stream = client.query(qStream);
+
+  // release the pooled client exactly once, however the stream finishes.
+  // pg-pool throws on a double release and these events can fire in
+  // combination. Passing the error tells pg to discard a connection that was
+  // left in a bad state instead of returning it to the pool.
+  let released = false;
+  const release = (streamErr) => {
+    if (released) return;
+    released = true;
+    client.release(streamErr);
+  };
+  stream.on('end', () => release());
+  stream.on('error', (streamErr) => release(streamErr));
+  stream.on('close', () => release());
+
+  StreamingService.streamResponse(res, stream, format, wbObject, pageOptions);
 }
 
 /**
@@ -244,9 +257,9 @@ async function streamFile(query, req, res, format, baseName) {
     });
     const worksheet = workbook.addWorksheet('data');
 
-    createStream(query, res, format, { workbook, worksheet });
+    await createStream(query, res, format, { workbook, worksheet });
   } else {
-    createStream(query, res, format);
+    await createStream(query, res, format);
   }
 }
 
@@ -261,7 +274,7 @@ async function streamJson(query, res, pageNumber, pageSize) {
   if (pageNumber > 1) query.offset((pageNumber - 1) * pageSize);
   query.limit(pageSize);
 
-  createStream(query, res, 'json', null, { pageNumber, pageSize });
+  await createStream(query, res, 'json', null, { pageNumber, pageSize });
 }
 
 /**
