@@ -1,5 +1,25 @@
 # Change Log
 
+## 1.4.0 (October 2026)
+
+### Added
+
+- Added the AssessmentParameterAgency and AssessmentUseAgency columns to the Assessments profile.
+
+### Fixed
+
+- Fixed a CSS transition issue in the select input drop-downs.
+
+- Updated error handling during file streaming to prevent errors from crashing the server.
+
+- Fixed National Downloads page using incorrect/empty file stats when an error occurs in the WATERS ETL process.
+
+### Chores
+
+- Updated GitHub workflow dependencies.
+
+- Updated application dependencies.
+
 ## 1.3.0 (July 2026)
 
 ### Added

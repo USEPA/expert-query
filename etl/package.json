@@ -1,6 +1,6 @@
 {
   "name": "expert-query-etl",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "The ‘Expert Query’ ETL application is used to load data from ATTAINS (Oracle) into the ‘Expert Query’ Postgres DB.",
   "keywords": [
     "Expert Query",
