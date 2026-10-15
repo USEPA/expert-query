@@ -1,4 +1,4 @@
-import { debounce, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
   Outlet,
@@ -964,26 +964,6 @@ function SelectFilter({
     [abort, filterFunc],
   );
 
-  const debouncedFetchOptions = useMemo(() => {
-    if (content.status !== 'success') return null;
-    return debounce(
-      fetchOptions,
-      content.data.parameters.debounceMilliseconds,
-      {
-        leading: true,
-        trailing: true,
-      },
-    );
-  }, [content, fetchOptions]);
-
-  useEffect(() => {
-    return function cleanup() {
-      debouncedFetchOptions?.cancel();
-    };
-  }, [debouncedFetchOptions]);
-
-  const loadOptions = debouncedFetchOptions ?? fetchOptions;
-
   const formatOptionLabel = useCallback(
     (option: Option) => {
       return secondaryFilterKey ? (
@@ -1015,12 +995,13 @@ function SelectFilter({
         menuList: () => 'font-ui-xs',
       }}
       components={{ MenuList }}
+      debounceTimeout={content.data?.parameters.debounceMilliseconds ?? 0}  // debounces inside the awaited request
       formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isMulti={isMulti}
       key={sourceValue?.value}
-      loadOptions={loadOptions}
+      loadOptions={fetchOptions}
       menuPortalTarget={document.body}
       onChange={filterHandler}
       onMenuClose={abort}
