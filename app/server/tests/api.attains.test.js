@@ -399,6 +399,31 @@ describe('API Attains Tests', () => {
     expect(Array.isArray(response.body)).toBe(true);
   });
 
+  test('POST /api/attains/assessments/values applies the provided filters', async () => {
+    const url = '/api/attains/assessments/values/reportingCycle';
+
+    const unfiltered = await supertest(app)
+      .post(url)
+      .send({ text: '', limit: 1 })
+      .expect(200);
+
+    const cycle = unfiltered.body[0].reportingCycle;
+
+    const matching = await supertest(app)
+      .post(url)
+      .send({ text: '', limit: 1, filters: { reportingCycle: cycle } })
+      .expect(200);
+
+    expect(matching.body).toEqual([{ reportingCycle: cycle }]);
+
+    const unmatched = await supertest(app)
+      .post(url)
+      .send({ text: '', limit: 1, filters: { reportingCycle: -1 } })
+      .expect(200);
+
+    expect(unmatched.body).toEqual([]);
+  });
+
   test('GET /api/attains/actionDocuments query returns ranked results', async () => {
     const response = await supertest(app)
       .get(
