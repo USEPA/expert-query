@@ -14,6 +14,8 @@
 
 - Fixed National Downloads page using incorrect/empty file stats when an error occurs in the WATERS ETL process.
 
+- Fixed an issue with selecting "Any" in the "Reporting Cycle" field and refreshing the page resulting in -1 being in the "Reporting Cycle" field.
+
 ### Chores
 
 - Updated GitHub workflow dependencies.
