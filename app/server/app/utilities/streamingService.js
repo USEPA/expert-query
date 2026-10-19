@@ -4,6 +4,8 @@ import Papa from 'papaparse';
 import { log } from '../utilities/logger.js';
 const setImmediatePromise = util.promisify(setImmediate);
 
+const documentUrlQueryString = process.env.DOCUMENT_URL_QUERY_STRING ?? '';
+
 /**
  * Error codes that indicate the client went away rather than a fault in the application.
  * These are expected during normal operation and are logged at a lower level.
@@ -27,6 +29,26 @@ function isClientDisconnect(error) {
     CLIENT_DISCONNECT_CODES.has(error?.code) ||
     error?.message === 'Premature close'
   );
+}
+
+/**
+ * Appends the configured query string to a document URL.
+ * @param {string} url
+ * @returns {string}
+ */
+function appendDocumentUrlQuery(url) {
+  if (!documentUrlQueryString || !url || typeof url !== 'string') return url;
+
+  // the parameter belongs with the query string, ahead of any fragment
+  const fragmentIndex = url.indexOf('#');
+  const base = fragmentIndex === -1 ? url : url.slice(0, fragmentIndex);
+  const fragment = fragmentIndex === -1 ? '' : url.slice(fragmentIndex);
+
+  let separator = '?';
+  if (/[?&]$/.test(base)) separator = '';
+  else if (base.includes('?')) separator = '&';
+
+  return `${base}${separator}${documentUrlQueryString}${fragment}`;
 }
 
 /**
@@ -194,6 +216,12 @@ export default class StreamingService {
             excelDoc.worksheet.columns = Object.keys(data).map((key) => {
               return { header: key, key };
             });
+          }
+
+          if (data.actionDocumentUrl) {
+            data.actionDocumentUrl = appendDocumentUrlQuery(
+              data.actionDocumentUrl,
+            );
           }
 
           // convert the json to csv

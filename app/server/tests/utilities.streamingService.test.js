@@ -55,6 +55,32 @@ function createQueryStream() {
 }
 
 /**
+ * Runs rows through the xlsx transform and returns the rows handed to exceljs.
+ */
+async function streamXlsxRows(StreamingService, rows) {
+  const res = createResponse();
+  const inStream = createQueryStream();
+  const written = [];
+  const excelDoc = {
+    worksheet: {
+      set columns(value) {},
+      addRow: (row) => {
+        written.push(row);
+        return { commit: jest.fn() };
+      },
+    },
+    workbook: { commit: jest.fn().mockResolvedValue(undefined) },
+  };
+
+  StreamingService.streamResponse(res, inStream, 'xlsx', excelDoc, {});
+  rows.forEach((row) => inStream.push(row));
+  inStream.push(null);
+  await settle(120);
+
+  return written;
+}
+
+/**
  * Records anything that would have terminated the process, so a test can assert
  * the streaming code never escalates a stream failure into a crash.
  */
@@ -340,5 +366,75 @@ describe('StreamingService tests', () => {
     StreamingService.writeHead(res, 200, 'json');
 
     expect(res.writeHead).not.toHaveBeenCalled();
+  });
+
+  describe('document URL query string', () => {
+    // the service reads the variable when it loads, so each test sets it before
+    // calling loadStreamingService
+    afterEach(() => {
+      delete process.env.DOCUMENT_URL_QUERY_STRING;
+    });
+
+    test('appends the configured query string to document URLs', async () => {
+      process.env.DOCUMENT_URL_QUERY_STRING = 'src=eq';
+      const { StreamingService } = await loadStreamingService();
+
+      const rows = await streamXlsxRows(StreamingService, [
+        { actionId: 'A1', actionDocumentUrl: 'https://example.gov/doc.pdf' },
+      ]);
+
+      expect(rows).toEqual([
+        {
+          actionId: 'A1',
+          actionDocumentUrl: 'https://example.gov/doc.pdf?src=eq',
+        },
+      ]);
+    });
+
+    test('appends to a URL that already has a query string', async () => {
+      process.env.DOCUMENT_URL_QUERY_STRING = 'src=eq';
+      const { StreamingService } = await loadStreamingService();
+
+      const rows = await streamXlsxRows(StreamingService, [
+        { actionDocumentUrl: 'https://example.gov/doc?id=7' },
+        { actionDocumentUrl: 'https://example.gov/doc?' },
+      ]);
+
+      expect(rows.map((row) => row.actionDocumentUrl)).toEqual([
+        'https://example.gov/doc?id=7&src=eq',
+        'https://example.gov/doc?src=eq',
+      ]);
+    });
+
+    test('inserts the query string ahead of a fragment', async () => {
+      process.env.DOCUMENT_URL_QUERY_STRING = 'src=eq';
+      const { StreamingService } = await loadStreamingService();
+
+      const rows = await streamXlsxRows(StreamingService, [
+        { actionDocumentUrl: 'https://example.gov/doc.pdf#page=2' },
+      ]);
+
+      expect(rows[0].actionDocumentUrl).toBe(
+        'https://example.gov/doc.pdf?src=eq#page=2',
+      );
+    });
+
+    test('leaves rows untouched when no query string is configured', async () => {
+      const { StreamingService } = await loadStreamingService();
+
+      const rows = await streamXlsxRows(StreamingService, [
+        {
+          actionDocumentUrl: 'https://example.gov/doc.pdf',
+          planSummaryLink: 'https://example.gov/plan',
+        },
+      ]);
+
+      expect(rows).toEqual([
+        {
+          actionDocumentUrl: 'https://example.gov/doc.pdf',
+          planSummaryLink: 'https://example.gov/plan',
+        },
+      ]);
+    });
   });
 });
