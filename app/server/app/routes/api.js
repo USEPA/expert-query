@@ -190,18 +190,8 @@ export default function (app, basePath) {
   router.get('/lookupFiles', (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
-    const servicesFilename =
-      isLocal || isTest
-        ? 'services-local.json'
-        : isDevelopment
-          ? 'services-dev.json'
-          : isStaging
-            ? 'services-stage.json'
-            : 'services-production.json';
-
     // NOTE: static content files found in `app/server/app/content/` directory
     const filenames = [
-      `content/config/${servicesFilename}`,
       'content/alerts/config.json',
       'content-etl/glossary.json',
       'content/config/parameters.json',
@@ -221,14 +211,18 @@ export default function (app, basePath) {
       })
       .then((data) => {
         return {
-          services: data[0],
-          alertsConfig: data[1],
-          glossary: data[2],
-          parameters: data[3],
-          filterConfig: data[4],
-          listOptions: data[5],
-          profileConfig: data[6],
-          nationalDownloads: data[7],
+          services: {
+            eqApiKey: process.env.EQ_API_KEY ?? '',
+            eqApiSignupKey: process.env.EQ_API_SIGNUP_KEY ?? '',
+            eqDataApi: process.env.EQ_DATA_API_URL ?? '',
+          },
+          alertsConfig: data[0],
+          glossary: data[1],
+          parameters: data[2],
+          filterConfig: data[3],
+          listOptions: data[4],
+          profileConfig: data[5],
+          nationalDownloads: data[6],
         };
       });
 
