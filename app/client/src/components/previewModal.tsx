@@ -121,7 +121,7 @@ export function PreviewModal<D extends QueryData>({
                     <a
                       href={value.toString()}
                       target="_blank"
-                      rel="noopener,noreferrer"
+                      rel="noopener"
                     >
                       {row[textColumn]}
                     </a>
