@@ -22,9 +22,8 @@ const app = express();
 
 /* istanbul ignore next */
 if (global.__coverage__) {
-  const setupCypressCodeCoverage = await import(
-    '@cypress/code-coverage/middleware/express'
-  );
+  const setupCypressCodeCoverage =
+    await import('@cypress/code-coverage/middleware/express');
   setupCypressCodeCoverage.default(app);
 }
 
@@ -32,6 +31,7 @@ app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   }),
 );
 app.use(
