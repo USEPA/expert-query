@@ -93,7 +93,7 @@ jobs:
       # Set up node and npm
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
       
       # Run front-end processes (install, lint, test, bundle)
       - name: Cache node modules
@@ -163,6 +163,10 @@ jobs:
           aws-secret-access-key: ${{ env.CF_S3_PUB_SECRET_KEY }}
           aws-region: ${{ env.CF_S3_PUB_REGION }}
 
+      - name: Filter x-internal fields from OpenAPI spec
+        run: npx openapi-filter eq-openapi.json eq-openapi.json
+        working-directory: app/server/app/content
+
       # Sync static content to public S3 bucket
       - name: Sync static content to S3
         run: aws s3 sync . s3://$CF_S3_PUB_BUCKET_ID/content
@@ -219,7 +223,7 @@ jobs:
       # Set up node and npm
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
 
       # Run CloudFoundry/Cloud.gov deployment
       - name: Set up Cloud Foundry CLI
