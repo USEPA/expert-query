@@ -59,14 +59,19 @@ export function postData({
   data,
   responseType,
   signal,
+  additionalHeaders,
 }: {
   url: string;
   apiKey: string;
   data: object;
   responseType?: 'json' | 'blob';
   signal?: AbortSignal;
+  additionalHeaders?: Record<string, string>;
 }) {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...additionalHeaders,
+  };
   if (apiKey) headers['X-Api-Key'] = apiKey;
 
   return fetchData(
