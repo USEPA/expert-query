@@ -205,8 +205,16 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
  * @param {string} format the format of the file attachment
  * @param {Object} excelDoc Excel workbook and worksheet objects
  * @param {Object} pageOptions page number and page size for paginated JSON
+ * @param {boolean} appendDocumentQuery append the configured query string to document URLs
  */
-async function createStream(query, res, format, wbObject, pageOptions) {
+async function createStream(
+  query,
+  res,
+  format,
+  wbObject,
+  pageOptions,
+  appendDocumentQuery,
+) {
   // awaited by the caller, so a failure to connect rejects up to the route
   // handler instead of throwing from a callback the request can no longer see
   const client = await pool.connect();
@@ -231,7 +239,14 @@ async function createStream(query, res, format, wbObject, pageOptions) {
   stream.on('error', (streamErr) => release(streamErr));
   stream.on('close', () => release());
 
-  StreamingService.streamResponse(res, stream, format, wbObject, pageOptions);
+  StreamingService.streamResponse(
+    res,
+    stream,
+    format,
+    wbObject,
+    pageOptions,
+    appendDocumentQuery,
+  );
 }
 
 /**
@@ -269,12 +284,26 @@ async function streamFile(query, req, res, format, baseName) {
  * @param {Express.Response} res
  * @param {number} pageNumber current page of results
  * @param {number} pageSize number of results per page
+ * @param {boolean} appendDocumentQuery append the configured query string to document URLs
  */
-async function streamJson(query, res, pageNumber, pageSize) {
+async function streamJson(
+  query,
+  res,
+  pageNumber,
+  pageSize,
+  appendDocumentQuery,
+) {
   if (pageNumber > 1) query.offset((pageNumber - 1) * pageSize);
   query.limit(pageSize);
 
-  await createStream(query, res, 'json', null, { pageNumber, pageSize });
+  await createStream(
+    query,
+    res,
+    'json',
+    null,
+    { pageNumber, pageSize },
+    appendDocumentQuery,
+  );
 }
 
 /**
@@ -561,6 +590,7 @@ async function executeQuery(profile, req, res) {
         res,
         parseInt(queryParams.options.pageNumber || 1),
         parseInt(queryParams.options.pageSize || defaultPageSize),
+        req.header('EQ-PREVIEW') !== 'true', // The preview renders the links in the app, so it opts out
       );
     }
   } catch (error) {

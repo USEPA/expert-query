@@ -52,6 +52,16 @@ function appendDocumentUrlQuery(url) {
 }
 
 /**
+ * Adds the configured query string to the document URL of a row.
+ * @param {Object} data a row of query results
+ */
+function addDocumentUrlQuery(data) {
+  if (data?.actionDocumentUrl) {
+    data.actionDocumentUrl = appendDocumentUrlQuery(data.actionDocumentUrl);
+  }
+}
+
+/**
  * Determines whether a stream can still accept writes.
  * @param {import('node:stream').Writable} stream
  * @returns {boolean}
@@ -120,15 +130,18 @@ export default class StreamingService {
    * Transforms the streaming data to csv or tsv.
    * @param {function} preHook function for writing initial headers
    * @param {'csv'|'tsv'} format export format file type
+   * @param {boolean} appendDocumentQuery append the configured query string to document URLs
    * @returns Transform object
    */
-  static getBasicTransform = (preHook, format) => {
+  static getBasicTransform = (preHook, format, appendDocumentQuery = true) => {
     return new Transform({
       writableObjectMode: true,
       transform(data, encoding, callback) {
         try {
           // preHook on first data only
           if (!this.comma) preHook();
+
+          if (appendDocumentQuery) addDocumentUrlQuery(data);
 
           // convert the json to csv
           const unparsedData = Papa.unparse(JSON.stringify([data]), {
@@ -156,9 +169,14 @@ export default class StreamingService {
    * Transforms the streaming data to json.
    * @param {function} preHook function for writing initial headers
    * @param {Object} pageOptions page number and page size for paginated JSON
+   * @param {boolean} appendDocumentQuery append the configured query string to document URLs
    * @returns Transform object
    */
-  static getJsonTransform = (preHook, pageOptions = {}) => {
+  static getJsonTransform = (
+    preHook,
+    pageOptions = {},
+    appendDocumentQuery = true,
+  ) => {
     const { pageNumber, pageSize } = pageOptions;
     const start = '{ "data": [';
     const end =
@@ -172,6 +190,9 @@ export default class StreamingService {
         try {
           // preHook on first data only
           if (!this.comma) preHook();
+
+          if (appendDocumentQuery) addDocumentUrlQuery(data);
+
           // if first data && error then no open/close brackets
           const prefix = this.comma || (data.error ? '' : start);
           const suffix = this.comma && data.error ? end : '';
@@ -200,9 +221,10 @@ export default class StreamingService {
    * Transforms the streaming data to xlsx.
    * @param {function} preHook function for writing initial headers
    * @param {Object} excelDoc Excel workbook and worksheet objects
+   * @param {boolean} appendDocumentQuery append the configured query string to document URLs
    * @returns Transform object
    */
-  static getXlsxTransform = (preHook, excelDoc) => {
+  static getXlsxTransform = (preHook, excelDoc, appendDocumentQuery = true) => {
     return new Transform({
       writableObjectMode: true,
       readableObjectMode: false,
@@ -218,11 +240,7 @@ export default class StreamingService {
             });
           }
 
-          if (data.actionDocumentUrl) {
-            data.actionDocumentUrl = appendDocumentUrlQuery(
-              data.actionDocumentUrl,
-            );
-          }
+          if (appendDocumentQuery) addDocumentUrlQuery(data);
 
           // convert the json to csv
           excelDoc.worksheet.addRow(data).commit();
@@ -259,6 +277,7 @@ export default class StreamingService {
    * @param {'csv'|'tsv'|'xlsx'|'json'|''} format export format file type
    * @param {Object} excelDoc Excel workbook and worksheet objects
    * @param {Object} pageOptions page number and page size for paginated JSON
+   * @param {boolean} appendDocumentQuery append the configured query string to document URLs
    */
   static streamResponse = (
     outStream,
@@ -266,6 +285,7 @@ export default class StreamingService {
     format,
     excelDoc,
     pageOptions,
+    appendDocumentQuery = true,
   ) => {
     const { preHook, errorHook, errorHandler } = StreamingService.getOptions(
       outStream,
@@ -301,12 +321,24 @@ export default class StreamingService {
       if (!inStream.destroyed) inStream.destroy();
     });
 
-    let transform = StreamingService.getJsonTransform(preHook, pageOptions);
+    let transform = StreamingService.getJsonTransform(
+      preHook,
+      pageOptions,
+      appendDocumentQuery,
+    );
     if (format === 'csv' || format === 'tsv') {
-      transform = StreamingService.getBasicTransform(preHook, format);
+      transform = StreamingService.getBasicTransform(
+        preHook,
+        format,
+        appendDocumentQuery,
+      );
     }
     if (format === 'xlsx' && excelDoc) {
-      transform = StreamingService.getXlsxTransform(preHook, excelDoc);
+      transform = StreamingService.getXlsxTransform(
+        preHook,
+        excelDoc,
+        appendDocumentQuery,
+      );
     }
 
     pipeline(inStream, transform, outStream, errorHandler);

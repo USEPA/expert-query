@@ -81,6 +81,8 @@ export function PreviewModal<D extends QueryData>({
         },
       },
       signal: getSignal(),
+      // keeps the download query string off the document links shown here
+      additionalHeaders: { 'EQ-PREVIEW': 'true' },
     })
       .then((res) => {
         if (!Array.isArray(res.data)) {
