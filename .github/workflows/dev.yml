@@ -162,6 +162,10 @@ jobs:
           aws-secret-access-key: ${{ env.CF_S3_PUB_SECRET_KEY }}
           aws-region: ${{ env.CF_S3_PUB_REGION }}
 
+      - name: Filter x-internal fields from OpenAPI spec
+        run: npx openapi-filter eq-openapi.json eq-openapi.json
+        working-directory: app/server/app/content
+
       # Sync static content to public S3 bucket
       - name: Sync static content to S3
         run: aws s3 sync . s3://$CF_S3_PUB_BUCKET_ID/content

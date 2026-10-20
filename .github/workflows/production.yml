@@ -73,6 +73,10 @@ jobs:
           rm -rf *
         working-directory: app/client
 
+      - name: Filter x-internal fields from OpenAPI spec
+        run: npx openapi-filter eq-openapi.json eq-openapi.json
+        working-directory: app/server/app/content
+
       - name: Remove unnecessary server app files
         run: rm -rf .env.example .eslintrc.js .prettierrc.json app/config jest.config.js jest_setup.js tests
         working-directory: app/server
