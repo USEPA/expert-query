@@ -1,5 +1,33 @@
 # Change Log
 
+## 1.4.0 (October 2026)
+
+### Added
+
+- Added the AssessmentParameterAgency and AssessmentUseAgency columns to the Assessments profile.
+
+- Added referrer to API calls and documents preview linsk, to support additional filtering in api.data.gov.
+
+### Fixed
+
+- Consolidated OpenAPI files to a single file for simpler documentation maintenance.
+
+- Updated error handling during file streaming to prevent errors from crashing the server.
+
+- Updated EQ and ATTAINS API keys to come from environment variables instead of a config file.
+
+- Fixed a CSS transition issue in the select input drop-downs.
+
+- Fixed National Downloads page using incorrect/empty file stats when an error occurs in the WATERS ETL process.
+
+- Fixed an issue with selecting "Any" in the "Reporting Cycle" field and refreshing the page resulting in -1 being in the "Reporting Cycle" field.
+
+### Chores
+
+- Updated GitHub workflow dependencies.
+
+- Updated application dependencies.
+
 ## 1.3.0 (July 2026)
 
 ### Added

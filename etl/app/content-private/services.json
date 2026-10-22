@@ -3,7 +3,7 @@
     "summary": "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/4"
   },
   "attains": {
-    "apiKey": "VgIEg4j6FpfGKq7jVfEsLRcT3mVze1ERIzi3e4vj",
+    "apiKey": "",
     "serviceUrl": "https://api.epa.gov/attains/"
   },
   "glossaryURL": "https://etss.epa.gov/synaptica_rest_services/api/vocabs/name/Expert%20Query%20Glossary/terms/full",

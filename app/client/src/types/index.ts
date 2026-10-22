@@ -10,15 +10,14 @@ declare global {
 
 // Columns that share values with those in the `domainValues` object
 export type AliasedField =
-  | 'associatedActionAgency'
-  | 'associatedActionType'
-  | 'pollutant';
+  'associatedActionAgency' | 'associatedActionType' | 'pollutant';
 
 export type AliasedOptions = {
   [key in AliasedField]: Array<Option>;
 };
 
 type BaseFilterFieldConfig = {
+  additionalOptions?: Option[];
   default?: Option;
   contextFields?: string[];
   direction?: 'asc' | 'desc';

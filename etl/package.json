@@ -1,6 +1,6 @@
 {
   "name": "expert-query-etl",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "The ‘Expert Query’ ETL application is used to load data from ATTAINS (Oracle) into the ‘Expert Query’ Postgres DB.",
   "keywords": [
     "Expert Query",
@@ -23,12 +23,13 @@
   },
   "repository": "github:USEPA/expert-query",
   "scripts": {
-    "etl_all": "node -r dotenv/config --inspect app/tasks/etlAll.js dotenv_config_path=./.env.local",
-    "etl_database": "node -r dotenv/config --inspect app/tasks/etlDatabase.js dotenv_config_path=./.env.local",
-    "etl_domain_values": "node -r dotenv/config --inspect app/tasks/etlDomainValues.js dotenv_config_path=./.env.local",
-    "etl_glossary": "node -r dotenv/config --inspect app/tasks/etlGlossary.js dotenv_config_path=./.env.local",
+    "etl_all": "cross-env DOTENV_PATH=./.env.local npx dotenv run -- node --inspect app/tasks/etlAll.js",
+    "etl_database": "cross-env DOTENV_PATH=./.env.local npx dotenv run -- node --inspect app/tasks/etlDatabase.js",
+    "etl_domain_values": "cross-env DOTENV_PATH=./.env.local npx dotenv run -- node --inspect app/tasks/etlDomainValues.js",
+    "etl_glossary": "cross-env DOTENV_PATH=./.env.local npx dotenv run -- node --inspect app/tasks/etlGlossary.js",
     "start": "npm run start_local_cmd",
-    "start_local_cmd": "cross-env nodemon -r dotenv/config --ignore 'app/tests' --inspect app/index.js dotenv_config_path=.env.local",
+    "start_local_cmd": "cross-env DOTENV_PATH=./.env.local npx dotenv run -- nodemon --ignore 'app/tests' --inspect app/index.js",
+    "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "husky": {
@@ -37,23 +38,25 @@
     }
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1080.0",
-    "axios": "1.18.1",
-    "dotenv": "17.4.2",
-    "express": "5.2.1",
+    "@aws-sdk/client-s3": "3.1151.0",
+    "axios": "1.20.0",
+    "dotenv": "18.0.8",
+    "express": "5.3.0",
     "log4js": "6.9.1",
     "node-cron": "4.6.0",
-    "pg": "8.22.0",
-    "pg-promise": "12.7.0"
+    "pg": "8.23.1",
+    "pg-promise": "12.7.1"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "browser-sync": "3.0.4",
     "cross-env": "10.1.0",
-    "eslint": "10.6.0",
+    "eslint": "10.12.0",
+    "globals": "17.13.0",
     "husky": "9.1.7",
-    "lint-staged": "17.0.8",
+    "lint-staged": "17.6.0",
     "nodemon": "3.1.14",
-    "prettier": "3.9.4"
+    "prettier": "3.9.10"
   },
   "lint-staged": {
     "linters": {

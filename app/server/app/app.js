@@ -14,13 +14,16 @@ import {
 } from './utilities/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// sendFile dotfile-checks every segment of an absolute path, so pass the
+// directory as root to keep it from rejecting dotted parent directories
+const publicDir = path.join(__dirname, 'public');
+
 const app = express();
 
 /* istanbul ignore next */
 if (global.__coverage__) {
-  const setupCypressCodeCoverage = await import(
-    '@cypress/code-coverage/middleware/express'
-  );
+  const setupCypressCodeCoverage =
+    await import('@cypress/code-coverage/middleware/express');
   setupCypressCodeCoverage.default(app);
 }
 
@@ -28,6 +31,7 @@ app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   }),
 );
 app.use(
@@ -180,14 +184,14 @@ app.all(pathRegex, (req, res) => res.redirect(`${basePath}`));
 // Serve client app's static built files
 // NOTE: client app's `build` directory contents copied into server app's
 // `public` directory in CI/CD step
-app.use(basePath, express.static(path.join(__dirname, 'public')));
+app.use(basePath, express.static(publicDir));
 
 // Ensure that requested client route exists (otherwise send 404).
 app.use(checkClientRouteExists);
 
 // setup client routes (built React app)
 app.use(function (req, res) {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile('index.html', { root: publicDir });
 });
 
 /****************************************************************
@@ -196,11 +200,11 @@ app.use(function (req, res) {
 /* Note, the React app should be handling 404 at this point 
    but we're leaving the below 404 check in for now */
 app.use(function (req, res, next) {
-  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+  res.status(404).sendFile('404.html', { root: publicDir });
 });
 
 app.use(function (err, req, res, next) {
-  res.status(500).sendFile(path.join(__dirname, 'public', '500.html'));
+  res.status(500).sendFile('500.html', { root: publicDir });
 });
 
 export default app;
