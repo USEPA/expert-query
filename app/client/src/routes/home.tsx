@@ -1,4 +1,4 @@
-import { debounce, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
   Outlet,
@@ -810,6 +810,19 @@ function ParameterErrorAlert({
           </ul>
         </>
       )}
+      {parameters.unmatched.size > 0 && (
+        <>
+          <p className="text-bold">
+            The following parameters were provided with values that do not exist
+            under the selected profile:
+          </p>
+          <ul>
+            {Array.from(parameters.unmatched).map((unmatchedParam) => (
+              <li key={unmatchedParam}>{unmatchedParam}</li>
+            ))}
+          </ul>
+        </>
+      )}
       <div className="display-flex flex-justify-end">
         <button className="usa-button" onClick={closeAlert} type="button">
           Close Alert
@@ -964,26 +977,6 @@ function SelectFilter({
     [abort, filterFunc],
   );
 
-  const debouncedFetchOptions = useMemo(() => {
-    if (content.status !== 'success') return null;
-    return debounce(
-      fetchOptions,
-      content.data.parameters.debounceMilliseconds,
-      {
-        leading: true,
-        trailing: true,
-      },
-    );
-  }, [content, fetchOptions]);
-
-  useEffect(() => {
-    return function cleanup() {
-      debouncedFetchOptions?.cancel();
-    };
-  }, [debouncedFetchOptions]);
-
-  const loadOptions = debouncedFetchOptions ?? fetchOptions;
-
   const formatOptionLabel = useCallback(
     (option: Option) => {
       return secondaryFilterKey ? (
@@ -1015,12 +1008,13 @@ function SelectFilter({
         menuList: () => 'font-ui-xs',
       }}
       components={{ MenuList }}
+      debounceTimeout={content.data?.parameters.debounceMilliseconds ?? 0} // debounces inside the awaited request
       formatOptionLabel={formatOptionLabel}
       inputId={`input-${filterKey}`}
       instanceId={`instance-${filterKey}`}
       isMulti={isMulti}
       key={sourceValue?.value}
-      loadOptions={loadOptions}
+      loadOptions={fetchOptions}
       menuPortalTarget={document.body}
       onChange={filterHandler}
       onMenuClose={abort}
@@ -1251,7 +1245,11 @@ function useQueryParams({
     )
       .then(({ filters, errors }) => {
         initializeFilters(filters);
-        if (errors.invalid.size || errors.duplicate.size)
+        if (
+          errors.invalid.size ||
+          errors.duplicate.size ||
+          errors.unmatched.size
+        )
           setParameterErrors(errors);
       })
       .catch((err) => {
@@ -1370,19 +1368,21 @@ function camelToKebab(camel: string) {
     .join('');
 }
 
-// Returns a boolean, specifying if a value is found in the
-// specified table and column of the database
-async function checkColumnValue(
+// Returns the option for a value as it exists in the specified table and
+// column of the database, or null if the value isn't found
+async function getColumnValue(
   apiKey: string,
   apiUrl: string,
   value: Value,
   fieldName: string,
   profile: string,
-) {
+  secondaryFieldName: string | null = null,
+): Promise<Option | null> {
   const url = `${apiUrl}/${profile}/values/${fieldName}`;
   const data = {
-    [fieldName]: value,
+    filters: { [fieldName]: value },
     limit: 1,
+    additionalColumns: secondaryFieldName ? [secondaryFieldName] : [],
   };
   const res = await postData({
     url,
@@ -1390,8 +1390,12 @@ async function checkColumnValue(
     data,
     responseType: 'json',
   });
-  if (res.length) return true;
-  return false;
+  const item = res[0];
+  if (!item) return null;
+  const columnValue = item[fieldName];
+  // Label with the secondary column, as the dropdown options are
+  const secondaryValue = secondaryFieldName ? item[secondaryFieldName] : null;
+  return { label: secondaryValue || columnValue, value: columnValue };
 }
 
 // Creates a reducer to manage the state of all query field inputs
@@ -1710,24 +1714,21 @@ async function getUrlInputs(
     ...Object.keys(params).map(async (key) => {
       const filterField = key in filterFields ? filterFields[key] : null;
       if (!filterField) return;
+      const matchParams = {
+        apiKey,
+        apiUrl,
+        values: params[key] ?? null,
+        field: filterField,
+        options: getStaticOptions(key, staticOptions),
+        profile: profile.key,
+        secondaryFieldName:
+          'secondaryKey' in filterField ? filterField.secondaryKey : null,
+        onUnmatched: (value: Value) => errors.unmatched.add(`${key}: ${value}`),
+      };
       if (isMultiOptionField(filterField)) {
-        newState[key] = await matchMultipleOptions(
-          apiKey,
-          apiUrl,
-          params[key] ?? null,
-          filterField,
-          getStaticOptions(key, staticOptions),
-          profile.key,
-        );
+        newState[key] = await matchMultipleOptions(matchParams);
       } else if (isSingleOptionField(filterField)) {
-        newState[key] = await matchSingleOption(
-          apiKey,
-          apiUrl,
-          params[key] ?? null,
-          filterField,
-          getStaticOptions(key, staticOptions),
-          profile.key,
-        );
+        newState[key] = await matchSingleOption(matchParams);
       } else if (isDateField(filterField)) {
         newState[key] = matchDate(params[key] ?? null);
       } else if (isYearField(filterField)) {
@@ -1825,74 +1826,63 @@ function matchDate(values: InputValue, yearOnly = false) {
 }
 
 // Wrapper function to add type assertion
-async function matchMultipleOptions(
-  apiKey: string,
-  apiUrl: string,
-  values: InputValue,
-  field: FilterField | SourceField,
-  options: ReadonlyArray<Option> | null = null,
-  profile: string | null = null,
-) {
-  return (await matchOptions(
-    apiKey,
-    apiUrl,
-    values,
-    field,
-    options,
-    profile,
-    true,
-  )) as ReadonlyArray<Option>;
+async function matchMultipleOptions(params: MatchOptionsParams) {
+  return (await matchOptions({
+    ...params,
+    multiple: true,
+  })) as ReadonlyArray<Option>;
 }
 
 // Wrapper function to add type assertion
-async function matchSingleOption(
-  apiKey: string,
-  apiUrl: string,
-  values: InputValue,
-  field: FilterField | SourceField,
-  options: ReadonlyArray<Option> | null = null,
-  profile: string | null = null,
-) {
-  return (await matchOptions(
-    apiKey,
-    apiUrl,
-    values,
-    field,
-    options,
-    profile,
-  )) as Option | null;
+async function matchSingleOption(params: MatchOptionsParams) {
+  return (await matchOptions(params)) as Option | null;
 }
 
 // Produce the option/s corresponding to a particular value
-async function matchOptions(
-  apiKey: string,
-  apiUrl: string,
-  values: InputValue,
-  field: FilterField | SourceField,
-  options: ReadonlyArray<Option> | null = null,
-  profile: string | null = null,
+async function matchOptions({
+  apiKey,
+  apiUrl,
+  values,
+  field,
+  options = null,
+  profile = null,
+  secondaryFieldName = null,
   multiple = false,
-) {
+  onUnmatched,
+}: MatchOptionsParams & { multiple?: boolean }) {
   const valuesArray: Value[] = [];
   if (Array.isArray(values)) valuesArray.push(...values);
   else if (values !== null) valuesArray.push(values);
+
+  const additionalOptions =
+    ('additionalOptions' in field ? field.additionalOptions : null) ?? [];
 
   const matches = new Set<Option>(); // prevent duplicates
   // Check if the value is valid, otherwise use a default value
   await Promise.all(
     valuesArray.map(async (value) => {
+      // Options configured on the client have no row in the database, so the
+      // config is the only place they can be matched
+      const additionalMatch = additionalOptions.find(
+        (option) => String(option.value) === String(value),
+      );
+      if (additionalMatch) return void matches.add(additionalMatch);
+
       if (options) {
         const match = options.find((option) => option.value === value);
         if (match) matches.add(match);
+        else onUnmatched?.(value);
       } else if (profile) {
-        const isValid = await checkColumnValue(
+        const match = await getColumnValue(
           apiKey,
           apiUrl,
           value,
           field.key,
           profile,
+          secondaryFieldName,
         );
-        if (isValid) matches.add({ label: value, value });
+        if (match) matches.add(match);
+        else onUnmatched?.(value);
       }
     }),
   );
@@ -1919,6 +1909,7 @@ function parseInitialParams(
   const paramErrors: ParameterErrors = {
     duplicate: new Set(),
     invalid: new Set(),
+    unmatched: new Set(),
   };
 
   Array.from(new URLSearchParams(window.location.search)).forEach(
@@ -2061,6 +2052,17 @@ type HomeContext = {
 
 type InputValue = Value | Value[] | null;
 
+type MatchOptionsParams = {
+  apiKey: string;
+  apiUrl: string;
+  field: FilterField | SourceField;
+  onUnmatched?: (value: Value) => void;
+  options?: ReadonlyArray<Option> | null;
+  profile?: string | null;
+  secondaryFieldName?: string | null;
+  values: InputValue;
+};
+
 type MultiOptionState = ReadonlyArray<Option> | null;
 
 type OptionInputHandler = (
@@ -2074,6 +2076,7 @@ type OptionQueryData = Partial<{
 type ParameterErrors = {
   duplicate: Set<string>;
   invalid: Set<string>;
+  unmatched: Set<string>;
 };
 
 type Profile = Profiles[string];

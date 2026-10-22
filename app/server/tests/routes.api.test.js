@@ -139,6 +139,56 @@ describe('API route tests', () => {
     });
   });
 
+  test('GET /api/lookupFiles builds download links from the active schema julian', async () => {
+    const axios = jest.fn().mockResolvedValue({ data: ['file.json'] });
+
+    const { app, mocks } = await loadApiRoutes({
+      axiosImpl: axios,
+      privateConfig: {
+        tableConfig: { assessments: { tableName: 'assessments' } },
+      },
+    });
+
+    mocks.queryPool
+      .mockResolvedValueOnce({ s3Julian: '1728259206' })
+      .mockResolvedValueOnce([
+        {
+          profileName: 'assessments',
+          numRows: 10,
+          timestamp: '2024-10-06T20:00:11.000Z',
+          csvSize: 100,
+          zipSize: 10,
+        },
+      ]);
+
+    const response = await request(app).get('/api/lookupFiles').expect(200);
+
+    expect(response.body.metadata.assessments.url).toBe(
+      'https://eq-public.s3-us-gov-west-1.amazonaws.com/national-downloads/1728259206/assessments.csv.zip',
+    );
+  });
+
+  test('GET /api/lookupFiles returns 500 when the active schema has no julian', async () => {
+    const axios = jest.fn().mockResolvedValue({ data: ['file.json'] });
+
+    const { app, mocks } = await loadApiRoutes({
+      axiosImpl: axios,
+      privateConfig: {
+        tableConfig: { assessments: { tableName: 'assessments' } },
+      },
+    });
+
+    mocks.queryPool
+      .mockResolvedValueOnce({ s3Julian: null })
+      .mockResolvedValueOnce([]);
+
+    const response = await request(app).get('/api/lookupFiles').expect(500);
+
+    expect(response.body).toEqual({
+      message: 'Error getting static content from S3 bucket',
+    });
+  });
+
   test('GET /api/lookupFiles returns 500 when metadata fetch fails', async () => {
     const axios = jest.fn().mockResolvedValue({
       data: {

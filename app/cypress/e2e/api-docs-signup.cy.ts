@@ -21,7 +21,7 @@ describe('API Documentation and API key Signup Pages', () => {
 
   it('Verify link to apikey signup page through UI', () => {
     cy.visit('/api-documentation');
-    cy.get('.opblock-summary-control').first().click();
+    cy.get('.opblock-summary-control').last().click();
 
     cy.findByRole('link', { name: 'obtain their own API key' })
       .filter(':visible')
