@@ -89,10 +89,13 @@ export async function loadConfig() {
       JSON.parse(stringOrResponse),
     );
 
+    const services = parsedData[2];
+    services.attains.apiKey = process.env.ATTAINS_API_KEY;
+
     return {
       config: parsedData[0],
       domainValueMappings: parsedData[1],
-      services: parsedData[2],
+      services,
       tableConfig: parsedData[3],
     };
   } catch (err) {

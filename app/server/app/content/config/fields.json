@@ -62,6 +62,11 @@
       "label": "Assessment Methods",
       "type": "multiselect"
     },
+    "assessmentParameterAgency": {
+      "key": "assessmentParameterAgency",
+      "label": "Parameter Agency",
+      "type": "multiselect"
+    },
     "assessmentTypes": {
       "key": "assessmentTypes",
       "label": "Assessment Type",
@@ -79,6 +84,11 @@
       "label": "Assessment Unit Status",
       "type": "multiselect",
       "default": { "value": "A", "label": "Active" }
+    },
+    "assessmentUseAgency": {
+      "key": "assessmentUseAgency",
+      "label": "Use Agency",
+      "type": "multiselect"
     },
     "associatedActionAgency": {
       "key": "associatedActionAgency",
@@ -628,7 +638,8 @@
           "assessmentDateHi",
           "assessmentTypes",
           "assessmentMethods",
-          "assessmentBasis"
+          "assessmentBasis",
+          "assessmentUseAgency"
         ]
       },
       {
@@ -657,7 +668,8 @@
           "seasonStartDateLo",
           "seasonStartDateHi",
           "seasonEndDateLo",
-          "seasonEndDateHi"
+          "seasonEndDateHi",
+          "assessmentParameterAgency"
         ]
       },
       {

@@ -142,6 +142,8 @@
       { "key": "assessmentTypes" },
       { "key": "assessmentMethods" },
       { "key": "assessmentBasis" },
+      { "key": "assessmentParameterAgency" },
+      { "key": "assessmentUseAgency" },
       { "key": "parameterGroup" },
       { "key": "parameterName" },
       { "key": "parameterStatus" },

@@ -44,8 +44,19 @@ async function fetchMetadata(req) {
 
   const baseDir = 'national-downloads';
 
-  const [latestRes, profileStats] = await Promise.all([
-    getFile(`${baseDir}/latest.json`).catch((err) => {
+  // The S3 directory of the data currently loaded in the database. Using this
+  // instead of `latest.json` keeps the download links pointed at the active
+  // schema's data, even when a newer extract failed to load.
+  const [activeSchema, profileStats] = await Promise.all([
+    queryPool(
+      knex
+        .withSchema('logging')
+        .column({ s3Julian: 's3_julian' })
+        .from('etl_schemas')
+        .where('schema_name', req.activeSchema)
+        .select(),
+      true,
+    ).catch((err) => {
       logError(err, metadataObj);
     }),
 
@@ -67,19 +78,19 @@ async function fetchMetadata(req) {
     }),
   ]);
 
-  if (!latestRes || !profileStats)
+  if (!activeSchema?.s3Julian || !profileStats)
     throw new Error('Error getting national downloads data');
 
   const data = {};
 
-  const latest = parseInt(parseResponse(latestRes).julian);
+  const s3Julian = activeSchema.s3Julian;
 
   // get config from private S3 bucket
   const privateConfig = await getPrivateConfig();
 
   Object.entries(privateConfig.tableConfig).map(([profile, config]) => {
     const basename = config.tableName;
-    const filename = `${baseDir}/${latest}/${basename}.csv.zip`;
+    const filename = `${baseDir}/${s3Julian}/${basename}.csv.zip`;
     const stats = profileStats.find((p) => p.profileName === config.tableName);
     if (!stats) return;
 
@@ -138,7 +149,7 @@ export default function (app, basePath) {
   router.get('/openapi', cors(corsOptions), (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
-    getFile('content/swagger/api-public.json', 'utf-8')
+    getFile('content/eq-openapi.json', 'utf-8')
       .then((stringsOrResponses) => {
         let responseJson = parseResponse(stringsOrResponses);
 
@@ -179,18 +190,8 @@ export default function (app, basePath) {
   router.get('/lookupFiles', (req, res) => {
     const metadataObj = populateMetdataObjFromRequest(req);
 
-    const servicesFilename =
-      isLocal || isTest
-        ? 'services-local.json'
-        : isDevelopment
-          ? 'services-dev.json'
-          : isStaging
-            ? 'services-stage.json'
-            : 'services-production.json';
-
     // NOTE: static content files found in `app/server/app/content/` directory
     const filenames = [
-      `content/config/${servicesFilename}`,
       'content/alerts/config.json',
       'content-etl/glossary.json',
       'content/config/parameters.json',
@@ -210,14 +211,18 @@ export default function (app, basePath) {
       })
       .then((data) => {
         return {
-          services: data[0],
-          alertsConfig: data[1],
-          glossary: data[2],
-          parameters: data[3],
-          filterConfig: data[4],
-          listOptions: data[5],
-          profileConfig: data[6],
-          nationalDownloads: data[7],
+          services: {
+            eqApiKey: process.env.EQ_API_KEY ?? '',
+            eqApiSignupKey: process.env.EQ_API_SIGNUP_KEY ?? '',
+            eqDataApi: process.env.EQ_DATA_API_URL ?? '',
+          },
+          alertsConfig: data[0],
+          glossary: data[1],
+          parameters: data[2],
+          filterConfig: data[3],
+          listOptions: data[4],
+          profileConfig: data[5],
+          nationalDownloads: data[6],
         };
       });
 

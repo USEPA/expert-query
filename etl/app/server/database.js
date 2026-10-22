@@ -1092,7 +1092,7 @@ async function transform(tableName, columns, data) {
         const colDef = columns.find(
           (col) => cur.name === (col.nameOverrideOrds || col.name),
         );
-        return { ...acc, [cur.name]: datum[colDef.name || col.name] };
+        return { ...acc, [cur.name]: datum[colDef.name || cur.name] };
       }, {}),
     );
   });

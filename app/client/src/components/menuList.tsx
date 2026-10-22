@@ -1,7 +1,7 @@
 import { Children, useEffect, useMemo, useRef, useState } from 'react';
 import { List, useDynamicRowHeight } from 'react-window';
 // types
-import type { MutableRefObject, ReactNode, Ref } from 'react';
+import type { ReactNode, Ref, RefObject } from 'react';
 import type {
   DynamicRowHeight,
   ListImperativeAPI,
@@ -64,7 +64,7 @@ export function MenuList<T>({
       return;
     }
 
-    (innerRef as MutableRefObject<HTMLDivElement | null>).current =
+    (innerRef as RefObject<HTMLDivElement | null>).current =
       element;
   };
 
@@ -113,7 +113,7 @@ function MenuItem({ index, style, width, items, rowHeightCache }: MenuItemProps)
   }, [index, rowHeightCache, width]);
 
   return (
-    <div ref={rowRef} style={{ ...style, overflowX: 'hidden' }}>
+    <div ref={rowRef} style={{ ...style, overflowX: 'hidden', transition: 'none' }}>
       {items[index]}
     </div>
   );
