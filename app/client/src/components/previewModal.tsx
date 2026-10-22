@@ -81,6 +81,8 @@ export function PreviewModal<D extends QueryData>({
         },
       },
       signal: getSignal(),
+      // keeps the download query string off the document links shown here
+      additionalHeaders: { 'EQ-PREVIEW': 'true' },
     })
       .then((res) => {
         if (!Array.isArray(res.data)) {
@@ -121,7 +123,7 @@ export function PreviewModal<D extends QueryData>({
                     <a
                       href={value.toString()}
                       target="_blank"
-                      rel="noopener,noreferrer"
+                      rel="noopener"
                     >
                       {row[textColumn]}
                     </a>

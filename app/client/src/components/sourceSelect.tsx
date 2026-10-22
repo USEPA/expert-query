@@ -2,7 +2,7 @@ import { uniqueId } from 'lodash';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Filter from 'images/filter_list.svg?react';
 // types
-import type { MutableRefObject, ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { Option } from 'types';
 
 /*
@@ -194,7 +194,7 @@ export function SourceSelect({
 // navigating lists with a keyboard.
 function useKeyPress(
   targetKey: string,
-  ref: MutableRefObject<HTMLElement | null>,
+  ref: RefObject<HTMLElement | null>,
 ) {
   const [keyPressed, setKeyPressed] = useState(false);
 
