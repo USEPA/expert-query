@@ -10,6 +10,7 @@ const path = require('path');
 const { exec } = require('child_process');
 
 const serverCoveragePath = './server/coverage/coverage-final.json';
+const resilienceCoveragePath = './server/coverage-resilience/coverage-final.json';
 const cyprusCoveragePath = './coverage/coverage-final.json';
 const combinedCoverageDir = 'combined_coverage_reports';
 const combinedResultsDir = 'combined_results_reports';
@@ -60,6 +61,15 @@ function createCombinedCoverageReport() {
 
   // Copy server coverage file
   copyFile(serverCoveragePath, combinedCoverageDir, 'coverage-server.json');
+
+  // Copy resilience coverage file, if the resilience lane was run
+  if (fs.existsSync(resilienceCoveragePath)) {
+    copyFile(
+      resilienceCoveragePath,
+      combinedCoverageDir,
+      'coverage-resilience.json',
+    );
+  }
 
   // Copy Cypress coverage file
   copyFile(cyprusCoveragePath, combinedCoverageDir, 'coverage-cypress.json');

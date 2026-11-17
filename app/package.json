@@ -1,6 +1,6 @@
 {
   "name": "expert-query",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "U.S. EPA Expert Query",
   "keywords": [
     "Expert Query",
@@ -27,7 +27,7 @@
     "cypress": "concurrently -kc \"blue.dim,green.dim,yellow.dim\" -n server,client,cypress \"npm:server\" \"npm:client\" \"cypress open --env coverage=false\"",
     "client_coverage": "npx rimraf .nyc_output/out.json && npx rimraf coverage && concurrently -s first -kc \"blue.dim,green.dim,yellow.dim\" -n server,client,cypress \"npm:server_coverage\" \"npm:client\" \"cypress run --browser edge\"",
     "coverage_spec_ex": "npx rimraf .nyc_output/out.json && concurrently -s first -kc \"blue.dim,green.dim,yellow.dim\" -n server,client,cypress \"npm:server_coverage\" \"npm:client\" \"cypress run --browser edge --spec 'cypress/e2e/action.cy.ts'\"",
-    "coverage": "npx rimraf combined_results_reports/results && cd server && npm run test && cd .. && npm run client_coverage && node combine_coverage_reports.js"
+    "coverage": "npx rimraf combined_results_reports/results && cd server && npm run test && npm run test:resilience:coverage && cd .. && npm run client_coverage && node combine_coverage_reports.js"
   },
   "devDependencies": {
     "@cypress/code-coverage": "4.0.3",

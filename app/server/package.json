@@ -1,6 +1,6 @@
 {
   "name": "expert-query-server",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "U.S. EPA Expert Query (server app)",
   "keywords": [
     "Expert Query",
@@ -21,11 +21,13 @@
     "start": "cross-env DOTENV_PATH=./.env.local npx dotenv run -- nodemon --inspect app/server.js",
     "start_coverage": "nyc --silent node --env-file=./.env.local app/server.js",
     "lint": "eslint .",
-    "test": "npx rimraf .nyc_output/out.json && npx rimraf coverage && node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --coverageDirectory=coverage"
+    "test": "npx rimraf .nyc_output/out.json && npx rimraf coverage && node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --coverageDirectory=coverage",
+    "test:resilience": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.resilience.config.js",
+    "test:resilience:coverage": "npx rimraf coverage-resilience && node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.resilience.config.js --coverage --coverageDirectory=coverage-resilience"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1151.0",
-    "axios": "1.20.0",
+    "axios": "1.21.0",
     "browser-sync": "3.0.4",
     "cors": "2.8.6",
     "dotenv": "18.0.8",
