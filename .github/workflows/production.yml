@@ -9,7 +9,7 @@ on:
 
 # Set shared environment variables
 env:
-  APP_VERSION: 1.4.0
+  APP_VERSION: 1.4.1
 
 permissions:
   contents: read
@@ -78,7 +78,7 @@ jobs:
         working-directory: app/server/app/content
 
       - name: Remove unnecessary server app files
-        run: rm -rf .env.example .eslintrc.js .prettierrc.json app/config jest.config.js jest_setup.js tests
+        run: rm -rf .env.example .eslintrc.js eslint.config.js .prettierrc.json app/config jest.config.js jest_setup.js tests
         working-directory: app/server
 
       - name: Copy production manifest file to server app
@@ -101,7 +101,7 @@ jobs:
         working-directory: etl
 
       - name: Remove unnecessary server app files
-        run: rm -rf .env.example .eslintrc.yml .prettierrc.json manifest-dev.yml manifest-staging.yml app/config
+        run: rm -rf .env.example .eslintrc.yml eslint.config.js .prettierrc.json manifest-dev.yml manifest-staging.yml app/config
         working-directory: etl
 
       - name: Copy to build folder

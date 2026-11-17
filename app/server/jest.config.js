@@ -20,6 +20,7 @@ export default {
     'build/',
     '.nyc_output/',
     'coverage/',
+    'tests/resilience/', // run separately via `npm run test:resilience`
   ],
   globals: {
     'ts-jest': {
