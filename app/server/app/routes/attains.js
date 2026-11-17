@@ -201,13 +201,13 @@ function createLatestSubquery(req, profile, params, columnName, columnType) {
 /**
  * Creates a stream object from a query.
  * @param {Object} query KnexJS query object
- * @param {Express.Response} res
+ * @param {express.Response} res
  * @param {string} format the format of the file attachment
  * @param {Object} excelDoc Excel workbook and worksheet objects
  * @param {Object} pageOptions page number and page size for paginated JSON
  * @param {boolean} appendDocumentQuery append the configured query string to document URLs
  */
-async function createStream(
+export async function createStream(
   query,
   res,
   format,
@@ -219,34 +219,63 @@ async function createStream(
   // handler instead of throwing from a callback the request can no longer see
   const client = await pool.connect();
 
+  // ms of no write progress before the response is abandoned
+  const idleTimeout = Number.parseInt(process.env.STREAM_IDLE_TIMEOUT);
+
+  // Release the pooled client exactly once, however the stream finishes.
+  // `pg-pool` throws on a double release and these events can fire in combination.
+  // Passing the error tells pg to discard a bad connection rather than pool it.
+  let released = false;
+  let release;
+  const onClientError = (clientErr) => release(clientErr);
+  release = (streamErr) => {
+    if (released) return;
+    released = true;
+    // pooled clients are reused; drop the listener or it piles up per checkout
+    client.removeListener('error', onClientError);
+    if (idleTimeout > 0) res.setTimeout(0);
+    client.release(streamErr);
+  };
+
+  // a connection error with no in-flight query lands on the client, not the stream;
+  // catch it or Node re-throws the 'error' and crashes the process.
+  client.on('error', onClientError);
+
+  // the response can close while the queries leading up to here are still running
+  if (res.closed || res.destroyed) {
+    release();
+    return;
+  }
+
+  // abandon the response after idleTimeout ms of no write progress; destroying it
+  // runs the teardown below and releases the client.
+  if (idleTimeout > 0) res.setTimeout(idleTimeout, () => res.destroy());
+
   const qStream = new QueryStream(query.toString(), [], {
     batchSize: parseInt(process.env.STREAM_BATCH_SIZE),
     highWaterMark: parseInt(process.env.STREAM_HIGH_WATER_MARK),
   });
   const stream = client.query(qStream);
 
-  // release the pooled client exactly once, however the stream finishes.
-  // pg-pool throws on a double release and these events can fire in
-  // combination. Passing the error tells pg to discard a connection that was
-  // left in a bad state instead of returning it to the pool.
-  let released = false;
-  const release = (streamErr) => {
-    if (released) return;
-    released = true;
-    client.release(streamErr);
-  };
   stream.on('end', () => release());
   stream.on('error', (streamErr) => release(streamErr));
   stream.on('close', () => release());
 
-  StreamingService.streamResponse(
-    res,
-    stream,
-    format,
-    wbObject,
-    pageOptions,
-    appendDocumentQuery,
-  );
+  try {
+    StreamingService.streamResponse(
+      res,
+      stream,
+      format,
+      wbObject,
+      pageOptions,
+      appendDocumentQuery,
+    );
+  } catch (err) {
+    // pipeline() throws synchronously if the response closed since the check above
+    stream.destroy();
+    release(err);
+    throw err;
+  }
 }
 
 /**

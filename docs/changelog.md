@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.4.1 (November 2026)
+
+### Fixed
+
+- Fixed a connection leak issue caused by unhandled or missing client close events.
+
 ## 1.4.0 (October 2026)
 
 ### Added

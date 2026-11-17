@@ -72,6 +72,9 @@ jobs:
       CF_S3_PRIV_SECRET_KEY: ${{ secrets.CF_STAGING_S3_PRIV_SECRET_KEY }}
       DB_POOL_MAX: 20
       DB_POOL_MIN: 5
+      DB_CONNECTION_TIMEOUT: 30000
+      DB_STATEMENT_TIMEOUT: 300000
+      DB_IDLE_IN_TRANSACTION_TIMEOUT: 60000
       DB_SSL: true
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
       DB_PASSWORD: ${{ secrets.EQ_PASSWORD_STAGING }}
@@ -84,6 +87,7 @@ jobs:
       SERVER_URL: https://owapps-stage.app.cloud.gov/expertquery
       STREAM_BATCH_SIZE: 2000
       STREAM_HIGH_WATER_MARK: 10000
+      STREAM_IDLE_TIMEOUT: 120000
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -141,6 +145,9 @@ jobs:
           cf set-env $APP_NAME "CF_S3_PRIV_SECRET_KEY" "$CF_S3_PRIV_SECRET_KEY" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MAX" "$DB_POOL_MAX" > /dev/null
           cf set-env $APP_NAME "DB_POOL_MIN" "$DB_POOL_MIN" > /dev/null
+          cf set-env $APP_NAME "DB_CONNECTION_TIMEOUT" "$DB_CONNECTION_TIMEOUT" > /dev/null
+          cf set-env $APP_NAME "DB_STATEMENT_TIMEOUT" "$DB_STATEMENT_TIMEOUT" > /dev/null
+          cf set-env $APP_NAME "DB_IDLE_IN_TRANSACTION_TIMEOUT" "$DB_IDLE_IN_TRANSACTION_TIMEOUT" > /dev/null
           cf set-env $APP_NAME "DB_SSL" "$DB_SSL" > /dev/null
           cf set-env $APP_NAME "DB_NAME" "$DB_NAME" > /dev/null
           cf set-env $APP_NAME "DB_PASSWORD" "$DB_PASSWORD" > /dev/null
@@ -154,6 +161,7 @@ jobs:
           cf set-env $APP_NAME "SERVER_URL" "$SERVER_URL" > /dev/null
           cf set-env $APP_NAME "STREAM_BATCH_SIZE" "$STREAM_BATCH_SIZE" > /dev/null
           cf set-env $APP_NAME "STREAM_HIGH_WATER_MARK" "$STREAM_HIGH_WATER_MARK" > /dev/null
+          cf set-env $APP_NAME "STREAM_IDLE_TIMEOUT" "$STREAM_IDLE_TIMEOUT" > /dev/null
           cf set-env $APP_NAME "TZ" "America/New_York" > /dev/null
 
       - name: Configure Public AWS Credentials
